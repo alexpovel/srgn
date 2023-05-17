@@ -1,93 +1,176 @@
 use env_logger::Env;
 use itertools::Itertools;
-use rstest::rstest;
-// use itertools::Itertools;
 use log::{debug, info};
 use std::{
     collections::HashSet,
     io::{stdin, Read},
 };
 
-use rust_fsm::{StateMachine, StateMachineImpl};
+const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
+const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum State {
-    Initial,
-    Regular(Option<Potential>),
-    Other,
-    Match,
+#[derive(Debug)]
+enum SpecialCharacter {
+    Umlaut(Umlaut),
+    Eszett,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum Potential {
-    Eszett,
-    Umlaut,
+#[derive(Debug, Clone, Copy)]
+enum Umlaut {
+    Ue,
+    Oe,
+    Ae,
+}
+
+// #[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug)]
+enum State {
+    Word(Option<Potential>),
+    #[default]
+    Other,
+    // Match,
 }
 
 #[derive(Debug)]
-enum WordTransition {
-    Internal,
-    Entered,
-    Exited,
+struct Span {
+    start: usize,
+    end: usize,
 }
 
-struct Machine {}
+#[derive(Debug)]
+struct Match {
+    span: Span,
+    content: SpecialCharacter,
+}
 
-impl StateMachineImpl for Machine {
-    type Input = char;
-    type State = State;
-    type Output = WordTransition;
-    const INITIAL_STATE: State = State::Initial;
+#[derive(Debug)]
+struct Potential(SpecialCharacter);
 
-    fn transition(state: &Self::State, input: &Self::Input) -> Option<Self::State> {
-        let next = match (state, input) {
+#[derive(Debug)]
+enum Transition {
+    Entered,
+    Exited,
+    Internal,
+    External,
+}
+
+impl Transition {
+    fn from_states(from: &State, to: &State) -> Self {
+        match (from, to) {
+            (State::Word(_), State::Other) => Transition::Exited,
+            (State::Other, State::Word(_)) => Transition::Entered,
+            (State::Word(_), State::Word(_)) => Transition::Internal,
+            (State::Other, State::Other) => Transition::External,
+        }
+    }
+}
+
+type MachineInput = char;
+
+#[derive(Debug)]
+struct Word {
+    content: String,
+    matches: Vec<Match>,
+}
+
+impl Word {
+    /// Clears the word's contents while retaining any allocated capacities.
+    fn clear(&mut self) {
+        self.content.clear();
+        self.matches.clear();
+    }
+}
+
+impl Default for Word {
+    fn default() -> Self {
+        Self {
+            content: String::with_capacity(EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES as usize),
+            matches: Vec::with_capacity(EXPECTABLE_MAXIMUM_MATCHES_PER_WORD as usize),
+        }
+    }
+}
+
+struct Machine {
+    state: State,
+    word: Word,
+    transition: Option<Transition>,
+}
+
+impl Machine {
+    fn new() -> Self {
+        Self {
+            state: State::default(),
+            word: Word::default(),
+            transition: None,
+        }
+    }
+
+    fn pre_transitition(&mut self) {
+        if let State::Other = self.state {
+            self.word.clear();
+        };
+    }
+
+    fn post_transitition(&mut self, input: &MachineInput, next: &State) {
+        self.transition = Some(Transition::from_states(&self.state, next));
+
+        if let Some(Transition::Entered | Transition::Internal) = self.transition {
+            self.word.content.push(*input);
+        };
+    }
+
+    fn transition(&mut self, input: &MachineInput) -> &Option<Transition> {
+        self.pre_transitition();
+
+        let next = match (&self.state, input) {
             (
-                State::Initial
-                | State::Regular(None)
-                | State::Regular(Some(Potential::Umlaut))
+                State::Word(None)
+                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
                 | State::Other,
-                'o' | 'u' | 'a',
-            ) => State::Regular(Some(Potential::Umlaut)),
-            (State::Initial | State::Regular(None) | State::Other, 's') => {
-                State::Regular(Some(Potential::Eszett))
+                c @ 'o' | c @ 'u' | c @ 'a' | c @ 's',
+            ) => State::Word(Some(Potential(match c {
+                'o' => SpecialCharacter::Umlaut(Umlaut::Oe),
+                'u' => SpecialCharacter::Umlaut(Umlaut::Ue),
+                'a' => SpecialCharacter::Umlaut(Umlaut::Ae),
+                's' => SpecialCharacter::Eszett,
+                _ => unreachable!("Protected by outer match statement."),
+            }))),
+            //
+            (State::Word(Some(Potential(SpecialCharacter::Eszett))), c @ 's') => {
+                let pos = self.word.content.len();
+                let match_ = Match {
+                    span: Span {
+                        start: pos - c.len_utf8(),
+                        end: pos + c.len_utf8(),
+                    },
+                    content: SpecialCharacter::Eszett,
+                };
+
+                self.word.matches.push(match_);
+                State::Word(None)
+            }
+            (State::Word(Some(Potential(SpecialCharacter::Umlaut(umlaut)))), c @ 'e') => {
+                let pos = self.word.content.len();
+                let match_ = Match {
+                    span: Span {
+                        start: pos - 1,
+                        end: pos + c.len_utf8(),
+                    },
+                    content: SpecialCharacter::Umlaut(*umlaut),
+                };
+
+                self.word.matches.push(match_);
+                State::Word(None)
             }
             //
-            (State::Regular(Some(Potential::Umlaut)), 'e') => State::Match,
-            (State::Regular(Some(Potential::Eszett)), 's') => State::Match,
-            //
-            (State::Match, c) if c.is_whitespace() => State::Other,
-            (State::Match, _) => State::Match,
-            //
-            (_, c) if c.is_alphabetic() => State::Regular(None),
+            (_, c) if c.is_alphabetic() => State::Word(None),
             (_, _) => State::Other,
         };
 
-        Some(next)
-    }
+        self.post_transitition(input, &next);
 
-    fn output(state: &Self::State, input: &Self::Input) -> Option<Self::Output> {
-        let next: State = Self::transition(state, input)?;
-
-        match (state, next) {
-            (State::Initial | State::Other, State::Regular(_)) => Some(WordTransition::Entered),
-            (State::Regular(_), State::Regular(_)) => Some(WordTransition::Internal),
-            (State::Match, State::Match) => Some(WordTransition::Internal),
-            (State::Regular(Some(_)), State::Match) => Some(WordTransition::Internal),
-            (State::Regular(_) | State::Match, State::Other) => Some(WordTransition::Exited),
-            //
-            (State::Initial | State::Other, State::Other) => None,
-            //
-            (State::Initial, State::Match) => panic!("Cannot match directly from initialization."),
-            (State::Regular(_) | State::Other | State::Match | State::Initial, State::Initial) => {
-                panic!("Cannot revert back to initial state.")
-            }
-            (State::Regular(None) | State::Other, State::Match) => {
-                panic!("Cannot reach match immediately.")
-            }
-            (State::Match, State::Regular(_)) => {
-                panic!("Cannot leave match unless it's a non-word.")
-            }
-        }
+        self.state = next;
+        &self.transition
     }
 }
 
@@ -100,7 +183,7 @@ fn main() {
     // let words: HashSet<&str> = HashSet::with_capacity(2 ^ 15);
     let _words: HashSet<&str> = HashSet::from_iter(raw.lines());
     let mut _output: Vec<char> = Vec::new();
-    let mut current_word = String::with_capacity(50);
+    // let mut current_word = String::with_capacity(50);
 
     let mut inbuf = String::new();
     stdin().read_to_string(&mut inbuf).unwrap();
@@ -109,36 +192,43 @@ fn main() {
 
     let mut _outbuf = String::with_capacity(inbuf.capacity());
 
-    let mut machine: StateMachine<Machine> = StateMachine::new();
+    let mut machine = Machine::new();
 
-    let mut previous = None;
+    // let mut previous = None;
 
     for char in inbuf.chars() {
         debug!("Beginning processing of character '{}'", char);
 
-        let transition = machine
-            .consume(&char)
-            .expect("FSM should be implemented such that no invalid transitions exist.");
+        let transition = machine.transition(&char);
 
-        debug!(
-            "Machine state is '{:?}', machine transition was '{:?}'",
-            machine.state(),
-            transition
-        );
+        debug!("Transition is '{:?}'", transition);
 
-        let Some(wt) = transition else {
-            _outbuf.push(char);
-            continue;
-        };
-
-        current_word.push(char);
-        if let (WordTransition::Exited, Some(State::Match)) = (wt, previous) {
-            let res = current_word.replace("ue", "ü");
-            _outbuf.push_str(&res);
-            current_word.clear();
+        if let Some(Transition::Exited) = transition {
+            debug!("Exited word: {:?}", machine.word);
+            // let res = current_word.replace("ue", "ü");
+            // _outbuf.push_str(&res);
+            // current_word.clear();
         }
 
-        previous = Some(*machine.state());
+        // let x = machine;
+
+        // .expect("FSM should be implemented such that no invalid transitions exist.");
+
+        // debug!("Machine state is '{:?}'", state);
+
+        // let Some(wt) = state else {
+        //     _outbuf.push(char);
+        //     continue;
+        // };
+
+        // current_word.push(char);
+        // if let (WordTransition::Exited, Some(State::Match)) = (wt, previous) {
+        //     let res = current_word.replace("ue", "ü");
+        //     _outbuf.push_str(&res);
+        //     current_word.clear();
+        // }
+
+        // previous = Some(*machine.state());
     }
 
     debug!("Final string is '{}'", _outbuf);
