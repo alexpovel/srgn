@@ -161,7 +161,7 @@ fn process(word: &str, words: HashSet<String>, possibilities: Vec<String>) {
 
 fn power_set<T: Clone>(elements: Vec<T>) -> Vec<Vec<T>> {
     let mut result = Vec::new();
-    for i in 0..=elements.len() {
+    for i in 1..=elements.len() {
         let subelements = elements.clone().into_iter().combinations(i);
         result.extend(subelements);
     }
@@ -177,13 +177,12 @@ mod tests {
     type TestVec = Vec<i32>;
 
     #[rstest]
-    #[case(Vec::new(), vec![Vec::new()])]
-    #[case(vec![1], vec![Vec::new(), vec![1]])]
-    #[case(vec![1, 2], vec![Vec::new(), vec![1], vec![2], vec![1, 2]])]
+    #[case(Vec::new(), vec![])]
+    #[case(vec![1], vec![vec![1]])]
+    #[case(vec![1, 2], vec![vec![1], vec![2], vec![1, 2]])]
     #[case(
         vec![1, 2, 3],
         vec![
-            Vec::new(),
             vec![1],
             vec![2],
             vec![3],
@@ -202,7 +201,6 @@ mod tests {
     fn test_powerset_of_tuples() {
         let input = vec![(1, 2), (2, 4), (3, 9)];
         let expected = vec![
-            Vec::new(),
             vec![(1, 2)],
             vec![(2, 4)],
             vec![(3, 9)],
