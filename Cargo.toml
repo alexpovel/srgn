@@ -7,9 +7,18 @@ edition = "2021"
 
 [dependencies]
 bincode = "2.0.0-rc.3"
+clap = { version = "4.2.7", features = ["derive"] }
 env_logger = "0.10.0"
 itertools = "0.10.5"
 log = "0.4.17"
 regex = "1.8.1"
 rstest = "0.17.0"
 rust-fsm = "0.6.1"
+
+[build-dependencies]
+cargo_metadata = "0.15.4"
+
+[features]
+default = ["de"]
+all = ["de"]
+de = []
