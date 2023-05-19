@@ -41,13 +41,13 @@ mod tests {
             vec![1, 2, 3]
         ]
     )]
-    fn test_powerset_of_integers(#[case] input: TestVec, #[case] expected: Vec<TestVec>) {
+    fn test_power_set_of_integers(#[case] input: TestVec, #[case] expected: Vec<TestVec>) {
         let result: Vec<Vec<i32>> = power_set(input);
         assert_eq!(result, expected);
     }
 
     #[rstest]
-    fn test_powerset_of_tuples() {
+    fn test_power_set_of_tuples() {
         let input = vec![(1, 2), (2, 4), (3, 9)];
         let expected = vec![
             vec![],

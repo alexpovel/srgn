@@ -1,53 +1,73 @@
-use clap::{Parser, ValueEnum};
-use env_logger::Env;
-use log::info;
+use std::io::{self, stdout, BufRead, Error, Write};
 
+use log::{debug, info};
+
+#[cfg(feature = "de")]
+use crate::modules::german::German;
+#[cfg(feature = "symbols")]
+use crate::modules::symbols::Symbols;
+use crate::{
+    cli::{Args, Module},
+    modules::TextProcessor,
+};
+
+mod cli;
 mod iteration;
 mod modules;
 
 const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
 const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 
-// enum Language {
-//     German,
-//     Test,
-// }
-
-// struct WordLists<'a> {
-//     german: Option<HashSet<&'a str>>,
-// }
-
-fn main() {
+fn main() -> Result<(), Error> {
+    env_logger::init();
     info!("Launching app.");
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
-    let _args = Args::parse();
+    let args = Args::init();
+    let processors: Vec<Box<dyn TextProcessor>> = args
+        .modules()
+        .iter()
+        .map(|module| {
+            let tp: Box<dyn TextProcessor> = match module {
+                #[cfg(feature = "de")]
+                Module::German => Box::new(German),
+                #[cfg(feature = "symbols")]
+                Module::Symbols => Box::new(Symbols),
+            };
+
+            debug!("Loaded module: {:?}", module);
+
+            tp
+        })
+        .collect();
+
+    let mut stdin = io::stdin().lock();
+
+    let mut buf = String::new();
+
+    const EOF_INDICATOR: usize = 0;
+    const INDICATOR: char = '\0';
+
+    while stdin.read_line(&mut buf)? > EOF_INDICATOR {
+        debug!("Starting processing line: {}", buf);
+
+        // Some processors require an indicator to signal the end of the line. Much like
+        // a missing trailing newline in a file, they might misbehave otherwise.
+        buf.push(INDICATOR);
+
+        for processor in &processors {
+            processor.process(&mut buf);
+        }
+
+        let Some(INDICATOR) = buf.pop() else {
+            unreachable!("Processor removed trailing indicator byte.");
+        };
+
+        debug!("Processed line: {}", buf);
+        debug!("Writing processed line");
+        stdout().lock().write_all(buf.as_bytes())?;
+        buf.clear();
+    }
 
     info!("Exiting.");
+    Ok(())
 }
-
-/// Simple program to greet a person
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Modules to use.
-    #[arg(value_enum)]
-    modules: Vec<Module>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Module {
-    /// The module for the German language.
-    German,
-    /// The module for symbols.
-    Symbols,
-}
-
-// fn get_word_list() -> WordLists<'static> {
-//     #[cfg(feature = "de")]
-//     let raw = HashSet::from_iter(include_str!("../target/word-lists/de.txt").lines());
-
-//     // HashSet::from_iter(raw.lines())
-//     // Default::default()
-//     WordLists { german: Some(raw) }
-// }

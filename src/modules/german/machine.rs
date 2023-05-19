@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use log::{debug, trace};
 
 use crate::{iteration::power_set, modules::TextProcessor};
 
@@ -114,22 +115,25 @@ impl StateMachine {
     }
 }
 
-struct ModuleImpl;
+pub struct German;
 
-impl TextProcessor for ModuleImpl {
+// Generated in `build.rs`.
+const WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.rs"));
+
+impl TextProcessor for German {
     fn process(&self, input: &mut String) -> bool {
-        // debug!("Input buffer reads: {}", inbuf);
+        debug!("Working on input '{}'", input);
 
         let mut output = String::with_capacity(input.capacity());
 
         let mut machine = StateMachine::new();
 
         for char in input.chars() {
-            // debug!("Beginning processing of character '{}'", char);
+            trace!("Beginning processing of character '{}'", char);
 
             let transition = machine.transition(&char);
 
-            // debug!("Transition is '{:?}'", transition);
+            trace!("Transition is '{:?}'", transition);
 
             match transition {
                 Some(Transition::External) => {
@@ -143,10 +147,10 @@ impl TextProcessor for ModuleImpl {
                 None => unreachable!("After initial transition, must have `Some`."),
             }
 
-            // debug!("Exited word: {:?}", machine.word);
+            trace!("Exited word: {:?}", machine.word);
 
             let match_sets = power_set(machine.word.matches().clone().into_iter());
-            // debug!("All matches: {:?}", match_sets);
+            trace!("All matches: {:?}", match_sets);
 
             let get_fresh_candidate = || machine.word.content().clone();
             let mut candidate = get_fresh_candidate();
@@ -166,12 +170,13 @@ impl TextProcessor for ModuleImpl {
                     let replacement = match_.content().value();
 
                     candidate.replace_range(match_.start()..match_.end(), &replacement);
-                    // debug!("Replaced candidate word, now is: {}", candidate);
+                    trace!("Replaced candidate word, now is: {}", candidate);
                 }
 
-                // if words.contains(&candidate as &str) {
-                //     break;
-                // }
+                if WORDS.binary_search(&candidate.as_str()).is_ok() {
+                    trace!("Found candidate in word list, exiting loop.");
+                    break;
+                }
 
                 candidate = get_fresh_candidate();
             }
@@ -182,8 +187,28 @@ impl TextProcessor for ModuleImpl {
             output.push(char);
         }
 
-        // debug!("Final string is '{}'", outbuf);
-        // inbuf
+        debug!("Final string is '{}'", output);
+        *input = output;
         true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn words_are_sorted() {
+        let mut sorted = WORDS.to_vec();
+        sorted.sort();
+        assert_eq!(WORDS, sorted.as_slice());
+    }
+
+    #[test]
+    fn words_are_unique() {
+        let mut unique = WORDS.to_vec();
+        unique.sort();
+        unique.dedup();
+        assert_eq!(WORDS, unique.as_slice());
     }
 }

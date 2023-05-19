@@ -1,39 +1,25 @@
-use std::{fs, path::Path};
-
-use cargo_metadata::MetadataCommand;
+use std::io::Write;
+use std::{
+    env,
+    fs::{self, File},
+    path::Path,
+};
 
 fn main() {
     generate_word_lists();
 }
 
 fn generate_word_lists() {
-    let metadata = MetadataCommand::new()
-        .no_deps()
-        .exec()
-        .expect("Failed to get cargo metadata.");
+    // https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
+    let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    for entry in fs::read_dir(Path::new("data/word-lists")).expect("Need word lists directory.") {
-        let source = entry.expect("Failed to access directory item.");
-
-        let target = metadata.target_directory.join("word-lists").join(
-            source
-                .file_name()
-                .to_str()
-                .expect("File name is malformed UTF-8."),
-        );
-
-        target.parent().map(fs::create_dir_all);
-
-        if !source
-            .metadata()
-            .expect("Failed to access directory item's metadata.")
-            .is_file()
-            || target.exists()
-        {
+    for entry in fs::read_dir(Path::new("data/word-lists")).unwrap() {
+        let source = entry.unwrap();
+        if !source.metadata().unwrap().is_file() {
             continue;
         }
 
-        let contents = fs::read_to_string(source.path()).expect("Failed to read file.");
+        let contents = fs::read_to_string(source.path()).unwrap();
 
         let mut words: Vec<&str> = contents
             .lines()
@@ -43,8 +29,21 @@ fn generate_word_lists() {
 
         words.sort();
 
-        fs::write(target, words.join("\n")).expect("Failed to write file.");
+        let destination = Path::new(&out_dir)
+            .join(Path::new(source.file_name().to_str().unwrap()).with_extension("rs"));
+
+        destination.parent().map(fs::create_dir_all);
+        let mut f = File::create(&destination).unwrap();
+
+        writeln!(f, "&[").unwrap();
+
+        for word in words {
+            writeln!(f, "    \"{}\",", word).unwrap();
+        }
+        writeln!(f, "]").unwrap();
     }
+
+    println!("cargo:rerun-if-changed=data/word-lists");
 }
 
 fn has_special_characters(word: &str) -> bool {
