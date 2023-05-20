@@ -1,7 +1,9 @@
-use itertools::Itertools;
 use log::{debug, trace};
 
-use crate::{iteration::power_set, modules::TextProcessor};
+use crate::{
+    iteration::power_set,
+    modules::{german::word::Replace, TextProcessor},
+};
 
 use super::{SpecialCharacter, Umlaut, Word};
 
@@ -83,7 +85,8 @@ impl StateMachine {
 
                 let start = pos - c.len_utf8(); // Previous char same as current `c`
                 let end = pos + c.len_utf8();
-                self.word.add_match(start, end, SpecialCharacter::Eszett);
+                self.word
+                    .add_replacement(start, end, SpecialCharacter::Eszett);
                 State::Word(None)
             }
             (State::Word(Some(Potential(SpecialCharacter::Umlaut(umlaut)))), c @ 'e') => {
@@ -99,7 +102,7 @@ impl StateMachine {
                 let start = pos - LENGTH_OF_PREVIOUS_CHARACTER;
                 let end = pos + c.len_utf8();
                 self.word
-                    .add_match(start, end, SpecialCharacter::Umlaut(*umlaut));
+                    .add_replacement(start, end, SpecialCharacter::Umlaut(*umlaut));
                 State::Word(None)
             }
             //
@@ -126,6 +129,36 @@ pub struct German;
 
 // Generated in `build.rs`.
 const WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
+
+fn is_valid(word: &str, words: &[&str]) -> bool {
+    debug_assert!(
+        words.iter().any(|word| word.is_ascii()),
+        "Looks like you're using a filtered word list. This function only works with the full word list (also containing all non-Umlaut words)"
+    );
+
+    trace!("Trying candidate '{}'...", word);
+
+    if words.binary_search(&word).is_ok() {
+        trace!("Found candidate '{}' in word list, is valid.", word);
+        return true;
+    }
+
+    // Skip initial, else initial `prefix` slice is empty.
+    for (i, _) in word.char_indices().skip(1) {
+        let prefix = &word[..i];
+        let suffix = &word[i..];
+        trace!("Trying prefix '{}', suffix '{}'", prefix, suffix);
+
+        if words.binary_search(&prefix).is_ok() {
+            trace!("Prefix found in word list, seeing if suffix is valid.");
+            return is_valid(suffix, words);
+        } else {
+            trace!("Prefix not found in word list, trying next.");
+        }
+    }
+
+    false
+}
 
 impl TextProcessor for German {
     fn process(&self, input: &mut String) -> bool {
@@ -156,32 +189,28 @@ impl TextProcessor for German {
 
             trace!("Exited word: {:?}", machine.word);
 
-            let match_sets = power_set(machine.word.matches().clone().into_iter());
-            trace!("All matches: {:?}", match_sets);
+            let replacement_combinations = power_set(
+                machine.word.replacements().clone().into_iter(),
+                // Exclude empty set, unnecessary work:
+                false,
+            );
+            trace!(
+                "All replacement combinations to try: {:?}",
+                replacement_combinations
+            );
 
             let get_fresh_candidate = || machine.word.content().clone();
             let mut candidate = get_fresh_candidate();
 
-            for match_set in match_sets {
-                let iter = match_set.iter().rev();
+            for replacement_combination in replacement_combinations {
+                candidate.apply_replacements(replacement_combination);
+                trace!(
+                    "Replaced candidate word, now is: '{}'. Starting validity check.",
+                    candidate
+                );
 
-                // We are replacing starting from behind, such that earlier indices are not
-                // invalidated.
-                debug_assert!(iter
-                    .clone()
-                    .collect_vec()
-                    .windows(2)
-                    .all(|tuple| tuple[0].start() > tuple[1].start()));
-
-                for match_ in iter {
-                    let replacement = match_.content().to_string();
-
-                    candidate.replace_range(match_.start()..match_.end(), &replacement);
-                    trace!("Replaced candidate word, now is: {}", candidate);
-                }
-
-                if WORDS.binary_search(&candidate.as_str()).is_ok() {
-                    trace!("Found candidate in word list, exiting loop.");
+                if is_valid(&candidate, WORDS) {
+                    trace!("Candidate is valid word, exiting search.");
                     break;
                 }
 

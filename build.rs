@@ -32,11 +32,7 @@ fn generate_word_lists() {
 
         let contents = fs::read_to_string(dir.path().join(file)).unwrap();
 
-        let mut words: Vec<&str> = contents
-            .lines()
-            .map(|word| word.trim())
-            .filter(|&word| has_special_characters(word))
-            .collect();
+        let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
 
         words.sort();
 
@@ -57,9 +53,7 @@ fn generate_word_lists() {
         writeln!(f, "]").unwrap();
     }
 
+    // Should work recursively, see also:
+    // https://github.com/rust-lang/cargo/issues/2599#issuecomment-1119059540
     println!("cargo:rerun-if-changed={}", WORD_LIST_DIRECTORY);
-}
-
-fn has_special_characters(word: &str) -> bool {
-    !word.is_ascii()
 }
