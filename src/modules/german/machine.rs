@@ -118,7 +118,7 @@ impl StateMachine {
 pub struct German;
 
 // Generated in `build.rs`.
-const WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.rs"));
+const WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
 
 impl TextProcessor for German {
     fn process(&self, input: &mut String) -> bool {

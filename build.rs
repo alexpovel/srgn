@@ -5,6 +5,8 @@ use std::{
     path::Path,
 };
 
+const WORD_LIST_DIRECTORY: &str = "data/word-lists";
+
 fn main() {
     generate_word_lists();
 }
@@ -13,13 +15,22 @@ fn generate_word_lists() {
     // https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    for entry in fs::read_dir(Path::new("data/word-lists")).unwrap() {
-        let source = entry.unwrap();
-        if !source.metadata().unwrap().is_file() {
+    for entry in fs::read_dir(Path::new(WORD_LIST_DIRECTORY)).unwrap() {
+        let dir = entry.unwrap();
+        if !dir.metadata().unwrap().is_dir() {
             continue;
         }
 
-        let contents = fs::read_to_string(source.path()).unwrap();
+        // Inlining the *full* word list into source code absolutely tanks performance
+        // and DX (clippy, ...) as it's circa 8 MB in size. The development list is very
+        // small in comparison. Note tests will only have that list available as well.
+        let file = if cfg!(debug_assertions) {
+            "dev.txt"
+        } else {
+            "full.txt"
+        };
+
+        let contents = fs::read_to_string(dir.path().join(file)).unwrap();
 
         let mut words: Vec<&str> = contents
             .lines()
@@ -29,8 +40,11 @@ fn generate_word_lists() {
 
         words.sort();
 
-        let destination = Path::new(&out_dir)
-            .join(Path::new(source.file_name().to_str().unwrap()).with_extension("rs"));
+        let destination = Path::new(&out_dir).join(
+            Path::new(dir.file_name().to_str().unwrap())
+                // Not fully valid Rust code, so use `in` over `rs`.
+                .with_extension("in"),
+        );
 
         destination.parent().map(fs::create_dir_all);
         let mut f = File::create(&destination).unwrap();
@@ -43,7 +57,7 @@ fn generate_word_lists() {
         writeln!(f, "]").unwrap();
     }
 
-    println!("cargo:rerun-if-changed=data/word-lists");
+    println!("cargo:rerun-if-changed={}", WORD_LIST_DIRECTORY);
 }
 
 fn has_special_characters(word: &str) -> bool {
