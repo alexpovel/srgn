@@ -81,7 +81,7 @@ impl StateMachine {
             (State::Word(Some(Potential(SpecialCharacter::Eszett))), c @ 's') => {
                 let pos = self.word.len();
 
-                let start = pos - c.len_utf8();
+                let start = pos - c.len_utf8(); // Previous char same as current `c`
                 let end = pos + c.len_utf8();
                 self.word.add_match(start, end, SpecialCharacter::Eszett);
                 State::Word(None)
@@ -89,7 +89,14 @@ impl StateMachine {
             (State::Word(Some(Potential(SpecialCharacter::Umlaut(umlaut)))), c @ 'e') => {
                 let pos = self.word.len();
 
-                let start = pos - 1;
+                const LENGTH_OF_PREVIOUS_CHARACTER: usize = 1;
+                debug_assert!(
+                    'o'.len_utf8() == LENGTH_OF_PREVIOUS_CHARACTER
+                        && 'u'.len_utf8() == LENGTH_OF_PREVIOUS_CHARACTER
+                        && 'a'.len_utf8() == LENGTH_OF_PREVIOUS_CHARACTER
+                );
+
+                let start = pos - LENGTH_OF_PREVIOUS_CHARACTER;
                 let end = pos + c.len_utf8();
                 self.word
                     .add_match(start, end, SpecialCharacter::Umlaut(*umlaut));
@@ -167,7 +174,7 @@ impl TextProcessor for German {
                     .all(|tuple| tuple[0].start() > tuple[1].start()));
 
                 for match_ in iter {
-                    let replacement = match_.content().value();
+                    let replacement = match_.content().to_string();
 
                     candidate.replace_range(match_.start()..match_.end(), &replacement);
                     trace!("Replaced candidate word, now is: {}", candidate);

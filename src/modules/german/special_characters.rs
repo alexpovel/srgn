@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Umlaut {
     Ue,
@@ -5,13 +7,17 @@ pub enum Umlaut {
     Ae,
 }
 
-impl Umlaut {
-    fn value(&self) -> String {
-        String::from(match self {
-            Umlaut::Ue => 'ü',
-            Umlaut::Oe => 'ö',
-            Umlaut::Ae => 'ä',
-        })
+impl Display for Umlaut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Umlaut::Ue => 'ü',
+                Umlaut::Oe => 'ö',
+                Umlaut::Ae => 'ä',
+            }
+        )
     }
 }
 
@@ -21,11 +27,15 @@ pub enum SpecialCharacter {
     Eszett,
 }
 
-impl SpecialCharacter {
-    pub fn value(&self) -> String {
-        match self {
-            SpecialCharacter::Umlaut(umlaut) => umlaut.value(),
-            SpecialCharacter::Eszett => String::from('ß'),
-        }
+impl Display for SpecialCharacter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                SpecialCharacter::Umlaut(umlaut) => umlaut.to_string(),
+                SpecialCharacter::Eszett => String::from('ß'),
+            }
+        )
     }
 }
