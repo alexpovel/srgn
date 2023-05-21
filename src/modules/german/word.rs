@@ -3,13 +3,13 @@ use itertools::Itertools;
 use super::SpecialCharacter;
 
 #[derive(Debug)]
-pub struct Word {
+pub(super) struct Word {
     content: String,
     replacements: Vec<Replacement>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Replacement {
+pub(super) struct Replacement {
     span: Span,
     content: SpecialCharacter,
 }
@@ -27,7 +27,7 @@ impl PartialOrd for Replacement {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
-pub struct Span {
+pub(super) struct Span {
     start: usize,
     end: usize,
 }
@@ -86,7 +86,7 @@ impl Replacement {
     }
 }
 
-pub trait Replace {
+pub(super) trait Replace {
     fn apply_replacement(&mut self, replacement: &Replacement);
     fn apply_replacements<T>(&mut self, replacements: T)
     where

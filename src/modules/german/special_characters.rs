@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Umlaut {
+pub(super) enum Umlaut {
     Ue,
     Oe,
     Ae,
@@ -22,7 +22,7 @@ impl Display for Umlaut {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SpecialCharacter {
+pub(super) enum SpecialCharacter {
     Umlaut(Umlaut),
     Eszett,
 }

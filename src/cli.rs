@@ -2,7 +2,7 @@ use clap::{Parser, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-pub struct Args {
+pub(super) struct Args {
     /// Modules to use.
     #[arg(value_enum, required = true, num_args = 1..)]
     modules: Vec<Module>,
@@ -20,7 +20,7 @@ impl Args {
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-pub enum Module {
+pub(super) enum Module {
     /// The German language module.
     #[cfg(feature = "de")]
     German,

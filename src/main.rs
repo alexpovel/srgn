@@ -14,6 +14,8 @@ use crate::{
 mod cli;
 mod iteration;
 mod modules;
+#[cfg(test)]
+mod testing;
 
 const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
 const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
