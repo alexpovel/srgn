@@ -14,19 +14,7 @@ pub(super) struct Replacement {
     content: SpecialCharacter,
 }
 
-impl Ord for Replacement {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.start().cmp(&other.start())
-    }
-}
-
-impl PartialOrd for Replacement {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Span {
     start: usize,
     end: usize,
@@ -112,7 +100,7 @@ impl Replace for String {
         // Assert sorting, such that reversing actually does the right thing.
         if cfg!(debug_assertions) {
             let mut cloned = replacements.iter().cloned().collect_vec();
-            cloned.sort();
+            cloned.sort_by_key(|replacement| replacement.start());
             assert_eq!(cloned, replacements);
         }
 

@@ -71,15 +71,26 @@ impl StateMachine {
                 State::Word(None)
                 | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
                 | State::Other,
-                c @ 'o' | c @ 'u' | c @ 'a' | c @ 's',
-            ) => State::Word(Some(Potential(match c {
-                'o' => SpecialCharacter::Umlaut(Umlaut::Oe),
-                'u' => SpecialCharacter::Umlaut(Umlaut::Ue),
-                'a' => SpecialCharacter::Umlaut(Umlaut::Ae),
-                's' => SpecialCharacter::Eszett,
-                _ => unreachable!("Protected by outer match statement."),
-            }))),
-            //
+                'o',
+            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Oe)))),
+            (
+                State::Word(None)
+                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
+                | State::Other,
+                'u',
+            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Ue)))),
+            (
+                State::Word(None)
+                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
+                | State::Other,
+                'a',
+            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Ae)))),
+            (
+                State::Word(None)
+                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
+                | State::Other,
+                's',
+            ) => State::Word(Some(Potential(SpecialCharacter::Eszett))),
             (State::Word(Some(Potential(SpecialCharacter::Eszett))), c @ 's') => {
                 let pos = self.word.len();
 
@@ -285,6 +296,7 @@ mod tests {
                 "🤩Dübel",
                 "🤩Dübel🤐",
                 "😎",
+                "dröge",
                 "DüBeL",
                 "Dübel\0",
                 "Duebel",

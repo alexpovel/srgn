@@ -60,9 +60,11 @@ fn main() -> Result<(), Error> {
             processor.process(&mut buf);
         }
 
-        let Some(INDICATOR) = buf.pop() else {
-            unreachable!("Processor removed trailing indicator byte.");
-        };
+        let c = buf.pop();
+        debug_assert!(
+            c == Some(INDICATOR),
+            "Processor removed trailing indicator byte."
+        );
 
         debug!("Processed line: {}", buf);
         debug!("Writing processed line");
