@@ -10,10 +10,23 @@ clap = { version = "4.2.7", features = ["derive"] }
 env_logger = "0.10.0"
 itertools = "0.10.5"
 log = "0.4.17"
-rstest = "0.17.0"
 
 [features]
 default = ["all"]
 all = ["de", "symbols"]
 de = []
 symbols = []
+
+[dev-dependencies]
+insta = { version = "1.29.0", features = ["yaml"] }
+paste = "1.0.12"
+rstest = "0.17.0"
+serde = { version = "1.0.163", features = ["derive"] }
+
+[profile.dev.package.insta]
+# https://insta.rs/docs/quickstart/#optional-faster-runs
+opt-level = 3
+
+[profile.dev.package.similar]
+# https://insta.rs/docs/quickstart/#optional-faster-runs
+opt-level = 3

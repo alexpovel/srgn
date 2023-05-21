@@ -21,57 +21,71 @@ where
 
 #[cfg(test)]
 mod tests {
+    fn sanitize_filename(filename: &str) -> String {
+        const REPLACEMENT: char = '_';
+        filename
+            .replace(
+                [
+                    ' ', ':', '<', '>', '\"', '/', '\\', '|', '?', '*', '\n', '\r',
+                ],
+                &REPLACEMENT.to_string(),
+            )
+            // Collapse consecutive underscores into one
+            .split(REPLACEMENT)
+            .filter(|&s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join(&REPLACEMENT.to_string())
+    }
+
     use super::power_set;
     use rstest::rstest;
+    use serde::Serialize;
 
-    type TestVec = Vec<i32>;
+    macro_rules! instrament {
+        ($(#[$attr:meta])* fn $name:ident ( $( $(#[$arg_attr:meta])* $arg:ident : $type:ty),* ) $body:expr ) => {
+            paste::paste! {
+                #[derive(Serialize)]
+                struct [<$name:camel>]<'a> {
+                    $( $arg: &'a $type, )*
+                }
 
-    #[rstest]
-    #[case(Vec::new(), vec![vec![]])]
-    #[case(vec![1], vec![vec![], vec![1]])]
-    #[case(vec![1, 2], vec![vec![], vec![1], vec![2], vec![1, 2]])]
-    #[case(
-        vec![1, 2, 3],
-        vec![
-            vec![],
-            vec![1],
-            vec![2],
-            vec![3],
-            vec![1, 2],
-            vec![1, 3],
-            vec![2, 3],
-            vec![1, 2, 3]
-        ]
-    )]
-    fn test_power_set_of_integers(#[case] input: TestVec, #[case] expected: Vec<TestVec>) {
-        let result: Vec<Vec<i32>> = power_set(input, true);
-        assert_eq!(result, expected);
+                impl<'a> std::fmt::Display for [<$name:camel>]<'a> {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        $(
+                            let mut str_val = format!("{:#?}", self.$arg);
+                            str_val = sanitize_filename(&str_val);
+                            println!("{}", str_val);
+                            write!(f, "{} ", str_val)?;
+                        )*
+                        Ok(())
+                    }
+                }
+
+                $(#[$attr])*
+                fn $name ( $( $(#[$arg_attr])* $arg : $type),* ) {
+                    let function_data = [<$name:camel>] { $($arg: &$arg),* };
+                    let mut settings = insta::Settings::clone_current();
+                    settings.set_info(&function_data);
+
+                    settings.bind(|| {
+                        #[allow(clippy::redundant_closure_call)]
+                        $body(&function_data);
+                    });
+                }
+            }
+        };
     }
 
-    #[rstest]
-    #[case(Vec::new(), vec![])]
-    #[case(vec![1], vec![vec![1]])]
-    #[case(vec![1, 2], vec![vec![1], vec![2], vec![1, 2]])]
-    fn test_power_set_without_empty_set(#[case] input: TestVec, #[case] expected: Vec<TestVec>) {
-        let result: Vec<Vec<i32>> = power_set(input, false);
-        assert_eq!(result, expected);
-    }
-
-    #[rstest]
-    fn test_power_set_of_tuples() {
-        let input = vec![(1, 2), (2, 4), (3, 9)];
-        let expected = vec![
-            vec![],
-            vec![(1, 2)],
-            vec![(2, 4)],
-            vec![(3, 9)],
-            vec![(1, 2), (2, 4)],
-            vec![(1, 2), (3, 9)],
-            vec![(2, 4), (3, 9)],
-            vec![(1, 2), (2, 4), (3, 9)],
-        ];
-
-        let result = power_set(input, true);
-        assert_eq!(result, expected);
+    instrament! {
+        #[rstest]
+        fn test_power_set(
+            #[values(vec![], vec![1], vec![1, 2])]
+            collection: Vec<i32>,
+            #[values(true, false)]
+            include_empty_set: bool
+        ) (|data: &TestPowerSet| {
+            let result = power_set(collection.clone(), include_empty_set);
+            insta::assert_yaml_snapshot!(data.to_string(), result);
+        })
     }
 }
