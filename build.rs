@@ -15,6 +15,7 @@ fn generate_word_lists() {
     // https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
+    let mut n = 0;
     for entry in fs::read_dir(Path::new(WORD_LIST_DIRECTORY)).unwrap() {
         let dir = entry.unwrap();
         if !dir.metadata().unwrap().is_dir() {
@@ -51,6 +52,12 @@ fn generate_word_lists() {
             writeln!(f, "    \"{}\",", word).unwrap();
         }
         writeln!(f, "]").unwrap();
+
+        n += 1;
+    }
+
+    if n == 0 {
+        panic!("No word lists processed, looked in {}", WORD_LIST_DIRECTORY);
     }
 
     // Should work recursively, see also:
