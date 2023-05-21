@@ -146,15 +146,29 @@ fn is_valid(word: &str, words: &[&str]) -> bool {
     // Skip initial, else initial `prefix` slice is empty.
     for (i, _) in word.char_indices().skip(1) {
         let prefix = &word[..i];
-        let suffix = &word[i..];
-        trace!("Trying prefix '{}', suffix '{}'", prefix, suffix);
+        trace!("Trying prefix '{}'", prefix);
 
         if words.binary_search(&prefix).is_ok() {
-            trace!("Prefix found in word list, seeing if suffix is valid.");
-            return is_valid(suffix, words);
-        } else {
-            trace!("Prefix not found in word list, trying next.");
+            let suffix = &word[i..];
+
+            // We cannot get around copying the whole string (`String.remove`), as the
+            // new, uppercased character might have a different byte length. It might
+            // therefore not fit into the newly open slot at index 0.
+            let mut uc_suffix = suffix.to_string();
+            uc_suffix = uc_suffix.remove(0).to_uppercase().to_string() + &uc_suffix;
+
+            trace!(
+                "Prefix found in word list, seeing if either original '{}' or uppercased suffix '{}' is valid.",
+                suffix,
+                uc_suffix
+            );
+
+            // Recursively forks the search into two branches. The uppercase version is
+            // likelier to be a hit, hence try first in hopes of a short circuit.
+            return is_valid(&uc_suffix, words) || is_valid(suffix, words);
         }
+
+        trace!("Prefix not found in word list, trying next.");
     }
 
     false
@@ -231,20 +245,69 @@ impl TextProcessor for German {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
+    use crate::testing::instrament;
+
     use super::*;
 
     #[test]
-    fn words_are_sorted() {
+    fn test_words_are_sorted() {
         let mut sorted = WORDS.to_vec();
         sorted.sort();
         assert_eq!(WORDS, sorted.as_slice());
     }
 
     #[test]
-    fn words_are_unique() {
+    fn test_words_are_unique() {
         let mut unique = WORDS.to_vec();
         unique.sort();
         unique.dedup();
         assert_eq!(WORDS, unique.as_slice());
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_valid_panics_on_filtered_word_list() {
+        let words = &["Önly", "speciäl", "wörds"];
+        is_valid("Doesn't matter, this will panic.", words);
+    }
+
+    instrament! {
+        #[rstest]
+        fn test_is_valid(
+            #[values(
+                "????",
+                "",
+                "\0",
+                "\0Dübel",
+                "\0Dübel\0",
+                "🤩Dübel",
+                "🤩Dübel🤐",
+                "😎",
+                "dübel",
+                "Dübel",
+                "DüBeL",
+                "Dübel\0",
+                "Duebel",
+                "kindergarten",
+                "Kindergarten",
+                "Koeffizient",
+                "kongruent",
+                "Mauer",
+                "Mauer😂",
+                "Mauerdübel",
+                "Mauerdübelkübel",
+                "Maür",
+                "Maürdübelkübel",
+                "No\nway",
+                "مرحبا",
+                "你好",
+            )]
+            word: String
+        ) (|data: &TestIsValid| {
+                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, WORDS));
+            }
+        )
     }
 }

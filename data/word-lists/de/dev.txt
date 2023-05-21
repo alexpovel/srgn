@@ -7,9 +7,9 @@ Poet
 Abenteuer
 Mauer
 Dübel
-dübel
-kübel
-übel
+kongruent
+Kübel
+Kindergarten
 Steuerung
 Messgerät
 Messe
