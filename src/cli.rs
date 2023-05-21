@@ -4,7 +4,7 @@ use clap::{Parser, ValueEnum};
 #[command(author, version, about, long_about = None)]
 pub struct Args {
     /// Modules to use.
-    #[arg(value_enum)]
+    #[arg(value_enum, required = true, num_args = 1..)]
     modules: Vec<Module>,
 }
 
