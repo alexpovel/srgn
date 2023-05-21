@@ -2,7 +2,7 @@
 source: src/modules/german/machine.rs
 expression: "is_valid(&word, WORDS)"
 info:
-  word: kindergarten
+  word: messgerät
 ---
 false
 
