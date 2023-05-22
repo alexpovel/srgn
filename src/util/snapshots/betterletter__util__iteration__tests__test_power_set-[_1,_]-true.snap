@@ -1,9 +1,11 @@
 ---
-source: src/iteration.rs
+source: src/util/iteration.rs
 expression: result
 info:
-  collection: []
+  collection:
+    - 1
   include_empty_set: true
 ---
 - []
+- - 1
 

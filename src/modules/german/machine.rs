@@ -1,11 +1,17 @@
 use log::{debug, trace};
 
 use crate::{
-    iteration::power_set,
     modules::{german::word::Replace, TextProcessor},
+    util::{
+        iteration::power_set,
+        strings::{first_char, lowercase_first_char, uppercase_first_char},
+    },
 };
 
-use super::{SpecialCharacter, Umlaut, Word};
+use super::{
+    Casing::Lower, Casing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
+    SpecialCharacter::Umlaut, Umlaut::Ae, Umlaut::Oe, Umlaut::Ue, Word,
+};
 
 #[derive(Default, Debug)]
 enum State {
@@ -67,40 +73,7 @@ impl StateMachine {
         self.pre_transition();
 
         let next = match (&self.state, input) {
-            (
-                State::Word(None)
-                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
-                | State::Other,
-                'o',
-            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Oe)))),
-            (
-                State::Word(None)
-                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
-                | State::Other,
-                'u',
-            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Ue)))),
-            (
-                State::Word(None)
-                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
-                | State::Other,
-                'a',
-            ) => State::Word(Some(Potential(SpecialCharacter::Umlaut(Umlaut::Ae)))),
-            (
-                State::Word(None)
-                | State::Word(Some(Potential(SpecialCharacter::Umlaut(_))))
-                | State::Other,
-                's',
-            ) => State::Word(Some(Potential(SpecialCharacter::Eszett))),
-            (State::Word(Some(Potential(SpecialCharacter::Eszett))), c @ 's') => {
-                let pos = self.word.len();
-
-                let start = pos - c.len_utf8(); // Previous char same as current `c`
-                let end = pos + c.len_utf8();
-                self.word
-                    .add_replacement(start, end, SpecialCharacter::Eszett);
-                State::Word(None)
-            }
-            (State::Word(Some(Potential(SpecialCharacter::Umlaut(umlaut)))), c @ 'e') => {
+            (State::Word(Some(Potential(Umlaut(umlaut)))), c @ 'e' | c @ 'E') => {
                 let pos = self.word.len();
 
                 const LENGTH_OF_PREVIOUS_CHARACTER: usize = 1;
@@ -112,8 +85,29 @@ impl StateMachine {
 
                 let start = pos - LENGTH_OF_PREVIOUS_CHARACTER;
                 let end = pos + c.len_utf8();
-                self.word
-                    .add_replacement(start, end, SpecialCharacter::Umlaut(*umlaut));
+                self.word.add_replacement(start, end, Umlaut(*umlaut));
+                State::Word(None)
+            }
+            (State::Word(None) | State::Word(Some(Potential(Umlaut(_)))) | State::Other, c) => {
+                match c {
+                    'a' => State::Word(Some(Potential(Umlaut(Ae(Lower))))),
+                    'A' => State::Word(Some(Potential(Umlaut(Ae(Upper))))),
+                    'o' => State::Word(Some(Potential(Umlaut(Oe(Lower))))),
+                    'O' => State::Word(Some(Potential(Umlaut(Oe(Upper))))),
+                    'u' => State::Word(Some(Potential(Umlaut(Ue(Lower))))),
+                    'U' => State::Word(Some(Potential(Umlaut(Ue(Upper))))),
+                    's' => State::Word(Some(Potential(Eszett(Lower)))),
+                    'S' => State::Word(Some(Potential(Eszett(Upper)))),
+                    c if c.is_alphabetic() => State::Word(None),
+                    _ => State::Other,
+                }
+            }
+            (State::Word(Some(Potential(Eszett(casing)))), c @ 's' | c @ 'S') => {
+                let pos = self.word.len();
+
+                let start = pos - c.len_utf8(); // Previous char same as current `c`
+                let end = pos + c.len_utf8();
+                self.word.add_replacement(start, end, Eszett(*casing));
                 State::Word(None)
             }
             //
@@ -149,34 +143,44 @@ fn is_valid(word: &str, words: &[&str]) -> bool {
 
     trace!("Trying candidate '{}'...", word);
 
-    if words.binary_search(&word).is_ok() {
+    // Pretty much all ordinarily lowercase words *might* appear uppercased, e.g. at the
+    // beginning of sentences. For example: "Uebel!" -> "Übel!", even though only "übel"
+    // is in the dictionary.
+    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), words) {
+        trace!("Candidate '{}' is valid when lowercased.", word);
+        return true;
+    }
+
+    let search = |word| words.binary_search(&word).is_ok();
+
+    if search(word) {
         trace!("Found candidate '{}' in word list, is valid.", word);
         return true;
     }
 
-    // Skip initial, else initial `prefix` slice is empty.
-    for (i, _) in word.char_indices().skip(1) {
+    for (i, _) in word
+        .char_indices()
+        // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
+        .skip(1)
+    {
         let prefix = &word[..i];
         trace!("Trying prefix '{}'", prefix);
 
-        if words.binary_search(&prefix).is_ok() {
+        if search(prefix) {
             let suffix = &word[i..];
 
-            // We cannot get around copying the whole string (`String.remove`), as the
-            // new, uppercased character might have a different byte length. It might
-            // therefore not fit into the newly open slot at index 0.
-            let mut uc_suffix = suffix.to_string();
-            uc_suffix = uc_suffix.remove(0).to_uppercase().to_string() + &uc_suffix;
-
             trace!(
-                "Prefix found in word list, seeing if either original '{}' or uppercased suffix '{}' is valid.",
-                suffix,
-                uc_suffix
+                "Prefix found in word list, seeing if (uppercased) suffix '{}' is valid.",
+                suffix
             );
 
-            // Recursively forks the search into two branches. The uppercase version is
-            // likelier to be a hit, hence try first in hopes of a short circuit.
-            return is_valid(&uc_suffix, words) || is_valid(suffix, words);
+            // We uppercase to detect e.g. `Mauerdübel`, where after the first iteration
+            // we'd have `Mauer` and `dübel`, with only `Dübel` being valid.
+            //
+            // Next recursion will test both lower- and this uppercased version, so also
+            // words like `Mauergrün` are valid, where `grün` is in the dictionary but
+            // `Grün` *might* not be, for example.
+            return is_valid(&uppercase_first_char(suffix), words);
         }
 
         trace!("Prefix not found in word list, trying next.");
@@ -237,6 +241,8 @@ impl TextProcessor for German {
                 if is_valid(&candidate, WORDS) {
                     trace!("Candidate is valid word, exiting search.");
                     break;
+                } else {
+                    trace!("Candidate is invalid word, trying the next one.");
                 }
 
                 candidate = get_fresh_candidate();
@@ -284,12 +290,17 @@ mod tests {
         is_valid("Doesn't matter, this will panic.", words);
     }
 
+    #[test]
+    #[should_panic]
+    fn test_is_valid_panics_on_empty_input() {
+        is_valid("", WORDS);
+    }
+
     instrament! {
         #[rstest]
         fn test_is_valid(
             #[values(
                 "????",
-                "",
                 "\0",
                 "\0Dübel",
                 "\0Dübel\0",

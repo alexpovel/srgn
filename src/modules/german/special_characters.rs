@@ -1,10 +1,16 @@
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Casing {
+    Lower,
+    Upper,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Umlaut {
-    Ue,
-    Oe,
-    Ae,
+    Ae(Casing),
+    Oe(Casing),
+    Ue(Casing),
 }
 
 impl Display for Umlaut {
@@ -13,9 +19,12 @@ impl Display for Umlaut {
             f,
             "{}",
             match self {
-                Umlaut::Ue => 'ü',
-                Umlaut::Oe => 'ö',
-                Umlaut::Ae => 'ä',
+                Umlaut::Ae(Casing::Lower) => 'ä',
+                Umlaut::Ae(Casing::Upper) => 'Ä',
+                Umlaut::Oe(Casing::Lower) => 'ö',
+                Umlaut::Oe(Casing::Upper) => 'Ö',
+                Umlaut::Ue(Casing::Lower) => 'ü',
+                Umlaut::Ue(Casing::Upper) => 'Ü',
             }
         )
     }
@@ -24,7 +33,7 @@ impl Display for Umlaut {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum SpecialCharacter {
     Umlaut(Umlaut),
-    Eszett,
+    Eszett(Casing),
 }
 
 impl Display for SpecialCharacter {
@@ -34,7 +43,8 @@ impl Display for SpecialCharacter {
             "{}",
             match self {
                 SpecialCharacter::Umlaut(umlaut) => umlaut.to_string(),
-                SpecialCharacter::Eszett => String::from('ß'),
+                SpecialCharacter::Eszett(Casing::Lower) => String::from('ß'),
+                SpecialCharacter::Eszett(Casing::Upper) => String::from('ẞ'),
             }
         )
     }

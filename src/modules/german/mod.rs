@@ -4,5 +4,5 @@ mod word;
 
 // Re-export symbols.
 pub use machine::German;
-pub(self) use special_characters::{SpecialCharacter, Umlaut};
+pub(self) use special_characters::{Casing, SpecialCharacter, Umlaut};
 pub(self) use word::Word;
