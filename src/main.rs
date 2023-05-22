@@ -47,24 +47,13 @@ fn main() -> Result<(), Error> {
     let mut buf = String::new();
 
     const EOF_INDICATOR: usize = 0;
-    const INDICATOR: char = '\0';
 
     while stdin.read_line(&mut buf)? > EOF_INDICATOR {
         debug!("Starting processing line: {}", buf);
 
-        // Some processors require an indicator to signal the end of the line. Much like
-        // a missing trailing newline in a file, they might misbehave otherwise.
-        buf.push(INDICATOR);
-
         for processor in &processors {
             processor.process(&mut buf);
         }
-
-        let c = buf.pop();
-        debug_assert!(
-            c == Some(INDICATOR),
-            "Processor removed trailing indicator byte."
-        );
 
         debug!("Processed line: {}", buf);
         debug!("Writing processed line");

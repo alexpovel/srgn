@@ -193,6 +193,12 @@ impl TextProcessor for German {
     fn process(&self, input: &mut String) -> bool {
         debug!("Working on input '{}'", input);
 
+        // The state machine, much like a missing trailing newline in a file, will
+        // misbehave if the very last transition is not an 'external' one (the last word
+        // won't be detected properly).
+        const INDICATOR: char = '\0';
+        input.push(INDICATOR);
+
         let mut output = String::with_capacity(input.capacity());
 
         let mut machine = StateMachine::new();
@@ -256,6 +262,13 @@ impl TextProcessor for German {
 
         debug!("Final string is '{}'", output);
         *input = output;
+
+        let c = input.pop();
+        debug_assert!(
+            c == Some(INDICATOR),
+            "Processor removed trailing indicator byte."
+        );
+
         true
     }
 }
