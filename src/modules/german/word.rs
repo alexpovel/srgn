@@ -46,7 +46,7 @@ impl Word {
         &self.replacements
     }
 
-    pub fn content(&self) -> &String {
+    pub fn content(&self) -> &str {
         &self.content
     }
 }

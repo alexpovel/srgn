@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    Casing::Lower, Casing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
+    word::Replacement, Casing::Lower, Casing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
     SpecialCharacter::Umlaut, Umlaut::Ae, Umlaut::Oe, Umlaut::Ue, Word,
 };
 
@@ -218,46 +218,21 @@ impl TextProcessor for German {
                 Some(Transition::Entered | Transition::Internal) => {
                     continue;
                 }
-                Some(Transition::Exited) => (),
+                Some(Transition::Exited) => {
+                    trace!("Exited word: {:?}", machine.word);
+
+                    let original = machine.word.content().to_owned();
+                    let word = find_valid_replacement(&original, machine.word.replacements())
+                        .unwrap_or(original);
+
+                    output.push_str(&word);
+
+                    // Add back the non-word character that caused the exit transition in the
+                    // first place.
+                    output.push(char);
+                }
                 None => unreachable!("After initial transition, must have `Some`."),
             }
-
-            trace!("Exited word: {:?}", machine.word);
-
-            let replacement_combinations = power_set(
-                machine.word.replacements().clone().into_iter(),
-                // Exclude empty set, unnecessary work:
-                false,
-            );
-            trace!(
-                "All replacement combinations to try: {:?}",
-                replacement_combinations
-            );
-
-            let get_fresh_candidate = || machine.word.content().clone();
-            let mut candidate = get_fresh_candidate();
-
-            for replacement_combination in replacement_combinations {
-                candidate.apply_replacements(replacement_combination);
-                trace!(
-                    "Replaced candidate word, now is: '{}'. Starting validity check.",
-                    candidate
-                );
-
-                if is_valid(&candidate, WORDS) {
-                    trace!("Candidate is valid word, exiting search.");
-                    break;
-                } else {
-                    trace!("Candidate is invalid word, trying the next one.");
-                }
-
-                candidate = get_fresh_candidate();
-            }
-
-            output.push_str(&candidate);
-
-            // Add back the non-word character that caused the exit transition.
-            output.push(char);
         }
 
         debug!("Final string is '{}'", output);
@@ -271,6 +246,41 @@ impl TextProcessor for German {
 
         true
     }
+}
+
+fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<String> {
+    let replacement_combinations = power_set(
+        replacements.iter().cloned(),
+        // Exclude empty set, unnecessary work:
+        false,
+    );
+    trace!(
+        "All replacement combinations to try: {:?}",
+        replacement_combinations
+    );
+
+    let get_fresh_candidate = || word.to_owned();
+    let mut candidate = get_fresh_candidate();
+
+    for replacement_combination in replacement_combinations {
+        candidate.apply_replacements(replacement_combination);
+        trace!(
+            "Replaced candidate word, now is: '{}'. Starting validity check.",
+            candidate
+        );
+
+        if is_valid(&candidate, WORDS) {
+            trace!("Candidate is valid, returning.");
+            return Some(candidate);
+        } else {
+            trace!("Candidate is invalid, trying next one.");
+        }
+
+        candidate = get_fresh_candidate();
+    }
+
+    trace!("No valid replacement found, returning.");
+    None
 }
 
 #[cfg(test)]
