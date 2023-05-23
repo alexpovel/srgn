@@ -67,7 +67,7 @@ impl TextProcessor for German {
                     // first place.
                     output.push(char);
                 }
-                None => unreachable!("After initial transition, must have `Some`."),
+                None => unreachable!("After initial transition, must have `Some`."), // TODO: Try and make this state unrepresentable in the type system.
             }
         }
 
