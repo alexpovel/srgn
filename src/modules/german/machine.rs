@@ -133,7 +133,7 @@ impl StateMachine {
 pub struct German;
 
 // Generated in `build.rs`.
-const WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
+const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
 
 fn is_valid(word: &str, words: &[&str]) -> bool {
     debug_assert!(
@@ -222,9 +222,12 @@ impl TextProcessor for German {
                     trace!("Exited word: {:?}", machine.word);
 
                     let original = machine.word.content().to_owned();
-                    let word =
-                        find_valid_replacement(&original, machine.word.replacements(), WORDS)
-                            .unwrap_or(original);
+                    let word = find_valid_replacement(
+                        &original,
+                        machine.word.replacements(),
+                        VALID_GERMAN_WORDS,
+                    )
+                    .unwrap_or(original);
 
                     output.push_str(&word);
 
@@ -298,17 +301,17 @@ mod tests {
 
     #[test]
     fn test_words_are_sorted() {
-        let mut sorted = WORDS.to_vec();
+        let mut sorted = VALID_GERMAN_WORDS.to_vec();
         sorted.sort();
-        assert_eq!(WORDS, sorted.as_slice());
+        assert_eq!(VALID_GERMAN_WORDS, sorted.as_slice());
     }
 
     #[test]
     fn test_words_are_unique() {
-        let mut unique = WORDS.to_vec();
+        let mut unique = VALID_GERMAN_WORDS.to_vec();
         unique.sort();
         unique.dedup();
-        assert_eq!(WORDS, unique.as_slice());
+        assert_eq!(VALID_GERMAN_WORDS, unique.as_slice());
     }
 
     #[test]
@@ -321,7 +324,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_is_valid_panics_on_empty_input() {
-        is_valid("", WORDS);
+        is_valid("", VALID_GERMAN_WORDS);
     }
 
     instrament! {
@@ -356,7 +359,7 @@ mod tests {
             )]
             word: String
         ) (|data: &TestIsValid| {
-                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, WORDS));
+                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, VALID_GERMAN_WORDS));
             }
         )
     }
