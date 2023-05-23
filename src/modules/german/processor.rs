@@ -50,7 +50,7 @@ impl TextProcessor for German {
                     continue;
                 }
                 Some(Transition::Exited) => {
-                    trace!("Exited word: {:?}", machine.current_word());
+                    debug!("Exited word: {:?}", machine.current_word());
 
                     let original = machine.current_word().content().to_owned();
                     let word = find_valid_replacement(
@@ -60,6 +60,7 @@ impl TextProcessor for German {
                     )
                     .unwrap_or(original);
 
+                    debug!("Processed word, appending to output: {:?}", &word);
                     output.push_str(&word);
 
                     // Add back the non-word character that caused the exit transition in the
@@ -70,7 +71,7 @@ impl TextProcessor for German {
             }
         }
 
-        debug!("Final string is '{}'", output);
+        debug!("Final output string is '{}'", output);
         *input = output;
 
         let c = input.pop();
@@ -93,6 +94,7 @@ fn find_valid_replacement(
         // Exclude empty set, unnecessary work:
         false,
     );
+    debug!("Starting search for valid replacement for word '{}'", word);
     trace!(
         "All replacement combinations to try: {:?}",
         replacement_combinations
@@ -107,14 +109,14 @@ fn find_valid_replacement(
         );
 
         if is_valid(&candidate, valid_words) {
-            trace!("Candidate is valid, returning.");
+            debug!("Candidate '{}' is valid, returning early.", candidate);
             return Some(candidate);
         } else {
-            trace!("Candidate is invalid, trying next one.");
+            trace!("Candidate '{}' is invalid, trying next one.", candidate);
         }
     }
 
-    trace!("No valid replacement found, returning.");
+    debug!("No valid replacement found, returning.");
     None
 }
 

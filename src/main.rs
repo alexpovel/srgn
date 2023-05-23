@@ -49,14 +49,13 @@ fn main() -> Result<(), Error> {
     const EOF_INDICATOR: usize = 0;
 
     while stdin.read_line(&mut buf)? > EOF_INDICATOR {
-        debug!("Starting processing line: {}", buf);
+        debug!("Starting processing line: {}", buf.escape_debug());
 
         for processor in &processors {
             processor.process(&mut buf)?;
         }
 
-        debug!("Processed line: {}", buf);
-        debug!("Writing processed line");
+        debug!("Processed line, will write out: '{}'", buf.escape_debug());
         stdout().lock().write_all(buf.as_bytes())?;
         buf.clear();
     }
