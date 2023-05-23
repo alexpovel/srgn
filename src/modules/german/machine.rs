@@ -222,8 +222,9 @@ impl TextProcessor for German {
                     trace!("Exited word: {:?}", machine.word);
 
                     let original = machine.word.content().to_owned();
-                    let word = find_valid_replacement(&original, machine.word.replacements())
-                        .unwrap_or(original);
+                    let word =
+                        find_valid_replacement(&original, machine.word.replacements(), WORDS)
+                            .unwrap_or(original);
 
                     output.push_str(&word);
 
@@ -248,7 +249,11 @@ impl TextProcessor for German {
     }
 }
 
-fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<String> {
+fn find_valid_replacement(
+    word: &str,
+    replacements: &[Replacement],
+    valid_words: &[&str],
+) -> Option<String> {
     let replacement_combinations = power_set(
         replacements.iter().cloned(),
         // Exclude empty set, unnecessary work:
@@ -269,7 +274,7 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
             candidate
         );
 
-        if is_valid(&candidate, WORDS) {
+        if is_valid(&candidate, valid_words) {
             trace!("Candidate is valid, returning.");
             return Some(candidate);
         } else {
