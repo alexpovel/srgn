@@ -18,6 +18,7 @@ use super::word::Replacement;
 
 const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
 
+#[derive(Clone, Copy)]
 pub struct German;
 
 impl TextProcessor for German {
@@ -178,7 +179,7 @@ fn is_valid(word: &str, valid_words: &[&str]) -> bool {
 mod tests {
     use rstest::rstest;
 
-    use crate::testing::instrament;
+    use crate::util::testing::instrament;
 
     use super::*;
 

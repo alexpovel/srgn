@@ -22,7 +22,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::power_set;
-    use crate::testing::instrament;
+    use crate::util::testing::instrament;
     use rstest::rstest;
 
     instrament! {

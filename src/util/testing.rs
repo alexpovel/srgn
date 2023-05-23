@@ -31,7 +31,7 @@ macro_rules! instrament {
                             )*
                         ];
 
-                        let name = crate::testing::sanitize_for_filename_use(&items.join("-"));
+                        let name = crate::util::testing::sanitize_for_filename_use(&items.join("-"));
                         write!(f, "{}", name)
                     }
                 }

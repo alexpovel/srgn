@@ -45,7 +45,7 @@ mod tests {
 
     use super::*;
 
-    use crate::testing::instrament;
+    use crate::util::testing::instrament;
 
     impl Serialize for Casing {
         fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

@@ -3,6 +3,7 @@ pub mod german;
 #[cfg(feature = "symbols")]
 pub mod symbols;
 
+#[derive(Debug)]
 pub struct ProcessError;
 
 impl From<ProcessError> for std::io::Error {
@@ -13,6 +14,6 @@ impl From<ProcessError> for std::io::Error {
 
 pub type ProcessResult = Result<(), ProcessError>;
 
-pub trait TextProcessor {
+pub trait TextProcessor: Send + Sync {
     fn process(&self, input: &mut String) -> ProcessResult;
 }

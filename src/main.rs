@@ -1,30 +1,20 @@
-use std::io::{self, stdout, BufRead, Error, Write};
-
-use log::{debug, info};
-
 #[cfg(feature = "de")]
-use crate::modules::german::German;
+use betterletter::modules::german::German;
 #[cfg(feature = "symbols")]
-use crate::modules::symbols::Symbols;
-use crate::{
-    cli::{Args, Module},
-    modules::TextProcessor,
-};
+use betterletter::modules::symbols::Symbols;
+use betterletter::modules::TextProcessor;
+use betterletter::process_single_threaded;
+use log::{debug, info};
+use std::io::{self, BufReader, Error};
 
-mod cli;
-mod modules;
-#[cfg(test)]
-mod testing;
-mod util;
-
-const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
-const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
+use crate::cli::{Args, Module};
 
 fn main() -> Result<(), Error> {
     env_logger::init();
     info!("Launching app.");
 
     let args = Args::init();
+
     let processors: Vec<Box<dyn TextProcessor>> = args
         .modules()
         .iter()
@@ -42,24 +32,43 @@ fn main() -> Result<(), Error> {
         })
         .collect();
 
-    let mut stdin = io::stdin().lock();
+    let mut source = BufReader::new(io::stdin());
+    let mut destination = io::stdout();
 
-    let mut buf = String::new();
+    process_single_threaded(&processors, &mut source, &mut destination)?;
+    info!("Done, exiting.");
+    Ok(())
+}
 
-    const EOF_INDICATOR: usize = 0;
+mod cli {
+    use clap::{Parser, ValueEnum};
 
-    while stdin.read_line(&mut buf)? > EOF_INDICATOR {
-        debug!("Starting processing line: {}", buf.escape_debug());
-
-        for processor in &processors {
-            processor.process(&mut buf)?;
-        }
-
-        debug!("Processed line, will write out: '{}'", buf.escape_debug());
-        stdout().lock().write_all(buf.as_bytes())?;
-        buf.clear();
+    #[derive(Parser, Debug)]
+    #[command(author, version, about, long_about = None)]
+    pub(super) struct Args {
+        /// Modules to use.
+        // https://github.com/TeXitoi/structopt/issues/84#issuecomment-1443764459
+        #[arg(value_enum, required = true, num_args = 1..)]
+        modules: Vec<Module>,
     }
 
-    info!("Exiting.");
-    Ok(())
+    impl Args {
+        pub fn init() -> Self {
+            Self::parse()
+        }
+
+        pub fn modules(&self) -> &Vec<Module> {
+            &self.modules
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+    pub(super) enum Module {
+        /// German language module.
+        #[cfg(feature = "de")]
+        German,
+        /// Symbols module.
+        #[cfg(feature = "symbols")]
+        Symbols,
+    }
 }
