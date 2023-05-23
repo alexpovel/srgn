@@ -135,9 +135,9 @@ pub struct German;
 // Generated in `build.rs`.
 const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
 
-fn is_valid(word: &str, words: &[&str]) -> bool {
+fn is_valid(word: &str, valid_words: &[&str]) -> bool {
     debug_assert!(
-        words.iter().any(|word| word.is_ascii()),
+        valid_words.iter().any(|word| word.is_ascii()),
         "Looks like you're using a filtered word list. This function only works with the full word list (also containing all non-Umlaut words)"
     );
 
@@ -146,12 +146,12 @@ fn is_valid(word: &str, words: &[&str]) -> bool {
     // Pretty much all ordinarily lowercase words *might* appear uppercased, e.g. at the
     // beginning of sentences. For example: "Uebel!" -> "Übel!", even though only "übel"
     // is in the dictionary.
-    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), words) {
+    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), valid_words) {
         trace!("Candidate '{}' is valid when lowercased.", word);
         return true;
     }
 
-    let search = |word| words.binary_search(&word).is_ok();
+    let search = |word| valid_words.binary_search(&word).is_ok();
 
     if search(word) {
         trace!("Found candidate '{}' in word list, is valid.", word);
@@ -180,7 +180,7 @@ fn is_valid(word: &str, words: &[&str]) -> bool {
             // Next recursion will test both lower- and this uppercased version, so also
             // words like `Mauergrün` are valid, where `grün` is in the dictionary but
             // `Grün` *might* not be, for example.
-            return is_valid(&uppercase_first_char(suffix), words);
+            return is_valid(&uppercase_first_char(suffix), valid_words);
         }
 
         trace!("Prefix not found in word list, trying next.");
