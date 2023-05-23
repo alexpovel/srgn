@@ -267,11 +267,9 @@ fn find_valid_replacement(
         replacement_combinations
     );
 
-    let get_fresh_candidate = || word.to_owned();
-    let mut candidate = get_fresh_candidate();
-
-    for replacement_combination in replacement_combinations {
-        candidate.apply_replacements(replacement_combination);
+    for replacements in replacement_combinations {
+        let mut candidate = word.to_owned();
+        candidate.apply_replacements(replacements);
         trace!(
             "Replaced candidate word, now is: '{}'. Starting validity check.",
             candidate
@@ -283,8 +281,6 @@ fn find_valid_replacement(
         } else {
             trace!("Candidate is invalid, trying next one.");
         }
-
-        candidate = get_fresh_candidate();
     }
 
     trace!("No valid replacement found, returning.");
