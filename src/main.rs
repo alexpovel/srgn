@@ -52,7 +52,7 @@ fn main() -> Result<(), Error> {
         debug!("Starting processing line: {}", buf);
 
         for processor in &processors {
-            processor.process(&mut buf);
+            processor.process(&mut buf)?;
         }
 
         debug!("Processed line: {}", buf);

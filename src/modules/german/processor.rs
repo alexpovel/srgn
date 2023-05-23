@@ -6,7 +6,7 @@ use crate::{
             machine::{StateMachine, Transition},
             word::Replace,
         },
-        TextProcessor,
+        ProcessResult, TextProcessor,
     },
     util::{
         iteration::power_set,
@@ -16,67 +16,12 @@ use crate::{
 
 use super::word::Replacement;
 
+const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
+
 pub struct German;
 
-// Generated in `build.rs`.
-const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in"));
-
-fn is_valid(word: &str, valid_words: &[&str]) -> bool {
-    debug_assert!(
-        valid_words.iter().any(|word| word.is_ascii()),
-        "Looks like you're using a filtered word list. This function only works with the full word list (also containing all non-Umlaut words)"
-    );
-
-    trace!("Trying candidate '{}'...", word);
-
-    // Pretty much all ordinarily lowercase words *might* appear uppercased, e.g. at the
-    // beginning of sentences. For example: "Uebel!" -> "Übel!", even though only "übel"
-    // is in the dictionary.
-    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), valid_words) {
-        trace!("Candidate '{}' is valid when lowercased.", word);
-        return true;
-    }
-
-    let search = |word| valid_words.binary_search(&word).is_ok();
-
-    if search(word) {
-        trace!("Found candidate '{}' in word list, is valid.", word);
-        return true;
-    }
-
-    for (i, _) in word
-        .char_indices()
-        // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
-        .skip(1)
-    {
-        let prefix = &word[..i];
-        trace!("Trying prefix '{}'", prefix);
-
-        if search(prefix) {
-            let suffix = &word[i..];
-
-            trace!(
-                "Prefix found in word list, seeing if (uppercased) suffix '{}' is valid.",
-                suffix
-            );
-
-            // We uppercase to detect e.g. `Mauerdübel`, where after the first iteration
-            // we'd have `Mauer` and `dübel`, with only `Dübel` being valid.
-            //
-            // Next recursion will test both lower- and this uppercased version, so also
-            // words like `Mauergrün` are valid, where `grün` is in the dictionary but
-            // `Grün` *might* not be, for example.
-            return is_valid(&uppercase_first_char(suffix), valid_words);
-        }
-
-        trace!("Prefix not found in word list, trying next.");
-    }
-
-    false
-}
-
 impl TextProcessor for German {
-    fn process(&self, input: &mut String) -> bool {
+    fn process(&self, input: &mut String) -> ProcessResult {
         debug!("Working on input '{}'", input);
 
         // The state machine, much like a missing trailing newline in a file, will
@@ -134,7 +79,7 @@ impl TextProcessor for German {
             "Processor removed trailing indicator byte."
         );
 
-        true
+        Ok(())
     }
 }
 
@@ -171,6 +116,60 @@ fn find_valid_replacement(
 
     trace!("No valid replacement found, returning.");
     None
+}
+
+fn is_valid(word: &str, valid_words: &[&str]) -> bool {
+    debug_assert!(
+        valid_words.iter().any(|word| word.is_ascii()),
+        "Looks like you're using a filtered word list. This function only works with the full word list (also containing all non-Umlaut words)"
+    );
+
+    trace!("Trying candidate '{}'...", word);
+
+    // Pretty much all ordinarily lowercase words *might* appear uppercased, e.g. at the
+    // beginning of sentences. For example: "Uebel!" -> "Übel!", even though only "übel"
+    // is in the dictionary.
+    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), valid_words) {
+        trace!("Candidate '{}' is valid when lowercased.", word);
+        return true;
+    }
+
+    let search = |word| valid_words.binary_search(&word).is_ok();
+
+    if search(word) {
+        trace!("Found candidate '{}' in word list, is valid.", word);
+        return true;
+    }
+
+    for (i, _) in word
+        .char_indices()
+        // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
+        .skip(1)
+    {
+        let prefix = &word[..i];
+        trace!("Trying prefix '{}'", prefix);
+
+        if search(prefix) {
+            let suffix = &word[i..];
+
+            trace!(
+                "Prefix found in word list, seeing if (uppercased) suffix '{}' is valid.",
+                suffix
+            );
+
+            // We uppercase to detect e.g. `Mauerdübel`, where after the first iteration
+            // we'd have `Mauer` and `dübel`, with only `Dübel` being valid.
+            //
+            // Next recursion will test both lower- and this uppercased version, so also
+            // words like `Mauergrün` are valid, where `grün` is in the dictionary but
+            // `Grün` *might* not be, for example.
+            return is_valid(&uppercase_first_char(suffix), valid_words);
+        }
+
+        trace!("Prefix not found in word list, trying next.");
+    }
+
+    false
 }
 
 #[cfg(test)]
