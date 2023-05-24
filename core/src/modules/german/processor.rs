@@ -245,4 +245,28 @@ mod tests {
             }
         )
     }
+
+    instrament! {
+        #[rstest]
+        fn test_process(
+            #[values(
+                "\0Kuebel",
+                "\0Duebel\0",
+                "🤩Duebel",
+                "🤩Duebel🤐",
+                "Dübel",
+                "Abenteuer sind toll!",
+                "Koeffizient",
+                "kongruent",
+                "Ich mag Aepfel, aber nicht Aerger.",
+                "Oel ist ein wichtiger Bestandteil von Oel.",
+            )]
+            word: String
+        ) (|data: &TestProcess| {
+                let mut input = word.clone();
+                German{}.process(&mut input).unwrap();
+                insta::assert_yaml_snapshot!(data.to_string(), input);
+            }
+        )
+    }
 }
