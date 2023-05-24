@@ -1,7 +1,0 @@
----
-source: src/util/strings.rs
-expression: result
-info:
-  word: Hello
----
-hello

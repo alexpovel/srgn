@@ -1,0 +1,7 @@
+---
+source: core/tests/cli.rs
+description: "Der Massstab\n"
+expression: "&output"
+---
+Der Maßstab
+

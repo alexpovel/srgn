@@ -1,7 +1,0 @@
----
-source: src/util/strings.rs
-expression: lowercase_first_char(&word)
-info:
-  word: ẞuperduper
----
-ßuperduper
