@@ -1,0 +1,16 @@
+---
+source: core/tests/cli.rs
+description: "Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.\nFranz jagt im komplett verwahrlosten Taxi quer durch Bayern.\nZwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.\nVogel Quax zwickt Johnys Pferd Bim.\nSylvia wagt quick den Jux bei Pforzheim.\nPolyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.\n\"Fix, Schwyz!\" quaekt Juergen bloed vom Pass.\nVictor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.\nFalsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.\nHeizoelrueckstossabdaempfung.\n"
+expression: "&output"
+---
+Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
+Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
+Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
+Vogel Quax zwickt Johnys Pferd Bim.
+Sylvia wagt quick den Jux bei Pforzheim.
+Polyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.
+"Fix, Schwyz!" quaekt Juergen bloed vom Pass.
+Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.
+Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.
+Heizoelrueckstossabdaempfung.
+

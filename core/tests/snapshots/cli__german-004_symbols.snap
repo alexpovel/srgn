@@ -1,0 +1,13 @@
+---
+source: core/tests/cli.rs
+description: "\n\nDuebel\n\n😂\n\n\u0010\n"
+expression: "&output"
+---
+
+
+Duebel
+
+😂
+
+
+

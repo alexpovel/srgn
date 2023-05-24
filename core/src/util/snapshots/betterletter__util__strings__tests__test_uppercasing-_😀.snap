@@ -1,0 +1,7 @@
+---
+source: core/src/util/strings.rs
+expression: uppercase_first_char(&word)
+info:
+  word: 😀
+---
+😀

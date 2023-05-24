@@ -1,0 +1,6 @@
+---
+source: core/tests/cli.rs
+description: Duebel
+expression: "&output"
+---
+Dübel
