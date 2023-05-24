@@ -38,7 +38,7 @@ pub fn process_multi_threaded_german(
 
     let results = Arc::new(Mutex::new(Vec::new()));
 
-    info!("Starting processing.");
+    info!("Starting processing");
 
     let handles: Vec<_> = (0..num_threads)
         .map(|i| {
@@ -60,7 +60,7 @@ pub fn process_multi_threaded_german(
                     processor.process(&mut item).unwrap();
 
                     let mut results = results_clone.lock().unwrap();
-                    info!("Thread {} finished processing line.", i);
+                    info!("Thread {} finished processing line", i);
                     results.push((index, item));
                 }
             })

@@ -2,10 +2,7 @@
 source: core/src/util/iteration.rs
 expression: result
 info:
-  collection:
-    - 1
-  include_empty_set: true
+  collection: []
 ---
-- []
-- - 1
+[]
 

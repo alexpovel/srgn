@@ -1,117 +1,130 @@
-pub fn first_char(word: &str) -> char {
-    word.chars()
-        .next()
-        .expect("Cannot get first char of empty word")
-}
+pub(crate) fn titlecase(word: &str) -> String {
+    let mut chars = word.chars();
+    let mut result = String::with_capacity(word.len());
 
-#[derive(Debug, Clone, Copy)]
-enum Casing {
-    Lower,
-    Upper,
-}
-
-fn first_char_with_case(word: &str, case: Casing) -> String {
-    let mut new = String::with_capacity(word.len());
-    let c = first_char(word);
-
-    match case {
-        Casing::Lower => {
-            let c = c.to_string().to_lowercase();
-            new.push_str(&c);
+    if let Some(c) = chars.next() {
+        for upper in c.to_uppercase() {
+            result.push(upper);
         }
-        Casing::Upper => {
-            let c = c.to_string().to_uppercase();
-            new.push_str(&c);
+    }
+
+    for c in chars {
+        for lower in c.to_lowercase() {
+            result.push(lower);
         }
-    };
+    }
 
-    new.push_str(&word[c.len_utf8()..]);
-
-    new
+    result
 }
 
-pub fn lowercase_first_char(word: &str) -> String {
-    first_char_with_case(word, Casing::Lower)
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum WordCasing {
+    AllLowercase,
+    AllUppercase,
+    Titlecase,
+    Mixed,
 }
 
-pub fn uppercase_first_char(word: &str) -> String {
-    first_char_with_case(word, Casing::Upper)
+impl TryFrom<&str> for WordCasing {
+    type Error = &'static str;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        if value.is_empty() {
+            return Err("String is empty");
+        }
+
+        let mut has_lowercase = false;
+        let mut has_uppercase = false;
+        let mut is_titlecase = true;
+
+        for (i, c) in value.chars().enumerate() {
+            if c.is_lowercase() {
+                has_lowercase = true;
+
+                if i == 0 {
+                    is_titlecase = false;
+                }
+            } else if c.is_uppercase() {
+                has_uppercase = true;
+
+                if i != 0 {
+                    is_titlecase = false;
+                }
+            } else {
+                return Err("String contains characters with undecidable casing");
+            }
+        }
+
+        match (is_titlecase, has_lowercase, has_uppercase) {
+            (true, _, _) => Ok(Self::Titlecase),
+            (_, true, false) => Ok(Self::AllLowercase),
+            (_, false, true) => Ok(Self::AllUppercase),
+            (_, true, true) => Ok(Self::Mixed),
+            (_, false, false) => Err("No suitable casing found"),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use instrament::instrament;
     use rstest::rstest;
     use serde::Serialize;
 
-    use super::*;
-
-    use instrament::instrament;
-
-    impl Serialize for Casing {
-        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-            match self {
-                Casing::Lower => serializer.serialize_str("lower"),
-                Casing::Upper => serializer.serialize_str("upper"),
-            }
-        }
-    }
-
-    instrament! {
-            #[rstest]
-            fn test_first_char(
-            #[values(
-                "Hello",
-                "Übel",
-                "Uebel",
-                "😀",
-                "ßuper",
-                "ẞuperduper",
-            )]
-                word: String
-            ) (|data: &TestFirstChar| {
-                insta::assert_snapshot!(data.to_string(), first_char(&word).to_string());
-            }
-        )
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_first_char_panics_on_empty_string() {
-        first_char("");
-    }
-
-    instrament! {
-            #[rstest]
-            fn test_lowercasing(
-            #[values(
-                "Hello",
-                "Übel",
-                "Uebel",
-                "😀",
-                "ßuper",
-                "ẞuperduper",
-            )]
-                word: String
-            ) (|data: &TestLowercasing| {
-                insta::assert_snapshot!(data.to_string(), lowercase_first_char(&word));
-            }
-        )
-    }
-
     instrament! {
         #[rstest]
-        fn test_uppercasing(
+        fn test_titlecasing(
         #[values(
             "hello",
+            "bItTe",
+            "dANKE",
             "übel",
             "uebel",
             "😀",
             "ßuper",
             "ẞuperduper",
+            "WOW!!",
+            "ẞß",
         )]
             word: String
-        ) (|data: &TestUppercasing| {
-                insta::assert_snapshot!(data.to_string(), uppercase_first_char(&word));
+        ) (|data: &TestTitlecasing| {
+                insta::assert_snapshot!(data.to_string(), titlecase(&word));
+            }
+        )
+    }
+
+    impl Serialize for WordCasing {
+        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            match self {
+                Self::AllLowercase => serializer.serialize_str("AllLowercase"),
+                Self::AllUppercase => serializer.serialize_str("AllUppercase"),
+                Self::Titlecase => serializer.serialize_str("Titlecase"),
+                Self::Mixed => serializer.serialize_str("Mixed"),
+            }
+        }
+    }
+
+    instrament! {
+            #[rstest]
+            fn test_word_casing_from_string(
+            #[values(
+                "hello",
+                "bItTe",
+                "dANKE",
+                "übel",
+                "uebel",
+                "😀",
+                "ßuper",
+                "ẞuperduper",
+                "WOW!!",
+                "SCREAMING",
+                "ẞß",
+                "",
+            )]
+                word: String
+            ) (|data: &TestWordCasingFromString| {
+                insta::assert_yaml_snapshot!(data.to_string(), WordCasing::try_from(word.as_str()));
             }
         )
     }

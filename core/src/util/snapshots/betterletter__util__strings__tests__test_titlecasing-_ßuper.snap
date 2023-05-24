@@ -1,7 +1,7 @@
 ---
 source: core/src/util/strings.rs
-expression: lowercase_first_char(&word)
+expression: titlecase(&word)
 info:
   word: ßuper
 ---
-ßuper
+SSuper

@@ -6,7 +6,6 @@ info:
     - 1
     - 2
     - 3
-  include_empty_set: true
 ---
 - []
 - - 1

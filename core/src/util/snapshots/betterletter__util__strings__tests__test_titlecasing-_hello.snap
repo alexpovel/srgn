@@ -1,6 +1,6 @@
 ---
 source: core/src/util/strings.rs
-expression: uppercase_first_char(&word)
+expression: titlecase(&word)
 info:
   word: hello
 ---

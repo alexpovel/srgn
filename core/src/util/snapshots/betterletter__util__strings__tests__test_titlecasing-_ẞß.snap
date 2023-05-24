@@ -1,0 +1,7 @@
+---
+source: core/src/util/strings.rs
+expression: titlecase(&word)
+info:
+  word: ẞß
+---
+ẞß

@@ -11,7 +11,7 @@ use crate::cli::{Args, Module};
 
 fn main() -> Result<(), Error> {
     env_logger::init();
-    info!("Launching app.");
+    info!("Launching app");
 
     let args = Args::init();
 
@@ -36,7 +36,7 @@ fn main() -> Result<(), Error> {
     let mut destination = io::stdout();
 
     process(&processors, &mut source, &mut destination)?;
-    info!("Done, exiting.");
+    info!("Done, exiting");
     Ok(())
 }
 

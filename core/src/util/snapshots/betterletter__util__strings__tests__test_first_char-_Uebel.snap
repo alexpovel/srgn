@@ -1,7 +1,0 @@
----
-source: core/src/util/strings.rs
-expression: first_char(&word).to_string()
-info:
-  word: Uebel
----
-U

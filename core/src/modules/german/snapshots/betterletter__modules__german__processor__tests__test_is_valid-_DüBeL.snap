@@ -1,8 +1,8 @@
 ---
 source: core/src/modules/german/processor.rs
-expression: "is_valid(&word, VALID_GERMAN_WORDS)"
+expression: "is_valid(&word, &contained_in_global_word_list)"
 info:
   word: DüBeL
 ---
-false
+true
 

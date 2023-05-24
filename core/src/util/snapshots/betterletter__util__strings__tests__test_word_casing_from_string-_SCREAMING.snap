@@ -1,0 +1,8 @@
+---
+source: core/src/util/strings.rs
+expression: "WordCasing::try_from(word.as_str())"
+info:
+  word: SCREAMING
+---
+Ok: AllUppercase
+

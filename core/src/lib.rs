@@ -18,7 +18,7 @@ pub fn process(
     const EOF_INDICATOR: usize = 0;
 
     while source.read_line(&mut buf)? > EOF_INDICATOR {
-        debug!("Starting processing line: {}", buf.escape_debug());
+        debug!("Starting processing line: '{}'", buf.escape_debug());
 
         for processor in processors {
             processor.process(&mut buf)?;
@@ -29,6 +29,6 @@ pub fn process(
         buf.clear();
     }
 
-    info!("Exiting.");
+    info!("Exiting");
     Ok(())
 }

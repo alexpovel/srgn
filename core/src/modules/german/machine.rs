@@ -1,5 +1,5 @@
 use super::{
-    Casing::Lower, Casing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
+    LetterCasing::Lower, LetterCasing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
     SpecialCharacter::Umlaut, Umlaut::Ae, Umlaut::Oe, Umlaut::Ue, Word,
 };
 
@@ -143,7 +143,7 @@ impl StateMachine {
 
         if let Some(Transition::Entered | Transition::Internal) = self.transition {
             trace!(
-                "In state '{:?}', building up current word '{:?}' with character '{:?}' due to transition {:?}",
+                "In state '{:?}', building up current word '{:?}' with character {:?} due to transition '{:?}'",
                 self.state,
                 self.word,
                 input,

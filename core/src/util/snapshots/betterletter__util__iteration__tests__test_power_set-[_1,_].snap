@@ -4,11 +4,7 @@ expression: result
 info:
   collection:
     - 1
-    - 2
-  include_empty_set: false
 ---
+- []
 - - 1
-- - 2
-- - 1
-  - 2
 

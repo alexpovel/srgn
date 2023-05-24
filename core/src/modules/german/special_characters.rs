@@ -1,16 +1,16 @@
 use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Casing {
+pub(super) enum LetterCasing {
     Lower,
     Upper,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Umlaut {
-    Ae(Casing),
-    Oe(Casing),
-    Ue(Casing),
+    Ae(LetterCasing),
+    Oe(LetterCasing),
+    Ue(LetterCasing),
 }
 
 impl Display for Umlaut {
@@ -19,12 +19,12 @@ impl Display for Umlaut {
             f,
             "{}",
             match self {
-                Umlaut::Ae(Casing::Lower) => 'ä',
-                Umlaut::Ae(Casing::Upper) => 'Ä',
-                Umlaut::Oe(Casing::Lower) => 'ö',
-                Umlaut::Oe(Casing::Upper) => 'Ö',
-                Umlaut::Ue(Casing::Lower) => 'ü',
-                Umlaut::Ue(Casing::Upper) => 'Ü',
+                Umlaut::Ae(LetterCasing::Lower) => 'ä',
+                Umlaut::Ae(LetterCasing::Upper) => 'Ä',
+                Umlaut::Oe(LetterCasing::Lower) => 'ö',
+                Umlaut::Oe(LetterCasing::Upper) => 'Ö',
+                Umlaut::Ue(LetterCasing::Lower) => 'ü',
+                Umlaut::Ue(LetterCasing::Upper) => 'Ü',
             }
         )
     }
@@ -33,7 +33,7 @@ impl Display for Umlaut {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum SpecialCharacter {
     Umlaut(Umlaut),
-    Eszett(Casing),
+    Eszett(LetterCasing),
 }
 
 impl Display for SpecialCharacter {
@@ -43,8 +43,8 @@ impl Display for SpecialCharacter {
             "{}",
             match self {
                 SpecialCharacter::Umlaut(umlaut) => umlaut.to_string(),
-                SpecialCharacter::Eszett(Casing::Lower) => String::from('ß'),
-                SpecialCharacter::Eszett(Casing::Upper) => String::from('ẞ'),
+                SpecialCharacter::Eszett(LetterCasing::Lower) => String::from('ß'),
+                SpecialCharacter::Eszett(LetterCasing::Upper) => String::from('ẞ'),
             }
         )
     }

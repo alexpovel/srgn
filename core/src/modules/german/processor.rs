@@ -1,5 +1,4 @@
-use log::{debug, trace};
-
+use super::word::Replacement;
 use crate::{
     modules::{
         german::{
@@ -9,12 +8,13 @@ use crate::{
         ProcessResult, TextProcessor,
     },
     util::{
-        iteration::power_set,
-        strings::{first_char, lowercase_first_char, uppercase_first_char},
+        iteration::power_set_without_empty,
+        strings::{titlecase, WordCasing},
     },
 };
-
-use super::word::Replacement;
+use cached::proc_macro::cached;
+use cached::SizedCache;
+use log::{debug, trace};
 
 const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
 
@@ -23,7 +23,7 @@ pub struct German;
 
 impl TextProcessor for German {
     fn process(&self, input: &mut String) -> ProcessResult {
-        debug!("Working on input '{}'", input);
+        debug!("Working on input '{}'", input.escape_debug());
 
         // The state machine, much like a missing trailing newline in a file, will
         // misbehave if the very last transition is not an 'external' one (the last word
@@ -36,7 +36,10 @@ impl TextProcessor for German {
         let mut machine = StateMachine::new();
 
         for char in input.chars() {
-            trace!("Beginning processing of character '{}'", char);
+            trace!(
+                "Beginning processing of character '{}'",
+                char.escape_debug()
+            );
 
             let transition = machine.transition(&char);
 
@@ -54,12 +57,9 @@ impl TextProcessor for German {
                     debug!("Exited word: {:?}", machine.current_word());
 
                     let original = machine.current_word().content().to_owned();
-                    let word = find_valid_replacement(
-                        &original,
-                        machine.current_word().replacements(),
-                        VALID_GERMAN_WORDS,
-                    )
-                    .unwrap_or(original);
+                    let word =
+                        find_valid_replacement(&original, machine.current_word().replacements())
+                            .unwrap_or(original);
 
                     debug!("Processed word, appending to output: {:?}", &word);
                     output.push_str(&word);
@@ -72,7 +72,7 @@ impl TextProcessor for German {
             }
         }
 
-        debug!("Final output string is '{}'", output);
+        debug!("Final output string is '{}'", output.escape_debug());
         *input = output;
 
         let c = input.pop();
@@ -85,16 +85,8 @@ impl TextProcessor for German {
     }
 }
 
-fn find_valid_replacement(
-    word: &str,
-    replacements: &[Replacement],
-    valid_words: &[&str],
-) -> Option<String> {
-    let replacement_combinations = power_set(
-        replacements.iter().cloned(),
-        // Exclude empty set, unnecessary work:
-        false,
-    );
+fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<String> {
+    let replacement_combinations = power_set_without_empty(replacements.iter().cloned());
     debug!("Starting search for valid replacement for word '{}'", word);
     trace!(
         "All replacement combinations to try: {:?}",
@@ -109,41 +101,73 @@ fn find_valid_replacement(
             candidate
         );
 
-        if is_valid(&candidate, valid_words) {
-            debug!("Candidate '{}' is valid, returning early.", candidate);
+        if is_valid(&candidate, &contained_in_global_word_list) {
+            debug!("Candidate '{}' is valid, returning early", candidate);
             return Some(candidate);
         } else {
-            trace!("Candidate '{}' is invalid, trying next one.", candidate);
+            trace!("Candidate '{}' is invalid, trying next one", candidate);
         }
     }
 
-    debug!("No valid replacement found, returning.");
+    debug!("No valid replacement found, returning");
     None
 }
 
-fn is_valid(word: &str, valid_words: &[&str]) -> bool {
-    debug_assert!(
-        valid_words.iter().any(|word| word.is_ascii()),
-        "Looks like you're using a filtered word list. This function only works with the full word list (also containing all non-Umlaut words)"
-    );
+fn contained_in_global_word_list(word: &str) -> bool {
+    VALID_GERMAN_WORDS.binary_search(&word).is_ok()
+}
 
-    trace!("Trying candidate '{}'...", word);
+// Memoize this function, otherwise there's exponential blowup in the number of calls.
+// https://github.com/jaemk/cached/issues/135#issuecomment-1315911572
+#[cached(
+    type = "SizedCache<String, bool>",
+    create = "{ SizedCache::with_size(1024) }",
+    convert = r#"{ String::from(word) }"#
+)]
+fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
+    trace!("Trying candidate '{}'", word);
 
-    // Pretty much all ordinarily lowercase words *might* appear uppercased, e.g. at the
-    // beginning of sentences. For example: "Uebel!" -> "Übel!", even though only "übel"
-    // is in the dictionary.
-    if first_char(word).is_uppercase() && is_valid(&lowercase_first_char(word), valid_words) {
-        trace!("Candidate '{}' is valid when lowercased.", word);
-        return true;
+    let casing = WordCasing::try_from(word);
+    trace!("Casing of candidate is '{:?}'", casing);
+
+    match casing {
+        Ok(WordCasing::AllLowercase) => {
+            // Adjectives, verbs, etc.: always lowercase. Nouns are *never* assumed to
+            // occur all lowercase (e.g. "laufen"). In any case, there is no further
+            // processing we can/want to do (or is there...
+            // https://www.youtube.com/watch?v=HLRdruqQfRk).
+            predicate(word)
+        }
+        Ok(WordCasing::AllUppercase | WordCasing::Mixed) => {
+            // Before proceeding, convert `SCREAMING` or `MiXeD` words to something
+            // sensible, then see from there (e.g. "ABENTEUER" -> "Abenteuer",
+            // "üBeRTrIeBeN" -> "Übertrieben"). See `Titlecase` for what happens next.
+
+            let tc = titlecase(word);
+            debug_assert!(
+                WordCasing::try_from(tc.as_str()) == Ok(WordCasing::Titlecase),
+                "Titlecased word, but isn't categorized correctly."
+            );
+
+            is_valid(&tc, predicate)
+        }
+        Ok(WordCasing::Titlecase) => {
+            // Regular nouns are normally titlecase, so see if they're found
+            // immediately (e.g. "Haus").
+            predicate(word)
+                // Adjectives and verbs might be titlecased at the beginning of
+                // sentences etc. (e.g. "Gut gemacht!" -> we need "gut").
+                || is_valid(&word.to_lowercase(), predicate)
+                // None of these worked: we might have a compound word. These are
+                // *never* assumed to occur as anything but titlecase (e.g.
+                // "Hausüberfall").
+                || is_valid_compound_word(word, &|w| is_valid(w, predicate))
+        }
+        Err(_) => false, // Ran into some unexpected characters...
     }
+}
 
-    let search = |word| valid_words.binary_search(&word).is_ok();
-
-    if search(word) {
-        trace!("Found candidate '{}' in word list, is valid.", word);
-        return true;
-    }
-
+fn is_valid_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
     for (i, _) in word
         .char_indices()
         // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
@@ -152,24 +176,20 @@ fn is_valid(word: &str, valid_words: &[&str]) -> bool {
         let prefix = &word[..i];
         trace!("Trying prefix '{}'", prefix);
 
-        if search(prefix) {
+        if predicate(prefix) {
             let suffix = &word[i..];
 
             trace!(
-                "Prefix found in word list, seeing if (uppercased) suffix '{}' is valid.",
+                "Prefix found in word list, seeing if suffix '{}' is valid.",
                 suffix
             );
 
-            // We uppercase to detect e.g. `Mauerdübel`, where after the first iteration
-            // we'd have `Mauer` and `dübel`, with only `Dübel` being valid.
-            //
-            // Next recursion will test both lower- and this uppercased version, so also
-            // words like `Mauergrün` are valid, where `grün` is in the dictionary but
-            // `Grün` *might* not be, for example.
-            return is_valid(&uppercase_first_char(suffix), valid_words);
+            // Compound words are very likely to be made up of nouns, so check that
+            // (first).
+            return predicate(&titlecase(suffix));
         }
 
-        trace!("Prefix not found in word list, trying next.");
+        trace!("Prefix not found in word list, trying next");
     }
 
     false
@@ -197,16 +217,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_is_valid_panics_on_filtered_word_list() {
-        let words = &["Önly", "speciäl", "wörds"];
-        is_valid("Doesn't matter, this will panic.", words);
+    fn test_word_list_is_not_filtered() {
+        assert!(
+            VALID_GERMAN_WORDS.iter().any(|word| word.is_ascii()),
+            concat!(
+                "Looks like you're using a filtered word list containing only special characters.",
+                " The current implementation relies on the full word list (also containing all non-Umlaut words)"
+            )
+        );
     }
 
     #[test]
-    #[should_panic]
-    fn test_is_valid_panics_on_empty_input() {
-        is_valid("", VALID_GERMAN_WORDS);
+    fn test_is_valid_on_empty_input() {
+        assert!(!is_valid("", &contained_in_global_word_list));
     }
 
     instrament! {
@@ -241,7 +264,7 @@ mod tests {
             )]
             word: String
         ) (|data: &TestIsValid| {
-                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, VALID_GERMAN_WORDS));
+                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, &contained_in_global_word_list));
             }
         )
     }
@@ -259,7 +282,14 @@ mod tests {
                 "Koeffizient",
                 "kongruent",
                 "Ich mag Aepfel, aber nicht Aerger.",
+                "Ich mag AEPFEL!! 😍",
+                "Wer mag Aepfel?!",
+                "Was sind aepfel?",
                 "Oel ist ein wichtiger Bestandteil von Oel.",
+                "WARUM SCHLIESSEN WIR NICHT AB?",
+                "Wir schliessen nicht ab.",
+                "WiR sChLieSsEn ab!",
+                "WiR sChLiesSEn vieLleEcHt aB.",
             )]
             word: String
         ) (|data: &TestProcess| {

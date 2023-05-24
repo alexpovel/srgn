@@ -1,7 +1,8 @@
 ---
 source: core/src/util/strings.rs
-expression: lowercase_first_char(&word)
+expression: "WordCasing::try_from(word.as_str())"
 info:
   word: ẞuperduper
 ---
-ßuperduper
+Ok: Titlecase
+

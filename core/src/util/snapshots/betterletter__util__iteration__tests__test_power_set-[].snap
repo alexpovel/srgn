@@ -3,7 +3,6 @@ source: core/src/util/iteration.rs
 expression: result
 info:
   collection: []
-  include_empty_set: false
 ---
-[]
+- []
 

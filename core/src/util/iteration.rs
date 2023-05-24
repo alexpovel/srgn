@@ -1,6 +1,22 @@
 use itertools::Itertools;
 
-pub fn power_set<C, T>(collection: C, include_empty_set: bool) -> Vec<Vec<T>>
+pub fn _power_set<C, T>(collection: C) -> Vec<Vec<T>>
+where
+    C: IntoIterator<Item = T>,
+    T: Clone,
+{
+    power_set_impl(collection, true)
+}
+
+pub fn power_set_without_empty<C, T>(collection: C) -> Vec<Vec<T>>
+where
+    C: IntoIterator<Item = T>,
+    T: Clone,
+{
+    power_set_impl(collection, false)
+}
+
+fn power_set_impl<C, T>(collection: C, include_empty_set: bool) -> Vec<Vec<T>>
 where
     C: IntoIterator<Item = T>,
     T: Clone,
@@ -21,7 +37,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::power_set;
+    use super::{_power_set, power_set_without_empty};
     use instrament::instrament;
     use rstest::rstest;
 
@@ -29,11 +45,20 @@ mod tests {
         #[rstest]
         fn test_power_set(
             #[values(vec![], vec![1], vec![1, 2], vec![1, 2, 3])]
-            collection: Vec<i32>,
-            #[values(true, false)]
-            include_empty_set: bool
+            collection: Vec<i32>
         ) (|data: &TestPowerSet| {
-            let result = power_set(collection.clone(), include_empty_set);
+            let result = _power_set(collection.clone());
+            insta::assert_yaml_snapshot!(data.to_string(), result);
+        })
+    }
+
+    instrament! {
+        #[rstest]
+        fn test_power_set_without_empty(
+            #[values(vec![], vec![1], vec![1, 2], vec![1, 2, 3])]
+            collection: Vec<i32>
+        ) (|data: &TestPowerSetWithoutEmpty| {
+            let result = power_set_without_empty(collection.clone());
             insta::assert_yaml_snapshot!(data.to_string(), result);
         })
     }
