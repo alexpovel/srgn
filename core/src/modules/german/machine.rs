@@ -40,6 +40,7 @@ impl Transition {
 
 type MachineInput = char;
 
+#[derive(Debug)]
 pub(super) struct StateMachine {
     state: State,
     word: Word,
@@ -61,12 +62,9 @@ impl StateMachine {
 
     fn pre_transition(&mut self) {
         if let State::Other = self.state {
-            trace!(
-                "In state '{:?}', clearing current word '{:?}'.",
-                self.state,
-                self.word
-            );
             self.word.clear();
+
+            trace!("Cleared current word, machine now is: {self:?}.");
         };
     }
 
@@ -89,9 +87,7 @@ impl StateMachine {
                 self.word.add_replacement(start, end, Umlaut(*umlaut));
 
                 trace!(
-                    "In state '{:?}', added replacement '{:?}' at position {}.",
-                    self.state,
-                    self.word.replacements().last().unwrap(),
+                    "Added replacement at position {}, machine now is: {self:?}.",
                     pos
                 );
 
@@ -119,9 +115,7 @@ impl StateMachine {
                 self.word.add_replacement(start, end, Eszett(*casing));
 
                 trace!(
-                    "In state '{:?}', added replacement '{:?}' at position {}.",
-                    self.state,
-                    self.word.replacements().last().unwrap(),
+                    "Added replacement at position {}, machine now is: {self:?}.",
                     pos
                 );
 
@@ -151,5 +145,7 @@ impl StateMachine {
                 self.transition
             );
         };
+
+        trace!("After transition, machine is: {self:?}.");
     }
 }

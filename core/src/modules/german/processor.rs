@@ -54,7 +54,7 @@ impl TextProcessor for German {
                     continue;
                 }
                 Transition::Exited => {
-                    debug!("Exited word: {:?}", machine.current_word());
+                    debug!("Exited machine: {:?}", machine);
 
                     let original = machine.current_word().content().to_owned();
                     let word =
@@ -71,14 +71,14 @@ impl TextProcessor for German {
             }
         }
 
-        debug!("Final output string is '{}'", output.escape_debug());
-        *input = output;
-
-        let c = input.pop();
+        let c = output.pop();
         debug_assert!(
             c == Some(INDICATOR),
             "Processor removed trailing indicator byte."
         );
+
+        debug!("Final output string is '{}'", output.escape_debug());
+        *input = output;
 
         Ok(())
     }
