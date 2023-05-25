@@ -15,7 +15,7 @@ enum State {
 #[derive(Debug)]
 struct Potential(SpecialCharacter);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(super) enum Transition {
     // Entered a word.
     Entered,
@@ -70,7 +70,7 @@ impl StateMachine {
         };
     }
 
-    pub fn transition(&mut self, input: &MachineInput) -> &Option<Transition> {
+    pub fn transition(&mut self, input: &MachineInput) -> Transition {
         self.pre_transition();
 
         let next = match (&self.state, input) {
@@ -132,25 +132,24 @@ impl StateMachine {
             (_, _) => State::Other,
         };
 
-        self.post_transition(input, &next);
+        let transition = Transition::from_states(&self.state, &next);
 
         self.state = next;
-        &self.transition
+        self.transition = Some(transition.clone()); // Clone, else it gets awkward returning.
+
+        self.post_transition(input);
+
+        transition
     }
 
-    fn post_transition(&mut self, input: &MachineInput, next: &State) {
-        self.transition = Some(Transition::from_states(&self.state, next));
-
+    fn post_transition(&mut self, input: &MachineInput) {
         if let Some(Transition::Entered | Transition::Internal) = self.transition {
+            self.word.push(*input);
             trace!(
-                "In state '{:?}', building up current word '{:?}' with character {:?} due to transition '{:?}'",
-                self.state,
-                self.word,
+                "Appending {:?} to current word due to transition {:?}.",
                 input,
                 self.transition
             );
-
-            self.word.push(*input);
         };
     }
 }

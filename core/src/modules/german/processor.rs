@@ -46,14 +46,14 @@ impl TextProcessor for German {
             trace!("Transition is '{:?}'", transition);
 
             match transition {
-                Some(Transition::External) => {
+                Transition::External => {
                     output.push(char);
                     continue;
                 }
-                Some(Transition::Entered | Transition::Internal) => {
+                Transition::Entered | Transition::Internal => {
                     continue;
                 }
-                Some(Transition::Exited) => {
+                Transition::Exited => {
                     debug!("Exited word: {:?}", machine.current_word());
 
                     let original = machine.current_word().content().to_owned();
@@ -68,7 +68,6 @@ impl TextProcessor for German {
                     // first place.
                     output.push(char);
                 }
-                None => unreachable!("After initial transition, must have `Some`."), // TODO: Try and make this state unrepresentable in the type system.
             }
         }
 
