@@ -16,7 +16,9 @@ use cached::proc_macro::cached;
 use cached::SizedCache;
 use log::{debug, trace};
 
-const VALID_GERMAN_WORDS: &[&str] = include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
+static VALID_GERMAN_WORDS: &[&str] =
+    &[include_str!("../../../data/word-lists/de/full-oneline.txt")];
+// include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
 
 #[derive(Clone, Copy)]
 pub struct German;
