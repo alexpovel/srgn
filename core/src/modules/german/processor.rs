@@ -258,12 +258,31 @@ mod tests {
                 "Maürdübelkübel",
                 "messgerät",
                 "No\nway",
+                "Süßwasserschwimmbäder",
                 "مرحبا",
                 "你好",
             )]
             word: String
         ) (|data: &TestIsValid| {
                 insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, &contained_in_global_word_list));
+            }
+        )
+    }
+
+    instrament! {
+        #[rstest]
+        fn test_is_valid_compound_word(
+            #[values(
+                "Süßwasserschwimmbäder",
+                "Mauerdübel",
+                "Mauerdübelkübel",
+                "Not a compound word",
+                "Mauer好",
+                "Mauerdjieojoid",
+            )]
+            word: String
+        ) (|data: &TestIsValidCompoundWord| {
+                insta::assert_yaml_snapshot!(data.to_string(), is_valid_compound_word(&word, &|w| is_valid(w, &contained_in_global_word_list)));
             }
         )
     }
