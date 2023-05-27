@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
-use std::path::PathBuf;
 use std::{
     env,
     fs::{self, File},

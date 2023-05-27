@@ -16,8 +16,8 @@ use cached::proc_macro::cached;
 use cached::SizedCache;
 use log::{debug, trace};
 
-static VALID_GERMAN_WORDS: &[&str] =
-    &[include_str!("../../../data/word-lists/de/full-oneline.txt")];
+static VALID_GERMAN_WORDS: &[u8] = &[0; 0];
+// include_bytes!("../../../data/word-lists/de/full-oneline.txt");
 // include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
 
 #[derive(Clone, Copy)]
@@ -115,7 +115,7 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
 }
 
 fn contained_in_global_word_list(word: &str) -> bool {
-    VALID_GERMAN_WORDS.binary_search(&word).is_ok()
+    false
 }
 
 // Memoize this function, otherwise there's exponential blowup in the number of calls.
@@ -200,27 +200,40 @@ fn is_valid_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool
 mod tests {
     use super::*;
     use instrament::instrament;
+    use itertools::Itertools;
     use rstest::rstest;
 
     #[test]
     fn test_words_are_sorted() {
-        let mut sorted = VALID_GERMAN_WORDS.to_vec();
+        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
+
+        let original = string.lines().collect_vec();
+
+        let mut sorted = string.lines().collect_vec();
         sorted.sort();
-        assert_eq!(VALID_GERMAN_WORDS, sorted.as_slice());
+
+        assert_eq!(original, sorted.as_slice());
     }
 
     #[test]
     fn test_words_are_unique() {
-        let mut unique = VALID_GERMAN_WORDS.to_vec();
+        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
+
+        let original = string.lines().collect_vec();
+
+        let mut unique = string.lines().collect_vec();
         unique.sort();
         unique.dedup();
-        assert_eq!(VALID_GERMAN_WORDS, unique.as_slice());
+
+        assert_eq!(original, unique.as_slice());
     }
 
     #[test]
     fn test_word_list_is_not_filtered() {
+        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
+
         assert!(
-            VALID_GERMAN_WORDS.iter().any(|word| word.is_ascii()),
+            string.lines().any(|word| word.is_ascii()),
             concat!(
                 "Looks like you're using a filtered word list containing only special characters.",
                 " The current implementation relies on the full word list (also containing all non-Umlaut words)"
