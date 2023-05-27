@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use std::cmp::Ordering;
-use std::iter::zip;
 use std::str;
 
 pub fn _power_set<C, T>(collection: C) -> Vec<Vec<T>>
@@ -38,12 +37,6 @@ where
     result
 }
 
-#[derive(Debug)]
-enum SearchDirection {
-    Left,
-    Right,
-}
-
 pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
     if needle.is_empty() {
         return true;
@@ -59,7 +52,7 @@ pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
     let mut low = leftmost;
     let mut high = rightmost;
 
-    let haystack = haystack.as_bytes(); // For freely slicing with `.chars()`.
+    let haystack = haystack.as_bytes(); // For freely slicing without `.chars()`.
 
     while low <= high {
         let mid = low + (high - low) / 2;
@@ -77,50 +70,23 @@ pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
         };
 
         let haystack_word = str::from_utf8(&haystack[start..end]).unwrap();
-        let needle_to_haystack_word_length = needle.len().cmp(&haystack_word.len());
-        let word_pair = zip(needle.chars(), haystack_word.chars());
 
-        let mut search_direction = None;
-
-        for (needle_char, haystack_char) in word_pair {
-            search_direction = match needle_char.cmp(&haystack_char) {
-                Ordering::Less => Some(SearchDirection::Left),
-                Ordering::Equal => match needle_to_haystack_word_length {
-                    // Two identical strings will execute this `match` on each
-                    // iteration, which is potentially slow, but the alternative code I
-                    // could come up with reads _much_ worse. This is poetry in
-                    // comparison. So legibility > performance here (compiler might be
-                    // able to optimize this away though?).
-                    Ordering::Less => Some(SearchDirection::Left),
-                    Ordering::Equal => None,
-                    Ordering::Greater => Some(SearchDirection::Right),
-                },
-                Ordering::Greater => Some(SearchDirection::Right),
-            };
-
-            if search_direction.is_some() {
-                break;
-            }
-        }
-
-        match search_direction {
-            Some(SearchDirection::Left) => {
-                if mid == 0 {
-                    // Cannot go left any further, so no match.
+        match needle.cmp(haystack_word) {
+            Ordering::Less => {
+                if mid == leftmost {
                     break;
                 }
 
                 high = mid - 1;
             }
-            Some(SearchDirection::Right) => {
-                if mid == haystack.len() {
-                    // Cannot go right any further, so no match.
+            Ordering::Equal => return true,
+            Ordering::Greater => {
+                if mid == rightmost {
                     break;
                 }
 
                 low = mid + 1;
             }
-            None => return true, // Got nowhere to search further, we have a match.
         }
     }
 
@@ -210,6 +176,9 @@ mod tests {
     #[case("Hündin", "Hund\nKatze\nMaus", '\n', false)]
     #[case("Hündin", "Hündin\nKatze\nMaus", '\n', true)]
     #[case("Mäuschen", "Hündin\nKatze\nMäuschen", '\n', true)]
+    // Real-world examples with common prefixes.
+    #[case("Abdämpfung", "Abdämpfung\nAbenteuer\nAbschluss", '\n', true)]
+    #[case("Abdämpfung", "Abdrehen\nAbdämpfung\nAbschluss", '\n', true)]
     fn test_binsearch(
         #[case] needle: &str,
         #[case] haystack: &str,

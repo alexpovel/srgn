@@ -119,10 +119,10 @@ fn generate_sample_text(n_lines: usize, sentences_per_line: usize) -> String {
             output.push(' ');
         });
 
-    eprintln!(
-        "Generated sample line (will repeated {} times):\n{}",
-        output, n_lines
-    );
+    // eprintln!(
+    //     "Generated sample line (will repeated {} times):\n{}",
+    //     output, n_lines
+    // );
 
     output.repeat(n_lines)
 }
