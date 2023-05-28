@@ -9,7 +9,7 @@ clap = { version = "4.2.7", features = ["derive"] }
 env_logger = "0.10.0"
 itertools = "0.10.5"
 log = "0.4.17"
-num_cpus = "1.15.0"
+common = { path = "../common" }
 
 [features]
 default = ["all"]
@@ -24,8 +24,11 @@ insta = { version = "1.29.0", features = ["yaml"] }
 paste = "1.0.12"
 rstest = "0.17.0"
 serde = { version = "1.0.163", features = ["derive"] }
-instrament = { path = "../instrament" }
 glob = "0.3.1"
+num_cpus = "1.15.0"
+
+[build-dependencies]
+common = { path = "../common" }
 
 [[bench]]
 name = "threading"

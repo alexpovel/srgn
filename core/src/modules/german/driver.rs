@@ -8,11 +8,12 @@ use crate::{
     },
     util::{
         iteration::{binary_search_uneven, power_set_without_empty},
-        strings::{titlecase, WordCasing},
+        strings::WordCasing,
     },
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
+use common::{is_compound_word, titlecase};
 use log::{debug, trace};
 
 static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt")); // Generated in `build.rs`.
@@ -158,57 +159,16 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 // None of these worked: we might have a compound word. These are
                 // *never* assumed to occur as anything but titlecase (e.g.
                 // "Hausüberfall").
-                || is_valid_compound_word(word, predicate)
+                || is_compound_word(word, predicate)
         }
         Err(_) => false, // Ran into some unexpected characters...
-    }
-}
-
-fn is_valid_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
-    trace!("Checking if word is valid compound word: '{}'", word);
-
-    if predicate(word) {
-        return true;
-    }
-
-    let indices = word.char_indices().skip(1);
-
-    // Greedily fetch the longest possible prefix. Otherwise, we short-circuit and might
-    // end up looking for (for example) "He" of "Heizölrechnung" and its suffix
-    // "izölrechnung" (not a word), whereas we could have found "Heizöl" and "Rechnung"
-    // instead.
-    let mut highest_valid_index = None;
-    for (i, _) in indices {
-        let prefix = &word[..i];
-
-        if predicate(prefix) {
-            highest_valid_index = Some(i);
-        }
-    }
-
-    match highest_valid_index {
-        Some(i) => {
-            let suffix = &word[i..];
-
-            trace!(
-                "Prefix '{}' found in word list, seeing if suffix '{}' is valid.",
-                &word[..i],
-                suffix
-            );
-
-            // Compound words are very likely to be made up of nouns, so check that
-            // first.
-            is_valid_compound_word(&titlecase(suffix), predicate)
-                || is_valid_compound_word(suffix, predicate)
-        }
-        None => false,
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use instrament::instrament;
+    use common::instrament;
     use itertools::Itertools;
     use rstest::rstest;
 
@@ -283,24 +243,6 @@ mod tests {
             word: String
         ) (|data: &TestIsValid| {
                 insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, &contained_in_global_word_list));
-            }
-        )
-    }
-
-    instrament! {
-        #[rstest]
-        fn test_is_valid_compound_word(
-            #[values(
-                "Süßwasserschwimmbäder",
-                "Mauerdübel",
-                "Mauerdübelkübel",
-                "Not a compound word",
-                "Mauer好",
-                "Mauerdjieojoid",
-            )]
-            word: String
-        ) (|data: &TestIsValidCompoundWord| {
-                insta::assert_yaml_snapshot!(data.to_string(), is_valid_compound_word(&word, &|w| is_valid(w, &contained_in_global_word_list)));
             }
         )
     }

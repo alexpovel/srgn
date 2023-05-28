@@ -84,7 +84,7 @@ pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{_power_set, power_set_without_empty};
-    use instrament::instrament;
+    use common::instrament;
     use rstest::rstest;
 
     instrament! {

@@ -1,3 +1,4 @@
+use common::is_compound_word;
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::{
@@ -45,56 +46,13 @@ where
     let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
     let words_set: HashSet<&str> = words.iter().copied().collect();
 
-    // words.retain(|word| !is_german_compound_word(word, &|w| words_set.contains(w), 0));
+    // Remove those words we would algorithmically generate anyway. This trades binary
+    // size for runtime performance.
+    words.retain(|word| !is_compound_word(word, &|w| words_set.contains(w)));
 
     words.sort();
 
     for word in words {
         writeln!(destination, "{}", word).unwrap();
     }
-}
-
-fn is_german_compound_word(word: &str, predicate: &impl Fn(&str) -> bool, depth: usize) -> bool {
-    // Only check if we're not at the root word, aka we're working on a suffix.
-    if depth > 0 && predicate(word) {
-        return true;
-    }
-
-    for (i, _) in word
-        .char_indices()
-        // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
-        .skip(1)
-    {
-        let prefix = &word[..i];
-
-        if predicate(prefix) {
-            let suffix = &word[i..];
-
-            // Compound words are very likely to be made up of nouns, so check that
-            // (first).
-            return is_german_compound_word(&titlecase(suffix), predicate, depth + 1)
-                || is_german_compound_word(suffix, predicate, depth + 1);
-        }
-    }
-
-    false
-}
-
-fn titlecase(word: &str) -> String {
-    let mut chars = word.chars();
-    let mut result = String::with_capacity(word.len());
-
-    if let Some(c) = chars.next() {
-        for upper in c.to_uppercase() {
-            result.push(upper);
-        }
-    }
-
-    for c in chars {
-        for lower in c.to_lowercase() {
-            result.push(lower);
-        }
-    }
-
-    result
 }
