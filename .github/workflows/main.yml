@@ -8,11 +8,14 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v3
-    # - run: rustup toolchain install stable --profile minimal
     - uses: swatinem/rust-cache@v2
     - name: Build
       run: cargo build --verbose
