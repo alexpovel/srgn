@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'betterletter'",
+            "name": "Debug executable 'betterletter' using 'German'",
             "cargo": {
                 "args": [
                     "build",
@@ -19,8 +19,14 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "args": [
+                "german"
+            ],
+            "stdio": [
+                ".vscode/debug-input.txt",
+                null
+            ],
+            "cwd": "${workspaceFolder}",
         },
         {
             "type": "lldb",
