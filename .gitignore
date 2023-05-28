@@ -22,3 +22,4 @@ tarpaulin-report.html
 
 # Coverage data
 *.profraw
+cobertura.xml
