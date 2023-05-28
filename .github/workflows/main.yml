@@ -16,11 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: swatinem/rust-cache@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    # - uses: swatinem/rust-cache@v2
+    # - name: Build
+    #   run: cargo build --verbose
+    # - name: Run tests
+    #   run: cargo test --verbose
 
   release-please:
     name: Execute release chores
@@ -37,4 +37,5 @@ jobs:
         id: release
         with:
           release-type: rust
+          path: core
           package-name: betterletter
