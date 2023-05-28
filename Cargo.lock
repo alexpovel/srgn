@@ -122,11 +122,11 @@ dependencies = [
  "assert_cmd",
  "cached",
  "clap 4.3.0",
+ "common",
  "criterion",
  "env_logger",
  "glob",
  "insta",
- "instrament",
  "itertools",
  "log",
  "num_cpus",
@@ -310,6 +310,14 @@ name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "rstest",
+]
 
 [[package]]
 name = "console"
@@ -694,10 +702,6 @@ checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
 dependencies = [
  "cfg-if",
 ]
-
-[[package]]
-name = "instrament"
-version = "0.1.0"
 
 [[package]]
 name = "io-lifetimes"

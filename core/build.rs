@@ -1,66 +1,58 @@
-use std::io::Write;
+use common::is_compound_word;
+use std::collections::HashSet;
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::{
     env,
     fs::{self, File},
     path::Path,
 };
 
-const WORD_LIST_DIRECTORY: &str = "data/word-lists";
-
 fn main() {
     generate_word_lists();
 }
 
 fn generate_word_lists() {
+    let base_source_path = Path::new("data/word-lists");
+
     // https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
     let out_dir = env::var_os("OUT_DIR").unwrap();
+    let base_destination_path = Path::new(&out_dir);
 
-    let mut n = 0;
-    for entry in fs::read_dir(Path::new(WORD_LIST_DIRECTORY)).unwrap() {
-        let dir = entry.unwrap();
-        if !dir.metadata().unwrap().is_dir() {
-            continue;
-        }
+    // Each of these might require different treatment, so do it separately.
 
-        // Inlining the *full* word list into source code absolutely tanks performance
-        // and DX (clippy, ...) as it's circa 8 MB in size. The development list is very
-        // small in comparison. Note tests will only have that list available as well.
-        let file = if cfg!(debug_assertions) {
-            "dev.txt"
-        } else {
-            "full.txt"
-        };
+    // German
+    let source_file = base_source_path.join("de.txt");
+    let destination_file = base_destination_path.join("de.txt");
+    destination_file.parent().map(fs::create_dir_all);
 
-        let contents = fs::read_to_string(dir.path().join(file)).unwrap();
-
-        let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
-
-        words.sort();
-
-        let destination = Path::new(&out_dir).join(
-            Path::new(dir.file_name().to_str().unwrap())
-                // Not fully valid Rust code, so use `in` over `rs`.
-                .with_extension("in"),
-        );
-
-        destination.parent().map(fs::create_dir_all);
-        let mut f = File::create(&destination).unwrap();
-
-        writeln!(f, "&[").unwrap();
-
-        for word in words {
-            writeln!(f, "    \"{}\",", word).unwrap();
-        }
-        writeln!(f, "]").unwrap();
-
-        n += 1;
-    }
-
-    if n == 0 {
-        panic!("No word lists processed, looked in {}", WORD_LIST_DIRECTORY);
-    }
+    process_german(
+        &mut BufReader::new(File::open(source_file).unwrap()),
+        &mut BufWriter::new(File::create(destination_file).unwrap()),
+    );
 
     // Should work recursively, see also:
     // https://github.com/rust-lang/cargo/issues/2599#issuecomment-1119059540
-    println!("cargo:rerun-if-changed={}", WORD_LIST_DIRECTORY);
+    println!("cargo:rerun-if-changed={}", base_source_path.display());
+}
+
+fn process_german<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
+where
+    R: Read,
+    W: Write,
+{
+    let mut contents = String::new();
+    source.read_to_string(&mut contents).unwrap();
+
+    let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
+    let words_set: HashSet<&str> = words.iter().copied().collect();
+
+    // Remove those words we would algorithmically generate anyway. This trades binary
+    // size for runtime performance.
+    words.retain(|word| !is_compound_word(word, &|w| words_set.contains(w)));
+
+    words.sort();
+
+    for word in words {
+        writeln!(destination, "{}", word).unwrap();
+    }
 }

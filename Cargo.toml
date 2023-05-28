@@ -1,6 +1,6 @@
 [workspace]
 
-members = ["core", "instrament"]
+members = ["core", "common"]
 
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs

@@ -1,22 +1,3 @@
-pub(crate) fn titlecase(word: &str) -> String {
-    let mut chars = word.chars();
-    let mut result = String::with_capacity(word.len());
-
-    if let Some(c) = chars.next() {
-        for upper in c.to_uppercase() {
-            result.push(upper);
-        }
-    }
-
-    for c in chars {
-        for lower in c.to_lowercase() {
-            result.push(lower);
-        }
-    }
-
-    result
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum WordCasing {
     AllLowercase,
@@ -68,31 +49,9 @@ impl TryFrom<&str> for WordCasing {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use instrament::instrament;
+    use common::instrament;
     use rstest::rstest;
     use serde::Serialize;
-
-    instrament! {
-        #[rstest]
-        fn test_titlecasing(
-        #[values(
-            "hello",
-            "bItTe",
-            "dANKE",
-            "übel",
-            "uebel",
-            "😀",
-            "ßuper",
-            "ẞuperduper",
-            "WOW!!",
-            "ẞß",
-        )]
-            word: String
-        ) (|data: &TestTitlecasing| {
-                insta::assert_snapshot!(data.to_string(), titlecase(&word));
-            }
-        )
-    }
 
     impl Serialize for WordCasing {
         fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

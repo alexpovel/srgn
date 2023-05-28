@@ -1,9 +1,7 @@
+mod driver;
 mod machine;
-mod processor;
-mod special_characters;
-mod word;
+mod words;
 
 // Re-export symbols.
-pub use processor::German;
-pub(self) use special_characters::{LetterCasing, SpecialCharacter, Umlaut};
-pub(self) use word::Word;
+pub use driver::German;
+pub(self) use words::{LetterCasing, SpecialCharacter, Umlaut, Word};
