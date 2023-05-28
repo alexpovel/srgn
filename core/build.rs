@@ -20,8 +20,8 @@ fn generate_word_lists() {
     // Each of these might require different treatment, so do it separately.
 
     // German
-    let source_file = base_source_path.join("de").join("full.txt");
-    let destination_file = base_destination_path.join("de").join("full.in");
+    let source_file = base_source_path.join("de.txt");
+    let destination_file = base_destination_path.join("de.txt");
     destination_file.parent().map(fs::create_dir_all);
 
     process_german(
@@ -45,20 +45,12 @@ where
     let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
     let words_set: HashSet<&str> = words.iter().copied().collect();
 
-    const MAX_WORD_LENGTH: usize = 40;
-    words.retain(|word| {
-        word.len() <= MAX_WORD_LENGTH
-            && !is_german_compound_word(word, &|w| words_set.contains(w), 0)
-    });
+    // words.retain(|word| !is_german_compound_word(word, &|w| words_set.contains(w), 0));
 
     words.sort();
 
-    let max_length = words.iter().map(|word| word.len()).max().unwrap();
-    let padding = '-';
-
     for word in words {
-        let padding = String::from(padding).repeat(max_length - word.len());
-        write!(destination, "{}{}", word, padding).unwrap();
+        writeln!(destination, "{}", word).unwrap();
     }
 }
 

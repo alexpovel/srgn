@@ -8,7 +8,7 @@ use crate::{
         ProcessResult, TextProcessor,
     },
     util::{
-        iteration::power_set_without_empty,
+        iteration::{binary_search_uneven, power_set_without_empty},
         strings::{titlecase, WordCasing},
     },
 };
@@ -16,9 +16,7 @@ use cached::proc_macro::cached;
 use cached::SizedCache;
 use log::{debug, trace};
 
-static VALID_GERMAN_WORDS: &[u8] = &[0; 0];
-// include_bytes!("../../../data/word-lists/de/full-oneline.txt");
-// include!(concat!(env!("OUT_DIR"), "/de.in")); // Generated in `build.rs`.
+static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt")); // Generated in `build.rs`.
 
 #[derive(Clone, Copy)]
 pub struct German;
@@ -115,10 +113,9 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
 }
 
 fn contained_in_global_word_list(word: &str) -> bool {
-    false
+    binary_search_uneven(word, VALID_GERMAN_WORDS, '\n')
 }
 
-// Memoize this function, otherwise there's exponential blowup in the number of calls.
 // https://github.com/jaemk/cached/issues/135#issuecomment-1315911572
 #[cached(
     type = "SizedCache<String, bool>",
@@ -162,38 +159,51 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 // None of these worked: we might have a compound word. These are
                 // *never* assumed to occur as anything but titlecase (e.g.
                 // "Hausüberfall").
-                || is_valid_compound_word(word, &|w| is_valid(w, predicate))
+                || is_valid_compound_word(word, predicate)
         }
         Err(_) => false, // Ran into some unexpected characters...
     }
 }
 
 fn is_valid_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
-    for (i, _) in word
-        .char_indices()
-        // Skip, as `prefix` empty on first iteration otherwise, which is wasted work.
-        .skip(1)
-    {
+    trace!("Checking if word is valid compound word: '{}'", word);
+
+    if predicate(word) {
+        return true;
+    }
+
+    let indices = word.char_indices().skip(1);
+
+    // Greedily fetch the longest possible prefix. Otherwise, we short-circuit and might
+    // end up looking for (for example) "He" of "Heizölrechnung" and its suffix
+    // "izölrechnung" (not a word), whereas we could have found "Heizöl" and "Rechnung"
+    // instead.
+    let mut highest_valid_index = None;
+    for (i, _) in indices {
         let prefix = &word[..i];
-        trace!("Trying prefix '{}'", prefix);
 
         if predicate(prefix) {
+            highest_valid_index = Some(i);
+        }
+    }
+
+    match highest_valid_index {
+        Some(i) => {
             let suffix = &word[i..];
 
             trace!(
-                "Prefix found in word list, seeing if suffix '{}' is valid.",
+                "Prefix '{}' found in word list, seeing if suffix '{}' is valid.",
+                &word[..i],
                 suffix
             );
 
             // Compound words are very likely to be made up of nouns, so check that
-            // (first).
-            return predicate(&titlecase(suffix));
+            // first.
+            is_valid_compound_word(&titlecase(suffix), predicate)
+                || is_valid_compound_word(suffix, predicate)
         }
-
-        trace!("Prefix not found in word list, trying next");
+        None => false,
     }
-
-    false
 }
 
 #[cfg(test)]
@@ -205,11 +215,9 @@ mod tests {
 
     #[test]
     fn test_words_are_sorted() {
-        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
+        let original = VALID_GERMAN_WORDS.lines().collect_vec();
 
-        let original = string.lines().collect_vec();
-
-        let mut sorted = string.lines().collect_vec();
+        let mut sorted = VALID_GERMAN_WORDS.lines().collect_vec();
         sorted.sort();
 
         assert_eq!(original, sorted.as_slice());
@@ -217,11 +225,9 @@ mod tests {
 
     #[test]
     fn test_words_are_unique() {
-        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
+        let original = VALID_GERMAN_WORDS.lines().collect_vec();
 
-        let original = string.lines().collect_vec();
-
-        let mut unique = string.lines().collect_vec();
+        let mut unique = VALID_GERMAN_WORDS.lines().collect_vec();
         unique.sort();
         unique.dedup();
 
@@ -230,10 +236,8 @@ mod tests {
 
     #[test]
     fn test_word_list_is_not_filtered() {
-        let string = String::from_utf8(VALID_GERMAN_WORDS.to_vec()).unwrap();
-
         assert!(
-            string.lines().any(|word| word.is_ascii()),
+            VALID_GERMAN_WORDS.lines().any(|word| word.is_ascii()),
             concat!(
                 "Looks like you're using a filtered word list containing only special characters.",
                 " The current implementation relies on the full word list (also containing all non-Umlaut words)"
