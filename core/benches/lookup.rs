@@ -96,7 +96,7 @@ fn binary_search_padded(word: &str, string: &str, block_size: usize) -> bool {
 
 pub fn criterion_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("lookup");
-    group.sample_size(10); // Default is 100
+    // group.sample_size(10); // Default is 100
 
     let mut words = WORDS.to_vec();
 
@@ -117,6 +117,21 @@ pub fn criterion_bench(c: &mut Criterion) {
         "über",                                            // Last word
         "Schufaeintragseinstellungsverfahrensüberführung", // Stupid long word
         "nonexistent",                                     // Nonexistent word
+        // Test different lengths to see throughput numbers:
+        "Öl",
+        "Paß",
+        "süß",
+        "aßen",
+        "dröge",
+        "Ärger",
+        "Wasser",
+        "großen",
+        "Maßstab",
+        "schwimm",
+        "Rückstoß",
+        "größeren",
+        "Messgerät",
+        "Schufaeintrag",
     ] {
         group.throughput(criterion::Throughput::Bytes(word.len() as u64));
 
