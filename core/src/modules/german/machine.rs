@@ -93,20 +93,6 @@ impl StateMachine {
 
                 State::Word(None)
             }
-            (State::Word(None) | State::Word(Some(Potential(Umlaut(_)))) | State::Other, c) => {
-                match c {
-                    'a' => State::Word(Some(Potential(Umlaut(Ae(Lower))))),
-                    'A' => State::Word(Some(Potential(Umlaut(Ae(Upper))))),
-                    'o' => State::Word(Some(Potential(Umlaut(Oe(Lower))))),
-                    'O' => State::Word(Some(Potential(Umlaut(Oe(Upper))))),
-                    'u' => State::Word(Some(Potential(Umlaut(Ue(Lower))))),
-                    'U' => State::Word(Some(Potential(Umlaut(Ue(Upper))))),
-                    's' => State::Word(Some(Potential(Eszett(Lower)))),
-                    'S' => State::Word(Some(Potential(Eszett(Upper)))),
-                    c if c.is_alphabetic() => State::Word(None),
-                    _ => State::Other,
-                }
-            }
             (State::Word(Some(Potential(Eszett(casing)))), c @ 's' | c @ 'S') => {
                 let pos = self.word.len();
 
@@ -121,9 +107,16 @@ impl StateMachine {
 
                 State::Word(None)
             }
-            //
+            (_, 'a') => State::Word(Some(Potential(Umlaut(Ae(Lower))))),
+            (_, 'A') => State::Word(Some(Potential(Umlaut(Ae(Upper))))),
+            (_, 'o') => State::Word(Some(Potential(Umlaut(Oe(Lower))))),
+            (_, 'O') => State::Word(Some(Potential(Umlaut(Oe(Upper))))),
+            (_, 'u') => State::Word(Some(Potential(Umlaut(Ue(Lower))))),
+            (_, 'U') => State::Word(Some(Potential(Umlaut(Ue(Upper))))),
+            (_, 's') => State::Word(Some(Potential(Eszett(Lower)))),
+            (_, 'S') => State::Word(Some(Potential(Eszett(Upper)))),
             (_, c) if c.is_alphabetic() => State::Word(None),
-            (_, _) => State::Other,
+            _ => State::Other,
         };
 
         let transition = Transition::from_states(&self.state, &next);

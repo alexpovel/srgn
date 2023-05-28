@@ -323,6 +323,7 @@ mod tests {
                 "Wir schliessen nicht ab.",
                 "WiR sChLieSsEn ab!",
                 "WiR sChLiesSEn vieLleEcHt aB.",
+                "Suess!",
             )]
             word: String
         ) (|data: &TestProcess| {
