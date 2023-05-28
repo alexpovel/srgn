@@ -16,6 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
       - run: cargo install clippy-sarif sarif-fmt
 
       - name: Run clippy
