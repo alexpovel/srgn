@@ -1,0 +1,32 @@
+name: Clippy analysis
+
+on:
+  push:
+  schedule:
+    - cron: '15 2 * * 1'
+
+
+jobs:
+  analyze:
+    name: Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: cargo install clippy-sarif sarif-fmt
+
+      - name: Run clippy
+        run: >
+          cargo clippy
+          --all-features
+          --message-format=json | clippy-sarif | tee results.sarif | sarif-fmt
+        continue-on-error: true
+
+      - name: Upload analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+          wait-for-processing: true
