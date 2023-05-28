@@ -25,6 +25,10 @@ jobs:
   release-please:
     name: Execute release chores
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     runs-on: ubuntu-latest
     needs: build-test-publish
 
