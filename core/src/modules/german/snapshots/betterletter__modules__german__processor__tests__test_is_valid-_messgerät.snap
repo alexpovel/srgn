@@ -1,8 +1,0 @@
----
-source: core/src/modules/german/processor.rs
-expression: "is_valid(&word, VALID_GERMAN_WORDS)"
-info:
-  word: messgerät
----
-false
-

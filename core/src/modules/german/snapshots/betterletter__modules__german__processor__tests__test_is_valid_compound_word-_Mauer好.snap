@@ -1,8 +1,0 @@
----
-source: core/src/modules/german/processor.rs
-expression: "is_valid_compound_word(&word, &contained_in_global_word_list)"
-info:
-  word: Mauer好
----
-false
-

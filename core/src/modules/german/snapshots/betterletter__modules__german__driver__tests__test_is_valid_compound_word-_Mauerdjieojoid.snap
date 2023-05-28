@@ -1,0 +1,8 @@
+---
+source: core/src/modules/german/driver.rs
+expression: "is_valid_compound_word(&word,\n    &(|w| is_valid(w, &contained_in_global_word_list)))"
+info:
+  word: Mauerdjieojoid
+---
+false
+
