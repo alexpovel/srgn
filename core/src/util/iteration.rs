@@ -54,7 +54,7 @@ pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
 
     let haystack = haystack.as_bytes(); // For freely slicing without `.chars()`.
 
-    while low <= high {
+    while low < high {
         let mid = low + (high - low) / 2;
 
         let pred = |c: &&u8| **c as char == sep;
@@ -72,21 +72,9 @@ pub fn binary_search_uneven(needle: &str, haystack: &str, sep: char) -> bool {
         let haystack_word = str::from_utf8(&haystack[start..end]).unwrap();
 
         match needle.cmp(haystack_word) {
-            Ordering::Less => {
-                if mid == leftmost {
-                    break;
-                }
-
-                high = mid - 1;
-            }
+            Ordering::Less => high = mid.saturating_sub(1),
             Ordering::Equal => return true,
-            Ordering::Greater => {
-                if mid == rightmost {
-                    break;
-                }
-
-                low = mid + 1;
-            }
+            Ordering::Greater => low = mid + 1,
         }
     }
 
