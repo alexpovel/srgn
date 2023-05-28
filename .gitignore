@@ -19,7 +19,7 @@ target/
 
 # Code coverage report
 tarpaulin-report.html
+cobertura.xml
 
 # Coverage data
 *.profraw
-cobertura.xml
