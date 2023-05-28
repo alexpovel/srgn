@@ -5,11 +5,6 @@ repos:
     hooks:
       - id: markdownlint
 
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.14.8
-    hooks:
-      - id: typos
-
   - repo: local
     hooks:
       - id: cargo-fmt
