@@ -8,9 +8,9 @@ use crate::stages::{
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
-use common::itertools::power_set_without_empty;
 use common::lookup::binary_search_uneven;
 use common::strings::{is_compound_word, titlecase};
+use itertools::Itertools;
 use log::{debug, trace};
 
 static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt")); // Generated in `build.rs`.
@@ -339,14 +339,34 @@ impl Stage for GermanStage {
 }
 
 fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<String> {
-    let replacement_combinations = power_set_without_empty(replacements.iter().copied());
+    let replacement_combinations: Vec<Vec<Replacement>> = replacements
+        .iter()
+        .powerset()
+        .map(|v| v.into_iter().copied().collect())
+        .collect();
+
     debug!("Starting search for valid replacement for word '{}'", word);
     trace!(
         "All replacement combinations to try: {:?}",
         replacement_combinations
     );
 
-    for replacements in replacement_combinations {
+    // By definition, the power set contains the empty set. There are two options for
+    // handling it:
+    // - not skipping: empty set is tried first, and if that word is valid, it is
+    //   returned
+    // - skipping: empty set is skipped, *some* replacements will take place; if none of
+    //   them are valid, no replacements will take place
+    //
+    // Not skipping it means words like `Busse` will remain unchanged on first
+    // iteration. Then, `Busse` will turn out to be valid already and will be returned .
+    // Skipping it means `Buße` is tried, which is *also* valid and returned, foregoing
+    // `Busse`.
+    debug_assert!(replacement_combinations
+        .first()
+        .map_or(true, std::vec::Vec::is_empty));
+
+    for replacements in replacement_combinations.into_iter().skip(1) {
         let mut candidate = word.to_owned();
         candidate.apply_replacements(replacements);
         trace!(

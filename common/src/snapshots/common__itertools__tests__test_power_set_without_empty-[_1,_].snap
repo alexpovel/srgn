@@ -1,9 +1,0 @@
----
-source: common/src/itertools.rs
-expression: result
-info:
-  collection:
-    - 1
----
-- - 1
-
