@@ -1,13 +1,13 @@
-#[cfg(feature = "de")]
-use betterletter::modules::german::German;
-#[cfg(feature = "symbols")]
-use betterletter::modules::symbols::Symbols;
-use betterletter::modules::TextProcessor;
 use betterletter::process;
+#[cfg(feature = "de")]
+use betterletter::stages::german::German;
+#[cfg(feature = "symbols")]
+use betterletter::stages::symbols::Symbols;
+use betterletter::stages::TextProcessor;
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
-use crate::cli::{Args, Module};
+use crate::cli::{Args, Stage};
 
 fn main() -> Result<(), Error> {
     env_logger::init();
@@ -16,17 +16,17 @@ fn main() -> Result<(), Error> {
     let args = Args::init();
 
     let processors: Vec<Box<dyn TextProcessor>> = args
-        .modules()
+        .stages()
         .iter()
-        .map(|module| {
-            let tp: Box<dyn TextProcessor> = match module {
+        .map(|stage| {
+            let tp: Box<dyn TextProcessor> = match stage {
                 #[cfg(feature = "de")]
-                Module::German => Box::new(German),
+                Stage::German => Box::new(German),
                 #[cfg(feature = "symbols")]
-                Module::Symbols => Box::new(Symbols),
+                Stage::Symbols => Box::new(Symbols),
             };
 
-            debug!("Loaded module: {:?}", module);
+            debug!("Loaded stage: {:?}", stage);
 
             tp
         })
@@ -46,10 +46,10 @@ mod cli {
     #[derive(Parser, Debug)]
     #[command(author, version, about, long_about = None)]
     pub(super) struct Args {
-        /// Modules to use.
+        /// Stages to use.
         // https://github.com/TeXitoi/structopt/issues/84#issuecomment-1443764459
         #[arg(value_enum, required = true, num_args = 1..)]
-        modules: Vec<Module>,
+        stages: Vec<Stage>,
     }
 
     impl Args {
@@ -57,17 +57,17 @@ mod cli {
             Self::parse()
         }
 
-        pub fn modules(&self) -> &Vec<Module> {
-            &self.modules
+        pub fn stages(&self) -> &Vec<Stage> {
+            &self.stages
         }
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-    pub(super) enum Module {
-        /// German language module.
+    pub(super) enum Stage {
+        /// German language stage.
         #[cfg(feature = "de")]
         German,
-        /// Symbols module.
+        /// Symbols stage.
         #[cfg(feature = "symbols")]
         Symbols,
     }

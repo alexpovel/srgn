@@ -1,8 +1,0 @@
----
-source: core/src/modules/german/driver.rs
-expression: "is_valid(&word, &contained_in_global_word_list)"
-info:
-  word: Maürdübelkübel
----
-false
-

@@ -1,7 +1,7 @@
-#[cfg(feature = "de")]
-use betterletter::modules::german::German;
-use betterletter::modules::TextProcessor;
 use betterletter::process;
+#[cfg(feature = "de")]
+use betterletter::stages::german::German;
+use betterletter::stages::TextProcessor;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use log::info;
 use std::io::{BufRead, Write};

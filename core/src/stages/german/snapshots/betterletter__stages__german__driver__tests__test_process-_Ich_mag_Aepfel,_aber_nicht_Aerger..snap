@@ -1,0 +1,8 @@
+---
+source: core/src/stages/german/driver.rs
+expression: input
+info:
+  word: "Ich mag Aepfel, aber nicht Aerger."
+---
+"Ich mag Äpfel, aber nicht Ärger."
+

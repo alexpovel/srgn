@@ -15,7 +15,7 @@ fn samples() -> Vec<Sample> {
     for entry in glob("tests/samples/**/*.txt").unwrap() {
         let path = entry.unwrap();
         let sample_number = path.file_stem().unwrap().to_str().unwrap();
-        let module_name = path
+        let stage_name = path
             .parent()
             .unwrap()
             .file_name()
@@ -27,7 +27,7 @@ fn samples() -> Vec<Sample> {
 
         samples.push(Sample {
             content: sample,
-            name: format!("{}-{}", module_name, sample_number),
+            name: format!("{}-{}", stage_name, sample_number),
         });
     }
 

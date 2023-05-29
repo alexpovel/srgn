@@ -1,8 +1,8 @@
-use crate::modules::TextProcessor;
+use crate::stages::TextProcessor;
 use log::{debug, info};
 use std::io::{BufRead, Error, Write};
 
-pub mod modules;
+pub mod stages;
 pub mod util;
 
 const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;

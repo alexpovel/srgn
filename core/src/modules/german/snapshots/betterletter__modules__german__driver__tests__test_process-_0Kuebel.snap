@@ -1,8 +1,0 @@
----
-source: core/src/modules/german/driver.rs
-expression: input
-info:
-  word: "\u0000Kuebel"
----
-"\u0000Kübel"
-
