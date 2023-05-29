@@ -35,7 +35,7 @@ fn main() -> Result<(), Error> {
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
-    process(&processors, &mut source, &mut destination)?;
+    process(&mut source, &processors, &mut destination)?;
     info!("Done, exiting");
     Ok(())
 }

@@ -9,8 +9,8 @@ const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
 const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 
 pub fn process(
-    processors: &Vec<Box<dyn TextProcessor>>,
     source: &mut impl BufRead,
+    processors: &Vec<Box<dyn TextProcessor>>,
     destination: &mut impl Write,
 ) -> Result<(), Error> {
     let mut buf = String::new();

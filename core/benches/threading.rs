@@ -17,7 +17,7 @@ fn process_single_threaded_german(
     mut destination: &mut impl Write,
 ) -> Result<(), std::io::Error> {
     let processors: Vec<Box<dyn TextProcessor>> = vec![Box::new(German)];
-    process(&processors, &mut source, &mut destination)
+    process(&mut source, &processors, &mut destination)
 }
 
 /// German is hard-coded for now as passing trait objects to threads didn't work well.
