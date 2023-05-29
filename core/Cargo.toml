@@ -24,6 +24,7 @@ env_logger = "0.10.0"
 itertools = "0.10.5"
 log = "0.4.17"
 common = { path = "../common" }
+unicode_titlecase = "2.0.0"
 
 [features]
 default = ["all"]

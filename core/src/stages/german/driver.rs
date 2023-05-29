@@ -9,9 +9,10 @@ use crate::stages::{
 use cached::proc_macro::cached;
 use cached::SizedCache;
 use common::lookup::binary_search_uneven;
-use common::strings::{is_compound_word, titlecase};
+use common::strings::is_compound_word;
 use itertools::Itertools;
 use log::{debug, trace};
+use unicode_titlecase::StrTitleCase;
 
 static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt")); // Generated in `build.rs`.
 
@@ -410,7 +411,7 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
         }
         Ok(WordCasing::AllUppercase) => {
             // Convert to something sensible before proceeding.
-            let tc = titlecase(word);
+            let tc = word.to_titlecase_lower_rest();
             debug_assert!(
                 WordCasing::try_from(tc.as_str()) == Ok(WordCasing::Titlecase),
                 "Titlecased word, but isn't categorized correctly."
@@ -423,7 +424,7 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
             // treatment.
             match word.chars().next() {
                 Some(c) if c.is_uppercase() => {
-                    let tc = titlecase(word);
+                    let tc = word.to_titlecase_lower_rest();
                     debug_assert!(
                         WordCasing::try_from(tc.as_str()) == Ok(WordCasing::Titlecase),
                         "Titlecased word, but isn't categorized correctly."

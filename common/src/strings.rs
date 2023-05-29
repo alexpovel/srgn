@@ -1,23 +1,5 @@
 use log::trace;
-
-pub fn titlecase(word: &str) -> String {
-    let mut chars = word.chars();
-    let mut result = String::with_capacity(word.len());
-
-    if let Some(c) = chars.next() {
-        for upper in c.to_uppercase() {
-            result.push(upper);
-        }
-    }
-
-    for c in chars {
-        for lower in c.to_lowercase() {
-            result.push(lower);
-        }
-    }
-
-    result
-}
+use unicode_titlecase::StrTitleCase;
 
 pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
     trace!("Checking if word is valid compound word: '{}'", word);
@@ -47,9 +29,10 @@ pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 suffix
             );
 
-            predicate(&titlecase(suffix))
+            let tc = suffix.to_titlecase_lower_rest();
+            predicate(&tc)
                 || predicate(suffix)
-                || is_compound_word(&titlecase(suffix), predicate)
+                || is_compound_word(&tc, predicate)
                 || is_compound_word(suffix, predicate)
         }
         None => false,
@@ -60,21 +43,6 @@ pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
 mod tests {
     use super::*;
     use rstest::rstest;
-
-    #[rstest]
-    #[case("hello", "Hello")]
-    #[case("bItTe", "Bitte")]
-    #[case("dANKE", "Danke")]
-    #[case("übel", "Übel")]
-    #[case("uebel", "Uebel")]
-    #[case("😀", "😀")]
-    #[case("ßuper", "SSuper")]
-    #[case("ẞuperduper", "ẞuperduper")]
-    #[case("WOW!!", "Wow!!")]
-    #[case("ẞß", "ẞß")]
-    fn test_titlecase(#[case] word: &str, #[case] expected: &str) {
-        assert_eq!(titlecase(word), expected);
-    }
 
     const WORDS: &[&str] = &["Süßwasser", "schwimm", "Bäder", "Mauer", "Dübel", "Kübel"];
 
