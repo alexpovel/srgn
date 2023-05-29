@@ -58,3 +58,14 @@ fn test_cli(samples: Vec<Sample>, #[values(&["german"], &["symbols"])] args: &[&
         })
     }
 }
+
+#[test]
+#[should_panic]
+fn test_cli_on_invalid_utf8() {
+    let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
+
+    let input = b"invalid utf8 \xFF";
+    cmd.arg("german").write_stdin(*input);
+
+    cmd.assert().success();
+}
