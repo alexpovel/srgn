@@ -1,4 +1,4 @@
-use betterletter::util::iteration::binary_search_uneven;
+use common::lookup::binary_search_uneven;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashSet;
 

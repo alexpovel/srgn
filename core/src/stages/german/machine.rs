@@ -68,14 +68,17 @@ impl StateMachine {
         };
     }
 
-    pub fn transition(&mut self, input: &MachineInput) -> Transition {
+    pub fn transition(&mut self, input: MachineInput) -> Transition {
         self.pre_transition();
 
         let next = match (&self.state, input) {
-            (State::Word(Some(Potential(Umlaut(umlaut)))), c @ 'e' | c @ 'E') => {
+            (State::Word(Some(Potential(Umlaut(umlaut)))), c @ ('e' | 'E')) => {
+                const LENGTH_OF_PREVIOUS_CHARACTER: usize = 1;
+
                 let pos = self.word.len();
 
-                const LENGTH_OF_PREVIOUS_CHARACTER: usize = 1;
+                // We're in a state machine, so we cannot know the length of the
+                // previous character, as have to assume its length here.
                 debug_assert!(
                     'o'.len_utf8() == LENGTH_OF_PREVIOUS_CHARACTER
                         && 'u'.len_utf8() == LENGTH_OF_PREVIOUS_CHARACTER
@@ -93,7 +96,7 @@ impl StateMachine {
 
                 State::Word(None)
             }
-            (State::Word(Some(Potential(Eszett(casing)))), c @ 's' | c @ 'S') => {
+            (State::Word(Some(Potential(Eszett(casing)))), c @ ('s' | 'S')) => {
                 let pos = self.word.len();
 
                 let start = pos - c.len_utf8(); // Previous char same as current `c`
@@ -129,9 +132,9 @@ impl StateMachine {
         transition
     }
 
-    fn post_transition(&mut self, input: &MachineInput) {
+    fn post_transition(&mut self, input: MachineInput) {
         if let Some(Transition::Entered | Transition::Internal) = self.transition {
-            self.word.push(*input);
+            self.word.push(input);
             trace!(
                 "Appending {:?} to current word due to transition {:?}.",
                 input,

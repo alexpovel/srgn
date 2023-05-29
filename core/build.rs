@@ -1,4 +1,4 @@
-use common::is_compound_word;
+use common::strings::is_compound_word;
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::{

@@ -2,6 +2,20 @@
 name = "betterletter"
 version = "0.1.0"
 edition = "2021"
+authors = ["Alex Povel <rust@alexpovel.de>"]
+description = "Substitute alternative, ASCII-only spellings of special characters with their Unicode equivalents."
+license-file = "LICENSE"
+repository = "https://github.com/alexpovel/betterletter-rs"
+readme = "README.md"
+documentation = "https://docs.rs/betterletter"
+keywords = ["spelling", "umlaut", "substitute", "unicode", "alternative"]
+categories = [
+    "accessibility",
+    "internationalization",
+    "localization",
+    "text-processing",
+    "value-formatting",
+]
 
 [dependencies]
 cached = "0.43.0"

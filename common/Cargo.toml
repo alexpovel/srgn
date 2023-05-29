@@ -2,11 +2,16 @@
 name = "common"
 version = "0.1.0"
 edition = "2021"
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 log = "0.4.17"
+itertools = "0.10.5"
+paste = "1.0.12"
+serde = { version = "1.0.163", features = ["derive"] }
 
 [dev-dependencies]
 rstest = "0.17.0"
+insta = { version = "1.29.0", features = ["yaml"] }

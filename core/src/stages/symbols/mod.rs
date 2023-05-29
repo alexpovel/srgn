@@ -1,9 +1,11 @@
-use super::{Stage, StageResult};
+use super::{tooling::StageResult, Stage};
 
-#[derive(Clone, Copy)]
-pub struct Symbols;
+/// Symbols stage, responsible for symbols such as `—` and `→`.
+#[derive(Debug, Clone, Copy)]
+#[allow(clippy::module_name_repetitions)]
+pub struct SymbolsStage;
 
-impl Stage for Symbols {
+impl Stage for SymbolsStage {
     fn substitute(&self, input: &str) -> StageResult {
         Ok(String::from(input).into())
     }

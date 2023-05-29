@@ -1,5 +1,5 @@
 ---
-source: core/src/util/iteration.rs
+source: common/src/itertools.rs
 expression: result
 info:
   collection:

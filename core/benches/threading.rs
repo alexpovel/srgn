@@ -1,7 +1,6 @@
-use betterletter::apply;
 #[cfg(feature = "de")]
-use betterletter::stages::german::German;
-use betterletter::stages::Stage;
+use betterletter::stages::GermanStage;
+use betterletter::{apply, Stage};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use log::info;
 use std::io::{BufRead, Write};
@@ -16,7 +15,7 @@ fn process_single_threaded_german(
     mut source: &mut impl BufRead,
     mut destination: &mut impl Write,
 ) -> Result<(), std::io::Error> {
-    let stages: Vec<Box<dyn Stage>> = vec![Box::new(German)];
+    let stages: Vec<Box<dyn Stage>> = vec![Box::new(GermanStage)];
     apply(&stages, &mut source, &mut destination)
 }
 
@@ -56,7 +55,7 @@ pub fn process_multi_threaded_german(
                     //     stage.process(&mut item).unwrap();
                     // }
 
-                    let stage = German;
+                    let stage = GermanStage;
                     let result = stage.substitute(&item).unwrap();
 
                     let mut results = results_clone.lock().unwrap();

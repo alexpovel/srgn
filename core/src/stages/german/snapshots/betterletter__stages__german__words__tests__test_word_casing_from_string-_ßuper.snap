@@ -1,5 +1,5 @@
 ---
-source: core/src/util/strings.rs
+source: core/src/stages/german/words.rs
 expression: "WordCasing::try_from(word.as_str())"
 info:
   word: ßuper

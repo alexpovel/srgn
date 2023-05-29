@@ -1,8 +1,8 @@
 use betterletter::apply;
 #[cfg(feature = "de")]
-use betterletter::stages::german::German;
+use betterletter::stages::GermanStage;
 #[cfg(feature = "symbols")]
-use betterletter::stages::symbols::Symbols;
+use betterletter::stages::SymbolsStage;
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
@@ -18,9 +18,9 @@ fn main() -> Result<(), Error> {
         .map(|stage| {
             let tp: Box<dyn betterletter::Stage> = match stage {
                 #[cfg(feature = "de")]
-                cli::Stage::German => Box::new(German),
+                cli::Stage::German => Box::new(GermanStage),
                 #[cfg(feature = "symbols")]
-                cli::Stage::Symbols => Box::new(Symbols),
+                cli::Stage::Symbols => Box::new(SymbolsStage),
             };
 
             debug!("Loaded stage: {:?}", stage);
