@@ -1,4 +1,4 @@
-use betterletter::process;
+use betterletter::apply;
 #[cfg(feature = "de")]
 use betterletter::stages::german::German;
 use betterletter::stages::Stage;
@@ -17,7 +17,7 @@ fn process_single_threaded_german(
     mut destination: &mut impl Write,
 ) -> Result<(), std::io::Error> {
     let stages: Vec<Box<dyn Stage>> = vec![Box::new(German)];
-    process(&mut source, &stages, &mut destination)
+    apply(&stages, &mut source, &mut destination)
 }
 
 /// German is hard-coded for now as passing trait objects to threads didn't work well.
@@ -47,7 +47,7 @@ pub fn process_multi_threaded_german(
             // let stages_clone = Arc::clone(&_stages);
 
             thread::spawn(move || {
-                while let Some((index, mut item)) = {
+                while let Some((index, item)) = {
                     let mut queue = queue_clone.lock().unwrap();
                     queue.pop_front()
                 } {
@@ -57,11 +57,11 @@ pub fn process_multi_threaded_german(
                     // }
 
                     let stage = German;
-                    stage.process(&mut item).unwrap();
+                    let result = stage.substitute(&item).unwrap();
 
                     let mut results = results_clone.lock().unwrap();
                     info!("Thread {} finished processing line", i);
-                    results.push((index, item));
+                    results.push((index, result));
                 }
             })
         })
@@ -74,7 +74,7 @@ pub fn process_multi_threaded_german(
     let mut results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
     results.sort_by_key(|&(index, _)| index);
 
-    let results: Vec<String> = results.into_iter().map(|(_, result)| result).collect();
+    let results: Vec<String> = results.into_iter().map(|(_, result)| result.0).collect();
 
     destination.write_all(results.join("\n").as_bytes())
 }

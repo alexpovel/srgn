@@ -12,8 +12,23 @@ impl From<StageError> for std::io::Error {
     }
 }
 
-pub type StageResult = Result<(), StageError>;
+#[derive(Debug)]
+pub struct SubstitutedString(pub String);
+
+impl From<SubstitutedString> for String {
+    fn from(s: SubstitutedString) -> Self {
+        s.0
+    }
+}
+
+impl From<String> for SubstitutedString {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+pub type StageResult = Result<SubstitutedString, StageError>;
 
 pub trait Stage: Send + Sync {
-    fn process(&self, input: &mut String) -> StageResult;
+    fn substitute(&self, input: &str) -> StageResult;
 }

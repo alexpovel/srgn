@@ -4,7 +4,7 @@ use super::{Stage, StageResult};
 pub struct Symbols;
 
 impl Stage for Symbols {
-    fn process(&self, _input: &mut String) -> StageResult {
-        Ok(())
+    fn substitute(&self, input: &str) -> StageResult {
+        Ok(String::from(input).into())
     }
 }

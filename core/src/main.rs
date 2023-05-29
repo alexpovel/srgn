@@ -1,4 +1,4 @@
-use betterletter::process;
+use betterletter::apply;
 #[cfg(feature = "de")]
 use betterletter::stages::german::German;
 #[cfg(feature = "symbols")]
@@ -32,7 +32,7 @@ fn main() -> Result<(), Error> {
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
-    process(&mut source, &stages, &mut destination)?;
+    apply(&stages, &mut source, &mut destination)?;
     info!("Done, exiting");
     Ok(())
 }

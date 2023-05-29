@@ -22,20 +22,17 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 pub struct German;
 
 impl Stage for German {
-    fn process(&self, input: &mut String) -> StageResult {
+    fn substitute(&self, input: &str) -> StageResult {
         debug!("Working on input '{}'", input.escape_debug());
+
+        let mut output = String::with_capacity(input.len());
+        let mut machine = StateMachine::new();
 
         // The state machine, much like a missing trailing newline in a file, will
         // misbehave if the very last transition is not an 'external' one (the last word
         // won't be detected properly).
         const INDICATOR: char = '\0';
-        input.push(INDICATOR);
-
-        let mut output = String::with_capacity(input.capacity());
-
-        let mut machine = StateMachine::new();
-
-        for char in input.chars() {
+        for char in input.chars().chain(std::iter::once(INDICATOR)) {
             trace!(
                 "Beginning processing of character '{}'",
                 char.escape_debug()
@@ -74,13 +71,13 @@ impl Stage for German {
         let c = output.pop();
         debug_assert!(
             c == Some(INDICATOR),
-            "Processor removed trailing indicator byte."
+            "Trailing indicator byte expected, but found '{:?}'.",
+            c
         );
 
         debug!("Final output string is '{}'", output.escape_debug());
-        *input = output;
 
-        Ok(())
+        Ok(output.into())
     }
 }
 
@@ -272,9 +269,9 @@ mod tests {
             )]
             word: String
         ) (|data: &TestProcess| {
-                let mut input = word.clone();
-                German{}.process(&mut input).unwrap();
-                insta::assert_yaml_snapshot!(data.to_string(), input);
+                let input = word.clone();
+                let result = German{}.substitute(&input).unwrap();
+                insta::assert_yaml_snapshot!(data.to_string(), result.0);
             }
         )
     }
