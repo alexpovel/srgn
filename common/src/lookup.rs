@@ -91,6 +91,16 @@ mod tests {
     #[case("a", "", ',', false)]
     #[case("", "abc", ',', true)]
     #[case("", "", ',', true)]
+    // Oddly-shaped haystack
+    #[case("abc", "abc", ',', true)]
+    #[case("abc", "abc,", ',', true)]
+    #[case("abc", "abc,def", ',', true)]
+    #[case("abc", ",", ',', false)]
+    #[case("", ",", ',', true)]
+    #[case("", ",,,,", ',', true)]
+    #[case("abc", ",,abc,,", ',', true)]
+    #[case("abc", "abc,,,", ',', true)]
+    #[case("abc", ",,,abc", ',', true)]
     // Switched characters.
     #[case("nmo", "abc,mno,yz", ',', false)]
     #[case("cba", "abc,def,yz", ',', false)]
@@ -109,6 +119,8 @@ mod tests {
     // Real-world examples with common prefixes.
     #[case("Abdämpfung", "Abdämpfung\nAbenteuer\nAbschluss", '\n', true)]
     #[case("Abdämpfung", "Abdrehen\nAbdämpfung\nAbschluss", '\n', true)]
+    // Needle contains separator.
+    #[case("abc,def", "abc,def,ghi", ',', false)]
     fn test_binsearch(
         #[case] needle: &str,
         #[case] haystack: &str,
