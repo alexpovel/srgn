@@ -1,10 +1,10 @@
-use super::{ProcessResult, TextProcessor};
+use super::{Stage, StageResult};
 
 #[derive(Clone, Copy)]
 pub struct Symbols;
 
-impl TextProcessor for Symbols {
-    fn process(&self, _input: &mut String) -> ProcessResult {
+impl Stage for Symbols {
+    fn process(&self, _input: &mut String) -> StageResult {
         Ok(())
     }
 }

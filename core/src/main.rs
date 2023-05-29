@@ -3,27 +3,24 @@ use betterletter::process;
 use betterletter::stages::german::German;
 #[cfg(feature = "symbols")]
 use betterletter::stages::symbols::Symbols;
-use betterletter::stages::TextProcessor;
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
-
-use crate::cli::{Args, Stage};
 
 fn main() -> Result<(), Error> {
     env_logger::init();
     info!("Launching app");
 
-    let args = Args::init();
+    let args = cli::Args::init();
 
-    let processors: Vec<Box<dyn TextProcessor>> = args
+    let stages: Vec<Box<dyn betterletter::Stage>> = args
         .stages()
         .iter()
         .map(|stage| {
-            let tp: Box<dyn TextProcessor> = match stage {
+            let tp: Box<dyn betterletter::Stage> = match stage {
                 #[cfg(feature = "de")]
-                Stage::German => Box::new(German),
+                cli::Stage::German => Box::new(German),
                 #[cfg(feature = "symbols")]
-                Stage::Symbols => Box::new(Symbols),
+                cli::Stage::Symbols => Box::new(Symbols),
             };
 
             debug!("Loaded stage: {:?}", stage);
@@ -35,7 +32,7 @@ fn main() -> Result<(), Error> {
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
-    process(&mut source, &processors, &mut destination)?;
+    process(&mut source, &stages, &mut destination)?;
     info!("Done, exiting");
     Ok(())
 }

@@ -4,16 +4,16 @@ pub mod german;
 pub mod symbols;
 
 #[derive(Debug)]
-pub struct ProcessError;
+pub struct StageError;
 
-impl From<ProcessError> for std::io::Error {
-    fn from(_: ProcessError) -> Self {
+impl From<StageError> for std::io::Error {
+    fn from(_: StageError) -> Self {
         std::io::Error::new(std::io::ErrorKind::Other, "Error in text processor.")
     }
 }
 
-pub type ProcessResult = Result<(), ProcessError>;
+pub type StageResult = Result<(), StageError>;
 
-pub trait TextProcessor: Send + Sync {
-    fn process(&self, input: &mut String) -> ProcessResult;
+pub trait Stage: Send + Sync {
+    fn process(&self, input: &mut String) -> StageResult;
 }

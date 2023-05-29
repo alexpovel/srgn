@@ -1,4 +1,4 @@
-use crate::stages::TextProcessor;
+pub use crate::stages::Stage;
 use log::{debug, info};
 use std::io::{BufRead, Error, Write};
 
@@ -10,7 +10,7 @@ const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 
 pub fn process(
     source: &mut impl BufRead,
-    processors: &Vec<Box<dyn TextProcessor>>,
+    stages: &Vec<Box<dyn Stage>>,
     destination: &mut impl Write,
 ) -> Result<(), Error> {
     let mut buf = String::new();
@@ -20,8 +20,8 @@ pub fn process(
     while source.read_line(&mut buf)? > EOF_INDICATOR {
         debug!("Starting processing line: '{}'", buf.escape_debug());
 
-        for processor in processors {
-            processor.process(&mut buf)?;
+        for stage in stages {
+            stage.process(&mut buf)?;
         }
 
         debug!("Processed line, will write out: '{}'", buf.escape_debug());

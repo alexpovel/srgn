@@ -1,7 +1,7 @@
 use betterletter::process;
 #[cfg(feature = "de")]
 use betterletter::stages::german::German;
-use betterletter::stages::TextProcessor;
+use betterletter::stages::Stage;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use log::info;
 use std::io::{BufRead, Write};
@@ -16,19 +16,19 @@ fn process_single_threaded_german(
     mut source: &mut impl BufRead,
     mut destination: &mut impl Write,
 ) -> Result<(), std::io::Error> {
-    let processors: Vec<Box<dyn TextProcessor>> = vec![Box::new(German)];
-    process(&mut source, &processors, &mut destination)
+    let stages: Vec<Box<dyn Stage>> = vec![Box::new(German)];
+    process(&mut source, &stages, &mut destination)
 }
 
 /// German is hard-coded for now as passing trait objects to threads didn't work well.
 pub fn process_multi_threaded_german(
-    // processors: &Vec<Arc<dyn TextProcessor>>,
+    // stages: &Vec<Arc<dyn Stage>>,
     source: impl BufRead,
     destination: &mut impl Write,
 ) -> Result<(), Error> {
     let lines = source.lines().collect::<Result<Vec<_>, _>>()?;
 
-    // let _procs = Arc::new(Mutex::new(processors));
+    // let _stages = Arc::new(Mutex::new(stages));
 
     let num_threads = num_cpus::get();
 
@@ -44,20 +44,20 @@ pub fn process_multi_threaded_german(
         .map(|i| {
             let queue_clone = Arc::clone(&queue);
             let results_clone = Arc::clone(&results);
-            // let processors_clone = Arc::clone(&procs);
+            // let stages_clone = Arc::clone(&_stages);
 
             thread::spawn(move || {
                 while let Some((index, mut item)) = {
                     let mut queue = queue_clone.lock().unwrap();
                     queue.pop_front()
                 } {
-                    // let processors = processors_clone.lock().unwrap();
-                    // for processor in processors.iter() {
-                    //     processor.process(&mut item).unwrap();
+                    // let stages = stages_clone.lock().unwrap();
+                    // for stage in stages.iter() {
+                    //     stage.process(&mut item).unwrap();
                     // }
 
-                    let processor = German;
-                    processor.process(&mut item).unwrap();
+                    let stage = German;
+                    stage.process(&mut item).unwrap();
 
                     let mut results = results_clone.lock().unwrap();
                     info!("Thread {} finished processing line", i);

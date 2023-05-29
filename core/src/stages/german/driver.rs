@@ -4,7 +4,7 @@ use crate::{
             machine::{StateMachine, Transition},
             words::{Replace, Replacement},
         },
-        ProcessResult, TextProcessor,
+        Stage, StageResult,
     },
     util::{
         iteration::{binary_search_uneven, power_set_without_empty},
@@ -21,8 +21,8 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 #[derive(Clone, Copy)]
 pub struct German;
 
-impl TextProcessor for German {
-    fn process(&self, input: &mut String) -> ProcessResult {
+impl Stage for German {
+    fn process(&self, input: &mut String) -> StageResult {
         debug!("Working on input '{}'", input.escape_debug());
 
         // The state machine, much like a missing trailing newline in a file, will
