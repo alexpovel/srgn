@@ -23,3 +23,7 @@ cobertura.xml
 
 # Coverage data
 *.profraw
+
+# https://github.com/flamegraph-rs/flamegraph / `perf`
+flamegraph.svg
+perf.data*
