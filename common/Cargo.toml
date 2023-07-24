@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 log = "0.4.17"
-itertools = "0.10.5"
+itertools = "0.11.0"
 paste = "1.0.12"
 serde = { version = "1.0.163", features = ["derive"] }
 unicode_titlecase = "2.0.0"
