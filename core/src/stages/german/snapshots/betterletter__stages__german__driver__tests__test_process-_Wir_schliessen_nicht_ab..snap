@@ -1,8 +1,0 @@
----
-source: core/src/stages/german/driver.rs
-expression: input
-info:
-  word: Wir schliessen nicht ab.
----
-Wir schließen nicht ab.
-

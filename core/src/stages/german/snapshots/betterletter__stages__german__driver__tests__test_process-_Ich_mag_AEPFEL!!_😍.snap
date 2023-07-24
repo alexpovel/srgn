@@ -1,8 +1,0 @@
----
-source: core/src/stages/german/driver.rs
-expression: input
-info:
-  word: Ich mag AEPFEL!! 😍
----
-Ich mag ÄPFEL!! 😍
-

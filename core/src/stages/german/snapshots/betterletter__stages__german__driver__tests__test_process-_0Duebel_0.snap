@@ -1,8 +1,0 @@
----
-source: core/src/stages/german/driver.rs
-expression: input
-info:
-  word: "\u0000Duebel\u0000"
----
-"\u0000Dübel\u0000"
-
