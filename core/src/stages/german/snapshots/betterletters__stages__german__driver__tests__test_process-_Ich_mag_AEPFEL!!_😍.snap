@@ -1,0 +1,8 @@
+---
+source: core/src/stages/german/driver.rs
+expression: result.0
+info:
+  word: Ich mag AEPFEL!! 😍
+---
+Ich mag ÄPFEL!! 😍
+

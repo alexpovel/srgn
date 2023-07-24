@@ -39,7 +39,7 @@ const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 ///
 ///
 /// ```
-/// use betterletter::{apply, stages::GermanStage, Stage};
+/// use betterletters::{apply, stages::GermanStage, Stage};
 /// use std::io::Cursor;
 ///
 /// let stages = vec![Box::new(GermanStage)].into_iter().map(|g| g as Box<dyn Stage>).collect();

@@ -1,0 +1,8 @@
+---
+source: core/src/stages/german/driver.rs
+expression: result.0
+info:
+  word: "\u0000Duebel\u0000"
+---
+"\u0000Dübel\u0000"
+

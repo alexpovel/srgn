@@ -36,7 +36,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// # Example: A simple greeting, with Umlaut and Eszett
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let result: String = GermanStage.substitute("Gruess Gott!").unwrap().into();
 /// assert_eq!(result, "Grüß Gott!");
@@ -48,7 +48,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// *elaborate* word list!), but is still handled, as its constituents are.
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let result: String = GermanStage.substitute("Du Suesswassertagtraeumer!").unwrap().into();
 /// assert_eq!(result, "Du Süßwassertagträumer!");
@@ -61,7 +61,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// for word in &[
 ///     // "ae"
@@ -111,7 +111,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// more likely than for Umlauts.
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// for (input, output) in &[
 ///     ("Busse", "Buße"), // busses / penance
@@ -150,7 +150,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 ///
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let result: String = GermanStage.substitute("aEpFeL").unwrap().into();
 ///
@@ -166,7 +166,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// output is `Äpfel`
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let result: String = GermanStage.substitute("AePfEl").unwrap().into();
 ///
@@ -177,7 +177,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// ## Subexample: other cases
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let f = |word: &str| -> String {GermanStage.substitute(word).unwrap().into()};
 ///
@@ -242,7 +242,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 /// Of course, the input has to be valid UTF-8, as is ensured by its signature ([`str`]).
 ///
 /// ```
-/// use betterletter::{Stage, stages::GermanStage};
+/// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let result: String = GermanStage.substitute("\0Schoener    你好 Satz... 👋🏻\r\n\n").unwrap().into();
 /// assert_eq!(result, "\0Schöner    你好 Satz... 👋🏻\r\n\n");
@@ -275,7 +275,7 @@ static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt
 ///
 /// For more info, an overview of the methods tried
 /// ([`phf`](https://crates.io/crates/phf) and more), and benchmarks, see [this
-/// issue](https://github.com/alexpovel/betterletter-rs/issues/9).
+/// issue](https://github.com/alexpovel/betterletters/issues/9).
 #[derive(Debug, Clone, Copy)]
 pub struct GermanStage;
 
