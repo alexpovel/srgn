@@ -21,7 +21,7 @@ categories = [
 cached = "0.43.0"
 clap = { version = "4.2.7", features = ["derive"] }
 env_logger = "0.10.0"
-itertools = "0.10.5"
+itertools = "0.11.0"
 log = "0.4.17"
 common = { path = "../common" }
 unicode_titlecase = "2.0.0"
