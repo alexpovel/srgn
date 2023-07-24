@@ -18,7 +18,7 @@ categories = [
 ]
 
 [dependencies]
-cached = "0.43.0"
+cached = "0.44.0"
 clap = { version = "4.2.7", features = ["derive"] }
 env_logger = "0.10.0"
 itertools = "0.10.5"
