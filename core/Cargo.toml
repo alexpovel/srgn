@@ -1,13 +1,13 @@
 [package]
-name = "betterletter"
+name = "betterletters"
 version = "0.1.0"
 edition = "2021"
 authors = ["Alex Povel <rust@alexpovel.de>"]
 description = "Substitute alternative, ASCII-only spellings of special characters with their Unicode equivalents."
 license-file = "LICENSE"
-repository = "https://github.com/alexpovel/betterletter-rs"
+repository = "https://github.com/alexpovel/betterletters"
 readme = "README.md"
-documentation = "https://docs.rs/betterletter"
+documentation = "https://docs.rs/betterletters"
 keywords = ["spelling", "umlaut", "substitute", "unicode", "alternative"]
 categories = [
     "accessibility",

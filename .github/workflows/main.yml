@@ -61,4 +61,4 @@ jobs:
         with:
           release-type: rust
           path: core
-          package-name: betterletter
+          package-name: betterletters

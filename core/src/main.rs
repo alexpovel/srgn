@@ -1,8 +1,8 @@
-use betterletter::apply;
+use betterletters::apply;
 #[cfg(feature = "de")]
-use betterletter::stages::GermanStage;
+use betterletters::stages::GermanStage;
 #[cfg(feature = "symbols")]
-use betterletter::stages::SymbolsStage;
+use betterletters::stages::SymbolsStage;
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
@@ -12,11 +12,11 @@ fn main() -> Result<(), Error> {
 
     let args = cli::Args::init();
 
-    let stages: Vec<Box<dyn betterletter::Stage>> = args
+    let stages: Vec<Box<dyn betterletters::Stage>> = args
         .stages()
         .iter()
         .map(|stage| {
-            let tp: Box<dyn betterletter::Stage> = match stage {
+            let tp: Box<dyn betterletters::Stage> = match stage {
                 #[cfg(feature = "de")]
                 cli::Stage::German => Box::new(GermanStage),
                 #[cfg(feature = "symbols")]

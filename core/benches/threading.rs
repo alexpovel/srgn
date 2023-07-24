@@ -1,6 +1,6 @@
 #[cfg(feature = "de")]
-use betterletter::stages::GermanStage;
-use betterletter::{apply, Stage};
+use betterletters::stages::GermanStage;
+use betterletters::{apply, Stage};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use log::info;
 use std::io::{BufRead, Write};
