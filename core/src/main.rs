@@ -7,7 +7,10 @@ use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
 fn main() -> Result<(), Error> {
-    env_logger::init();
+    env_logger::builder()
+        .format_timestamp_micros() // High precision is nice for benchmarks
+        .init();
+
     info!("Launching app");
 
     let args = cli::Args::init();

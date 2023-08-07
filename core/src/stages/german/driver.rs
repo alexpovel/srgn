@@ -8,13 +8,10 @@ use crate::stages::{
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
-use common::lookup::binary_search_uneven;
 use common::strings::is_compound_word;
 use itertools::Itertools;
 use log::{debug, trace};
 use unicode_titlecase::StrTitleCase;
-
-static VALID_GERMAN_WORDS: &str = include_str!(concat!(env!("OUT_DIR"), "/de.txt")); // Generated in `build.rs`.
 
 /// German language stage, responsible for Umlauts and Eszett.
 ///
@@ -387,8 +384,21 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
     None
 }
 
+// See `Example`: https://docs.rs/fst/0.4.7/fst/set/struct.Set.html#method.new
+static FST_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/de.fst")); // Generated in `build.rs`.
+
 fn contained_in_global_word_list(word: &str) -> bool {
-    binary_search_uneven(word, VALID_GERMAN_WORDS, '\n')
+    trace!("Checking if '{word}' is contained in word list.");
+    trace!("Loading FST.");
+    let set =
+        fst::Set::new(FST_BYTES).expect("Failed to load FST; FST bytes malformed at build time?");
+    trace!("Done loading FST.");
+
+    trace!("Performing word lookup in FST.");
+    let result = set.contains(word);
+    trace!("Done performing word lookup in FST (got '{result}').");
+
+    result
 }
 
 // https://github.com/jaemk/cached/issues/135#issuecomment-1315911572
@@ -455,34 +465,25 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
 mod tests {
     use super::*;
     use common::instrament;
-    use itertools::Itertools;
     use rstest::rstest;
 
     #[test]
-    fn test_words_are_sorted() {
-        let original = VALID_GERMAN_WORDS.lines().collect_vec();
-
-        let mut sorted = VALID_GERMAN_WORDS.lines().collect_vec();
-        sorted.sort_unstable(); // see also: clippy::stable_sort_primitive
-
-        assert_eq!(original, sorted.as_slice());
-    }
-
-    #[test]
-    fn test_words_are_unique() {
-        let original = VALID_GERMAN_WORDS.lines().collect_vec();
-
-        let mut unique = VALID_GERMAN_WORDS.lines().collect_vec();
-        unique.sort_unstable(); // see also: clippy::stable_sort_primitive
-        unique.dedup();
-
-        assert_eq!(original, unique.as_slice());
-    }
-
-    #[test]
     fn test_word_list_is_not_filtered() {
+        let set = fst::Set::new(FST_BYTES).unwrap();
+        let mut stream = set.stream();
+
         assert!(
-            VALID_GERMAN_WORDS.lines().any(str::is_ascii),
+            {
+                let mut has_any_ascii = false;
+
+                while let Some(key) = fst::Streamer::next(&mut stream) {
+                    if key.is_ascii() {
+                        has_any_ascii = true;
+                        break;
+                    }
+                }
+                has_any_ascii
+            },
             concat!(
                 "Looks like you're using a filtered word list containing only special characters.",
                 " The current implementation relies on the full word list (also containing all non-Umlaut words)"

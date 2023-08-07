@@ -18,21 +18,21 @@ fn generate_word_lists() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let base_destination_path = Path::new(&out_dir);
 
-    // Each of these might require different treatment, so do it separately.
+    // Each of these might require different treatments, so do it separately.
 
-    // German
-    let source_file = base_source_path.join("de.txt");
-    let destination_file = base_destination_path.join("de.txt");
-    destination_file.parent().map(fs::create_dir_all);
+    {
+        // German
+        let source_file = base_source_path.join("de.txt");
+        let destination_file = base_destination_path.join("de.fst");
+        destination_file.parent().map(fs::create_dir_all);
 
-    process_german(
-        &mut BufReader::new(File::open(source_file).unwrap()),
-        &mut BufWriter::new(File::create(destination_file).unwrap()),
-    );
+        process_german(
+            &mut BufReader::new(File::open(&source_file).unwrap()),
+            &mut BufWriter::new(File::create(destination_file).unwrap()),
+        );
 
-    // Should work recursively, see also:
-    // https://github.com/rust-lang/cargo/issues/2599#issuecomment-1119059540
-    println!("cargo:rerun-if-changed={}", base_source_path.display());
+        println!("cargo:rerun-if-changed={}", source_file.display());
+    }
 }
 
 fn process_german<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
@@ -43,16 +43,42 @@ where
     let mut contents = String::new();
     source.read_to_string(&mut contents).unwrap();
 
-    let mut words: Vec<&str> = contents.lines().map(|word| word.trim()).collect();
-    let words_set: HashSet<&str> = words.iter().copied().collect();
+    let words: HashSet<&str> = contents.lines().map(|word| word.trim()).collect();
+    let mut filtered_words = Vec::new();
 
-    // Remove those words we would algorithmically generate anyway. This trades binary
-    // size for runtime performance.
-    words.retain(|word| !is_compound_word(word, &|w| words_set.contains(w)));
-
-    words.sort();
-
-    for word in words {
-        writeln!(destination, "{}", word).unwrap();
+    let mut n_compounds = 0;
+    for word in &words {
+        let mut constituents = vec![];
+        // Remove those words we would algorithmically generate anyway. This trades binary
+        // size for runtime performance.
+        if is_compound_word(word, &|w| words.contains(w), &mut constituents) {
+            println!("Dropping: {} ({})", word, constituents.join("-"));
+            n_compounds += 1;
+        } else {
+            filtered_words.push(word.to_owned());
+        }
     }
+
+    drop(words);
+    println!(
+        "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list",
+        n_compounds,
+        filtered_words.len(),
+        {
+            let mut path: std::path::PathBuf = env::var_os("OUT_DIR").unwrap().into();
+            path.pop(); // Remove "out"
+            path.push("output"); // The log file
+            path
+        }
+    );
+
+    filtered_words.sort();
+    filtered_words.dedup(); // `fst::SetBuilder.insert` doesn't check for dupes, so be sure (?)
+
+    let mut build = fst::SetBuilder::new(destination).unwrap();
+    for word in filtered_words {
+        build.insert(word).unwrap();
+    }
+
+    build.finish().unwrap();
 }

@@ -1,7 +1,11 @@
 use log::trace;
 use unicode_titlecase::StrTitleCase;
 
-pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
+pub fn is_compound_word(
+    word: &str,
+    predicate: &impl Fn(&str) -> bool,
+    constituents: &mut Vec<String>,
+) -> bool {
     trace!("Checking if word is valid compound word: '{}'", word);
 
     let indices = word.char_indices().skip(1);
@@ -21,6 +25,8 @@ pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
 
     match highest_valid_index {
         Some(i) => {
+            constituents.push(word[..i].to_owned());
+
             let suffix = &word[i..];
 
             trace!(
@@ -30,10 +36,25 @@ pub fn is_compound_word(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
             );
 
             let tc = suffix.to_titlecase_lower_rest();
-            predicate(&tc)
-                || predicate(suffix)
-                || is_compound_word(&tc, predicate)
-                || is_compound_word(suffix, predicate)
+
+            if predicate(&tc) {
+                trace!("Suffix '{}' is valid.", tc);
+                constituents.push(tc.to_owned());
+                true
+            } else if predicate(suffix) {
+                trace!("Suffix '{}' is valid.", suffix);
+                constituents.push(suffix.to_owned());
+                true
+            } else if is_compound_word(&tc, predicate, constituents) {
+                trace!("Suffix '{}' is valid.", tc);
+                true
+            } else if is_compound_word(suffix, predicate, constituents) {
+                trace!("Suffix '{}' is valid.", suffix);
+                true
+            } else {
+                trace!("Suffix '{}' is not valid.", suffix);
+                false
+            }
         }
         None => false,
     }
@@ -54,6 +75,9 @@ mod tests {
     #[case("Mauer好", false)]
     #[case("Mauerdjieojoid", false)]
     fn test_is_compound_word(#[case] word: &str, #[case] expected: bool) {
-        assert_eq!(is_compound_word(word, &|w| WORDS.contains(&w)), expected);
+        assert_eq!(
+            is_compound_word(word, &|w| WORDS.contains(&w), &mut vec![]),
+            expected
+        );
     }
 }

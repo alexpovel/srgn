@@ -25,6 +25,7 @@ itertools = "0.10.5"
 log = "0.4.17"
 common = { path = "../common" }
 unicode_titlecase = "2.0.0"
+fst = "0.4.7"
 
 [features]
 default = ["all"]
@@ -44,6 +45,7 @@ num_cpus = "1.15.0"
 
 [build-dependencies]
 common = { path = "../common" }
+fst = "0.4.7"
 
 [[bench]]
 name = "threading"
