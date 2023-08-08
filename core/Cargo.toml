@@ -50,7 +50,3 @@ fst = "0.4.7"
 [[bench]]
 name = "threading"
 harness = false
-
-[[bench]]
-name = "lookup"
-harness = false
