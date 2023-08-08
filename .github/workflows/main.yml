@@ -1,4 +1,4 @@
-name: Build, test and publish
+name: Main
 
 on:
   push:
@@ -8,6 +8,8 @@ env:
 
 jobs:
   build-test:
+    name: Build and test (${{ matrix.os }})
+
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -20,6 +22,7 @@ jobs:
       - name: Build
         run: >
           cargo build
+          --locked
           --verbose
 
       - name: Run tests (without coverage)
@@ -28,15 +31,25 @@ jobs:
           cargo test
           --verbose
 
+      - name: Install cargo-tarpaulin (for coverage)
+        # As recommened by `cargo-binstall` team:
+        # https://github.com/cargo-bins/cargo-binstall/tree/d5549ce99ebc82b1ceee93a41375137b7dbd1a1f#faq
+        uses: taiki-e/install-action@v2
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          tool: cargo-tarpaulin
       - name: Run tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
-          cargo install cargo-tarpaulin
+          rustup toolchain install --profile minimal nightly
           && cargo tarpaulin
           --verbose
           --out Xml
           --engine llvm
           --skip-clean
+          --tests
+          --doc
+          --exclude-files 'benches/*'
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
@@ -60,5 +73,25 @@ jobs:
         id: release
         with:
           release-type: rust
-          path: core
-          package-name: betterletters
+
+  publish:
+    name: Publish to crates.io
+
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: needs.release-please.outputs.created
+
+    environment: crates.io
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: swatinem/rust-cache@v2
+
+      - name: Publish
+      # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
+        run: >
+          cargo publish
+          --verbose
+          --locked
+          --no-verify
+          --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
