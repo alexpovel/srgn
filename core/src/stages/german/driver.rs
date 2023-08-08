@@ -11,6 +11,7 @@ use cached::SizedCache;
 use common::strings::decompose_compound_word;
 use itertools::Itertools;
 use log::{debug, trace};
+use once_cell::sync::Lazy;
 use unicode_titlecase::StrTitleCase;
 
 /// German language stage, responsible for Umlauts and Eszett.
@@ -384,18 +385,17 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
     None
 }
 
-// See `Example`: https://docs.rs/fst/0.4.7/fst/set/struct.Set.html#method.new
-static FST_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/de.fst")); // Generated in `build.rs`.
+static SET: Lazy<fst::Set<&[u8]>> = Lazy::new(|| {
+    let bytes: &'static [u8] = include_bytes!(concat!(env!("OUT_DIR"), "/de.fst")); // Generated in `build.rs`.
+    trace!("Loading FST.");
+    let set = fst::Set::new(bytes).expect("Failed to load FST; FST bytes malformed at build time?");
+    trace!("Done loading FST.");
+    set
+});
 
 fn contained_in_global_word_list(word: &str) -> bool {
-    trace!("Checking if '{word}' is contained in word list.");
-    trace!("Loading FST.");
-    let set =
-        fst::Set::new(FST_BYTES).expect("Failed to load FST; FST bytes malformed at build time?");
-    trace!("Done loading FST.");
-
-    trace!("Performing word lookup in FST.");
-    let result = set.contains(word);
+    trace!("Performing lookup of '{word}' in FST.");
+    let result = SET.contains(word);
     trace!("Done performing word lookup in FST (got '{result}').");
 
     result
@@ -469,8 +469,7 @@ mod tests {
 
     #[test]
     fn test_word_list_is_not_filtered() {
-        let set = fst::Set::new(FST_BYTES).unwrap();
-        let mut stream = set.stream();
+        let mut stream = SET.stream();
 
         assert!(
             {

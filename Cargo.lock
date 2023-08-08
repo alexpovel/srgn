@@ -150,6 +150,7 @@ dependencies = [
  "itertools",
  "log",
  "num_cpus",
+ "once_cell",
  "paste",
  "rstest",
  "serde",
