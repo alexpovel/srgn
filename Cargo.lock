@@ -317,11 +317,8 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "insta",
- "itertools",
  "log",
- "paste",
  "rstest",
- "serde",
  "unicode_titlecase",
 ]
 
