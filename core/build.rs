@@ -1,4 +1,4 @@
-use common::strings::is_compound_word;
+use common::strings::decompose_compound_word;
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::{
@@ -48,14 +48,16 @@ where
 
     let mut n_compounds = 0;
     for word in &words {
-        let mut constituents = vec![];
         // Remove those words we would algorithmically generate anyway. This trades binary
         // size for runtime performance.
-        if is_compound_word(word, &|w| words.contains(w), &mut constituents) {
-            println!("Dropping: {} ({})", word, constituents.join("-"));
-            n_compounds += 1;
-        } else {
-            filtered_words.push(word.to_owned());
+        match decompose_compound_word(word, &|w| words.contains(w)) {
+            Some(constituents) => {
+                println!("Dropping: {} ({})", word, constituents.join("-"));
+                n_compounds += 1;
+            }
+            None => {
+                filtered_words.push(word.to_owned());
+            }
         }
     }
 

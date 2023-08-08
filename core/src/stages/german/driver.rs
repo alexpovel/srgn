@@ -8,7 +8,7 @@ use crate::stages::{
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
-use common::strings::is_compound_word;
+use common::strings::decompose_compound_word;
 use itertools::Itertools;
 use log::{debug, trace};
 use unicode_titlecase::StrTitleCase;
@@ -455,7 +455,7 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 // None of these worked: we might have a compound word. These are
                 // *never* assumed to occur as anything but titlecase (e.g.
                 // "Hausüberfall").
-                || is_compound_word(word, predicate)
+                || decompose_compound_word(word, predicate).is_some()
         }
         Err(_) => false, // Ran into some unexpected characters...
     }
