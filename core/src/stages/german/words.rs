@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::fmt::Display;
+use std::{fmt::Display, ops::Range};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum WordCasing {
@@ -105,16 +105,10 @@ pub(super) struct Word {
     replacements: Vec<Replacement>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Replacement {
-    span: Span,
+    span: Range<usize>,
     content: SpecialCharacter,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct Span {
-    start: usize,
-    end: usize,
 }
 
 impl Word {
@@ -134,7 +128,7 @@ impl Word {
 
     pub fn add_replacement(&mut self, start: usize, end: usize, content: SpecialCharacter) {
         self.replacements.push(Replacement {
-            span: Span { start, end },
+            span: Range { start, end },
             content,
         });
     }
@@ -196,7 +190,7 @@ impl Replace for String {
 
         // Assert sorting, such that reversing actually does the right thing.
         if cfg!(debug_assertions) {
-            let mut cloned = replacements.iter().copied().collect_vec();
+            let mut cloned = replacements.iter().cloned().collect_vec();
             cloned.sort_by_key(crate::stages::german::words::Replacement::start);
             assert_eq!(cloned, replacements);
         }

@@ -341,7 +341,7 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
     let replacement_combinations: Vec<Vec<Replacement>> = replacements
         .iter()
         .powerset()
-        .map(|v| v.into_iter().copied().collect())
+        .map(|v| v.into_iter().cloned().collect())
         .collect();
 
     debug!("Starting search for valid replacement for word '{}'", word);
