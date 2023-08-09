@@ -12,6 +12,9 @@ enum State {
     Word(Option<Potential>),
 }
 
+/// This is basically just an `Option`, but it's more descriptive and leads to really
+/// nicely readable code (an avoids `Option<Option<T>>`, which could be confusing/less
+/// readable).
 #[derive(Debug)]
 struct Potential(SpecialCharacter);
 
