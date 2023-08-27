@@ -151,6 +151,7 @@ dependencies = [
  "num_cpus",
  "once_cell",
  "paste",
+ "rayon",
  "rstest",
  "serde",
  "unicode_titlecase",

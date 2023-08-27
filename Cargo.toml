@@ -55,6 +55,7 @@ opt-level = 3
 [build-dependencies]
 decompound = "0.3.0"
 fst = "0.4.7"
+rayon = "1.7.0"
 
 [[bench]]
 name = "threading"

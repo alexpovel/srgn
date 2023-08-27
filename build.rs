@@ -1,6 +1,8 @@
 use decompound::{decompound, DecompositionOptions};
+use rayon::prelude::*;
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
+use std::sync::Mutex;
 use std::{
     env,
     fs::{self, File},
@@ -9,6 +11,16 @@ use std::{
 
 fn main() {
     generate_word_lists();
+}
+
+macro_rules! time_it {
+    ($name:expr, $e:expr) => {{
+        let now = std::time::Instant::now();
+        let result = $e;
+        let duration = now.elapsed();
+        println!("{} - Time taken: {:?}", $name, duration);
+        result
+    }};
 }
 
 fn generate_word_lists() {
@@ -43,56 +55,70 @@ where
     let mut contents = String::new();
     source.read_to_string(&mut contents).unwrap();
 
-    let words: HashSet<&str> = contents.lines().map(|word| word.trim()).collect();
-    let mut filtered_words = Vec::new();
+    let words: HashSet<&str> = time_it!(
+        "Constructing hashset of words",
+        contents.lines().map(|word| word.trim()).collect()
+    );
+    let keepers = Mutex::new(Vec::new());
 
-    let mut n_compounds = 0;
-    for word in &words {
-        assert!(
-            !word.contains('-'),
-            // Shouldn't need these, as hyphenated words are themselves made up of other
-            // words...
-            "Hyphenated words not expected in dictionary"
-        );
+    println!("cargo:warning=Filtering {} words", words.len());
+    time_it!(
+        "Filtering words",
+        // Parallel iteration is a massive time-saver, more than an order of magnitude
+        // (approx. 2 minutes -> 5 seconds)
+        words.par_iter().for_each(|word| {
+            match decompound(
+                word,
+                &|w| words.contains(w),
+                DecompositionOptions::TRY_TITLECASE_SUFFIX,
+            ) {
+                Ok(_constituents) => {
+                    // Hot loop IO: very costly, only use when debugging
+                    // println!("Dropping '{}' ({})", word, _constituents.join("-"));
+                }
+                Err(_) => {
+                    let mut keepers = keepers.lock().unwrap();
+                    keepers.push(word.to_owned());
 
-        // Remove those words we would algorithmically generate anyway. This trades binary
-        // size for runtime performance.
-        match decompound(
-            word,
-            &|w| words.contains(w),
-            DecompositionOptions::TRY_TITLECASE_SUFFIX,
-        ) {
-            Ok(constituents) => {
-                println!("Dropping: {} ({})", word, constituents.join("-"));
-                n_compounds += 1;
-            }
-            Err(_) => {
-                println!("Keeping: {}", word);
-                filtered_words.push(word.to_owned());
-            }
-        }
-    }
+                    // Hot loop IO: very costly, only use when debugging
+                    // println!("cargo:warning=Keeping '{}'", word);
+                }
+            };
+        })
+    );
 
-    drop(words);
+    let mut keepers = keepers.into_inner().unwrap();
+    let dropped_words: HashSet<_> = words
+        .difference(&keepers.iter().cloned().collect::<HashSet<_>>())
+        .cloned()
+        .collect();
+
+    drop(words); // Prevent misuse; these are unfiltered!
+
     println!(
-        "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list",
-        n_compounds,
-        filtered_words.len(),
+        "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
+        dropped_words.len(),
+        keepers.len(),
         {
             let mut path: std::path::PathBuf = env::var_os("OUT_DIR").unwrap().into();
             path.pop(); // Remove "out"
             path.push("output"); // The log file
             path
-        }
+        },
     );
 
-    filtered_words.sort();
-    filtered_words.dedup(); // `fst::SetBuilder.insert` doesn't check for dupes, so be sure (?)
+    time_it!("Sorting filtered words", keepers.sort());
 
-    let mut build = fst::SetBuilder::new(destination).unwrap();
-    for word in filtered_words {
-        build.insert(word).unwrap();
-    }
+    // `fst::SetBuilder.insert` doesn't check for dupes, so be sure (?)
+    time_it!("Deduplicating filtered words", keepers.dedup());
 
-    build.finish().unwrap();
+    time_it!("Building FST", {
+        let mut build = fst::SetBuilder::new(destination).unwrap();
+
+        for word in &keepers {
+            build.insert(word).unwrap();
+        }
+
+        build.finish().unwrap();
+    });
 }
