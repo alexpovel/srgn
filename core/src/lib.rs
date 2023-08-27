@@ -20,6 +20,12 @@ pub use crate::stages::Stage;
 use log::{debug, info};
 use std::io::{BufRead, Error, Write};
 
+/// Internal macros. Have to live here to be usable in unit, not just integration
+/// (`./tests`) tests. Do not [move from
+/// here](https://stackoverflow.com/questions/26731243/how-do-i-use-a-macro-across-module-files#comment115383139_63234531)
+#[macro_use]
+pub mod macros;
+
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;
 

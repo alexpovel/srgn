@@ -472,7 +472,6 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::instrament;
     use rstest::rstest;
 
     #[test]

@@ -206,7 +206,6 @@ impl Replace for String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common::instrament;
     use rstest::rstest;
     use serde::Serialize;
 
