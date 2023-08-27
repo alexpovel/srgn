@@ -8,7 +8,7 @@ use crate::stages::{
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
-use common::strings::decompose_compound_word;
+use decompound::{decompound, DecompositionOptions};
 use itertools::Itertools;
 use log::{debug, trace};
 use once_cell::sync::Lazy;
@@ -250,7 +250,7 @@ use unicode_titlecase::StrTitleCase;
 ///
 /// This stage is implemented as a [finite state
 /// machine](https://en.wikipedia.org/wiki/Finite-state_machine), which means it runs in
-/// linear time as well as constant space. It is therefore very fast and memory
+/// linear time as well as constant space. It should therefore be quite fast and memory
 /// efficient, requiring only a single pass over the input [`str`].
 ///
 /// The underlying checks for valid words are implemented as a
@@ -418,11 +418,18 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
             // There is no further processing we can/want to do (or is there...
             // https://www.youtube.com/watch?v=HLRdruqQfRk).
             predicate(word)
+            // However, due to how the lookup is generated and deduplicated, words
+            // like `süßes` *might not be found* when looked up as a whole. It has
+            // been split to `süß` and `es`, and *only these* are in the word list.
+            // `süßes` is therefore a compound word, by our definition (it's not, it
+            // just falls victim to an imperfect algorithm).
+            || decompound(word, predicate, DecompositionOptions::TRY_TITLECASE_SUFFIX).is_ok()
         }
         Ok(WordCasing::AllUppercase) => {
             // Convert to something sensible before proceeding.
             let tc = word.to_titlecase_lower_rest();
             debug_assert!(
+                // Infinite recursion should this go wrong, so check
                 WordCasing::try_from(tc.as_str()) == Ok(WordCasing::Titlecase),
                 "Titlecased word, but isn't categorized correctly."
             );
@@ -436,6 +443,7 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 Some(c) if c.is_uppercase() => {
                     let tc = word.to_titlecase_lower_rest();
                     debug_assert!(
+                        // Infinite recursion should this go wrong, so check
                         WordCasing::try_from(tc.as_str()) == Ok(WordCasing::Titlecase),
                         "Titlecased word, but isn't categorized correctly."
                     );
@@ -452,10 +460,10 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
                 // Adjectives and verbs might be titlecased at the beginning of
                 // sentences etc. (e.g. "Gut gemacht!" -> we need "gut").
                 || is_valid(&word.to_lowercase(), predicate)
-                // None of these worked: we might have a compound word. These are
-                // *never* assumed to occur as anything but titlecase (e.g.
+                // None of these worked: we might have a compound word. In the ordinary
+                // case, these only occur as titlecase, as they're nouns (e.g.
                 // "Hausüberfall").
-                || decompose_compound_word(word, predicate).is_some()
+                || decompound(word, predicate, DecompositionOptions::TRY_TITLECASE_SUFFIX).is_ok()
         }
         Err(_) => false, // Ran into some unexpected characters...
     }

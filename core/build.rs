@@ -1,4 +1,4 @@
-use common::strings::decompose_compound_word;
+use decompound::{decompound, DecompositionOptions};
 use std::collections::HashSet;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::{
@@ -48,14 +48,26 @@ where
 
     let mut n_compounds = 0;
     for word in &words {
+        assert!(
+            !word.contains('-'),
+            // Shouldn't need these, as hyphenated words are themselves made up of other
+            // words...
+            "Hyphenated words not expected in dictionary"
+        );
+
         // Remove those words we would algorithmically generate anyway. This trades binary
         // size for runtime performance.
-        match decompose_compound_word(word, &|w| words.contains(w)) {
-            Some(constituents) => {
+        match decompound(
+            word,
+            &|w| words.contains(w),
+            DecompositionOptions::TRY_TITLECASE_SUFFIX,
+        ) {
+            Ok(constituents) => {
                 println!("Dropping: {} ({})", word, constituents.join("-"));
                 n_compounds += 1;
             }
-            None => {
+            Err(_) => {
+                println!("Keeping: {}", word);
                 filtered_words.push(word.to_owned());
             }
         }
