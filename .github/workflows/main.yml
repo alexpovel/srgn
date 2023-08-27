@@ -38,18 +38,19 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         with:
           tool: cargo-tarpaulin
+      - name: Install (minimal) nightly toolchain
+        if: matrix.os == 'ubuntu-latest'
+        run: rustup toolchain install --profile minimal nightly
       - name: Run tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
         run: >
-          rustup toolchain install --profile minimal nightly
-          && cargo tarpaulin
+          cargo tarpaulin
           --verbose
           --out Xml
           --engine llvm
           --skip-clean
-          --tests
           --doc
-          --exclude-files 'benches/*'
+          --exclude-files 'benches/*,build.rs,src/macros.rs'
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
