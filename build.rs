@@ -61,7 +61,6 @@ where
     );
     let keepers = Mutex::new(Vec::new());
 
-    println!("cargo:warning=Filtering {} words", words.len());
     time_it!(
         "Filtering words",
         // Parallel iteration is a massive time-saver, more than an order of magnitude
@@ -81,7 +80,7 @@ where
                     keepers.push(word.to_owned());
 
                     // Hot loop IO: very costly, only use when debugging
-                    // println!("cargo:warning=Keeping '{}'", word);
+                    // println!("Keeping '{}'", word);
                 }
             };
         })
