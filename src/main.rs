@@ -15,7 +15,7 @@ fn main() -> Result<(), Error> {
 
     let args = cli::Args::init();
 
-    let stages: Vec<Box<dyn betterletters::Stage>> = args
+    let stages = args
         .stages()
         .iter()
         .map(|stage| {
