@@ -18,6 +18,7 @@
 
 pub use crate::stages::Stage;
 use log::{debug, info};
+use rayon::prelude::*;
 use std::io::{BufRead, Error, Write};
 
 /// Internal macros. Have to live here to be usable in unit, not just integration
@@ -90,5 +91,30 @@ pub fn apply(
 
     destination.flush()?;
     info!("Exiting");
+    Ok(())
+}
+
+/// Docs
+/// # Errors
+/// None. Life is perfect.
+pub fn apply_par(
+    stages: &Vec<Box<dyn Stage>>,
+    source: &mut impl BufRead,
+    destination: &mut impl Write,
+) -> Result<(), Error> {
+    let mut lines = source.lines().collect::<Result<Vec<_>, _>>()?;
+
+    lines.par_iter_mut().try_for_each(|line| {
+        for stage in stages {
+            let result = stage.substitute(line)?;
+            *line = result.0;
+        }
+        Ok::<(), Error>(())
+    })?;
+
+    for line in lines {
+        destination.write_all(line.as_bytes())?;
+    }
+
     Ok(())
 }
