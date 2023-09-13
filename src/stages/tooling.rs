@@ -24,10 +24,7 @@ impl std::fmt::Display for StageError {
 /// [newtype](https://doc.rust-lang.org/rust-by-example/generics/new_types.html), used
 /// for increased clarity.
 #[derive(Debug)]
-pub struct SubstitutedString(
-    /// The actual string contents.
-    pub String,
-);
+pub struct SubstitutedString(String);
 
 /// Convert a [`SubstitutedString`] into a [`String`].
 ///

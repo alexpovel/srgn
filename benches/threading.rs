@@ -56,7 +56,7 @@ pub fn process_multi_threaded_german(
                     // }
 
                     let stage = GermanStage;
-                    let result = stage.substitute(&item).unwrap();
+                    let result: String = stage.substitute(&item).unwrap().into();
 
                     let mut results = results_clone.lock().unwrap();
                     info!("Thread {} finished processing line", i);
@@ -73,7 +73,7 @@ pub fn process_multi_threaded_german(
     let mut results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
     results.sort_by_key(|&(index, _)| index);
 
-    let results: Vec<String> = results.into_iter().map(|(_, result)| result.0).collect();
+    let results: Vec<String> = results.into_iter().map(|(_, result)| result).collect();
 
     destination.write_all(results.join("\n").as_bytes())
 }

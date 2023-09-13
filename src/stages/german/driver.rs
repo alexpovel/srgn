@@ -566,8 +566,8 @@ mod tests {
             word: String
         ) (|data: &TestProcess| {
                 let input = word.clone();
-                let result = GermanStage{}.substitute(&input).unwrap();
-                insta::assert_yaml_snapshot!(data.to_string(), result.0);
+                let result: String = GermanStage{}.substitute(&input).unwrap().into();
+                insta::assert_yaml_snapshot!(data.to_string(), result);
             }
         )
     }
