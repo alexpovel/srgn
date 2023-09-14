@@ -1,5 +1,5 @@
 use betterletters::apply;
-#[cfg(feature = "de")]
+#[cfg(feature = "german")]
 use betterletters::stages::GermanStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::SymbolsStage;
@@ -20,7 +20,7 @@ fn main() -> Result<(), Error> {
         .iter()
         .map(|stage| {
             let tp: Box<dyn betterletters::Stage> = match stage {
-                #[cfg(feature = "de")]
+                #[cfg(feature = "german")]
                 cli::Stage::German => Box::new(GermanStage::new(args.german_prefer_original)),
                 #[cfg(feature = "symbols")]
                 cli::Stage::Symbols => Box::new(SymbolsStage),
@@ -76,7 +76,7 @@ mod cli {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
     pub(super) enum Stage {
         /// Substitutions like 'Gruesse!' to 'Grüße!'
-        #[cfg(feature = "de")]
+        #[cfg(feature = "german")]
         German,
         /// Substitutions like '!=' to '≠', '->' to '→'
         #[cfg(feature = "symbols")]

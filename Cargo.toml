@@ -30,8 +30,8 @@ decompound = "0.3.0"
 
 [features]
 default = ["all"]
-all = ["de", "symbols"]
-de = []
+all = ["german", "symbols"]
+german = []
 symbols = []
 
 [dev-dependencies]

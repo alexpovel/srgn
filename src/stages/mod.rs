@@ -1,4 +1,4 @@
-#[cfg(feature = "de")]
+#[cfg(feature = "german")]
 mod german;
 #[cfg(feature = "symbols")]
 mod symbols;

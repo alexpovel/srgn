@@ -1,4 +1,4 @@
-#[cfg(feature = "de")]
+#[cfg(feature = "german")]
 use betterletters::stages::GermanStage;
 use betterletters::{apply, Stage};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
