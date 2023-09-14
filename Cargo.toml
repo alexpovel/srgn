@@ -19,7 +19,7 @@ categories = [
 
 [dependencies]
 cached = "0.44.0"
-clap = { version = "4.4.0", features = ["derive"] }
+clap = { version = "4.4.0", features = ["derive", "env"] }
 env_logger = "0.10.0"
 itertools = "0.11.0"
 log = "0.4.20"
@@ -27,12 +27,14 @@ unicode_titlecase = "2.2.1"
 fst = "0.4.7"
 once_cell = "1.18.0"
 decompound = "0.3.0"
+regex = "1.9.5"
 
 [features]
 default = ["all"]
-all = ["german", "symbols"]
+all = ["german", "symbols", "deletion"]
 german = []
 symbols = []
+deletion = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
