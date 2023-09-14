@@ -49,3 +49,9 @@ install-flamegraph-prerequisites:
             exit 1; \
         fi \
     fi
+
+# Sorts the given word list.
+[unix]
+sort FILE:
+    python -c "for line in sorted(open('{{ invocation_directory() / FILE }}').read().splitlines()): print(line)" > {{ FILE }}.sorted
+    mv {{ FILE }}.sorted {{ invocation_directory() / FILE }}
