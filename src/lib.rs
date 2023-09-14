@@ -29,8 +29,8 @@ pub mod macros;
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;
 
-const EXPECTABLE_MAXIMUM_WORD_LENGTH_BYTES: u8 = 64;
-const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
+const EXPECTABLE_AVERAGE_WORD_LENGTH_BYTES: u8 = 16;
+const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 
 /// Apply the list of [stages][Stage] to a source, writing results to the given
 /// destination.
