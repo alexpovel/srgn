@@ -34,9 +34,9 @@ impl Stage for SymbolsStage {
     ///
     /// The implementation is in the style of coroutines as presented [in this
     /// article](https://www.chiark.greenend.org.uk/~sgtatham/quasiblog/coroutines-philosophy/).
-    /// Instead of writing an explicit state machine (like in [`GermanStage`]), we use a
-    /// generator coroutine to consume values from. The position in code itself is then
-    /// our state. `undo_overfetching` is a bit like sending a value back into the
+    /// Instead of constructing an explicit state machine (like in [`GermanStage`]), we
+    /// use a generator coroutine to consume values from. The position in code itself is
+    /// then our state. `undo_overfetching` is a bit like sending a value back into the
     /// coroutine so it can be yielded again.
     ///
     /// All in all, ugly and verbose, would not recommend, but a worthwhile experiment.

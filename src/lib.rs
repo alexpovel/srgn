@@ -48,7 +48,7 @@ const EXPECTABLE_MAXIMUM_MATCHES_PER_WORD: u8 = 8;
 /// use betterletters::{apply, stages::GermanStage, Stage};
 /// use std::io::Cursor;
 ///
-/// let stages = vec![Box::new(GermanStage)].into_iter().map(|g| g as Box<dyn Stage>).collect();
+/// let stages = vec![Box::new(GermanStage::default())].into_iter().map(|g| g as Box<dyn Stage>).collect();
 ///
 /// let mut input = Cursor::new("Gruess Gott!\n");
 /// let mut output: Vec<u8> = Vec::new();

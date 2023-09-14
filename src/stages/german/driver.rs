@@ -16,7 +16,8 @@ use unicode_titlecase::StrTitleCase;
 
 /// German language stage, responsible for Umlauts and Eszett.
 ///
-/// This stage is responsible for applying the following rules, **where applicable**:
+/// This stage is responsible for applying the following rules, [**where
+/// applicable**](#example-words-validly-containing-alternative-umlaut-spelling):
 /// - [*Umlauts*](https://en.wikipedia.org/wiki/Umlaut_(diacritic)): replace `ue`, `oe`,
 ///   `ae` with `ü`, `ö`, `ä`, respectively,
 /// - [*Eszett*](https://en.wikipedia.org/wiki/%C3%9F): replace `ss` with `ß`.
@@ -36,7 +37,8 @@ use unicode_titlecase::StrTitleCase;
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let result: String = GermanStage.substitute("Gruess Gott!").unwrap().into();
+/// let stage = GermanStage::default();
+/// let result: String = stage.substitute("Gruess Gott!").unwrap().into();
 /// assert_eq!(result, "Grüß Gott!");
 /// ```
 ///
@@ -48,7 +50,8 @@ use unicode_titlecase::StrTitleCase;
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let result: String = GermanStage.substitute("Du Suesswassertagtraeumer!").unwrap().into();
+/// let stage = GermanStage::default();
+/// let result: String = stage.substitute("Du Suesswassertagtraeumer!").unwrap().into();
 /// assert_eq!(result, "Du Süßwassertagträumer!");
 /// ```
 ///
@@ -75,50 +78,15 @@ use unicode_titlecase::StrTitleCase;
 ///     "Mauer",         // should not be "Maür"
 ///     "Steuerung",     // should not be "Steürung"
 /// ] {
-///     let result: String = GermanStage.substitute(word).unwrap().into();
+///     let stage = GermanStage::default();
+///     let result: String = stage.substitute(word).unwrap().into();
 ///     assert_eq!(result, word.to_string());
 /// }
 /// ```
 ///
 /// Note that `ss`/`ß` is not mentioned, as it is handled
-/// [elsewhere](#example-words-with-valid-alternative-and-special-character-spellings).
-///
-/// # Example: Words with valid alternative *and* special character spellings
-///
-/// Some words are validly spelled with alternative Umlauts *and* special characters *in
-/// the same position*, such as:
-/// - [Ma**ß**e](https://de.wiktionary.org/wiki/Ma%C3%9Fe): pertaining to measurements
-/// - [Ma**ss**e](https://de.wiktionary.org/wiki/Masse): pertaining to mass/weight
-///
-/// So if a user inputs `Masse` (they can't spell `Maße`, else they wouldn't have
-/// reached for this crate in the first place), what do they mean? Such cases are
-/// tricky, as there isn't an easy solution without reaching for full-blown
-/// [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) or ML, as the
-/// word's context would be required. This stage is much too limited for that. A choice
-/// has to be made:
-///
-/// - do not replace: keep alternative spelling, or
-/// - replace: keep special character spelling.
-///
-/// This tool chooses the latter, as it seems [the least
-/// astonishing](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) in the
-/// context of this tool, whose entire point is to **make replacements if they're
-/// valid**.
-///
-/// This is an issue mainly for Eszett (`ß`), as for it, two valid spellings are much
-/// more likely than for Umlauts.
-///
-/// ```
-/// use betterletters::{Stage, stages::GermanStage};
-///
-/// for (input, output) in &[
-///     ("Busse", "Buße"), // busses / penance
-///     ("Masse", "Maße"), // mass / measurements
-/// ] {
-///     let result: String = GermanStage.substitute(input).unwrap().into();
-///     assert_eq!(result, output.to_string());
-/// }
-/// ```
+/// [elsewhere][`GermanStage::new`], dealing with the topic of words with valid
+/// alternative *and* special character spellings.
 ///
 /// # Example: Upper- and mixed case
 ///
@@ -150,7 +118,8 @@ use unicode_titlecase::StrTitleCase;
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let result: String = GermanStage.substitute("aEpFeL").unwrap().into();
+/// let stage = GermanStage::default();
+/// let result: String = stage.substitute("aEpFeL").unwrap().into();
 ///
 /// // Error: MiXeD CaSe noun without leading capital letter
 /// assert_eq!(result, "aEpFeL");
@@ -166,7 +135,8 @@ use unicode_titlecase::StrTitleCase;
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let result: String = GermanStage.substitute("AePfEl").unwrap().into();
+/// let stage = GermanStage::default();
+/// let result: String = stage.substitute("AePfEl").unwrap().into();
 ///
 /// // OK: MiXeD CaSe words nouns are okay, *if* starting with a capital letter
 /// assert_eq!(result, "ÄPfEl");
@@ -177,7 +147,8 @@ use unicode_titlecase::StrTitleCase;
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let f = |word: &str| -> String {GermanStage.substitute(word).unwrap().into()};
+/// let stage = GermanStage::default();
+/// let f = |word: &str| -> String {stage.substitute(word).unwrap().into()};
 ///
 /// // OK: The normal case, adjective lowercase
 /// assert_eq!(f("Voll suess!"), "Voll süß!");
@@ -234,15 +205,17 @@ use unicode_titlecase::StrTitleCase;
 /// # Example: Other bytes
 ///
 /// This stage handles the German alphabet *only*, and will leave other input bytes
-/// untouched. You get to keep your trailing newlines, emojis (also multi-[`char`] ones),
-/// and everything else.
+/// untouched. You get to keep your trailing newlines, emojis (also multi-[`char`]
+/// ones), and everything else.
 ///
-/// Of course, the input has to be valid UTF-8, as is ensured by its signature ([`str`]).
+/// Of course, the input has to be valid UTF-8, as is ensured by its signature
+/// ([`str`]).
 ///
 /// ```
 /// use betterletters::{Stage, stages::GermanStage};
 ///
-/// let result: String = GermanStage.substitute("\0Schoener    你好 Satz... 👋🏻\r\n\n").unwrap().into();
+/// let stage = GermanStage::default();
+/// let result: String = stage.substitute("\0Schoener    你好 Satz... 👋🏻\r\n\n").unwrap().into();
 /// assert_eq!(result, "\0Schöner    你好 Satz... 👋🏻\r\n\n");
 /// ```
 ///
@@ -263,19 +236,95 @@ use unicode_titlecase::StrTitleCase;
 ///    - compilation times of 5 minutes and more (on fast hardware)
 /// - large binary size:
 ///
-///   A simple array of strings, `&[&str]`, adds two [`usize`] in terms of overhead **per
-///   [`str`]** (tuple of `(pointer, length)`), which is 16 bytes on 64-bit systems and
-///   therefore **longer than the average word** (which sits at around 15 bytes, give or
-///   take). Seeing as there can be hundreds of thousands, if not millions of entries,
-///   this quickly *doubles* the binary size for no good reason.
+///   A simple array of strings, `&[&str]`, adds two [`usize`] in terms of overhead
+///   **per [`str`]** (tuple of `(pointer, length)`), which is 16 bytes on 64-bit
+///   systems and therefore **longer than the average word** (which sits at around 15
+///   bytes, give or take). Seeing as there can be hundreds of thousands, if not
+///   millions of entries, this quickly *doubles* the binary size for no good reason.
 /// - not available statically, aka at compile time, aka incurring a runtime cost. This
 ///   crate's binary is optimized for start-up speed.
 ///
 /// For more info, an overview of the methods tried
 /// ([`phf`](https://crates.io/crates/phf) and more), and benchmarks, see [this
-/// issue](https://github.com/alexpovel/betterletters/issues/9).
+/// issue](https://github.com/alexpovel/betterletters/issues/9) and [this
+/// thread](https://users.rust-lang.org/t/fast-string-lookup-in-a-single-str-containing-millions-of-unevenly-sized-substrings/98040).
 #[derive(Debug, Clone, Copy)]
-pub struct GermanStage;
+pub struct GermanStage {
+    prefer_original: bool,
+}
+
+impl GermanStage {
+    /// Create a new [`GermanStage`].
+    ///
+    /// # Arguments
+    ///
+    /// * `prefer_original`: For a tied situation, where an original word and some
+    /// replacement are *both* legal, controls which one is returned. See
+    /// [below](#example-words-valid-both-in-original-and-replaced-form) for when this
+    /// is relevant.
+    ///
+    /// ## Example: Words valid both in original and replaced form
+    ///
+    /// Some words are validly spelled with alternative Umlauts *and* special characters
+    /// *in the same position*, such as:
+    /// - [Ma**ß**e](https://de.wiktionary.org/wiki/Ma%C3%9Fe): pertaining to
+    ///   measurements
+    /// - [Ma**ss**e](https://de.wiktionary.org/wiki/Masse): pertaining to mass/weight
+    ///
+    /// So if a user inputs `Masse` (they can't spell `Maße`, else they wouldn't have
+    /// reached for this crate in the first place), what do they mean? Such cases are
+    /// tricky, as there isn't an easy solution without reaching for full-blown
+    /// [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) or ML, as the
+    /// word's context would be required. This stage is much too limited for that. A
+    /// choice has to be made:
+    ///
+    /// - do not replace: keep alternative spelling, or
+    /// - replace: keep special character spelling.
+    ///
+    /// This tool chooses the latter, as it seems [the least
+    /// astonishing](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) in
+    /// the context of this tool, whose entire point is to **make replacements if
+    /// they're valid**.
+    ///
+    /// This is an issue mainly for Eszett (`ß`), as for it, two valid spellings are
+    /// much more likely than for Umlauts.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use betterletters::{Stage, stages::GermanStage};
+    ///
+    /// for (original, output) in &[
+    ///     ("Busse", "Buße"), // busses / penance
+    ///     ("Masse", "Maße"), // mass / measurements
+    /// ] {
+    ///     // `false`: prefer replacement
+    ///     let stage = GermanStage::new(false);
+    ///     let result: String = stage.substitute(original).unwrap().into();
+    ///     assert_eq!(result, output.to_string());
+    ///
+    ///    // `true`: prefer original
+    ///    let stage = GermanStage::new(true);
+    ///    let result: String = stage.substitute(original).unwrap().into();
+    ///    assert_eq!(result, original.to_string());
+    /// }
+    /// ```
+    #[must_use]
+    pub fn new(prefer_original: bool) -> Self {
+        Self { prefer_original }
+    }
+}
+
+impl Default for GermanStage {
+    /// Create a new [`GermanStage`] with default settings.
+    ///
+    /// Performing replacements is preferred over [keeping the
+    /// original][`GermanStage::new`], which is considered a fallback.
+    fn default() -> Self {
+        let prefer_original = false;
+        Self::new(prefer_original)
+    }
+}
 
 impl Stage for GermanStage {
     fn substitute(&self, input: &str) -> StageResult {
@@ -311,9 +360,12 @@ impl Stage for GermanStage {
                     debug!("Exited machine: {:?}", machine);
 
                     let original = machine.current_word().content().to_owned();
-                    let word =
-                        find_valid_replacement(&original, machine.current_word().replacements())
-                            .unwrap_or(original);
+                    let word = find_valid_replacement(
+                        &original,
+                        machine.current_word().replacements(),
+                        self.prefer_original,
+                    )
+                    .unwrap_or(original);
 
                     debug!("Processed word, appending to output: {:?}", &word);
                     output.push_str(&word);
@@ -337,7 +389,11 @@ impl Stage for GermanStage {
     }
 }
 
-fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<String> {
+fn find_valid_replacement(
+    word: &str,
+    replacements: &[Replacement],
+    prefer_original: bool,
+) -> Option<String> {
     let replacement_combinations: Vec<Vec<Replacement>> = replacements
         .iter()
         .powerset()
@@ -365,7 +421,10 @@ fn find_valid_replacement(word: &str, replacements: &[Replacement]) -> Option<St
         .first()
         .map_or(true, std::vec::Vec::is_empty));
 
-    for replacements in replacement_combinations.into_iter().skip(1) {
+    #[allow(clippy::bool_to_int_with_if)] // Readability is much better.
+    let n_skip = if prefer_original { 0 } else { 1 };
+
+    for replacements in replacement_combinations.into_iter().skip(n_skip) {
         let mut candidate = word.to_owned();
         candidate.apply_replacements(replacements);
         trace!(
@@ -566,7 +625,8 @@ mod tests {
             word: String
         ) (|data: &TestProcess| {
                 let input = word.clone();
-                let result: String = GermanStage{}.substitute(&input).unwrap().into();
+                let stage = GermanStage{ prefer_original: false };
+                let result: String = stage.substitute(&input).unwrap().into();
                 insta::assert_yaml_snapshot!(data.to_string(), result);
             }
         )

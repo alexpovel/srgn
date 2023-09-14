@@ -14,8 +14,9 @@ use std::{
 fn process_single_threaded_german(
     mut source: &mut impl BufRead,
     mut destination: &mut impl Write,
+    prefer_original: bool,
 ) -> Result<(), std::io::Error> {
-    let stages: Vec<Box<dyn Stage>> = vec![Box::new(GermanStage)];
+    let stages: Vec<Box<dyn Stage>> = vec![Box::new(GermanStage::new(prefer_original))];
     apply(&stages, &mut source, &mut destination)
 }
 
@@ -24,6 +25,7 @@ pub fn process_multi_threaded_german(
     // stages: &Vec<Arc<dyn Stage>>,
     source: impl BufRead,
     destination: &mut impl Write,
+    prefer_original: bool,
 ) -> Result<(), Error> {
     let lines = source.lines().collect::<Result<Vec<_>, _>>()?;
 
@@ -55,7 +57,7 @@ pub fn process_multi_threaded_german(
                     //     stage.process(&mut item).unwrap();
                     // }
 
-                    let stage = GermanStage;
+                    let stage = GermanStage::new(prefer_original);
                     let result: String = stage.substitute(&item).unwrap().into();
 
                     let mut results = results_clone.lock().unwrap();
@@ -132,6 +134,8 @@ fn criterion_bench(c: &mut Criterion) {
 
     group.sample_size(10);
 
+    let prefer_original = false;
+
     for n_lines in [1, 10].iter() {
         for sentences_per_line in [1, 100_000].iter() {
             let text = generate_sample_text(*n_lines, *sentences_per_line);
@@ -147,7 +151,11 @@ fn criterion_bench(c: &mut Criterion) {
                 &text,
                 |b, text| {
                     b.iter(|| {
-                        process_single_threaded_german(&mut text.as_bytes(), &mut destination)
+                        process_single_threaded_german(
+                            &mut text.as_bytes(),
+                            &mut destination,
+                            prefer_original,
+                        )
                     });
                 },
             );
@@ -160,7 +168,11 @@ fn criterion_bench(c: &mut Criterion) {
                 &text,
                 |b, text| {
                     b.iter(|| {
-                        process_multi_threaded_german(&mut text.as_bytes(), &mut destination)
+                        process_multi_threaded_german(
+                            &mut text.as_bytes(),
+                            &mut destination,
+                            prefer_original,
+                        )
                     });
                 },
             );
