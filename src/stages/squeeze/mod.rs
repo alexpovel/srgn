@@ -12,29 +12,6 @@ impl Scoped for SqueezeStage {}
 impl Stage for SqueezeStage {
     fn substitute(&self, _input: &str) -> String {
         unimplemented!("Squeezing works without substituting")
-
-        // Wouldn't need an owned `String` for this stage, but return signature requires
-        // it anyway.
-        // let mut out = String::with_capacity(input.len());
-
-        // let mut left = 0; // Left bound of current substring we *might* push
-        // let mut previous: Option<regex::Match> = None;
-
-        // for m in self.pattern.find_iter(input) {
-        //     let flush = previous.map_or(true, |p| !ranges_are_consecutive(&p.range(), &m.range()));
-
-        //     if flush {
-        //         out.push_str(&input[left..m.end()]);
-        //     }
-
-        //     left = m.end();
-        //     previous = Some(m);
-        // }
-
-        // out.push_str(&input[left..]); // Remainder; entire string if no matches
-
-        // // Ok(out.into())
-        // out
     }
 
     fn apply(&self, input: &str, scope: &Scope) -> String {
@@ -59,32 +36,6 @@ impl Stage for SqueezeStage {
         out
     }
 }
-
-// fn ranges_are_consecutive<T: Eq>(left: &Range<T>, right: &Range<T>) -> bool {
-//     left.end == right.start
-// }
-
-// impl SqueezeStage {
-//     /// Create a new instance.
-//     ///
-//     /// # Arguments
-//     ///
-//     /// * `pattern`: The regex to use for squeezing.
-//     ///
-//     /// # Panics
-//     ///
-//     /// Panics if the given pattern cannot be prepended with `(?U)`, which is used to
-//     /// [render greedy quantifiers
-//     /// non-greedy](https://docs.rs/regex/latest/regex/#grouping-and-flags), and vice
-//     /// versa.
-//     #[must_use]
-//     pub fn new(pattern: &Regex) -> Self {
-//         let pattern = Regex::new(&format!(r"(?U){pattern}"))
-//             .expect("should be able to prepend (?U) to pattern");
-
-//         Self { pattern }
-//     }
-// }
 
 #[cfg(test)]
 mod tests {

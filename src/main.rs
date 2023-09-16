@@ -16,13 +16,6 @@ fn main() -> Result<(), Error> {
     let args = cli::Args::init();
     info!("Launching app with args: {:?}", args);
 
-    // args.append_stage_if_missing_but_required(cli::Stage::German, args.german_prefer_original);
-    // args.append_stage_if_missing_but_required(cli::Stage::Symbols, false /* None yet */);
-    // args.append_stage_if_missing_but_required(
-    //     cli::Stage::Deletion,
-    //     args.deletion_pattern.is_some(),
-    // );
-
     let mut stages: Vec<Box<dyn betterletters::Stage>> = Vec::new();
 
     if args.squeeze {
@@ -44,31 +37,6 @@ fn main() -> Result<(), Error> {
         stages.push(Box::<DeletionStage>::default());
         debug!("Loaded stage: Deletion");
     }
-
-    // let stages = args
-    //     .stages
-    //     .iter()
-    //     .map(|stage| {
-    //         let res: Result<Box<dyn betterletters::Stage>, _> = match stage {
-    //             #[cfg(feature = "german")]
-    //             cli::Stage::German => Ok(Box::new(GermanStage::new(args.german_prefer_original))),
-
-    //             #[cfg(feature = "symbols")]
-    //             cli::Stage::Symbols => Ok(Box::new(SymbolsStage)),
-    //             #[cfg(feature = "deletion")]
-    //             cli::Stage::Deletion => Ok(Box::new(DeletionStage::new(
-    //                 args.scope.clone().ok_or(Error::new(
-    //                     io::ErrorKind::InvalidInput, // Abuse...
-    //                     "Deletion requested but no delete option specified.",
-    //                 ))?,
-    //             ))),
-    //         };
-
-    //         debug!("Loaded stage: {:?}", stage);
-
-    //         res
-    //     })
-    //     .collect::<Result<Vec<_>, Error>>()?;
 
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
@@ -126,32 +94,4 @@ mod cli {
             Self::parse()
         }
     }
-
-    // pub(super) fn append_stage_if_missing_but_required(
-    //     &mut self,
-    //     stage: Stage,
-    //     relevant_options_present: bool,
-    // ) {
-    //     // if relevant_options_present && !self.stages.contains(&stage) {
-    //     //     info!(
-    //     //         "Arguments specific to {:?} stage found, but stage not specified. Adding.",
-    //     //         stage
-    //     //     );
-    //     //     self.stages.push(stage);
-    //     // }
-    // }
-    // }
-
-    // #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-    // pub(super) enum Stage {
-    //     /// Substitutions like 'Gruesse!' to 'Grüße!'
-    //     #[cfg(feature = "german")]
-    //     German,
-    //     /// Substitutions like '!=' to '≠', '->' to '→'
-    //     #[cfg(feature = "symbols")]
-    //     Symbols,
-    //     /// Deletions of character classes
-    //     #[cfg(feature = "deletion")]
-    //     Deletion,
-    // }
 }
