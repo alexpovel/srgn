@@ -58,7 +58,3 @@ opt-level = 3
 decompound = "0.3.0"
 fst = "0.4.7"
 rayon = "1.7.0"
-
-[[bench]]
-name = "threading"
-harness = false
