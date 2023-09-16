@@ -18,6 +18,7 @@
 
 pub use crate::stages::Stage;
 use log::{debug, info};
+use scoped::Scope;
 use std::io::{BufRead, Error, Write};
 
 /// Internal macros. Have to live here to be usable in unit, not just integration
@@ -26,9 +27,13 @@ use std::io::{BufRead, Error, Write};
 #[macro_use]
 pub mod macros;
 
+/// Items related to scopes, which are used to limit the application of stages.
+pub mod scoped;
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;
 
+/// Pattern signalling global scope, aka matching entire inputs.
+pub const GLOBAL_SCOPE: &str = r".*";
 const EXPECTABLE_AVERAGE_WORD_LENGTH_BYTES: u8 = 16;
 const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 
@@ -45,7 +50,7 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 ///
 ///
 /// ```
-/// use betterletters::{apply, stages::GermanStage, Stage};
+/// use betterletters::{apply, scoped::Scope, stages::GermanStage, Stage};
 /// use std::io::Cursor;
 ///
 /// let stages = vec![Box::new(GermanStage::default())].into_iter().map(|g| g as Box<dyn Stage>).collect();
@@ -53,7 +58,7 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 /// let mut input = Cursor::new("Gruess Gott!\n");
 /// let mut output: Vec<u8> = Vec::new();
 ///
-/// apply(&stages, &mut input, &mut output);
+/// apply(&stages, &Scope::default(), &mut input, &mut output);
 ///
 /// assert_eq!(output, "Grüß Gott!\n".as_bytes());
 /// ```
@@ -68,6 +73,7 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 /// - when the destination cannot be flushed before exiting
 pub fn apply(
     stages: &Vec<Box<dyn Stage>>,
+    scope: &Scope,
     source: &mut impl BufRead,
     destination: &mut impl Write,
 ) -> Result<(), Error> {
@@ -79,8 +85,7 @@ pub fn apply(
         debug!("Starting processing line: '{}'", buf.escape_debug());
 
         for stage in stages {
-            let result = stage.substitute(&buf)?;
-            buf = result.into();
+            buf = stage.apply(&buf, scope);
         }
 
         debug!("Processed line, will write out: '{}'", buf.escape_debug());

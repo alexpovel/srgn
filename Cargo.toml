@@ -31,10 +31,11 @@ regex = "1.9.5"
 
 [features]
 default = ["all"]
-all = ["german", "symbols", "deletion"]
+all = ["german", "symbols", "deletion", "squeeze"]
 german = []
 symbols = []
 deletion = []
+squeeze = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
@@ -45,6 +46,9 @@ rstest = "0.18.2"
 serde = { version = "1.0.188", features = ["derive"] }
 glob = "0.3.1"
 num_cpus = "1.16.0"
+rand = "0.8.5"
+rand_regex = "0.16.0"
+test-log = "0.2.12"
 
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs

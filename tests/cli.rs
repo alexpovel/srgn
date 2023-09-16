@@ -1,66 +1,68 @@
-struct Sample {
-    content: String,
-    name: String,
-}
+//! End-to-end tests for the CLI. Main purpose is exercising multiple combinations of
+//! inputs/flags/options.
 
 #[cfg(test)]
 mod tests {
     use assert_cmd::Command;
-    use glob::glob;
-    use rstest::{fixture, rstest};
-    use std::fs;
+    use rstest::rstest;
 
-    use super::*;
+    // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
+    // integration tests only with valid UTF8.
+    static SAMPLES: &[&str] = &[
+        r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
+Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
+Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
+Vogel Quax zwickt Johnys Pferd Bim.
+Sylvia wagt quick den Jux bei Pforzheim.
+Polyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.
+"Fix, Schwyz!" quaekt Juergen bloed vom Pass.
+Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.
+Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.
+Heizoelrueckstossabdaempfung.
+"#,
+        r#"
 
-    #[fixture]
-    fn samples() -> Vec<Sample> {
-        let mut samples = Vec::new();
 
-        for entry in glob("tests/samples/**/*.txt").unwrap() {
-            let path = entry.unwrap();
-            let sample_number = path.file_stem().unwrap().to_str().unwrap();
-            let stage_name = path
-                .parent()
-                .unwrap()
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap();
+Duebel
 
-            let sample = fs::read_to_string(&path).unwrap();
+😂
 
-            samples.push(Sample {
-                content: sample,
-                name: format!("{}-{}", stage_name, sample_number),
-            });
-        }
+
 
-        assert!(!samples.is_empty(), "No samples found, wrong glob?");
-
-        samples
-    }
+"#,
+        r#"Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫"#,
+    ];
 
     #[rstest]
-    fn test_cli(samples: Vec<Sample>, #[values(&["german"], &["symbols"])] args: &[&str]) {
-        // Should rebuild the binary to `target/debug/<name>`. This works if running as an
-        // integration test (insides `tests/`), but not if running as a unit test (inside
-        // `src/main.rs` etc.).
+    fn test_cli(
+        // This will generate all permutations of all `values`, which is a lot but
+        // neatly manageable through `insta`.
+        #[values(1, 2, 3)] n_sample: usize,
+        #[values(&["--german"], &["--symbols"], &["--german", "--symbols"])] args: &[&str],
+    ) {
+        // Should rebuild the binary to `target/debug/<name>`. This works if running as
+        // an integration test (insides `tests/`), but not if running as a unit test
+        // (inside `src/main.rs` etc.).
         let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
 
-        for sample in samples {
-            let input = sample.content;
-            cmd.args(args).write_stdin(input.clone());
+        let sample = SAMPLES[n_sample - 1];
+        cmd.args(args).write_stdin(sample.clone());
 
-            let raw_output = cmd.output().unwrap().stdout;
-            let output = String::from_utf8(raw_output).unwrap();
+        let output = cmd.output().expect("failed to execute process");
+        assert!(
+            // Don't forget this; not manually checked by the framework!
+            output.status.success(),
+            "Command failed: {:?}",
+            cmd
+        );
 
-            let snapshot_name = sample.name + "_" + &args.join("-");
-            insta::with_settings!({
-                description => &input,
-            }, {
-                insta::assert_snapshot!(snapshot_name, &output);
-            })
-        }
+        let stdout = String::from_utf8(output.stdout).unwrap();
+
+        let padded_sample_number = format!("{:03}", n_sample);
+
+        let snapshot_name =
+            (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
+        insta::assert_snapshot!(snapshot_name, &stdout);
     }
 
     #[test]

@@ -1,7 +1,0 @@
----
-source: core/tests/cli.rs
-description: "Sehr droege, dieser\nMassstab!"
-expression: "&output"
----
-Sehr dröge, dieser
-Maßstab!

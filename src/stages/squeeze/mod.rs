@@ -1,66 +1,90 @@
-use std::ops::Range;
-
-use super::{tooling::StageResult, Stage};
+use super::Stage;
+use crate::scoped::{Scope, ScopeStatus::InScope, Scoped};
 use regex::Regex;
 
-/// Deletes all matches of a given regex.
-#[derive(Debug, Clone)]
+/// Squeezes all consecutive matched scopes into a single occurrence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::module_name_repetitions)]
-pub struct SqueezeStage {
-    pattern: Regex,
-}
+pub struct SqueezeStage {}
+
+impl Scoped for SqueezeStage {}
 
 impl Stage for SqueezeStage {
-    fn substitute(&self, input: &str) -> StageResult {
+    fn substitute(&self, _input: &str) -> String {
+        unimplemented!("Squeezing works without substituting")
+
         // Wouldn't need an owned `String` for this stage, but return signature requires
         // it anyway.
+        // let mut out = String::with_capacity(input.len());
+
+        // let mut left = 0; // Left bound of current substring we *might* push
+        // let mut previous: Option<regex::Match> = None;
+
+        // for m in self.pattern.find_iter(input) {
+        //     let flush = previous.map_or(true, |p| !ranges_are_consecutive(&p.range(), &m.range()));
+
+        //     if flush {
+        //         out.push_str(&input[left..m.end()]);
+        //     }
+
+        //     left = m.end();
+        //     previous = Some(m);
+        // }
+
+        // out.push_str(&input[left..]); // Remainder; entire string if no matches
+
+        // // Ok(out.into())
+        // out
+    }
+
+    fn apply(&self, input: &str, scope: &Scope) -> String {
         let mut out = String::with_capacity(input.len());
 
-        let mut left = 0; // Left bound of current substring we *might* push
-        let mut previous: Option<regex::Match> = None;
+        let scope: Scope = Regex::new(&format!(r"(?U){}", Regex::from(scope)))
+            .expect("should be able to prepend (?U) to pattern")
+            .into();
 
-        for m in self.pattern.find_iter(input) {
-            let flush = previous.map_or(true, |p| !ranges_are_consecutive(&p.range(), &m.range()));
-
-            if flush {
-                out.push_str(&input[left..m.end()]);
+        let mut previous = None;
+        for scope in self.split_by_scope(input, &scope) {
+            if let InScope(_) = scope {
+                if let Some(InScope(_)) = previous {
+                    continue;
+                }
             }
 
-            left = m.end();
-            previous = Some(m);
+            out.push_str((&scope).into());
+            previous = Some(scope);
         }
 
-        out.push_str(&input[left..]); // Remainder; entire string if no matches
-
-        Ok(out.into())
+        out
     }
 }
 
-fn ranges_are_consecutive<T: Eq>(left: &Range<T>, right: &Range<T>) -> bool {
-    left.end == right.start
-}
+// fn ranges_are_consecutive<T: Eq>(left: &Range<T>, right: &Range<T>) -> bool {
+//     left.end == right.start
+// }
 
-impl SqueezeStage {
-    /// Create a new instance.
-    ///
-    /// # Arguments
-    ///
-    /// * `pattern`: The regex to use for squeezing.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the given pattern cannot be prepended with `(?U)`, which is used to
-    /// [render greedy quantifiers
-    /// non-greedy](https://docs.rs/regex/latest/regex/#grouping-and-flags), and vice
-    /// versa.
-    #[must_use]
-    pub fn new(pattern: &Regex) -> Self {
-        let pattern = Regex::new(&format!(r"(?U){pattern}"))
-            .expect("should be able to prepend (?U) to pattern");
+// impl SqueezeStage {
+//     /// Create a new instance.
+//     ///
+//     /// # Arguments
+//     ///
+//     /// * `pattern`: The regex to use for squeezing.
+//     ///
+//     /// # Panics
+//     ///
+//     /// Panics if the given pattern cannot be prepended with `(?U)`, which is used to
+//     /// [render greedy quantifiers
+//     /// non-greedy](https://docs.rs/regex/latest/regex/#grouping-and-flags), and vice
+//     /// versa.
+//     #[must_use]
+//     pub fn new(pattern: &Regex) -> Self {
+//         let pattern = Regex::new(&format!(r"(?U){pattern}"))
+//             .expect("should be able to prepend (?U) to pattern");
 
-        Self { pattern }
-    }
-}
+//         Self { pattern }
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -79,6 +103,9 @@ mod tests {
     #[case("bab", "a", "bab")]
     #[case("babab", "a", "babab")]
     #[case("ababa", "a", "ababa")]
+    //
+    // Squeezes only the pattern, no other repetitions
+    #[case("aaabbb", "a", "abbb")]
     //
     // Squeezes start
     #[case("aab", "a", "ab")]
@@ -113,6 +140,15 @@ mod tests {
     // Deals with character classes (inverted space)
     #[case("Hello World", r"\S", "H W")]
     #[case("Hello\t\tWorld", r"\S", "H\t\tW")]
+    //
+    // Deals with overlapping matches; behavior of `regex` crate
+    #[case("abab", r"aba", "abab")]
+    #[case("ababa", r"aba", "ababa")]
+    #[case("ababab", r"aba", "ababab")]
+    #[case("abababa", r"aba", "abababa")]
+    //
+    #[case("aba", r"aba", "aba")]
+    #[case("abaaba", r"aba", "aba")]
     //
     // Turns greedy quantifiers into non-greedy ones automatically
     #[case("ab", r"\s+", "ab")]
@@ -175,9 +211,9 @@ mod tests {
         " dirty Strings \t with \t\t messed up whitespace\n\n\n"
     )]
     fn test_squeeze(#[case] input: &str, #[case] pattern: Regex, #[case] expected: &str) {
-        let stage = SqueezeStage::new(&pattern);
+        let stage = SqueezeStage {};
 
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.apply(input, &Scope::new(pattern));
 
         assert_eq!(result, expected);
     }

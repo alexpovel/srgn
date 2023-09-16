@@ -1,7 +1,0 @@
----
-source: core/tests/cli.rs
-description: "Hallo Welt, Mauerduebel!\n"
-expression: "&output"
----
-Hallo Welt, Mauerduebel!
-

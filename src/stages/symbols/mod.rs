@@ -1,6 +1,6 @@
 #[cfg(doc)]
 use super::GermanStage;
-use super::{tooling::StageResult, Stage};
+use crate::{scoped::Scoped, Stage};
 use std::collections::VecDeque;
 
 /// Replace ASCII symbols (`--`, `->`, `!=`, ...) with proper Unicode equivalents (`–`,
@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 ///
 /// This stage is greedy, i.e. it will try to replace as many symbols as possible,
 /// replacing left-to-right as greedily as possible.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::module_name_repetitions)]
 pub struct SymbolsStage;
 
@@ -27,6 +27,8 @@ macro_rules! fetch_next {
     };
 }
 
+impl Scoped for SymbolsStage {}
+
 impl Stage for SymbolsStage {
     /// ## Implementation note
     ///
@@ -40,7 +42,7 @@ impl Stage for SymbolsStage {
     /// coroutine so it can be yielded again.
     ///
     /// All in all, ugly and verbose, would not recommend, but a worthwhile experiment.
-    fn substitute(&self, input: &str) -> StageResult {
+    fn substitute(&self, input: &str) -> String {
         let mut deque = input.chars().collect::<VecDeque<_>>();
         let mut out = String::new();
 
@@ -130,7 +132,7 @@ impl Stage for SymbolsStage {
             out.push_str(&stack.into_iter().collect::<String>());
         }
 
-        Ok(out.into())
+        out
     }
 }
 
@@ -215,7 +217,7 @@ mod tests {
     #[case("!=", "≠")]
     fn test_symbol_substitution_base_cases(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -247,7 +249,7 @@ mod tests {
         #[case] expected: &str,
     ) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -271,7 +273,7 @@ mod tests {
     #[case("A!=B", "A≠B")]
     fn test_symbol_substitution_neighboring_letters(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -298,7 +300,7 @@ mod tests {
         #[case] expected: &str,
     ) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -319,7 +321,7 @@ mod tests {
     #[case("<--X-->", "⟵X⟶")]
     fn test_symbol_substitution_disrupting_symbols(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -332,7 +334,7 @@ mod tests {
     #[case("->In->Out->", "→In→Out→")]
     fn test_symbol_substitution_sentences(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -368,7 +370,7 @@ mod tests {
     #[case("!=!=!=", "≠≠≠")]
     fn test_symbol_substitution_ambiguous_sequences(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -387,7 +389,7 @@ mod tests {
     #[case("≥", "≥")]
     fn test_symbol_substitution_existing_symbol(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
@@ -410,7 +412,7 @@ mod tests {
     #[case("https://->", "https://->")] // Pivot point
     fn test_symbol_substitution_uri(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage;
-        let result: String = stage.substitute(input).unwrap().into();
+        let result = stage.substitute(input);
 
         assert_eq!(result, expected);
     }
