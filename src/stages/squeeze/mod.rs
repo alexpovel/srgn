@@ -11,15 +11,17 @@ impl Scoped for SqueezeStage {}
 
 impl Stage for SqueezeStage {
     fn substitute(&self, _input: &str) -> String {
+        // Refer to `apply`, which this stage *overrides*.
         unimplemented!("Squeezing works without substituting")
     }
 
     fn apply(&self, input: &str, scope: &Scope) -> String {
         let mut out = String::with_capacity(input.len());
 
-        let scope: Scope = Regex::new(&format!(r"(?U){}", Regex::from(scope)))
-            .expect("should be able to prepend (?U) to pattern")
-            .into();
+        let scope = Scope::from(
+            Regex::new(&format!(r"(?U){}", Regex::from(scope)))
+                .expect("should be able to prepend (?U) to pattern"),
+        );
 
         let mut previous = None;
         for scope in self.split_by_scope(input, &scope) {
