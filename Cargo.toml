@@ -53,6 +53,7 @@ rand_regex = "0.16.0"
 test-log = "0.2.12"
 proptest = "1.2.0"
 enum-iterator = "1.4.1"
+serial_test = "2.0.0"
 
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs
