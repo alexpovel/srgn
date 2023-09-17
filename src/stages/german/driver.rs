@@ -735,4 +735,31 @@ mod tests {
         let result = stage.substitute(input);
         assert_eq!(result, expected);
     }
+
+    #[rstest]
+    // Single letter. Notice the mapping is irreversible.
+    #[case("ue", "ü")]
+    #[case("uE", "ü")]
+    #[case("Ue", "Ü")]
+    #[case("UE", "Ü")]
+    //
+    // Beginning of word
+    #[case("uekol", "ükol")]
+    #[case("uEkol", "ükol")]
+    #[case("Uekol", "Ükol")]
+    #[case("UEkol", "Ükol")]
+    //
+    // Middle of word
+    #[case("guessa", "güßa")]
+    #[case("gUessa", "gÜßa")]
+    #[case("guEssa", "güßa")]
+    #[case("gUEssa", "gÜßa")]
+    #[case("Guessa", "Güßa")]
+    #[case("GUESSA", "GÜẞA")]
+    fn test_casing_when_being_naive(#[case] input: &str, #[case] expected: &str) {
+        let mut stage = GermanStage::default();
+        stage.naive();
+        let result = stage.substitute(input);
+        assert_eq!(result, expected);
+    }
 }

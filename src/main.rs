@@ -7,10 +7,10 @@ use betterletters::stages::GermanStage;
 use betterletters::stages::LowerStage;
 #[cfg(feature = "squeeze")]
 use betterletters::stages::SqueezeStage;
-#[cfg(feature = "symbols")]
-use betterletters::stages::SymbolsStage;
 #[cfg(feature = "upper")]
 use betterletters::stages::UpperStage;
+#[cfg(feature = "symbols")]
+use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
@@ -39,8 +39,13 @@ fn main() -> Result<(), Error> {
     }
 
     if args.symbols {
-        stages.push(Box::<SymbolsStage>::default());
-        debug!("Loaded stage: Symbols");
+        if args.invert {
+            stages.push(Box::<SymbolsInversionStage>::default());
+            debug!("Loaded stage: SymbolsInversion");
+        } else {
+            stages.push(Box::<SymbolsStage>::default());
+            debug!("Loaded stage: Symbols");
+        }
     }
 
     if args.delete {
@@ -100,7 +105,7 @@ mod cli {
         #[arg(short, long, env = "GERMAN")]
         pub german: bool,
         /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
-        #[arg(short = 'S', long, env = "SYMBOLS")]
+        #[arg(short = 'S', long, env = "SYMBOLS", group = "invertible")]
         pub symbols: bool,
         /// Delete what was matched
         ///
@@ -126,6 +131,24 @@ mod cli {
         /// Useful for names, which are otherwise not modifiable as they do not occur in
         /// dictionaries. Called 'naive' as this does not perform legal checks.
         pub german_naive: bool,
+        /// Undo the effects of passed stages, where applicable
+        ///
+        /// Requires a 1:1 mapping (bijection) between replacements and original, which
+        /// is currently available for:
+        ///
+        /// - symbols: '≠' <-> '!=' etc.
+        ///
+        /// Other stages:
+        ///
+        /// - german: inverting e.g. 'Ä' is ambiguous (can be 'Ae' or 'AE')
+        ///
+        /// - upper, lower, deletion, squeeze: inversion is impossible as information is
+        ///   lost
+        ///
+        /// These may still be passed, but will be ignored for inversion and applied
+        /// normally
+        #[arg(short, long, env = "INVERT", requires = "invertible")]
+        pub invert: bool,
     }
 
     impl Args {

@@ -17,6 +17,7 @@ pub use deletion::DeletionStage;
 pub use german::GermanStage;
 pub use lower::LowerStage;
 pub use squeeze::SqueezeStage;
+pub use symbols::inversion::SymbolsInversionStage;
 pub use symbols::SymbolsStage;
 pub use upper::UpperStage;
 

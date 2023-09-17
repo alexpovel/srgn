@@ -1,7 +1,11 @@
 #[cfg(doc)]
 use super::GermanStage;
 use crate::{scoped::Scoped, Stage};
+#[cfg(test)]
+use enum_iterator::{all, Sequence};
 use std::collections::VecDeque;
+
+pub mod inversion;
 
 /// Replace ASCII symbols (`--`, `->`, `!=`, ...) with proper Unicode equivalents (`–`,
 /// `→`, `≠`, ...).
@@ -10,7 +14,7 @@ use std::collections::VecDeque;
 /// replacing left-to-right as greedily as possible.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::module_name_repetitions)]
-pub struct SymbolsStage;
+pub struct SymbolsStage {}
 
 macro_rules! fetch_next {
     ($it:expr, $stack:expr, $buf:expr $(, $label:tt)?) => {
@@ -136,6 +140,8 @@ impl Stage for SymbolsStage {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(test, derive(Sequence))]
 enum Symbol {
     // Typographic symbols
     EmDash,
@@ -169,6 +175,30 @@ impl From<Symbol> for char {
             Symbol::NotEqual => '≠',
             Symbol::LessThanOrEqual => '≤',
             Symbol::GreaterThanOrEqual => '≥',
+        }
+    }
+}
+
+impl TryFrom<char> for Symbol {
+    type Error = ();
+
+    fn try_from(c: char) -> Result<Self, Self::Error> {
+        match c {
+            // Typographic symbols
+            '–' => Ok(Symbol::EnDash),
+            '—' => Ok(Symbol::EmDash),
+            // Arrows
+            '→' => Ok(Symbol::ShortRightArrow),
+            '←' => Ok(Symbol::ShortLeftArrow),
+            '⟶' => Ok(Symbol::LongRightArrow),
+            '⟵' => Ok(Symbol::LongLeftArrow),
+            '↔' => Ok(Symbol::LeftRightArrow),
+            '⇒' => Ok(Symbol::RightDoubleArrow),
+            // Math
+            '≠' => Ok(Symbol::NotEqual),
+            '≤' => Ok(Symbol::LessThanOrEqual),
+            '≥' => Ok(Symbol::GreaterThanOrEqual),
+            _ => Err(()),
         }
     }
 }
@@ -216,7 +246,7 @@ mod tests {
     #[case(">=", "≥")]
     #[case("!=", "≠")]
     fn test_symbol_substitution_base_cases(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -248,7 +278,7 @@ mod tests {
         #[case] input: &str,
         #[case] expected: &str,
     ) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -272,7 +302,7 @@ mod tests {
     #[case("A>=B", "A≥B")]
     #[case("A!=B", "A≠B")]
     fn test_symbol_substitution_neighboring_letters(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -299,7 +329,7 @@ mod tests {
         #[case] input: &str,
         #[case] expected: &str,
     ) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -320,7 +350,7 @@ mod tests {
     //
     #[case("<--X-->", "⟵X⟶")]
     fn test_symbol_substitution_disrupting_symbols(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -333,7 +363,7 @@ mod tests {
     #[case("A <= B => C", "A ≤ B ⇒ C")]
     #[case("->In->Out->", "→In→Out→")]
     fn test_symbol_substitution_sentences(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -369,7 +399,7 @@ mod tests {
     #[case("!=!=", "≠≠")]
     #[case("!=!=!=", "≠≠≠")]
     fn test_symbol_substitution_ambiguous_sequences(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -388,7 +418,7 @@ mod tests {
     #[case("≤", "≤")]
     #[case("≥", "≥")]
     fn test_symbol_substitution_existing_symbol(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
@@ -411,9 +441,21 @@ mod tests {
     #[case("https:/->", "https:/→")]
     #[case("https://->", "https://->")] // Pivot point
     fn test_symbol_substitution_uri(#[case] input: &str, #[case] expected: &str) {
-        let stage = SymbolsStage;
+        let stage = SymbolsStage::default();
         let result = stage.substitute(input);
 
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_symbol_to_char_and_back_is_bijective() {
+        let symbols: Vec<_> = all::<Symbol>().collect();
+
+        for symbol in symbols {
+            let c = char::from(symbol);
+            let back = Symbol::try_from(c).expect("Should be able to convert back to symbol");
+
+            assert_eq!(symbol, back);
+        }
     }
 }
