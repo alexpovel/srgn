@@ -2,7 +2,7 @@ use crate::scoped::Scoped;
 
 use super::Stage;
 
-/// Deletes all matches of a given regex.
+/// Deletes everything in the input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::module_name_repetitions)]
 pub struct DeletionStage {}
