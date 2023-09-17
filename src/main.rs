@@ -77,7 +77,9 @@ mod cli {
         #[arg(short = 'S', long, env = "SYMBOLS")]
         pub symbols: bool,
         /// Delete what was matched
-        #[arg(short, long, env = "DELETE", requires = "scope")]
+        ///
+        /// Treated as exclusive: no point in deleting and performing any other action
+        #[arg(short, long, env = "DELETE", requires = "scope", exclusive = true)]
         pub delete: bool,
         /// Squeeze consecutive occurrences of what was matched into one
         #[arg(short, long, env = "SQUEEZE", requires = "scope")]
