@@ -3,6 +3,8 @@ use betterletters::apply;
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
 use betterletters::stages::GermanStage;
+#[cfg(feature = "lower")]
+use betterletters::stages::LowerStage;
 #[cfg(feature = "squeeze")]
 use betterletters::stages::SqueezeStage;
 #[cfg(feature = "symbols")]
@@ -51,6 +53,11 @@ fn main() -> Result<(), Error> {
         debug!("Loaded stage: Upper");
     }
 
+    if args.lower {
+        stages.push(Box::<LowerStage>::default());
+        debug!("Loaded stage: Lower");
+    }
+
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
@@ -79,6 +86,9 @@ mod cli {
         /// Uppercase what was matched
         #[arg(short, long, env = "UPPER")]
         pub upper: bool,
+        /// Lowercase what was matched
+        #[arg(short, long, env = "LOWER")]
+        pub lower: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
         /// 'Abenteuergrüße'
         ///
