@@ -12,12 +12,15 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
       - name: Build
         run: >
@@ -43,14 +46,13 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
       - name: Run tests (with coverage)
         if: matrix.os == 'ubuntu-latest'
+        # `--all-targets` does not include `--doc`
         run: >
           cargo tarpaulin
-          --verbose
-          --out Xml
+          --out xml
           --engine llvm
-          --skip-clean
+          --all-targets
           --doc
-          --exclude-files 'benches/*,build.rs,src/macros.rs'
       - name: Upload coverage reports to Codecov
         if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
@@ -85,7 +87,7 @@ jobs:
     environment: crates.io
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
 
       - name: Publish
