@@ -9,6 +9,8 @@ mod symbols;
 #[cfg(feature = "upper")]
 mod upper;
 
+use std::fmt::Debug;
+
 pub use deletion::DeletionStage;
 pub use german::GermanStage;
 pub use squeeze::SqueezeStage;
@@ -26,7 +28,7 @@ use crate::scoped::{
 /// Stages are the core of the text processing pipeline and can be applied in any order,
 /// [any number of times each](https://en.wikipedia.org/wiki/Idempotence) (more than
 /// once being wasted work, though).
-pub trait Stage: Send + Sync + Scoped {
+pub trait Stage: Send + Sync + Scoped + Debug {
     /// Substitute text in a given `input` string.
     ///
     /// This is infallible: it cannot fail in the sense of [`Result`]. It can only
