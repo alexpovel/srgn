@@ -11,7 +11,7 @@ use betterletters::stages::SqueezeStage;
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
-use log::{debug, info, LevelFilter};
+use log::{debug, info, warn, LevelFilter};
 use std::io::{self, BufReader, Error};
 
 fn main() -> Result<(), Error> {
@@ -68,6 +68,11 @@ fn main() -> Result<(), Error> {
 
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
+
+    if stages.is_empty() {
+        // Doesn't hurt, but warn loudly
+        warn!("No stages loaded, will return input unchanged");
+    }
 
     apply(&stages, &args.scope.into(), &mut source, &mut destination)?;
     info!("Done, exiting");
