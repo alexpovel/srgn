@@ -63,10 +63,14 @@ mod cli {
             env = "REPLACE",
         )]
         pub replace: Option<String>,
-        /// Perform substitutions on German words, such as 'Gruesse' to 'Grüße'
+        /// Perform substitutions on German words, such as 'Abenteuergruesse' to
+        /// 'Abenteuergrüße'
         ///
-        /// Compound words are supported. Words _legally_ containing alternative Umlaut
-        /// spellings are respected and not modified (e.g., 'Abente_ue_r').
+        /// Alternative spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced
+        /// by their respective proper notation (ä, ö, ü, ß; native Unicode). Arbitrary
+        /// compound words are supported. Words legally containing alternative Umlaut
+        /// spellings are respected and not modified (e.g., 'Abente_ue_r'). Words
+        /// require correct spelling to be detected.
         #[arg(short, long, env = "GERMAN")]
         pub german: bool,
         /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
