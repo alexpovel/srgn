@@ -9,12 +9,23 @@ pub(crate) enum WordCasing {
     Mixed,
 }
 
+/// Error conditions when parsing a string into a `WordCasing`.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum WordCasingError {
+    /// The string is empty.
+    EmptyString,
+    /// The string contains characters with undecidable casing.
+    ///
+    /// These are all sorts of characters, even ASCII ones: `!`, `?`, emojis, ...
+    UndecidableCasing,
+}
+
 impl TryFrom<&str> for WordCasing {
-    type Error = &'static str;
+    type Error = WordCasingError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         if value.is_empty() {
-            return Err("String is empty");
+            return Err(WordCasingError::EmptyString);
         }
 
         let mut has_lowercase = false;
@@ -35,7 +46,7 @@ impl TryFrom<&str> for WordCasing {
                     is_titlecase = false;
                 }
             } else {
-                return Err("String contains characters with undecidable casing");
+                return Err(WordCasingError::UndecidableCasing);
             }
         }
 
@@ -206,6 +217,7 @@ impl Replace for String {
 #[cfg(test)]
 mod tests {
     use super::WordCasing::*;
+    use super::WordCasingError::*;
     use super::*;
     use rstest::rstest;
 
@@ -228,12 +240,12 @@ mod tests {
     #[case("ẞß", Ok(Titlecase))] // Eszett works
     //
     // Error conditions
-    #[case("WOW!!", Err("String contains characters with undecidable casing"))]
-    #[case("😀", Err("String contains characters with undecidable casing"))]
-    #[case("", Err("String is empty"))]
+    #[case("WOW!!", Err(UndecidableCasing))]
+    #[case("😀", Err(UndecidableCasing))]
+    #[case("", Err(EmptyString))]
     fn test_word_casing_from_string(
         #[case] input: &str,
-        #[case] expected: Result<WordCasing, &str>,
+        #[case] expected: Result<WordCasing, WordCasingError>,
     ) {
         assert_eq!(WordCasing::try_from(input), expected);
     }
