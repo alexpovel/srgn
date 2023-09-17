@@ -46,11 +46,7 @@ impl TryFrom<&str> for WordCasing {
                     is_titlecase = false;
                 }
             } else {
-                // Reset and bail out.
-                has_lowercase = false;
-                has_uppercase = false;
-                is_titlecase = false;
-                break;
+                return Err(WordCasingError::UndecidableCasing);
             }
         }
 
@@ -59,7 +55,7 @@ impl TryFrom<&str> for WordCasing {
             (_, true, false) => Ok(Self::AllLowercase),
             (_, false, true) => Ok(Self::AllUppercase),
             (_, true, true) => Ok(Self::Mixed),
-            (_, false, false) => Err(WordCasingError::UndecidableCasing),
+            (_, false, false) => unreachable!("Impossible case: any non-empty string has either lower- or uppercase or returned an `Err` early."),
         }
     }
 }
