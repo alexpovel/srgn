@@ -10,6 +10,7 @@ use cached::proc_macro::cached;
 use cached::SizedCache;
 use decompound::{decompound, DecompositionOptions};
 use itertools::Itertools;
+use itertools::MinMaxResult::{MinMax, NoElements, OneElement};
 use log::{debug, trace};
 use once_cell::sync::Lazy;
 use unicode_titlecase::StrTitleCase;
@@ -251,6 +252,7 @@ use unicode_titlecase::StrTitleCase;
 #[derive(Debug, Clone, Copy)]
 pub struct GermanStage {
     prefer_original: bool,
+    naive: bool,
 }
 
 impl GermanStage {
@@ -262,6 +264,9 @@ impl GermanStage {
     /// replacement are *both* legal, controls which one is returned. See
     /// [below](#example-words-valid-both-in-original-and-replaced-form) for when this
     /// is relevant.
+    /// * `naive`: If `true`, perform any possible replacement, regardless of legality
+    /// of the resulting word. Useful for names, which are otherwise not modifiable as
+    /// they do not occur in dictionaries. See [example](#example-naive-mode).
     ///
     /// ## Example: Words valid both in original and replaced form
     ///
@@ -289,8 +294,6 @@ impl GermanStage {
     /// This is an issue mainly for Eszett (`ß`), as for it, two valid spellings are
     /// much more likely than for Umlauts.
     ///
-    /// ## Example
-    ///
     /// ```
     /// use betterletters::{Stage, stages::GermanStage};
     ///
@@ -298,31 +301,88 @@ impl GermanStage {
     ///     ("Busse", "Buße"), // busses / penance
     ///     ("Masse", "Maße"), // mass / measurements
     /// ] {
-    ///     // `false`: prefer replacement
-    ///     let stage = GermanStage::new(false);
+    ///     let mut stage = GermanStage::default();
+    ///     stage.prefer_replacement();
     ///     let result = stage.substitute(original);
     ///     assert_eq!(result, output.to_string());
     ///
-    ///    // `true`: prefer original
-    ///    let stage = GermanStage::new(true);
+    ///    let mut stage = GermanStage::default();
+    ///    stage.prefer_original();
     ///    let result = stage.substitute(original);
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
+    ///
+    /// ## Example: naive mode
+    ///
+    /// Naive mode is essentially forcing a maximum number of replacements.
+    ///
+    /// ```
+    /// use betterletters::{Stage, stages::GermanStage};
+    ///
+    /// for (original, output) in &[
+    ///     ("Frau Schroekedaek", "Frau Schrökedäk"), // Names are not in the word list
+    ///     ("Abenteuer", "Abenteür"), // Illegal, but possible now
+    /// ] {
+    ///    let mut stage = GermanStage::default();
+    ///    stage.naive();
+    ///    let result = stage.substitute(original);
+    ///    assert_eq!(result, output.to_string());
+    ///
+    ///    // However, this is overridden by:
+    ///    stage.prefer_original();
+    ///    let result = stage.substitute(original);
+    ///    assert_eq!(result, original.to_string());
+    ///
+    ///    // The usual behavior:
+    ///    let mut stage = GermanStage::default();
+    ///    stage.sophisticated();
+    ///    let result = stage.substitute(original);
+    ///    assert_eq!(result, original.to_string());
+    /// }
+    /// ```
+    ///
     #[must_use]
-    pub fn new(prefer_original: bool) -> Self {
-        Self { prefer_original }
+    pub fn new(prefer_original: bool, naive: bool) -> Self {
+        Self {
+            prefer_original,
+            naive,
+        }
+    }
+
+    /// Prefer the original word over any replacement.
+    pub fn prefer_original(&mut self) -> &mut Self {
+        self.prefer_original = true;
+        self
+    }
+
+    /// Prefer any replacement over the original word.
+    pub fn prefer_replacement(&mut self) -> &mut Self {
+        self.prefer_original = false;
+        self
+    }
+
+    /// Be naive.
+    pub fn naive(&mut self) -> &mut Self {
+        self.naive = true;
+        self
+    }
+
+    /// Stop being naive.
+    pub fn sophisticated(&mut self) -> &mut Self {
+        self.naive = false;
+        self
     }
 }
 
 impl Default for GermanStage {
     /// Create a new [`GermanStage`] with default settings.
     ///
-    /// Performing replacements is preferred over [keeping the
-    /// original][`GermanStage::new`], which is considered a fallback.
+    /// Default settings are such that features of this stage are leveraged most.
     fn default() -> Self {
         let prefer_original = false;
-        Self::new(prefer_original)
+        let naive = false;
+        Self::new(prefer_original, naive)
     }
 }
 
@@ -366,14 +426,15 @@ impl Stage for GermanStage {
                         &original,
                         machine.current_word().replacements(),
                         self.prefer_original,
+                        self.naive,
                     )
                     .unwrap_or(original);
 
                     debug!("Processed word, appending to output: {:?}", &word);
                     output.push_str(&word);
 
-                    // Add back the non-word character that caused the exit transition in the
-                    // first place.
+                    // Add back the non-word character that caused the exit transition
+                    // in the first place.
                     output.push(char);
                 }
             }
@@ -396,12 +457,30 @@ fn find_valid_replacement(
     word: &str,
     replacements: &[Replacement],
     prefer_original: bool,
+    naive: bool,
 ) -> Option<String> {
-    let replacement_combinations: Vec<Vec<Replacement>> = replacements
-        .iter()
-        .powerset()
-        .map(|v| v.into_iter().cloned().collect())
-        .collect();
+    let replacement_combinations = {
+        let mut res: Vec<Vec<_>> = replacements
+            .iter()
+            .powerset()
+            .map(|v| v.into_iter().cloned().collect())
+            .collect();
+
+        if naive {
+            // Removes all intermediate sets: the shortest (empty) set is required later
+            // for `prefer_original`. The longest contains *all* theoretically possible
+            // replacements
+            res = match res.into_iter().minmax_by_key(Vec::len) {
+                NoElements => {
+                    unreachable!("powerset always contains at least the empty set")
+                }
+                OneElement(e) => vec![e],
+                MinMax(min, max) => vec![min, max],
+            };
+        }
+
+        res
+    };
 
     debug!("Starting search for valid replacement for word '{}'", word);
     trace!(
@@ -435,7 +514,7 @@ fn find_valid_replacement(
             candidate
         );
 
-        if is_valid(&candidate, &contained_in_global_word_list) {
+        if naive || is_valid(&candidate, &contained_in_global_word_list) {
             debug!("Candidate '{}' is valid, returning early", candidate);
             return Some(candidate);
         }
@@ -628,7 +707,7 @@ mod tests {
             word: String
         ) (|data: &TestProcess| {
                 let input = word.clone();
-                let stage = GermanStage{ prefer_original: false };
+                let stage = GermanStage{ prefer_original: false, naive: false };
                 let result: String = stage.substitute(&input);
                 // .unwrap().into();
                 insta::assert_yaml_snapshot!(data.to_string(), result);

@@ -24,7 +24,11 @@ fn main() -> Result<(), Error> {
     }
 
     if args.german {
-        stages.push(Box::new(GermanStage::new(args.german_prefer_original)));
+        stages.push(Box::new(GermanStage::new(
+            // Smell? Bug if bools swapped.
+            args.german_prefer_original,
+            args.german_naive,
+        )));
         debug!("Loaded stage: German");
     }
 
@@ -93,6 +97,13 @@ mod cli {
         // natural language processing or LLMs, so that's all we can offer...
         #[arg(long, env = "GERMAN_PREFER_ORIGINAL")]
         pub german_prefer_original: bool,
+        #[arg(long, env = "GERMAN_NAIVE")]
+        /// Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
+        /// regardless of legality of the resulting word
+        ///
+        /// Useful for names, which are otherwise not modifiable as they do not occur in
+        /// dictionaries. Called 'naive' as this does not perform legal checks.
+        pub german_naive: bool,
     }
 
     impl Args {
