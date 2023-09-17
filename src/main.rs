@@ -1,10 +1,14 @@
+use betterletters::apply;
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
 use betterletters::stages::GermanStage;
+#[cfg(feature = "squeeze")]
+use betterletters::stages::SqueezeStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::SymbolsStage;
-use betterletters::{apply, stages::SqueezeStage};
+#[cfg(feature = "upper")]
+use betterletters::stages::UpperStage;
 use log::{debug, info};
 use std::io::{self, BufReader, Error};
 
@@ -42,6 +46,11 @@ fn main() -> Result<(), Error> {
         debug!("Loaded stage: Deletion");
     }
 
+    if args.upper {
+        stages.push(Box::<UpperStage>::default());
+        debug!("Loaded stage: Upper");
+    }
+
     let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
@@ -67,6 +76,9 @@ mod cli {
             env = "REPLACE",
         )]
         pub replace: Option<String>,
+        /// Uppercase what was matched
+        #[arg(short, long, env = "UPPER")]
+        pub upper: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
         /// 'Abenteuergrüße'
         ///
