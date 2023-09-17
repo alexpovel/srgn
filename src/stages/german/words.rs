@@ -205,42 +205,36 @@ impl Replace for String {
 
 #[cfg(test)]
 mod tests {
+    use super::WordCasing::*;
     use super::*;
     use rstest::rstest;
-    use serde::Serialize;
 
-    impl Serialize for WordCasing {
-        fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-            match self {
-                Self::AllLowercase => serializer.serialize_str("AllLowercase"),
-                Self::AllUppercase => serializer.serialize_str("AllUppercase"),
-                Self::Titlecase => serializer.serialize_str("Titlecase"),
-                Self::Mixed => serializer.serialize_str("Mixed"),
-            }
-        }
-    }
-
-    instrament! {
-            #[rstest]
-            fn test_word_casing_from_string(
-            #[values(
-                "hello",
-                "bItTe",
-                "dANKE",
-                "übel",
-                "uebel",
-                "😀",
-                "ßuper",
-                "ẞuperduper",
-                "WOW!!",
-                "SCREAMING",
-                "ẞß",
-                "",
-            )]
-                word: String
-            ) (|data: &TestWordCasingFromString| {
-                insta::assert_yaml_snapshot!(data.to_string(), WordCasing::try_from(word.as_str()));
-            }
-        )
+    #[rstest]
+    // Lowercase
+    #[case("hello", Ok(AllLowercase))]
+    #[case("uebel", Ok(AllLowercase))]
+    #[case("übel", Ok(AllLowercase))]
+    #[case("ßuper", Ok(AllLowercase))]
+    //
+    // Uppercase
+    #[case("SCREAMING", Ok(AllUppercase))]
+    //
+    // Mixed
+    #[case("bItTe", Ok(Mixed))]
+    #[case("dANKE", Ok(Mixed))]
+    //
+    // Titlecase
+    #[case("ẞuperduper", Ok(Titlecase))]
+    #[case("ẞß", Ok(Titlecase))] // Eszett works
+    //
+    // Error conditions
+    #[case("WOW!!", Err("String contains characters with undecidable casing"))]
+    #[case("😀", Err("String contains characters with undecidable casing"))]
+    #[case("", Err("String is empty"))]
+    fn test_word_casing_from_string(
+        #[case] input: &str,
+        #[case] expected: Result<WordCasing, &str>,
+    ) {
+        assert_eq!(WordCasing::try_from(input), expected);
     }
 }

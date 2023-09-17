@@ -643,75 +643,96 @@ mod tests {
         assert!(!is_valid("", &contained_in_global_word_list));
     }
 
-    instrament! {
-        #[rstest]
-        fn test_is_valid(
-            #[values(
-                "????",
-                "\0",
-                "\0Dübel",
-                "\0Dübel\0",
-                "🤩Dübel",
-                "🤩Dübel🤐",
-                "😎",
-                "dröge",
-                "DüBeL",
-                "Dübel\0",
-                "Duebel",
-                "kindergarten",
-                "Koeffizient",
-                "kongruent",
-                "Kübel",
-                "Mauer",
-                "Mauer😂",
-                "Mauerdübel",
-                "Mauerdübelkübel",
-                "Maür",
-                "Maürdübelkübel",
-                "messgerät",
-                "No\nway",
-                "Süßwasserschwimmbäder",
-                "مرحبا",
-                "你好",
-            )]
-            word: String
-        ) (|data: &TestIsValid| {
-                insta::assert_yaml_snapshot!(data.to_string(), is_valid(&word, &contained_in_global_word_list));
-            }
-        )
+    #[rstest]
+    // Regular words
+    #[case("Koeffizient", true)]
+    #[case("kongruent", true)]
+    #[case("Mauer", true)]
+    #[case("dröge", true)]
+    #[case("Kübel", true)]
+    //
+    // Mixed case is judged by case of initial character
+    #[case("DüBeL", true)] // Noun, upper
+    #[case("düBeL", false)] // Noun, lower; *not* detected, always illegal
+    #[case("dröGE", true)] // Adjective, lower
+    #[case("DrÖgE", true)] // Adjective, upper; start of sentence might have this, so legal
+    //
+    // Junk
+    #[case("????", false)]
+    #[case("\0", false)]
+    #[case("\0Dübel", false)]
+    #[case("Dübel\0", false)]
+    #[case("\0Dübel\0", false)]
+    #[case("🤩Dübel", false)]
+    #[case("🤩Dübel🤐", false)]
+    #[case("😎", false)]
+    #[case("Mauer😂", false)]
+    //
+    // Alternative Umlaut/Eszett spellings aren't accepted at this point
+    #[case("Duebel", false)]
+    //
+    // Misspellings
+    #[case("Maür", false)]
+    #[case("Maürdübelkübel", false)]
+    //
+    // Lowercasing noun isn't valid
+    #[case("Messgerät", true)]
+    #[case("messgerät", false)]
+    //
+    // Compound words are supported
+    #[case("Mauerdübel", true)]
+    #[case("Mauerdübelkübel", true)]
+    #[case("Süßwasserschwimmbäder", true)]
+    //
+    // Foreign languages
+    #[case("kindergarten", false)]
+    #[case("Kindergarten", true)] // Capitalized in German
+    #[case("No\nway", false)]
+    #[case("مرحبا", false)]
+    #[case("你好", false)]
+    fn test_is_valid(#[case] word: &str, #[case] expected: bool) {
+        assert_eq!(is_valid(word, &contained_in_global_word_list), expected);
     }
 
-    instrament! {
-        #[rstest]
-        fn test_process(
-            #[values(
-                "\0Kuebel",
-                "\0Duebel\0",
-                "🤩Duebel",
-                "🤩Duebel🤐",
-                "Dübel",
-                "Abenteuer sind toll!",
-                "Koeffizient",
-                "kongruent",
-                "Ich mag Aepfel, aber nicht Aerger.",
-                "Ich mag AEPFEL!! 😍",
-                "Wer mag Aepfel?!",
-                "Was sind aepfel?",
-                "Oel ist ein wichtiger Bestandteil von Oel.",
-                "WARUM SCHLIESSEN WIR NICHT AB?",
-                "Wir schliessen nicht ab.",
-                "WiR sChLieSsEn ab!",
-                "WiR sChLiesSEn vieLleEcHt aB.",
-                "Suess!",
-            )]
-            word: String
-        ) (|data: &TestProcess| {
-                let input = word.clone();
-                let stage = GermanStage{ prefer_original: false, naive: false };
-                let result: String = stage.substitute(&input);
-                // .unwrap().into();
-                insta::assert_yaml_snapshot!(data.to_string(), result);
-            }
-        )
+    #[rstest]
+    // Regular word
+    #[case("Dübel", "Dübel")]
+    //
+    // Mixed with junk bytes works
+    #[case("\0Kuebel", "\0Kübel")]
+    #[case("\0Duebel\0", "\0Dübel\0")]
+    #[case("🤩Duebel", "🤩Dübel")]
+    #[case("🤩Duebel🤐", "🤩Dübel🤐")]
+    //
+    // Legally alternative Umlaut/Eszett spelled words are not replaced
+    #[case("Abenteuer sind toll!", "Abenteuer sind toll!")]
+    #[case("Koeffizient", "Koeffizient")]
+    #[case("kongruent", "kongruent")]
+    //
+    // Casing detection works
+    #[case(
+        "Ich mag Aepfel, aber nicht Aerger.",
+        "Ich mag Äpfel, aber nicht Ärger."
+    )]
+    #[case("Ich mag AEPFEL!! 😍", "Ich mag ÄPFEL!! 😍")]
+    #[case("Wer mag Aepfel?!", "Wer mag Äpfel?!")]
+    #[case("Was sind aepfel?", "Was sind aepfel?")] // We are not a spellchecker
+    //
+    // Casing of Eszett works
+    #[case("WARUM SCHLIESSEN WIR NICHT AB?", "WARUM SCHLIEẞEN WIR NICHT AB?")]
+    #[case("Wir schliessen nicht ab.", "Wir schließen nicht ab.")]
+    #[case("WiR sChLieSsEn ab!", "WiR sChLieẞEn ab!")]
+    #[case("WiR sChLiesSEn vieLleEcHt aB.", "WiR sChLießEn vieLleEcHt aB.")]
+    #[case("Suess!", "Süß!")]
+    //
+    // Ö works
+    #[case(
+        "Oel ist ein wichtiger Bestandteil von Oel.",
+        "Öl ist ein wichtiger Bestandteil von Öl."
+    )]
+    fn test_substitution(#[case] input: &str, #[case] expected: &str) {
+        let stage = GermanStage::default();
+        let result = stage.substitute(input);
+        assert_eq!(result, expected);
     }
 }
