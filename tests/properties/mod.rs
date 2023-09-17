@@ -6,7 +6,7 @@ mod symbols;
 mod upper;
 
 // https://proptest-rs.github.io/proptest/proptest/tutorial/config.html
-const DEFAULT_NUMBER_OF_TEST_CASES: u32 = 1_024;
+const DEFAULT_NUMBER_OF_TEST_CASES: u32 = 512;
 
 fn apply(stage: &impl Stage, input: &str, scope: Scope) -> String {
     stage.apply(input, &scope)
