@@ -38,7 +38,13 @@ Duebel
         // This will generate all permutations of all `values`, which is a lot but
         // neatly manageable through `insta`.
         #[values(1, 2, 3)] n_sample: usize,
-        #[values(&["--german"], &["--symbols"], &["--german", "--symbols"])] args: &[&str],
+        #[values(
+            &["--german"],
+            &["--symbols"],
+            &["--german", "--symbols"],
+            &["--delete", r"\p{Emoji_Presentation}"],
+        )]
+        args: &[&str],
     ) {
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
