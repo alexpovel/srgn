@@ -17,9 +17,9 @@ use log::{debug, info, warn, LevelFilter};
 use std::io::{self, BufReader, Error};
 
 fn main() -> Result<(), Error> {
-    let args = cli::Args::init();
+    let args = cli::Cli::init();
 
-    let level_filter = level_filter_from_env_and_verbosity(args.additional_verbosity);
+    let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
     env_logger::Builder::new()
         .filter_level(level_filter)
         .format_timestamp_micros() // High precision is nice for benchmarks
@@ -29,27 +29,27 @@ fn main() -> Result<(), Error> {
 
     let mut stages: Vec<Box<dyn betterletters::Stage>> = Vec::new();
 
-    if let Some(replacement) = args.replace {
+    if let Some(replacement) = args.composable_stages.replace {
         stages.push(Box::new(ReplacementStage::new(replacement)));
         debug!("Loaded stage: Replacement");
     }
 
-    if args.squeeze {
+    if args.standalone_stages.squeeze {
         stages.push(Box::<SqueezeStage>::default());
         debug!("Loaded stage: Squeeze");
     }
 
-    if args.german {
+    if args.composable_stages.german {
         stages.push(Box::new(GermanStage::new(
             // Smell? Bug if bools swapped.
-            args.german_prefer_original,
-            args.german_naive,
+            args.german_options.german_prefer_original,
+            args.german_options.german_naive,
         )));
         debug!("Loaded stage: German");
     }
 
-    if args.symbols {
-        if args.invert {
+    if args.composable_stages.symbols {
+        if args.options.invert {
             stages.push(Box::<SymbolsInversionStage>::default());
             debug!("Loaded stage: SymbolsInversion");
         } else {
@@ -58,17 +58,17 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    if args.delete {
+    if args.standalone_stages.delete {
         stages.push(Box::<DeletionStage>::default());
         debug!("Loaded stage: Deletion");
     }
 
-    if args.upper {
+    if args.composable_stages.upper {
         stages.push(Box::<UpperStage>::default());
         debug!("Loaded stage: Upper");
     }
 
-    if args.lower {
+    if args.composable_stages.lower {
         stages.push(Box::<LowerStage>::default());
         debug!("Loaded stage: Lower");
     }
@@ -113,13 +113,13 @@ mod cli {
     use betterletters::GLOBAL_SCOPE;
     use clap::{ArgAction, Parser};
 
-    const STAGES_HELP_HEADING: &str = "Stages";
-    const GLOBAL_OPTIONS_HELP_HEADING: &str = "Options (global)";
-    const GERMAN_STAGE_OPTIONS_HELP_HEADING: &str = "Options (german)";
-
+    /// Main CLI entrypoint.
+    ///
+    /// Using `verbatim_doc_comment` a lot as otherwise lines wouldn't wrap neatly. I
+    /// format them narrowly manually anyway, so can just use them verbatim.
     #[derive(Parser, Debug)]
-    #[command(author, version, about, long_about = None)]
-    pub(super) struct Args {
+    #[command(author, version, about, verbatim_doc_comment, long_about = None)]
+    pub(super) struct Cli {
         /// Scope to apply to, as a regular expression pattern
         ///
         /// Stages will apply their transformations within this scope only.
@@ -128,72 +128,26 @@ mod cli {
         ///
         /// Where that default is meaningless (e.g., deletion), this argument is
         /// _required_.
-        #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE)]
+        #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE, verbatim_doc_comment)]
         pub scope: regex::Regex,
-        /// Replace scope by this (fixed) value
-        ///
-        /// Specially treated stage for ergonomics and compatibility with `tr`.
-        ///
-        /// If given, will run before any other stage.
-        #[arg(value_name = "REPLACEMENT", env = "REPLACE")]
-        pub replace: Option<String>,
-        /// Uppercase scope
-        #[arg(short, long, env = "UPPER", help_heading = STAGES_HELP_HEADING)]
-        pub upper: bool,
-        /// Lowercase scope
-        #[arg(short, long, env = "LOWER", help_heading = STAGES_HELP_HEADING)]
-        pub lower: bool,
-        /// Perform substitutions on German words, such as 'Abenteuergruesse' to
-        /// 'Abenteuergrüße'
-        ///
-        /// ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
-        /// their respective native Unicode (ä, ö, ü, ß).
-        ///
-        /// Arbitrary compound words are supported.
-        ///
-        /// Words legally containing alternative spellings are not modified.
-        ///
-        /// Words require correct spelling to be detected.
-        #[arg(short, long, env = "GERMAN", help_heading = STAGES_HELP_HEADING)]
-        pub german: bool,
-        /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
-        ///
-        /// Helps translate 'ASCII art' into native Unicode representations.
-        #[arg(short = 'S', long, env = "SYMBOLS", group = "invertible", help_heading = STAGES_HELP_HEADING)]
-        pub symbols: bool,
-        /// Delete scope
-        ///
-        /// Can only be used alone: no point in deleting and performing any other
-        /// action. Sibling stages would either receive empty input or have their work
-        /// wiped.
-        #[arg(short, long, env = "DELETE", requires = "scope", exclusive = true, help_heading = STAGES_HELP_HEADING)]
-        pub delete: bool,
-        /// Squeeze consecutive occurrences of scope into one
-        ///
-        /// For example, 'a++b' -> 'a+b' for a scope of '+'.
-        ///
-        /// Quantifiers in scope will have their greediness inverted, allowing for
-        /// 'A1337B' -> 'A1B' for a scope of '\d+' (no '?' required).
-        ///
-        /// A greedy scope ('\d+?') would match all of '1337' and replace nothing.
-        #[arg(short, long, env = "SQUEEZE", requires = "scope", help_heading = STAGES_HELP_HEADING)]
-        pub squeeze: bool,
-        /// When some original version and its replacement are equally legal, prefer the
-        /// original and do not modify.
-        ///
-        /// For example, "Busse" (original) and "Buße" (replacement) are equally legal
-        /// words: by default, the tool would prefer the latter.
-        // More fine-grained control is not available. We are not in the business of
-        // natural language processing or LLMs, so that's all we can offer...
-        #[arg(long, env = "GERMAN_PREFER_ORIGINAL", help_heading = GERMAN_STAGE_OPTIONS_HELP_HEADING)]
-        pub german_prefer_original: bool,
-        /// Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
-        /// regardless of legality of the resulting word
-        ///
-        /// Useful for names, which are otherwise not modifiable as they do not occur in
-        /// dictionaries. Called 'naive' as this does not perform legal checks.
-        #[arg(long, env = "GERMAN_NAIVE", help_heading = GERMAN_STAGE_OPTIONS_HELP_HEADING)]
-        pub german_naive: bool,
+
+        #[command(flatten)]
+        pub composable_stages: ComposableStages,
+
+        #[command(flatten)]
+        pub standalone_stages: StandaloneStages,
+
+        #[command(flatten)]
+        pub options: GlobalOptions,
+
+        #[command(flatten)]
+        pub german_options: GermanStageOptions,
+    }
+
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = true)]
+    #[command(next_help_heading = "Options (global)")]
+    pub(super) struct GlobalOptions {
         /// Undo the effects of passed stages, where applicable
         ///
         /// Requires a 1:1 mapping (bijection) between replacements and original, which
@@ -210,18 +164,111 @@ mod cli {
         ///
         /// These may still be passed, but will be ignored for inversion and applied
         /// normally
-        #[arg(short, long, env = "INVERT", requires = "invertible", help_heading = GLOBAL_OPTIONS_HELP_HEADING)]
+        #[arg(short, long, env, requires = "symbols", verbatim_doc_comment)]
         pub invert: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
         /// (if missing, 'error'), and increased according to the number of times this
         /// flag is given.
-        #[arg(short = 'v', long = "verbose", action = ArgAction::Count)]
+        #[arg(
+            short = 'v',
+            long = "verbose",
+            action = ArgAction::Count,
+            verbatim_doc_comment
+        )]
         pub additional_verbosity: u8,
     }
 
-    impl Args {
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = true)]
+    #[command(next_help_heading = "Composable Stages")]
+    pub(super) struct ComposableStages {
+        /// Replace scope by this (fixed) value
+        ///
+        /// Specially treated stage for ergonomics and compatibility with `tr`.
+        ///
+        /// If given, will run before any other stage.
+        #[arg(value_name = "REPLACEMENT", env, verbatim_doc_comment)]
+        pub replace: Option<String>,
+        /// Uppercase scope
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub upper: bool,
+        /// Lowercase scope
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub lower: bool,
+        /// Perform substitutions on German words, such as 'Abenteuergruesse' to
+        /// 'Abenteuergrüße'
+        ///
+        /// ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
+        /// their respective native Unicode (ä, ö, ü, ß).
+        ///
+        /// Arbitrary compound words are supported.
+        ///
+        /// Words legally containing alternative spellings are not modified.
+        ///
+        /// Words require correct spelling to be detected.
+        #[arg(short, long, verbatim_doc_comment)]
+        pub german: bool,
+        /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
+        ///
+        /// Helps translate 'ASCII art' into native Unicode representations.
+        #[arg(short = 'S', long, verbatim_doc_comment)]
+        pub symbols: bool,
+    }
+
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = false)]
+    #[command(next_help_heading = "Standalone Stages (only usable alone)")]
+    pub(super) struct StandaloneStages {
+        /// Delete scope
+        ///
+        /// Cannot be used with any other stage: no point in deleting and performing any
+        /// other action. Sibling stages would either receive empty input or have their
+        /// work wiped.
+        #[arg(
+            short,
+            long,
+            requires = "scope",
+            conflicts_with = stringify!(ComposableStages),
+            verbatim_doc_comment
+        )]
+        pub delete: bool,
+        /// Squeeze consecutive occurrences of scope into one
+        ///
+        /// For example, 'a++b' -> 'a+b' for a scope of '+'.
+        ///
+        /// Quantifiers in scope will have their greediness inverted, allowing for
+        /// 'A1337B' -> 'A1B' for a scope of '\d+' (no '?' required).
+        ///
+        /// A greedy scope ('\d+?') would match all of '1337' and replace nothing.
+        #[arg(short, long, env, requires = "scope", verbatim_doc_comment)]
+        pub squeeze: bool,
+    }
+
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = true)]
+    #[command(next_help_heading = "Options (german)")]
+    pub(super) struct GermanStageOptions {
+        /// When some original version and its replacement are equally legal, prefer the
+        /// original and do not modify.
+        ///
+        /// For example, "Busse" (original) and "Buße" (replacement) are equally legal
+        /// words: by default, the tool would prefer the latter.
+        // More fine-grained control is not available. We are not in the business of
+        // natural language processing or LLMs, so that's all we can offer...
+        #[arg(long, env, verbatim_doc_comment)]
+        pub german_prefer_original: bool,
+        /// Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
+        /// regardless of legality of the resulting word
+        ///
+        /// Useful for names, which are otherwise not modifiable as they do not occur in
+        /// dictionaries. Called 'naive' as this does not perform legal checks.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub german_naive: bool,
+    }
+
+    impl Cli {
         pub(super) fn init() -> Self {
             Self::parse()
         }
