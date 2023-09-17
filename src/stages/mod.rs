@@ -4,6 +4,8 @@ mod deletion;
 mod german;
 #[cfg(feature = "lower")]
 mod lower;
+#[cfg(feature = "replace")]
+mod replace;
 #[cfg(feature = "squeeze")]
 mod squeeze;
 #[cfg(feature = "symbols")]
@@ -16,6 +18,7 @@ use std::fmt::Debug;
 pub use deletion::DeletionStage;
 pub use german::GermanStage;
 pub use lower::LowerStage;
+pub use replace::ReplacementStage;
 pub use squeeze::SqueezeStage;
 pub use symbols::inversion::SymbolsInversionStage;
 pub use symbols::SymbolsStage;

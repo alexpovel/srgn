@@ -5,6 +5,8 @@ use betterletters::stages::DeletionStage;
 use betterletters::stages::GermanStage;
 #[cfg(feature = "lower")]
 use betterletters::stages::LowerStage;
+#[cfg(feature = "replace")]
+use betterletters::stages::ReplacementStage;
 #[cfg(feature = "squeeze")]
 use betterletters::stages::SqueezeStage;
 #[cfg(feature = "upper")]
@@ -26,6 +28,11 @@ fn main() -> Result<(), Error> {
     info!("Launching app with args: {:?}", args);
 
     let mut stages: Vec<Box<dyn betterletters::Stage>> = Vec::new();
+
+    if let Some(replacement) = args.replace {
+        stages.push(Box::new(ReplacementStage::new(replacement)));
+        debug!("Loaded stage: Replacement");
+    }
 
     if args.squeeze {
         stages.push(Box::<SqueezeStage>::default());
@@ -124,6 +131,10 @@ mod cli {
         #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE)]
         pub scope: regex::Regex,
         /// Replace scope by this (fixed) value
+        ///
+        /// Specially treated stage for ergonomics and compatibility with `tr`.
+        ///
+        /// If given, will run before any other stage.
         #[arg(value_name = "REPLACEMENT", env = "REPLACE")]
         pub replace: Option<String>,
         /// Uppercase scope

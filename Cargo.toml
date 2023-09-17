@@ -31,13 +31,14 @@ regex = "1.9.5"
 
 [features]
 default = ["all"]
-all = ["german", "symbols", "deletion", "squeeze", "upper", "lower"]
+all = ["german", "symbols", "deletion", "squeeze", "upper", "lower", "replace"]
 german = []
 symbols = []
 deletion = []
 squeeze = []
 upper = []
 lower = []
+replace = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
