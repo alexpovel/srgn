@@ -1,8 +1,0 @@
----
-source: core/src/stages/german/driver.rs
-expression: "is_valid(&word, &contained_in_global_word_list)"
-info:
-  word: Mauerdübelkübel
----
-true
-

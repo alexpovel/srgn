@@ -1,8 +1,0 @@
----
-source: core/src/stages/german/driver.rs
-expression: result.0
-info:
-  word: Oel ist ein wichtiger Bestandteil von Oel.
----
-Öl ist ein wichtiger Bestandteil von Öl.
-
