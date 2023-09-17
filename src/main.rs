@@ -75,45 +75,66 @@ mod cli {
     use betterletters::GLOBAL_SCOPE;
     use clap::Parser;
 
+    const STAGES_HELP_HEADING: &str = "Stages";
+    const GLOBAL_OPTIONS_HELP_HEADING: &str = "Options (global)";
+    const GERMAN_STAGE_OPTIONS_HELP_HEADING: &str = "Options (german)";
+
     #[derive(Parser, Debug)]
     #[command(author, version, about, long_about = None)]
     pub(super) struct Args {
         /// Scope to apply to, as a regular expression pattern
+        ///
+        /// Stages will apply their transformations within this scope only.
+        ///
+        /// The default is the global scope, matching the entire input.
+        ///
+        /// Where that default is meaningless (e.g., deletion), this argument is
+        /// _required_.
         #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE)]
         pub scope: regex::Regex,
-        /// Replace what was matched with this value
-        #[arg(
-            value_name = "REPLACEMENT",
-            // conflicts_with = "delete",
-            env = "REPLACE",
-        )]
+        /// Replace scope by this (fixed) value
+        #[arg(value_name = "REPLACEMENT", env = "REPLACE")]
         pub replace: Option<String>,
-        /// Uppercase what was matched
-        #[arg(short, long, env = "UPPER")]
+        /// Uppercase scope
+        #[arg(short, long, env = "UPPER", help_heading = STAGES_HELP_HEADING)]
         pub upper: bool,
-        /// Lowercase what was matched
-        #[arg(short, long, env = "LOWER")]
+        /// Lowercase scope
+        #[arg(short, long, env = "LOWER", help_heading = STAGES_HELP_HEADING)]
         pub lower: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
         /// 'Abenteuergrüße'
         ///
-        /// Alternative spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced
-        /// by their respective proper notation (ä, ö, ü, ß; native Unicode). Arbitrary
-        /// compound words are supported. Words legally containing alternative Umlaut
-        /// spellings are respected and not modified (e.g., 'Abente_ue_r'). Words
-        /// require correct spelling to be detected.
-        #[arg(short, long, env = "GERMAN")]
+        /// ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
+        /// their respective native Unicode (ä, ö, ü, ß).
+        ///
+        /// Arbitrary compound words are supported.
+        ///
+        /// Words legally containing alternative spellings are not modified.
+        ///
+        /// Words require correct spelling to be detected.
+        #[arg(short, long, env = "GERMAN", help_heading = STAGES_HELP_HEADING)]
         pub german: bool,
         /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
-        #[arg(short = 'S', long, env = "SYMBOLS", group = "invertible")]
-        pub symbols: bool,
-        /// Delete what was matched
         ///
-        /// Treated as exclusive: no point in deleting and performing any other action
-        #[arg(short, long, env = "DELETE", requires = "scope", exclusive = true)]
+        /// Helps translate 'ASCII art' into native Unicode representations.
+        #[arg(short = 'S', long, env = "SYMBOLS", group = "invertible", help_heading = STAGES_HELP_HEADING)]
+        pub symbols: bool,
+        /// Delete scope
+        ///
+        /// Can only be used alone: no point in deleting and performing any other
+        /// action. Sibling stages would either receive empty input or have their work
+        /// wiped.
+        #[arg(short, long, env = "DELETE", requires = "scope", exclusive = true, help_heading = STAGES_HELP_HEADING)]
         pub delete: bool,
-        /// Squeeze consecutive occurrences of what was matched into one
-        #[arg(short, long, env = "SQUEEZE", requires = "scope")]
+        /// Squeeze consecutive occurrences of scope into one
+        ///
+        /// For example, 'a++b' -> 'a+b' for a scope of '+'.
+        ///
+        /// Quantifiers in scope will have their greediness inverted, allowing for
+        /// 'A1337B' -> 'A1B' for a scope of '\d+' (no '?' required).
+        ///
+        /// A greedy scope ('\d+?') would match all of '1337' and replace nothing.
+        #[arg(short, long, env = "SQUEEZE", requires = "scope", help_heading = STAGES_HELP_HEADING)]
         pub squeeze: bool,
         /// When some original version and its replacement are equally legal, prefer the
         /// original and do not modify.
@@ -122,14 +143,14 @@ mod cli {
         /// words: by default, the tool would prefer the latter.
         // More fine-grained control is not available. We are not in the business of
         // natural language processing or LLMs, so that's all we can offer...
-        #[arg(long, env = "GERMAN_PREFER_ORIGINAL")]
+        #[arg(long, env = "GERMAN_PREFER_ORIGINAL", help_heading = GERMAN_STAGE_OPTIONS_HELP_HEADING)]
         pub german_prefer_original: bool,
-        #[arg(long, env = "GERMAN_NAIVE")]
         /// Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
         /// regardless of legality of the resulting word
         ///
         /// Useful for names, which are otherwise not modifiable as they do not occur in
         /// dictionaries. Called 'naive' as this does not perform legal checks.
+        #[arg(long, env = "GERMAN_NAIVE", help_heading = GERMAN_STAGE_OPTIONS_HELP_HEADING)]
         pub german_naive: bool,
         /// Undo the effects of passed stages, where applicable
         ///
@@ -147,7 +168,7 @@ mod cli {
         ///
         /// These may still be passed, but will be ignored for inversion and applied
         /// normally
-        #[arg(short, long, env = "INVERT", requires = "invertible")]
+        #[arg(short, long, env = "INVERT", requires = "invertible", help_heading = GLOBAL_OPTIONS_HELP_HEADING)]
         pub invert: bool,
     }
 
