@@ -250,3 +250,20 @@ mod tests {
         assert_eq!(WordCasing::try_from(input), expected);
     }
 }
+#[cfg(test)]
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(10_000))]
+        #[test]
+        fn test_wordcasing_does_not_panic(
+            // https://docs.rs/regex/latest/regex/#matching-one-character
+            // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
+            input in r"\p{Any}*"
+        ) {
+            let _ = WordCasing::try_from(input.as_str());
+        }
+    }
+}
