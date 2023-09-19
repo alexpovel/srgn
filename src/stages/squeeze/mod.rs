@@ -1,5 +1,5 @@
 use super::Stage;
-use crate::scoped::{Scope, ScopeStatus::InScope, Scoped};
+use crate::scoped::{Scope, ScopeStatus::In, Scoped};
 use regex::Regex;
 
 /// Squeezes all consecutive matched scopes into a single occurrence.
@@ -15,28 +15,28 @@ impl Stage for SqueezeStage {
         unimplemented!("Squeezing works without substituting")
     }
 
-    fn apply(&self, input: &str, scope: &Scope) -> String {
-        let mut out = String::with_capacity(input.len());
+    // fn apply(&self, input: &str, scope: &Scope) -> String {
+    //     let mut out = String::with_capacity(input.len());
 
-        let scope = Scope::from(
-            Regex::new(&format!(r"(?U){}", Regex::from(scope)))
-                .expect("should be able to prepend (?U) to pattern"),
-        );
+    //     let scope = Scope::from(
+    //         Regex::new(&format!(r"(?U){}", Regex::from(scope)))
+    //             .expect("should be able to prepend (?U) to pattern"),
+    //     );
 
-        let mut previous = None;
-        for scope in self.split_by_scope(input, &scope) {
-            if let InScope(_) = scope {
-                if let Some(InScope(_)) = previous {
-                    continue;
-                }
-            }
+    //     let mut previous = None;
+    //     for scope in self.split_by_scope(input, &scope) {
+    //         if let In(_) = scope {
+    //             if let Some(In(_)) = previous {
+    //                 continue;
+    //             }
+    //         }
 
-            out.push_str((&scope).into());
-            previous = Some(scope);
-        }
+    //         out.push_str((&scope).into());
+    //         previous = Some(scope);
+    //     }
 
-        out
-    }
+    //     out
+    // }
 }
 
 #[cfg(test)]

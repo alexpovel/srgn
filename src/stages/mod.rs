@@ -26,7 +26,7 @@ pub use upper::UpperStage;
 
 use crate::scoped::{
     Scope,
-    ScopeStatus::{InScope, OutOfScope},
+    ScopeStatus::{In, Out},
     Scoped,
 };
 
@@ -42,24 +42,24 @@ pub trait Stage: Send + Sync + Scoped + Debug {
     /// return incorrect results, which would be bugs (please report).
     fn substitute(&self, input: &str) -> String;
 
-    /// Applies this stage to an `input`, working only on [`InScope`] items and
-    /// forwarding [`OutOfScope`] items unchanged.
-    ///
-    /// Always returns an owned version of the `input`, even for stages where that might
-    /// technically be unnecessary.
-    ///
-    /// This is infallible: it cannot fail in the sense of [`Result`]. It can only
-    /// return incorrect results, which would be bugs (please report).
-    fn apply(&self, input: &str, scope: &Scope) -> String {
-        let mut out = String::with_capacity(input.len());
+    // Applies this stage to an `input`, working only on [`InScope`] items and
+    // forwarding [`OutOfScope`] items unchanged.
+    //
+    // Always returns an owned version of the `input`, even for stages where that might
+    // technically be unnecessary.
+    //
+    // This is infallible: it cannot fail in the sense of [`Result`]. It can only
+    // return incorrect results, which would be bugs (please report).
+    // fn apply(&self, input: &str, scope: &Scope) -> String {
+    //     let mut out = String::with_capacity(input.len());
 
-        for scope in self.split_by_scope(input, scope) {
-            match scope {
-                InScope(s) => out.push_str(&self.substitute(s)),
-                OutOfScope(s) => out.push_str(s),
-            }
-        }
+    //     for scope in self.split_by_scope(input, scope) {
+    //         match scope {
+    //             In(s) => out.push_str(&self.substitute(s)),
+    //             Out(s) => out.push_str(s),
+    //         }
+    //     }
 
-        out
-    }
+    //     out
+    // }
 }

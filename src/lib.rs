@@ -19,12 +19,15 @@
 pub use crate::stages::Stage;
 use log::{debug, info};
 use scoped::Scope;
-use std::io::{BufRead, Error, Write};
+use scoping::ScopedView;
+use std::io::{BufRead, Error, Read, Write};
 
 /// Items related to scopes, which are used to limit the application of stages.
 pub mod scoped;
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;
+
+pub mod scoping;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
@@ -67,25 +70,20 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 /// - when the destination cannot be flushed before exiting
 pub fn apply(
     stages: &Vec<Box<dyn Stage>>,
-    scope: &Scope,
-    source: &mut impl BufRead,
+    view: ScopedView,
     destination: &mut impl Write,
 ) -> Result<(), Error> {
-    const EOF_INDICATOR: usize = 0;
-
-    let mut buf = String::new();
-
-    while source.read_line(&mut buf)? > EOF_INDICATOR {
-        debug!("Starting processing line: '{}'", buf.escape_debug());
+    let result = view.submit(|s| {
+        let mut out = String::with_capacity(s.len());
 
         for stage in stages {
-            buf = stage.apply(&buf, scope);
+            out.push_str(&stage.substitute(s));
         }
 
-        debug!("Processed line, will write out: '{}'", buf.escape_debug());
-        destination.write_all(buf.as_bytes())?;
-        buf.clear();
-    }
+        out
+    });
+
+    destination.write_all(result.as_bytes())?;
 
     destination.flush()?;
     info!("Exiting");

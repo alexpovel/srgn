@@ -1,4 +1,4 @@
-use betterletters::apply;
+use betterletters::scoping::langs::python::{PythonScoper, Scoper};
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
@@ -13,8 +13,10 @@ use betterletters::stages::SqueezeStage;
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
+use betterletters::{apply, scoping::regex::RegexScoper};
 use log::{debug, info, warn, LevelFilter};
-use std::io::{self, BufReader, Error};
+use regex::Regex;
+use std::io::{self, BufReader, Error, Read};
 
 fn main() -> Result<(), Error> {
     let args = cli::Cli::init();
@@ -26,6 +28,18 @@ fn main() -> Result<(), Error> {
         .init();
 
     info!("Launching app with args: {:?}", args);
+
+    let mut buf = String::new();
+    std::io::stdin().read_to_string(&mut buf)?;
+
+    let mut root_scoper: Box<dyn Scoper> = Box::new(RegexScoper::new(args.scope, None));
+
+    if let Some(python) = args.languages_scopes.python {
+        root_scoper = Box::new(PythonScoper::new(&python, Some(root_scoper)));
+    }
+
+    let view = root_scoper.scope(&buf);
+    debug!("View: {:?}", view);
 
     let mut stages: Vec<Box<dyn betterletters::Stage>> = Vec::new();
 
@@ -73,7 +87,6 @@ fn main() -> Result<(), Error> {
         debug!("Loaded stage: Lower");
     }
 
-    let mut source = BufReader::new(io::stdin());
     let mut destination = io::stdout();
 
     if stages.is_empty() {
@@ -81,7 +94,7 @@ fn main() -> Result<(), Error> {
         warn!("No stages loaded, will return input unchanged");
     }
 
-    apply(&stages, &args.scope.into(), &mut source, &mut destination)?;
+    apply(&stages, view, &mut destination)?;
     info!("Done, exiting");
     Ok(())
 }
@@ -110,8 +123,11 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::GLOBAL_SCOPE;
+    use betterletters::{
+        scoping::langs::python::LanguageScoper, scoping::langs::python::PythonScoper, GLOBAL_SCOPE,
+    };
     use clap::{ArgAction, Parser};
+    use tree_sitter::Query;
 
     /// Main CLI entrypoint.
     ///
@@ -139,6 +155,9 @@ mod cli {
 
         #[command(flatten)]
         pub options: GlobalOptions,
+
+        #[command(flatten)]
+        pub languages_scopes: LanguageScopes,
 
         #[command(flatten)]
         pub german_options: GermanStageOptions,
@@ -245,6 +264,19 @@ mod cli {
         #[arg(short, long, env, requires = "scope", verbatim_doc_comment)]
         pub squeeze: bool,
     }
+
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = false)]
+    #[command(next_help_heading = "Language scopes")]
+    pub(super) struct LanguageScopes {
+        /// Python
+        #[arg(long, env, verbatim_doc_comment)]
+        pub python: Option<String>,
+    }
+
+    // fn parse_query(input: &str) -> Result<Query, &str> {
+    //     Ok(Query::new(PythonScoper::lang(), input).unwrap())
+    // }
 
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]

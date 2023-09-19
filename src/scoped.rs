@@ -84,14 +84,14 @@ pub trait Scoped {
 
         for m in scope.0.find_iter(input) {
             if m.start() > last_end {
-                scopes.push(ScopeStatus::OutOfScope(&input[last_end..m.start()]));
+                scopes.push(ScopeStatus::Out(&input[last_end..m.start()]));
             }
 
-            scopes.push(ScopeStatus::InScope(m.as_str()));
+            scopes.push(ScopeStatus::In(m.as_str()));
             last_end = m.end();
         }
 
-        scopes.push(ScopeStatus::OutOfScope(&input[last_end..]));
+        scopes.push(ScopeStatus::Out(&input[last_end..]));
 
         scopes.retain(|s| {
             let s: &str = s.into();
@@ -107,9 +107,9 @@ pub trait Scoped {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ScopeStatus<'a> {
     /// The given string part is in scope for processing.
-    InScope(&'a str),
+    In(&'a str),
     /// The given string part is out of scope for processing.
-    OutOfScope(&'a str),
+    Out(&'a str),
 }
 
 impl<'a> From<&'a ScopeStatus<'_>> for &'a str {
@@ -118,14 +118,14 @@ impl<'a> From<&'a ScopeStatus<'_>> for &'a str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'a ScopeStatus) -> Self {
         match s {
-            ScopeStatus::InScope(s) | ScopeStatus::OutOfScope(s) => s,
+            ScopeStatus::In(s) | ScopeStatus::Out(s) => s,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::ScopeStatus::{InScope, OutOfScope};
+    use super::ScopeStatus::{In, Out};
     use super::*;
     use rstest::rstest;
 
@@ -135,26 +135,26 @@ mod tests {
     /// Run some manual testing for sanity. Random/fuzzing/property testing is much
     /// better in this case. See below.
     #[rstest]
-    #[case("a", "", vec![OutOfScope("a")])]
+    #[case("a", "", vec![Out("a")])]
     #[case("", "a", vec![])] // Empty results are discarded
     //
-    #[case("a", "a", vec![InScope("a")])]
-    #[case("a", "b", vec![OutOfScope("a")])]
+    #[case("a", "a", vec![In("a")])]
+    #[case("a", "b", vec![Out("a")])]
     //
-    #[case("a", ".*", vec![InScope("a")])]
-    #[case("a", ".+?", vec![InScope("a")])]
+    #[case("a", ".*", vec![In("a")])]
+    #[case("a", ".+?", vec![In("a")])]
     //
-    #[case("a\na", ".*", vec![InScope("a"), OutOfScope("\n"), InScope("a")])]
-    #[case("a\na", "(?s).*", vec![InScope("a\na")])] // Dot matches newline
+    #[case("a\na", ".*", vec![In("a"), Out("\n"), In("a")])]
+    #[case("a\na", "(?s).*", vec![In("a\na")])] // Dot matches newline
     //
-    #[case("abc", "a", vec![InScope("a"), OutOfScope("bc")])]
+    #[case("abc", "a", vec![In("a"), Out("bc")])]
     //
-    #[case("abc", r"\w", vec![InScope("a"), InScope("b"), InScope("c")])]
-    #[case("abc", r"\W", vec![OutOfScope("abc")])]
-    #[case("abc", r"\w+", vec![InScope("abc")])]
+    #[case("abc", r"\w", vec![In("a"), In("b"), In("c")])]
+    #[case("abc", r"\W", vec![Out("abc")])]
+    #[case("abc", r"\w+", vec![In("abc")])]
     //
-    #[case("Work 69 on 420 words", r"\w+", vec![InScope("Work"), OutOfScope(" "), InScope("69"), OutOfScope(" "), InScope("on"), OutOfScope(" "), InScope("420"), OutOfScope(" "), InScope("words")])]
-    #[case("Ignore 69 the 420 digits", r"\p{letter}+", vec![InScope("Ignore"), OutOfScope(" 69 "), InScope("the"), OutOfScope(" 420 "), InScope("digits")])]
+    #[case("Work 69 on 420 words", r"\w+", vec![In("Work"), Out(" "), In("69"), Out(" "), In("on"), Out(" "), In("420"), Out(" "), In("words")])]
+    #[case("Ignore 69 the 420 digits", r"\p{letter}+", vec![In("Ignore"), Out(" 69 "), In("the"), Out(" 420 "), In("digits")])]
     fn test_split_by_scope(
         #[case] input: &str,
         #[case] scope: &str,
@@ -265,8 +265,8 @@ mod tests {
                 let scopes = dummy.split_by_scope(&input, &scope);
 
                 if scopes.iter().any(|s| match s {
-                    InScope(_) => true,
-                    OutOfScope(_) => false,
+                    In(_) => true,
+                    Out(_) => false,
                 }) {
                     n_matches += 1;
                 }
