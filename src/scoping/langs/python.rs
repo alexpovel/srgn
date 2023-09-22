@@ -5,8 +5,6 @@ use crate::scoping::ScopedView;
 
 pub trait Scoper {
     fn scope<'a>(&self, input: &'a str) -> ScopedView<'a>;
-
-    fn next(self) -> Option<Box<dyn Scoper>>;
 }
 
 impl Debug for dyn Scoper {
@@ -23,14 +21,13 @@ pub trait LanguageScoper: Scoper {
 #[derive(Debug)]
 pub struct PythonScoper {
     query: Query,
-    next: Option<Box<dyn Scoper>>,
 }
 
 impl PythonScoper {
-    pub fn new(query: &str, next: Option<Box<dyn Scoper>>) -> Self {
+    pub fn new(query: &str) -> Self {
         let query = Query::new(Self::lang(), query).expect("Invalid query.");
 
-        Self { query, next }
+        Self { query }
     }
 }
 
@@ -53,10 +50,6 @@ impl Scoper for PythonScoper {
             .map(|capture| capture.node.byte_range());
 
         ScopedView::from_raw(input, ranges)
-    }
-
-    fn next(self) -> Option<Box<dyn Scoper>> {
-        self.next
     }
 }
 

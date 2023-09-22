@@ -11,7 +11,7 @@ impl Scoped for UpperStage {}
 
 impl Stage for UpperStage {
     fn substitute(&self, view: &mut ScopedView) {
-        view.submit(|s| s.replace('ß', "ẞ").to_uppercase());
+        view.map(|s| s.replace('ß', "ẞ").to_uppercase());
     }
 }
 

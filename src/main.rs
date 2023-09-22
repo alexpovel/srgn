@@ -1,3 +1,4 @@
+use betterletters::scoping::langs::python::{PythonScoper, Scoper};
 use betterletters::scoping::ScopedView;
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
@@ -15,10 +16,6 @@ use betterletters::stages::UpperStage;
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
 use betterletters::Stage;
 use betterletters::{apply, scoping::regex::RegexScoper};
-use betterletters::{
-    scoped::Scoped,
-    scoping::langs::python::{PythonScoper, Scoper},
-};
 use log::{debug, info, warn, LevelFilter};
 use std::io::{self, Error, Read};
 
@@ -52,10 +49,10 @@ fn assemble_scopers(args: &cli::Cli) -> Vec<Box<dyn Scoper>> {
     let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
-        scopers.push(Box::new(PythonScoper::new(&python, None)));
+        scopers.push(Box::new(PythonScoper::new(&python)));
     }
 
-    scopers.push(Box::new(RegexScoper::new(args.scope.clone(), None)));
+    scopers.push(Box::new(RegexScoper::new(args.scope.clone())));
 
     scopers
 }

@@ -3,8 +3,6 @@ use itertools::Itertools;
 use log::{debug, trace};
 use std::{borrow::Cow, fmt::Display, ops::Range};
 
-use self::langs::python::Scoper;
-
 pub mod langs;
 
 pub mod regex;
@@ -29,14 +27,6 @@ impl From<ScopedView<'_>> for String {
         view.to_string()
     }
 }
-
-// impl<'a> Iterator for ScopedView<'a> {
-//     type Item = ScopeStatus<'a>;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.scopes.pop()
-//     }
-// }
 
 impl<'a> ScopedView<'a> {
     #[must_use]
@@ -70,7 +60,7 @@ impl<'a> ScopedView<'a> {
         scopes.into()
     }
 
-    pub fn explode<F>(&mut self, scoper: F) -> Result<(), ()>
+    pub fn explode<F>(&mut self, f: F) -> Result<(), ()>
     where
         F: Fn(&str) -> ScopedView,
     {
@@ -88,7 +78,7 @@ impl<'a> ScopedView<'a> {
 
             match scope {
                 In(Cow::Borrowed(s)) => {
-                    let mut new_scopes = scoper(s).scopes;
+                    let mut new_scopes = f(s).scopes;
                     new_scopes.retain(|s| !s.is_empty());
                     new.extend(new_scopes);
                 }
@@ -111,12 +101,10 @@ impl<'a> ScopedView<'a> {
     }
 
     /// submit a function to be applied to each in-scope, returning out-scopes unchanged
-    pub fn submit<F>(&mut self, f: F)
+    pub fn map<F>(&mut self, f: F)
     where
         F: Fn(&str) -> String,
     {
-        // let mut out = String::with_capacity(self.len());
-
         for scope in &mut self.scopes {
             match scope {
                 In(s) => {
@@ -130,20 +118,9 @@ impl<'a> ScopedView<'a> {
                 }
                 Out(s) => {
                     debug!("Appending '{}'", s.escape_debug());
-                    // out.push_str(s);
                 }
             }
         }
-    }
-
-    pub fn len(&self) -> usize {
-        self.scopes
-            .iter()
-            .map(|ss| {
-                let s: &str = ss.into();
-                s.len()
-            })
-            .sum()
     }
 }
 
