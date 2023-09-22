@@ -1,5 +1,9 @@
 use super::Stage;
-use crate::scoped::{Scope, ScopeStatus::In, Scoped};
+use crate::{
+    scoped::{ScopeStatus, Scoped},
+    scoping::ScopedView,
+};
+use log::{debug, trace};
 use regex::Regex;
 
 /// Squeezes all consecutive matched scopes into a single occurrence.
@@ -10,33 +14,35 @@ pub struct SqueezeStage {}
 impl Scoped for SqueezeStage {}
 
 impl Stage for SqueezeStage {
-    fn substitute(&self, _input: &str) -> String {
-        // Refer to `apply`, which this stage *overrides*.
-        unimplemented!("Squeezing works without substituting")
+    fn substitute(&self, view: &mut ScopedView) {
+        debug!("Squeezing...");
+        let v = view.into_inner_mut();
+
+        let mut prev_was_in = false;
+        v.retain(|scope| {
+            let keep = !(prev_was_in && matches!(scope, ScopeStatus::In(_)));
+            prev_was_in = matches!(scope, ScopeStatus::In(_));
+            trace!("keep: {}, scope: {:?}", keep, scope);
+            keep
+        });
+
+        debug!("Squeezed: {:?}", v);
+
+        // let mut previous = None;
+        // for scope in v {
+        //     if let ScopeStatus::In(_) = scope {
+        //         if let Some(ScopeStatus::In(_)) = previous {
+        //             continue;
+        //         }
+        //     }
+        // }
+
+        //     out.push_str((&scope).into());
+        //     previous = Some(scope);
+        // }
+
+        // out
     }
-
-    // fn apply(&self, input: &str, scope: &Scope) -> String {
-    //     let mut out = String::with_capacity(input.len());
-
-    //     let scope = Scope::from(
-    //         Regex::new(&format!(r"(?U){}", Regex::from(scope)))
-    //             .expect("should be able to prepend (?U) to pattern"),
-    //     );
-
-    //     let mut previous = None;
-    //     for scope in self.split_by_scope(input, &scope) {
-    //         if let In(_) = scope {
-    //             if let Some(In(_)) = previous {
-    //                 continue;
-    //             }
-    //         }
-
-    //         out.push_str((&scope).into());
-    //         previous = Some(scope);
-    //     }
-
-    //     out
-    // }
 }
 
 #[cfg(test)]
@@ -166,7 +172,9 @@ mod tests {
     fn test_squeeze(#[case] input: &str, #[case] pattern: Regex, #[case] expected: &str) {
         let stage = SqueezeStage {};
 
-        let result = stage.apply(input, &Scope::new(pattern));
+        let mut view = ScopedView::new(input);
+        stage.substitute(&mut view);
+        let result = view.to_string();
 
         assert_eq!(result, expected);
     }

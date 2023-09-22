@@ -18,9 +18,8 @@
 
 pub use crate::stages::Stage;
 use log::{debug, info};
-use scoped::Scope;
-use scoping::ScopedView;
-use std::io::{BufRead, Error, Read, Write};
+use scoping::{langs::python::Scoper, ScopedView};
+use std::io::{Error, Write};
 
 /// Items related to scopes, which are used to limit the application of stages.
 pub mod scoped;
@@ -31,8 +30,6 @@ pub mod scoping;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
-const EXPECTABLE_AVERAGE_WORD_LENGTH_BYTES: u8 = 16;
-const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 
 /// Apply the list of [stages][Stage] to a source, writing results to the given
 /// destination.
@@ -69,23 +66,23 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 /// - when the destination cannot be written to
 /// - when the destination cannot be flushed before exiting
 pub fn apply(
-    stages: &Vec<Box<dyn Stage>>,
-    view: ScopedView,
+    scopers: &[Box<dyn Scoper>],
+    mut view: ScopedView,
+    stages: &[Box<dyn Stage>],
     destination: &mut impl Write,
 ) -> Result<(), Error> {
-    let result = view.submit(|s| {
-        let mut out = String::with_capacity(s.len());
+    for scoper in scopers {
+        view.explode(|s| scoper.scope(s));
+    }
 
-        for stage in stages {
-            out.push_str(&stage.substitute(s));
-        }
+    for stage in stages {
+        debug!("Applying stage {:?}", stage);
+        stage.substitute(&mut view);
+    }
 
-        out
-    });
-
-    destination.write_all(result.as_bytes())?;
-
+    destination.write_all(view.to_string().as_bytes())?;
     destination.flush()?;
+
     info!("Exiting");
     Ok(())
 }

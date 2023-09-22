@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use super::{langs::python::Scoper, ranges_to_view};
+use super::{langs::python::Scoper, ScopedView};
 
 #[derive(Debug)]
 pub struct RegexScoper {
@@ -9,14 +9,16 @@ pub struct RegexScoper {
 }
 
 impl RegexScoper {
+    #[must_use]
     pub fn new(pattern: Regex, next: Option<Box<dyn Scoper>>) -> Self {
         Self { pattern, next }
     }
 }
 
 impl Scoper for RegexScoper {
-    fn scope<'a>(&'a self, input: &'a str) -> super::ScopedView {
-        ranges_to_view(input, self.pattern.find_iter(input).map(|m| m.range()))
+    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a> {
+        let ranges = self.pattern.find_iter(input).map(|m| m.range());
+        ScopedView::from_raw(input, ranges)
     }
 
     fn next(self) -> Option<Box<dyn Scoper>> {

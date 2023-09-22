@@ -1,10 +1,10 @@
 use std::fmt::{self, Debug, Formatter};
 
 use super::{Language, Parser, Query, QueryCursor};
-use crate::scoping::{ranges_to_view, ScopedView};
+use crate::scoping::ScopedView;
 
 pub trait Scoper {
-    fn scope<'a>(&'a self, input: &'a str) -> ScopedView;
+    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a>;
 
     fn next(self) -> Option<Box<dyn Scoper>>;
 }
@@ -35,7 +35,8 @@ impl PythonScoper {
 }
 
 impl Scoper for PythonScoper {
-    fn scope<'a>(&'a self, input: &'a str) -> ScopedView {
+    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a> {
+        // view.explode(|s| {
         // tree-sitter is about incremental parsing, which we don't use here
         let old_tree = None;
 
@@ -51,14 +52,7 @@ impl Scoper for PythonScoper {
             .flat_map(|query_match| query_match.captures)
             .map(|capture| capture.node.byte_range());
 
-        let mut view = ranges_to_view(input, ranges);
-
-        if let Some(ref next) = self.next {
-            let f = |s| next.scope(s);
-            view.explode(f);
-        }
-
-        view
+        ScopedView::from_raw(input, ranges)
     }
 
     fn next(self) -> Option<Box<dyn Scoper>> {

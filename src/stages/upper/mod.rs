@@ -1,4 +1,4 @@
-use crate::scoped::Scoped;
+use crate::{scoped::Scoped, scoping::ScopedView};
 
 use super::Stage;
 
@@ -10,8 +10,8 @@ pub struct UpperStage {}
 impl Scoped for UpperStage {}
 
 impl Stage for UpperStage {
-    fn substitute(&self, input: &str) -> String {
-        input.replace('ß', "ẞ").to_uppercase()
+    fn substitute(&self, view: &mut ScopedView) {
+        view.submit(|s| s.replace('ß', "ẞ").to_uppercase());
     }
 }
 
@@ -51,6 +51,8 @@ mod tests {
     // Emojis
     #[case("👋\0", "👋\0")]
     fn substitute(#[case] input: &str, #[case] expected: &str) {
-        assert_eq!(UpperStage {}.substitute(input), expected);
+        let mut view = ScopedView::new(input);
+        UpperStage::default().substitute(&mut view);
+        assert_eq!(view.to_string(), expected);
     }
 }
