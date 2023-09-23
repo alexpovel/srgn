@@ -7,11 +7,12 @@ use super::Stage;
 /// ## Example: replacing invalid characters in identifiers
 ///
 /// ```
+/// use betterletters::RegexPattern;
 /// use betterletters::stages::{Stage, ReplacementStage};
 /// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};
 ///
 /// let stage = ReplacementStage::new("_".to_string());
-/// let scoper = Regex::new(regex::Regex::new(r"[^a-zA-Z0-9]+").unwrap());
+/// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
 /// let mut view = ScopedViewBuilder::new("hyphenated-variable-name").explode_from_scoper(
 ///     &scoper
 /// ).build();
@@ -25,13 +26,14 @@ use super::Stage;
 /// ## Example: replace emojis
 ///
 /// ```
+/// use betterletters::RegexPattern;
 /// use betterletters::stages::{Stage, ReplacementStage};
 /// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};
 ///
 /// let stage = ReplacementStage::new(":(".to_string());
 /// // A Unicode character class category. See also
 /// // https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties
-/// let scoper = Regex::new(regex::Regex::new(r"\p{Emoji}").unwrap());
+/// let scoper = Regex::new(RegexPattern::new(r"\p{Emoji}").unwrap());
 /// let mut view = ScopedViewBuilder::new("Party! 😁 💃 🎉 🥳 So much fun! ╰(°▽°)╯").explode_from_scoper(
 ///     &scoper
 /// ).build();

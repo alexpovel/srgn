@@ -143,7 +143,7 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::GLOBAL_SCOPE;
+    use betterletters::{RegexPattern, GLOBAL_SCOPE};
     use clap::{ArgAction, Parser};
 
     /// Main CLI entrypoint.
@@ -162,7 +162,7 @@ mod cli {
         /// Where that default is meaningless (e.g., deletion), this argument is
         /// _required_.
         #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE, verbatim_doc_comment)]
-        pub scope: regex::Regex,
+        pub scope: RegexPattern,
 
         #[command(flatten)]
         pub composable_stages: ComposableStages,

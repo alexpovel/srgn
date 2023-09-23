@@ -32,11 +32,10 @@ impl Stage for SqueezeStage {
 
 #[cfg(test)]
 mod tests {
-    use crate::scoping::ScopedViewBuilder;
-    use regex::Regex;
-    use rstest::rstest;
-
     use super::*;
+    use crate::scoping::ScopedViewBuilder;
+    use crate::RegexPattern;
+    use rstest::rstest;
 
     #[rstest]
     // Pattern only
@@ -110,14 +109,15 @@ mod tests {
     //
     #[case("abab", r"\D", "a")]
     //
-    #[case("abab", r"(ab){2}", "abab")]
-    #[case("ababa", r"(ab){2}", "ababa")]
-    #[case("ababab", r"(ab){2}", "ababab")]
-    #[case("abababa", r"(ab){2}", "abababa")]
-    #[case("abababab", r"(ab){2}", "abab")]
-    #[case("ababababa", r"(ab){2}", "ababa")]
-    #[case("ababababab", r"(ab){2}", "ababab")]
-    #[case("abababababab", r"(ab){2}", "abab")]
+    // Builds up properly; need non-capturing group
+    #[case("abab", r"(?:ab){2}", "abab")]
+    #[case("ababa", r"(?:ab){2}", "ababa")]
+    #[case("ababab", r"(?:ab){2}", "ababab")]
+    #[case("abababa", r"(?:ab){2}", "abababa")]
+    #[case("abababab", r"(?:ab){2}", "abab")]
+    #[case("ababababa", r"(?:ab){2}", "ababa")]
+    #[case("ababababab", r"(?:ab){2}", "ababab")]
+    #[case("abababababab", r"(?:ab){2}", "abab")]
     //
     #[case("Anything whatsoever gets rEkT", r".", "A")]
     #[case(
@@ -143,7 +143,7 @@ mod tests {
         r" ",
         " dirty Strings \t with \t\t messed up whitespace\n\n\n"
     )]
-    fn test_squeeze(#[case] input: &str, #[case] pattern: Regex, #[case] expected: &str) {
+    fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
         let stage = SqueezeStage {};
 
         let builder = ScopedViewBuilder::new(input)

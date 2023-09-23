@@ -1,7 +1,7 @@
 use betterletters::{
     scoping::{regex::Regex, ScopedViewBuilder},
     stages::SqueezeStage,
-    Stage,
+    RegexPattern, Stage,
 };
 use proptest::prelude::*;
 
@@ -17,7 +17,7 @@ proptest! {
     ) {
         let stage = SqueezeStage::default();
         let mut view = ScopedViewBuilder::new(&input).explode_from_scoper(
-            &Regex::new(regex::Regex::new("A").unwrap())
+            &Regex::new(RegexPattern::new("A").unwrap())
         ).build();
 
         stage.map(&mut view);

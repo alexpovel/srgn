@@ -33,6 +33,10 @@ pub mod scoping;
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
 
+/// The type of regular expression used throughout the crate. Abstracts away the
+/// underlying implementation.
+pub use fancy_regex::Regex as RegexPattern;
+
 /// Apply the list of [stages][Stage] to a source, writing results to the given
 /// destination.
 ///
