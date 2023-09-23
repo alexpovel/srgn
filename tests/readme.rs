@@ -6,13 +6,15 @@ mod tests {
         parse_document, Arena, ComrakOptions,
     };
 
-    use itertools::Itertools;
     use nom::{
-        bytes::complete::{tag, take_till, take_until, take_while1},
-        character::complete::{char, line_ending, multispace0},
+        branch::alt,
+        bytes::complete::{escaped, tag, take_till, take_until, take_while1},
+        character::complete::{alpha1 as ascii_alpha1, char, line_ending, multispace0, none_of},
         multi::many1,
+        sequence::delimited,
         Finish, IResult,
     };
+    use shell_words::split;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct CommandUnderTest {
@@ -21,26 +23,29 @@ mod tests {
         stdout: String,
     }
 
+    /// https://stackoverflow.com/a/58907488/11477374
+    fn parse_quoted(input: &str) -> IResult<&str, &str> {
+        let esc = escaped(none_of("\\\'"), '\\', tag("'"));
+        let esc_or_empty = alt((esc, tag("")));
+        let res = delimited(tag("'"), esc_or_empty, tag("'"))(input)?;
+
+        Ok(res)
+    }
+
     fn parse_command_output_pair(input: &str) -> IResult<&str, CommandUnderTest> {
-        let (input, _) = char('$')(input)?;
+        let (input, _terminal_prompt) = char('$')(input)?;
+
+        let (input, _echo_cmd) = delimited(multispace0, tag("echo"), multispace0)(input)?;
+
+        let (input, stdin) = parse_quoted(input)?;
+
+        let (input, _unix_pipe) = delimited(multispace0, char('|'), multispace0)(input)?;
+
+        let (input, _program_name) = ascii_alpha1(input)?;
 
         let (input, _) = multispace0(input)?;
-        let (input, _) = tag("echo")(input)?;
-        let (input, _) = multispace0(input)?;
 
-        let quote = '\'';
-        let (input, _) = char(quote)(input)?;
-        // Doesn't handle escaping
-        let (input, stdin) = take_until("\'")(input)?;
-        let (input, _) = char(quote)(input)?;
-
-        let (input, _) = multispace0(input)?;
-        let (input, _) = char('|')(input)?;
-        let (input, _) = multispace0(input)?;
-
-        let (input, _program) = take_till(|c| c == ' ')(input)?;
-
-        let (input, args) = take_while1(|c| c != '#' && c != '\n')(input)?;
+        let (input, raw_args) = take_while1(|c| c != '#' && c != '\n')(input)?;
         let (input, _) = take_until("\n")(input)?;
         let (input, _) = line_ending(input)?;
 
@@ -52,12 +57,7 @@ mod tests {
             input,
             CommandUnderTest {
                 stdin: stdin.trim().to_string(),
-                args: args
-                    .split_whitespace()
-                    .map(String::from)
-                    .filter(|s| !s.is_empty())
-                    .map(|s| s.replace(quote, ""))
-                    .collect_vec(),
+                args: split(raw_args).expect("Should be able to split args"),
                 stdout: stdout.trim().to_string(),
             },
         ))
@@ -83,13 +83,11 @@ mod tests {
 
             if let NodeValue::CodeBlock(NodeCodeBlock { info, literal, .. }) = value {
                 if info == console {
-                    let x = parse_code_blocks(&literal).finish();
-                    println!("{:#?}", x);
-                    let parsed = parse_code_blocks(&literal)
+                    let (_, commands) = parse_code_blocks(&literal)
                         .finish()
                         .expect("Anything in `console` should be parseable as a command");
-                    println!("{:#?}", parsed);
-                    cuts.extend(parsed.1);
+                    println!("Found command to run: {:#?}", commands);
+                    cuts.extend(commands);
                 }
             }
         });

@@ -153,6 +153,7 @@ dependencies = [
  "itertools 0.11.0",
  "log",
  "nom",
+ "nom-unicode",
  "num_cpus",
  "once_cell",
  "paste",
@@ -164,6 +165,7 @@ dependencies = [
  "rstest",
  "serde",
  "serial_test",
+ "shell-words",
  "test-log",
  "tree-sitter",
  "tree-sitter-python",
@@ -1036,6 +1038,15 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "nom-unicode"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5c03a4d71ab9740c752c165329e9df13a808093b146dfbef6170ac260771ffe"
+dependencies = [
+ "nom",
 ]
 
 [[package]]

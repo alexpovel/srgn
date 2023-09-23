@@ -2,6 +2,9 @@
 //! inputs/flags/options.
 
 #[cfg(test)]
+/// Only run these tests if the required features are *all* enabled. This will require
+/// adjusting and isn't ideal (not fine-grained).
+#[cfg(all(feature = "german", feature = "symbols", feature = "deletion"))]
 mod tests {
     use assert_cmd::Command;
     use rstest::rstest;
