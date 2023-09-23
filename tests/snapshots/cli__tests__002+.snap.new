@@ -1,0 +1,15 @@
+---
+source: tests/cli.rs
+assertion_line: 72
+expression: "&stdout"
+---
+
+
+
+Duebel
+
+😂
+
+
+
+

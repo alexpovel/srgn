@@ -1,0 +1,6 @@
+---
+source: tests/cli.rs
+assertion_line: 72
+expression: "&stdout"
+---
+Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫

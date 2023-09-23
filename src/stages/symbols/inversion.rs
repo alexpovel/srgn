@@ -1,5 +1,6 @@
+use crate::Stage;
+
 use super::Symbol;
-use crate::{scoped::Scoped, Stage};
 
 /// Inverts all symbols inserted by [`SymbolsStage`].
 ///
@@ -9,10 +10,8 @@ use crate::{scoped::Scoped, Stage};
 #[allow(clippy::module_name_repetitions)]
 pub struct SymbolsInversionStage {}
 
-impl Scoped for SymbolsInversionStage {}
-
 impl Stage for SymbolsInversionStage {
-    fn substitute(&self, input: &str) -> String {
+    fn process(&self, input: &str) -> String {
         input
             .chars()
             .map(|c| match Symbol::try_from(c) {

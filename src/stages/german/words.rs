@@ -156,8 +156,8 @@ impl Word {
 impl Default for Word {
     fn default() -> Self {
         Self {
-            content: String::with_capacity(crate::EXPECTABLE_AVERAGE_WORD_LENGTH_BYTES as usize),
-            replacements: Vec::with_capacity(crate::EXPECTABLE_AVERAGE_MATCHES_PER_WORD as usize),
+            content: String::with_capacity(super::EXPECTABLE_AVERAGE_WORD_LENGTH_BYTES as usize),
+            replacements: Vec::with_capacity(super::EXPECTABLE_AVERAGE_MATCHES_PER_WORD as usize),
         }
     }
 }

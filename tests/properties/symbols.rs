@@ -1,7 +1,11 @@
-use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
+use betterletters::{
+    scoping::ScopedViewBuilder,
+    stages::{SymbolsInversionStage, SymbolsStage},
+    Stage,
+};
 use proptest::prelude::*;
 
-use crate::properties::{apply_with_default_scope, DEFAULT_NUMBER_OF_TEST_CASES};
+use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES * 2))]
@@ -14,8 +18,17 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"[ -~]*(-|<|>|=|!){2,3}[ -~]*"
     ) {
-        let applied = apply_with_default_scope(&SymbolsStage::default(), &input);
-        let inverted = apply_with_default_scope(&SymbolsInversionStage::default(), &applied);
+        let applied = {
+            let mut view = ScopedViewBuilder::new(&input).build();
+            SymbolsStage::default().map(&mut view);
+            view.to_string()
+        };
+
+        let inverted = {
+            let mut view = ScopedViewBuilder::new(&applied).build();
+            SymbolsInversionStage::default().map(&mut view);
+            view.to_string()
+        };
 
         assert_eq!(input, inverted);
     }

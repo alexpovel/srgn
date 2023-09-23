@@ -1,4 +1,7 @@
-use betterletters::stages::{LowerStage, Stage};
+use betterletters::{
+    scoping::ScopedViewBuilder,
+    stages::{LowerStage, Stage},
+};
 use proptest::prelude::*;
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -12,7 +15,9 @@ proptest! {
         input in r"\p{Lowercase_Letter}*"
     ) {
         let stage = LowerStage::default();
-        let res = stage.substitute(&input);
+        let mut view = ScopedViewBuilder::new(&input).build();
+        stage.map(&mut view);
+        let res = view.to_string();
 
         assert_eq!(res, input);
     }

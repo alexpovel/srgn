@@ -1,4 +1,8 @@
-use betterletters::{scoping::ScopedView, stages::SqueezeStage, Stage};
+use betterletters::{
+    scoping::{regex::Regex, ScopedViewBuilder},
+    stages::SqueezeStage,
+    Stage,
+};
 use proptest::prelude::*;
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -12,9 +16,11 @@ proptest! {
         input in r"\p{Any}*AA\p{Any}*"
     ) {
         let stage = SqueezeStage::default();
-        let mut view = ScopedView::new(&input);
+        let mut view = ScopedViewBuilder::new(&input).explode_from_scoper(
+            &Regex::new(regex::Regex::new("A").unwrap())
+        ).build();
 
-        stage.substitute(&mut view);
+        stage.map(&mut view);
         let res = view.to_string();
 
         assert!(res.len() < input.len());

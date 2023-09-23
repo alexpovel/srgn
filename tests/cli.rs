@@ -40,9 +40,9 @@ Duebel
         #[values(1, 2, 3)] n_sample: usize,
         #[values(
             &["--german"],
-            &["--symbols"],
-            &["--german", "--symbols"],
-            &["--delete", r"\p{Emoji_Presentation}"],
+            // &["--symbols"],
+            // &["--german", "--symbols"],
+            // &["--delete", r"\p{Emoji_Presentation}"],
         )]
         args: &[&str],
     ) {

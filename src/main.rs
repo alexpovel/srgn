@@ -1,5 +1,5 @@
-use betterletters::scoping::langs::python::{PythonScoper, Scoper};
-use betterletters::scoping::ScopedView;
+use betterletters::scoping::langs::python::Python;
+use betterletters::scoping::ScopedViewBuildStep;
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
@@ -15,9 +15,9 @@ use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
 use betterletters::Stage;
-use betterletters::{apply, scoping::regex::RegexScoper};
+use betterletters::{apply, scoping::regex::Regex};
 use log::{debug, info, warn, LevelFilter};
-use std::io::{self, Error, Read};
+use std::io::{self, Error, Read, Write};
 
 fn main() -> Result<(), Error> {
     let args = cli::Cli::init();
@@ -35,24 +35,24 @@ fn main() -> Result<(), Error> {
 
     let mut buf = String::new();
     std::io::stdin().read_to_string(&mut buf)?;
-    let view = ScopedView::new(&buf);
+
+    let result = apply(&buf, &scopers, &stages)?;
 
     let mut destination = io::stdout();
-
-    apply(&scopers, view, &stages, &mut destination)?;
+    destination.write_all(result.as_bytes())?;
 
     info!("Done, exiting");
     Ok(())
 }
 
-fn assemble_scopers(args: &cli::Cli) -> Vec<Box<dyn Scoper>> {
-    let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
+fn assemble_scopers(args: &cli::Cli) -> Vec<Box<dyn ScopedViewBuildStep>> {
+    let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
-        scopers.push(Box::new(PythonScoper::new(&python)));
+        scopers.push(Box::new(Python::new(&python)));
     }
 
-    scopers.push(Box::new(RegexScoper::new(args.scope.clone())));
+    scopers.push(Box::new(Regex::new(args.scope.clone())));
 
     scopers
 }
@@ -61,7 +61,7 @@ fn assemble_stages(args: &cli::Cli) -> Vec<Box<dyn Stage>> {
     let mut stages: Vec<Box<dyn Stage>> = Vec::new();
 
     #[cfg(feature = "replace")]
-    if let Some(replacement) = args.composable_stages.replace {
+    if let Some(replacement) = args.composable_stages.replace.clone() {
         stages.push(Box::new(ReplacementStage::new(replacement)));
         debug!("Loaded stage: Replacement");
     }
@@ -177,7 +177,7 @@ mod cli {
         pub languages_scopes: LanguageScopes,
 
         #[cfg(feature = "german")]
-        #[command(#[cfg(feature = "german")] flatten)]
+        #[command(flatten)]
         pub german_options: GermanStageOptions,
     }
 

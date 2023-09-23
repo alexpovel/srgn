@@ -1,22 +1,18 @@
 fn main() {
     #[cfg(feature = "german")]
-    generate_word_lists();
+    natural_languages::generate_word_lists();
 }
 
 #[cfg(feature = "german")]
 mod natural_languages {
-    use decompound::{decompound, DecompositionOptions};
-    use rayon::prelude::*;
-    use std::collections::HashSet;
-    use std::io::{BufReader, BufWriter, Read, Write};
-    use std::sync::Mutex;
+    use std::io::{BufReader, BufWriter};
     use std::{
         env,
         fs::{self, File},
         path::Path,
     };
 
-    fn generate_word_lists() {
+    pub fn generate_word_lists() {
         let base_source_path = Path::new("data/word-lists");
 
         // https://doc.rust-lang.org/cargo/reference/build-script-examples.html#code-generation
@@ -31,7 +27,7 @@ mod natural_languages {
             let destination_file = base_destination_path.join("de.fst");
             destination_file.parent().map(fs::create_dir_all);
 
-            process_german(
+            german::process_german(
                 &mut BufReader::new(File::open(&source_file).unwrap()),
                 &mut BufWriter::new(File::create(destination_file).unwrap()),
             );
@@ -42,6 +38,13 @@ mod natural_languages {
 
     #[cfg(feature = "german")]
     mod german {
+        use decompound::{decompound, DecompositionOptions};
+        use rayon::prelude::*;
+        use std::collections::HashSet;
+        use std::env;
+        use std::io::{BufReader, BufWriter, Read, Write};
+        use std::sync::Mutex;
+
         macro_rules! time_it {
             ($name:expr, $e:expr) => {{
                 let now = std::time::Instant::now();
@@ -52,7 +55,7 @@ mod natural_languages {
             }};
         }
 
-        fn process_german<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
+        pub fn process_german<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
         where
             R: Read,
             W: Write,

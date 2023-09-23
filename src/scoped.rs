@@ -1,141 +1,102 @@
-use std::borrow::Cow;
+// /// A scope to apply a [`Stage`] to.
+// ///
+// /// A scope is a newtype around a regular expression pattern, and used to split a given
+// /// string into [`ScopeStatus`]es. The scope can span any regex, including the entire
+// /// input (`.*`), or individual characters.
+// ///
+// /// Special care should be given to greedy matching, which is the
+// /// [default](https://docs.rs/regex/latest/regex/#repetitions). It might extend to scope
+// /// further than intended.
+// #[derive(Debug, Clone)]
+// pub struct Scope(Regex);
 
-use log::debug;
-use regex::Regex;
+// impl Scope {
+//     /// Create a new [`Scope`].
+//     #[must_use]
+//     pub fn new(pattern: Regex) -> Self {
+//         Self(pattern)
+//     }
+// }
 
-use crate::GLOBAL_SCOPE;
+// impl From<Regex> for Scope {
+//     fn from(r: Regex) -> Self {
+//         Self(r)
+//     }
+// }
 
-/// A scope to apply a [`Stage`] to.
-///
-/// A scope is a newtype around a regular expression pattern, and used to split a given
-/// string into [`ScopeStatus`]es. The scope can span any regex, including the entire
-/// input (`.*`), or individual characters.
-///
-/// Special care should be given to greedy matching, which is the
-/// [default](https://docs.rs/regex/latest/regex/#repetitions). It might extend to scope
-/// further than intended.
-#[derive(Debug, Clone)]
-pub struct Scope(Regex);
+// impl From<Scope> for Regex {
+//     fn from(s: Scope) -> Self {
+//         s.0
+//     }
+// }
 
-impl Scope {
-    /// Create a new [`Scope`].
-    #[must_use]
-    pub fn new(pattern: Regex) -> Self {
-        Self(pattern)
-    }
-}
+// impl From<&Scope> for Regex {
+//     fn from(s: &Scope) -> Self {
+//         s.0.clone()
+//     }
+// }
 
-impl From<Regex> for Scope {
-    fn from(r: Regex) -> Self {
-        Self(r)
-    }
-}
+// impl From<&Regex> for Scope {
+//     fn from(r: &Regex) -> Self {
+//         Self(r.clone())
+//     }
+// }
 
-impl From<Scope> for Regex {
-    fn from(s: Scope) -> Self {
-        s.0
-    }
-}
+// impl Default for Scope {
+//     /// Create a new [`Scope`] that matches everything ([`GLOBAL_SCOPE`]).
+//     fn default() -> Self {
+//         Self(Regex::new(GLOBAL_SCOPE).unwrap())
+//     }
+// }
 
-impl From<&Scope> for Regex {
-    fn from(s: &Scope) -> Self {
-        s.0.clone()
-    }
-}
+// /// A trait for splitting a string into [`ScopeStatus`]es.
+// ///
+// /// [`Stage`]s are [`Scoped`], such that their processing can be applied only to parts
+// /// in some [`Scope`] (these are [`InScope`]), and not to parts outside of it (these
+// /// are [`OutOfScope`]).
+// pub trait Scoped {
+//     /// Given some `input` and a corresponding [`Scope`], split the `input` into
+//     /// consecutive [`ScopeStatus`]es according to the `scope`.
+//     ///
+//     /// This is like [`Regex::find_iter`] (matched items are considered [`InScope`]),
+//     /// but also returns [`OutOfScope`] (i.e., unmatched) items, interleaved. As such,
+//     /// reassembling all returned [`str`] parts yields back the original `input`.
+//     ///
+//     /// The returned [`Vec`] does not necessarily contain alternatingly scoped slices.
+//     /// Multiple [`InScope`] items in a row might be returned if corresponding
+//     /// consecutive matches are found. However, [`OutOfScope`] items cannot follow one
+//     /// another directly. Empty [`str`] slices are not returned.
+//     ///
+//     // # Examples
+//     //
+//     // ```
+//     // use regex::Regex;
+//     // use text_processing_pipeline::scoped::{Scope, Scoped, ScopeStatus};
+//     // ```
+//     fn split_by_scope<'a>(&self, input: &'a str, scope: &Scope) -> Vec<ScopeStatus<'a>> {
+//         let mut scopes = Vec::new();
+//         let mut last_end = 0;
 
-impl From<&Regex> for Scope {
-    fn from(r: &Regex) -> Self {
-        Self(r.clone())
-    }
-}
+//         for m in scope.0.find_iter(input) {
+//             if m.start() > last_end {
+//                 scopes.push(ScopeStatus::Out(&input[last_end..m.start()]));
+//             }
 
-impl Default for Scope {
-    /// Create a new [`Scope`] that matches everything ([`GLOBAL_SCOPE`]).
-    fn default() -> Self {
-        Self(Regex::new(GLOBAL_SCOPE).unwrap())
-    }
-}
+//             scopes.push(ScopeStatus::In(Cow::Borrowed(m.as_str())));
+//             last_end = m.end();
+//         }
 
-/// A trait for splitting a string into [`ScopeStatus`]es.
-///
-/// [`Stage`]s are [`Scoped`], such that their processing can be applied only to parts
-/// in some [`Scope`] (these are [`InScope`]), and not to parts outside of it (these
-/// are [`OutOfScope`]).
-pub trait Scoped {
-    /// Given some `input` and a corresponding [`Scope`], split the `input` into
-    /// consecutive [`ScopeStatus`]es according to the `scope`.
-    ///
-    /// This is like [`Regex::find_iter`] (matched items are considered [`InScope`]),
-    /// but also returns [`OutOfScope`] (i.e., unmatched) items, interleaved. As such,
-    /// reassembling all returned [`str`] parts yields back the original `input`.
-    ///
-    /// The returned [`Vec`] does not necessarily contain alternatingly scoped slices.
-    /// Multiple [`InScope`] items in a row might be returned if corresponding
-    /// consecutive matches are found. However, [`OutOfScope`] items cannot follow one
-    /// another directly. Empty [`str`] slices are not returned.
-    ///
-    // # Examples
-    //
-    // ```
-    // use regex::Regex;
-    // use text_processing_pipeline::scoped::{Scope, Scoped, ScopeStatus};
-    // ```
-    fn split_by_scope<'a>(&self, input: &'a str, scope: &Scope) -> Vec<ScopeStatus<'a>> {
-        let mut scopes = Vec::new();
-        let mut last_end = 0;
+//         scopes.push(ScopeStatus::Out(&input[last_end..]));
 
-        for m in scope.0.find_iter(input) {
-            if m.start() > last_end {
-                scopes.push(ScopeStatus::Out(&input[last_end..m.start()]));
-            }
+//         scopes.retain(|s| {
+//             let s: &str = s.into();
+//             !s.is_empty()
+//         });
 
-            scopes.push(ScopeStatus::In(Cow::Borrowed(m.as_str())));
-            last_end = m.end();
-        }
-
-        scopes.push(ScopeStatus::Out(&input[last_end..]));
-
-        scopes.retain(|s| {
-            let s: &str = s.into();
-            !s.is_empty()
-        });
-
-        debug!("Scopes to work on: {:?}", scopes);
-        scopes
-    }
-}
-
-/// Indicates whether a given string part is in scope.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ScopeStatus<'a> {
-    /// The given string part is in scope for processing.
-    ///
-    /// Might be replaced.
-    In(Cow<'a, str>),
-    /// The given string part is out of scope for processing.
-    ///
-    /// Treated as immutable, view-only.
-    Out(&'a str),
-}
-
-impl ScopeStatus<'_> {
-    pub fn is_empty(&self) -> bool {
-        let s: &str = self.into();
-        s.is_empty()
-    }
-}
-
-impl<'a> From<&'a ScopeStatus<'_>> for &'a str {
-    /// Get the underlying string slice of a [`ScopeStatus`].
-    ///
-    /// All variants contain such a slice, so this is a convenient method.
-    fn from(s: &'a ScopeStatus) -> Self {
-        match s {
-            ScopeStatus::In(s) => s,
-            ScopeStatus::Out(s) => s,
-        }
-    }
-}
+//         debug!("Scopes to work on: {:?}", scopes);
+//         scopes
+//     }
+// }
 
 // #[cfg(test)]
 // mod tests {

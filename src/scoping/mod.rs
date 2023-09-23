@@ -1,75 +1,145 @@
-use crate::scoped::ScopeStatus::{self, In, Out};
+// use crate::scoped::ScopeStatus::{self, In, Out};
 use itertools::Itertools;
 use log::{debug, trace};
-use std::{borrow::Cow, fmt::Display, ops::Range};
+use std::fmt;
+use std::{borrow::Cow, ops::Range};
 
 pub mod langs;
 
 pub mod regex;
 
+pub trait ScopedViewBuildStep {
+    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a>;
+}
+
+impl fmt::Debug for dyn ScopedViewBuildStep {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Scoper").finish()
+    }
+}
+
+/// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScopedView<'a> {
-    scopes: Vec<ScopeStatus<'a>>,
+pub enum Scope<'a, T> {
+    /// The given part is in scope for processing.
+    In(T),
+    /// The given part is out of scope for processing.
+    ///
+    /// Treated as immutable, view-only.
+    Out(&'a str),
 }
 
-impl Display for ScopedView<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for scope in &self.scopes {
-            let s: &str = scope.into();
-            write!(f, "{s}")?;
+type ROScope<'a> = Scope<'a, &'a str>;
+type ROScopes<'a> = Vec<ROScope<'a>>;
+
+type RWScope<'a> = Scope<'a, Cow<'a, str>>;
+type RWScopes<'a> = Vec<RWScope<'a>>;
+
+impl<'a> ROScope<'a> {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        let s: &str = self.into();
+        s.is_empty()
+    }
+}
+
+impl<'a> From<&'a ROScope<'a>> for &'a str {
+    /// Get the underlying string slice of a [`ScopeStatus`].
+    ///
+    /// All variants contain such a slice, so this is a convenient method.
+    fn from(s: &'a ROScope) -> Self {
+        match s {
+            Scope::In(s) | Scope::Out(s) => s,
         }
-        Ok(())
     }
 }
 
-impl From<ScopedView<'_>> for String {
-    fn from(view: ScopedView<'_>) -> Self {
-        view.to_string()
+impl<'a> From<ROScope<'a>> for RWScope<'a> {
+    fn from(s: ROScope<'a>) -> Self {
+        match s {
+            Scope::In(s) => RWScope::In(Cow::Borrowed(s)),
+            Scope::Out(s) => RWScope::Out(s),
+        }
     }
 }
 
-impl<'a> ScopedView<'a> {
+impl<'a> From<&'a RWScope<'a>> for &'a str {
+    /// Get the underlying string slice of a [`ScopeStatus`].
+    ///
+    /// All variants contain such a slice, so this is a convenient method.
+    fn from(s: &'a RWScope) -> Self {
+        match s {
+            Scope::In(s) => s,
+            Scope::Out(s) => s,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScopedViewBuilder<'a> {
+    scopes: ROScopes<'a>,
+}
+
+impl<'a> ScopedViewBuilder<'a> {
     #[must_use]
     pub fn new(input: &'a str) -> Self {
-        let scopes = vec![In(Cow::Borrowed(input))];
-        Self { scopes }
-    }
-
-    pub fn into_inner_mut(&mut self) -> &mut Vec<ScopeStatus<'a>> {
-        self.scopes.as_mut()
-    }
-
-    pub fn from_raw(input: &'a str, ranges: impl IntoIterator<Item = Range<usize>>) -> Self {
-        let mut scopes = Vec::new();
-
-        let mut last_end = 0;
-        for Range { start, end } in ranges.into_iter().sorted_by_key(|r| r.start) {
-            scopes.push(Out(&input[last_end..start]));
-            scopes.push(In(Cow::Borrowed(&input[start..end])));
-            last_end = end;
+        Self {
+            scopes: vec![Scope::In(input)],
         }
-
-        if last_end < input.len() {
-            scopes.push(Out(&input[last_end..]));
-        }
-
-        scopes.retain(|s| !s.is_empty());
-
-        debug!("Scopes: {:?}", scopes);
-
-        scopes.into()
     }
 
-    pub fn explode<F>(&mut self, f: F) -> Result<(), ()>
+    #[must_use]
+    pub fn build(self) -> ScopedView<'a> {
+        ScopedView {
+            scopes: self
+                .scopes
+                .into_iter()
+                .map(std::convert::Into::into)
+                .collect(),
+        }
+    }
+}
+
+impl<'a> ScopedViewBuilder<'a> {
+    #[must_use]
+    pub fn explode_from_ranges(self, exploder: impl Fn(&str) -> Vec<Range<usize>>) -> Self {
+        self.explode(|s| {
+            let ranges = exploder(s);
+            let mut scopes = Vec::new();
+
+            let mut last_end = 0;
+            for Range { start, end } in ranges.into_iter().sorted_by_key(|r| r.start) {
+                scopes.push(Scope::Out(&s[last_end..start]));
+                scopes.push(Scope::In(&s[start..end]));
+                last_end = end;
+            }
+
+            if last_end < s.len() {
+                scopes.push(Scope::Out(&s[last_end..]));
+            }
+
+            scopes.retain(|s| !s.is_empty());
+
+            debug!("Scopes: {:?}", scopes);
+
+            ScopedViewBuilder { scopes }
+        })
+    }
+
+    #[must_use]
+    pub fn explode_from_scoper(self, scoper: &impl ScopedViewBuildStep) -> Self {
+        self.explode(|s| scoper.scope(s))
+    }
+
+    #[must_use]
+    pub fn explode<F>(mut self, exploder: F) -> Self
     where
-        F: Fn(&str) -> ScopedView,
+        F: Fn(&'a str) -> Self,
     {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.len());
         for scope in self.scopes.drain(..) {
             trace!("Exploding scope: {:?}", scope);
-
-            debug_assert!(!scope.is_empty(), "Empty scope found");
 
             if scope.is_empty() {
                 trace!("Skipping empty scope");
@@ -77,55 +147,110 @@ impl<'a> ScopedView<'a> {
             }
 
             match scope {
-                In(Cow::Borrowed(s)) => {
-                    let mut new_scopes = f(s).scopes;
+                Scope::In(s) => {
+                    let mut new_scopes = exploder(s).scopes;
                     new_scopes.retain(|s| !s.is_empty());
                     new.extend(new_scopes);
                 }
                 // Be explicit about the `Out(_)` case, so changing the enum is a
                 // compile error
-                Out("") => {}
-                out @ Out(_) => new.push(out),
-
+                Scope::Out("") => {}
+                out @ Scope::Out(_) => new.push(out),
                 // I cannot get this owned junk out of here to save my life, SORRY. A
-                // better Rustacean would know how.
-                In(Cow::Owned(_)) => return Err(()),
+                // better Rustacean would know how. Problem is: we own a `String` here,
+                // but `f` takes a reference *and returns an object with identical
+                // lifetime*, which will die as the owned `String` in this scope dies.
+                // ScopeStatus::In(Cow::Owned(_)) => return Err(()),
             }
 
             trace!("Exploded scope, new scopes looks like: {:?}", new);
         }
         trace!("Done exploding scopes.");
 
-        self.scopes = new;
-        Ok(())
+        ScopedViewBuilder { scopes: new }
+        // Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScopedView<'a> {
+    scopes: RWScopes<'a>,
+}
+
+impl<'a> ScopedView<'a> {
+    // #[must_use]
+    // pub fn new(input: &'a str) -> Self {
+    //     let scopes = vec![Scope::In(Cow::Borrowed(input))];
+    //     Self { scopes }
+    // }
+
+    /// For API discoverability.
+    #[must_use]
+    pub fn builder(input: &'a str) -> ScopedViewBuilder<'a> {
+        ScopedViewBuilder::new(input)
     }
 
     /// submit a function to be applied to each in-scope, returning out-scopes unchanged
-    pub fn map<F>(&mut self, f: F)
+    pub fn map<F>(&mut self, f: &F) -> &mut Self
     where
-        F: Fn(&str) -> String,
+        F: Fn(&str) -> <str as ToOwned>::Owned,
+        // F: Stage + ?Sized,
     {
         for scope in &mut self.scopes {
             match scope {
-                In(s) => {
+                Scope::In(s) => {
                     let res = f(s);
                     debug!(
                         "Replacing '{}' with '{}'",
                         s.escape_debug(),
                         res.escape_debug()
                     );
-                    *scope = In(Cow::Owned(res));
+                    *scope = Scope::In(Cow::Owned(res));
                 }
-                Out(s) => {
+                Scope::Out(s) => {
                     debug!("Appending '{}'", s.escape_debug());
                 }
             }
         }
+
+        self
+    }
+
+    pub fn into_inner_mut(&mut self) -> &mut RWScopes<'a> {
+        self.scopes.as_mut()
     }
 }
 
-impl<'a> From<Vec<ScopeStatus<'a>>> for ScopedView<'a> {
-    fn from(scopes: Vec<ScopeStatus<'a>>) -> Self {
-        Self { scopes }
+// implement equality check against &str
+// impl PartialEq<&str> for ScopedView<'_> {
+//     fn eq(&self, other: &&str) -> bool {
+//         self.to_string() == *other
+//     }
+// }
+
+// impl<'a> From<Vec<Scope<'a, &str>>> for ReadWriteScopedView<'a> {
+//     fn from(scopes: Vec<Scope<'a, &str>>) -> Self {
+//         Self { scopes }
+//     }
+// }
+
+// impl From<ReadWriteScopedView<'_>> for &'_ str {
+//     fn from(view: ReadWriteScopedView) -> Self {
+//         let mut s = String::new();
+//         for scope in view.scopes {
+//             let s: &str = scope.into();
+//             s.push_str(s);
+//         }
+//         s.as_str()
+//     }
+// }
+
+impl fmt::Display for ScopedView<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for scope in &self.scopes {
+            let s: &str = scope.into();
+            write!(f, "{s}")?;
+        }
+        Ok(())
     }
 }

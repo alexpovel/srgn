@@ -1,22 +1,31 @@
-use regex::Regex;
+use crate::GLOBAL_SCOPE;
 
-use super::{langs::python::Scoper, ScopedView};
+use super::{ScopedViewBuildStep, ScopedViewBuilder};
 
 #[derive(Debug)]
-pub struct RegexScoper {
-    pattern: Regex,
+pub struct Regex {
+    pattern: regex::Regex,
 }
 
-impl RegexScoper {
+impl Regex {
     #[must_use]
-    pub fn new(pattern: Regex) -> Self {
+    pub fn new(pattern: regex::Regex) -> Self {
         Self { pattern }
     }
 }
 
-impl Scoper for RegexScoper {
-    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a> {
-        let ranges = self.pattern.find_iter(input).map(|m| m.range());
-        ScopedView::from_raw(input, ranges)
+impl Default for Regex {
+    fn default() -> Self {
+        Self::new(regex::Regex::new(GLOBAL_SCOPE).unwrap())
+    }
+}
+
+impl ScopedViewBuildStep for Regex {
+    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+        ScopedViewBuilder::new(input).explode_from_ranges(|s| {
+            let ranges = self.pattern.find_iter(s).map(|m| m.range());
+
+            ranges.collect()
+        })
     }
 }

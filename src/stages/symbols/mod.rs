@@ -1,6 +1,6 @@
 #[cfg(doc)]
 use super::GermanStage;
-use crate::{scoped::Scoped, Stage};
+use crate::Stage;
 #[cfg(test)]
 use enum_iterator::{all, Sequence};
 use std::collections::VecDeque;
@@ -31,8 +31,6 @@ macro_rules! fetch_next {
     };
 }
 
-impl Scoped for SymbolsStage {}
-
 impl Stage for SymbolsStage {
     /// ## Implementation note
     ///
@@ -46,7 +44,7 @@ impl Stage for SymbolsStage {
     /// coroutine so it can be yielded again.
     ///
     /// All in all, ugly and verbose, would not recommend, but a worthwhile experiment.
-    fn substitute(&self, input: &str) -> String {
+    fn process(&self, input: &str) -> String {
         let mut deque = input.chars().collect::<VecDeque<_>>();
         let mut out = String::new();
 
@@ -247,7 +245,7 @@ mod tests {
     #[case("!=", "≠")]
     fn test_symbol_substitution_base_cases(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -279,7 +277,7 @@ mod tests {
         #[case] expected: &str,
     ) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -303,7 +301,7 @@ mod tests {
     #[case("A!=B", "A≠B")]
     fn test_symbol_substitution_neighboring_letters(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -330,7 +328,7 @@ mod tests {
         #[case] expected: &str,
     ) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -351,7 +349,7 @@ mod tests {
     #[case("<--X-->", "⟵X⟶")]
     fn test_symbol_substitution_disrupting_symbols(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -364,7 +362,7 @@ mod tests {
     #[case("->In->Out->", "→In→Out→")]
     fn test_symbol_substitution_sentences(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -400,7 +398,7 @@ mod tests {
     #[case("!=!=!=", "≠≠≠")]
     fn test_symbol_substitution_ambiguous_sequences(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -419,7 +417,7 @@ mod tests {
     #[case("≥", "≥")]
     fn test_symbol_substitution_existing_symbol(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }
@@ -442,7 +440,7 @@ mod tests {
     #[case("https://->", "https://->")] // Pivot point
     fn test_symbol_substitution_uri(#[case] input: &str, #[case] expected: &str) {
         let stage = SymbolsStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
 
         assert_eq!(result, expected);
     }

@@ -1,4 +1,4 @@
-use betterletters::{scoping::ScopedView, stages::UpperStage, Stage};
+use betterletters::{scoping::ScopedViewBuilder, stages::UpperStage, Stage};
 use proptest::prelude::*;
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -11,9 +11,9 @@ proptest! {
         input in r"\p{Uppercase_Letter}*"
     ) {
         let stage = UpperStage::default();
-        let mut view = ScopedView::new(&input);
+        let mut view = ScopedViewBuilder::new(&input).build();
 
-        stage.substitute(&mut view);
+        stage.map(&mut view);
         let res = view.to_string();
 
         assert_eq!(res, input);

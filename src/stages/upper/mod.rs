@@ -1,5 +1,3 @@
-use crate::{scoped::Scoped, scoping::ScopedView};
-
 use super::Stage;
 
 /// Renders in uppercase.
@@ -7,11 +5,9 @@ use super::Stage;
 #[allow(clippy::module_name_repetitions)]
 pub struct UpperStage {}
 
-impl Scoped for UpperStage {}
-
 impl Stage for UpperStage {
-    fn substitute(&self, view: &mut ScopedView) {
-        view.map(|s| s.replace('ß', "ẞ").to_uppercase());
+    fn process(&self, input: &str) -> String {
+        input.replace('ß', "ẞ").to_uppercase()
     }
 }
 
@@ -51,8 +47,7 @@ mod tests {
     // Emojis
     #[case("👋\0", "👋\0")]
     fn substitute(#[case] input: &str, #[case] expected: &str) {
-        let mut view = ScopedView::new(input);
-        UpperStage::default().substitute(&mut view);
-        assert_eq!(view.to_string(), expected);
+        let result = UpperStage::default().process(input);
+        assert_eq!(result, expected);
     }
 }

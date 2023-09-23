@@ -1,29 +1,15 @@
-use std::fmt::{self, Debug, Formatter};
+use std::fmt::Debug;
 
-use super::{Language, Parser, Query, QueryCursor};
-use crate::scoping::ScopedView;
-
-pub trait Scoper {
-    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a>;
-}
-
-impl Debug for dyn Scoper {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Scoper").finish()
-    }
-}
-
-pub trait LanguageScoper: Scoper {
-    fn lang() -> Language;
-    fn parser() -> Parser;
-}
+use super::{Language, LanguageScopedViewBuildStep, Parser, Query, QueryCursor};
+use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
 
 #[derive(Debug)]
-pub struct PythonScoper {
+pub struct Python {
     query: Query,
 }
 
-impl PythonScoper {
+impl Python {
+    #[must_use]
     pub fn new(query: &str) -> Self {
         let query = Query::new(Self::lang(), query).expect("Invalid query.");
 
@@ -31,29 +17,30 @@ impl PythonScoper {
     }
 }
 
-impl Scoper for PythonScoper {
-    fn scope<'a>(&self, input: &'a str) -> ScopedView<'a> {
-        // view.explode(|s| {
-        // tree-sitter is about incremental parsing, which we don't use here
-        let old_tree = None;
+impl ScopedViewBuildStep for Python {
+    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+        ScopedViewBuilder::new(input).explode_from_ranges(|s| {
+            // tree-sitter is about incremental parsing, which we don't use here
+            let old_tree = None;
 
-        let tree = Self::parser()
-            .parse(input, old_tree)
-            .expect("No language set in parser, or other unrecoverable error");
-        let root = tree.root_node();
+            let tree = Self::parser()
+                .parse(s, old_tree)
+                .expect("No language set in parser, or other unrecoverable error");
+            let root = tree.root_node();
 
-        let mut qc = QueryCursor::new();
-        let matches = qc.matches(&self.query, root, input.as_bytes());
+            let mut qc = QueryCursor::new();
+            let matches = qc.matches(&self.query, root, s.as_bytes());
 
-        let ranges = matches
-            .flat_map(|query_match| query_match.captures)
-            .map(|capture| capture.node.byte_range());
+            let ranges = matches
+                .flat_map(|query_match| query_match.captures)
+                .map(|capture| capture.node.byte_range());
 
-        ScopedView::from_raw(input, ranges)
+            ranges.collect()
+        })
     }
 }
 
-impl LanguageScoper for PythonScoper {
+impl LanguageScopedViewBuildStep for Python {
     fn lang() -> Language {
         tree_sitter_python::language()
     }

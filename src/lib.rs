@@ -9,6 +9,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![allow(clippy::multiple_crate_versions)]
+#![allow(missing_docs)]
 //! Substitute alternative, ASCII-only spellings of special characters with their
 //! Unicode equivalents.
 //!
@@ -16,10 +17,11 @@
 //! stage in order, like a pipeline. In fact, the result should be the same as if you
 //! piped using a shell, but processing will be more performant.
 
+use crate::scoping::ScopedViewBuilder;
 pub use crate::stages::Stage;
-use log::{debug, info};
-use scoping::{langs::python::Scoper, ScopedView};
-use std::io::{Error, Write};
+use log::debug;
+use scoping::ScopedViewBuildStep;
+use std::io::Error;
 
 /// Items related to scopes, which are used to limit the application of stages.
 pub mod scoped;
@@ -44,17 +46,15 @@ pub const GLOBAL_SCOPE: &str = r".*";
 ///
 ///
 /// ```
-/// use betterletters::{apply, scoped::Scope, stages::GermanStage, Stage};
-/// use std::io::Cursor;
+/// use betterletters::{apply, scoping::{ScopedViewBuildStep, regex::Regex}, stages::GermanStage, Stage};
 ///
-/// let stages = vec![Box::new(GermanStage::default())].into_iter().map(|g| g as Box<dyn Stage>).collect();
+/// let stages: &[Box<dyn Stage>] = &[Box::new(GermanStage::default())];
+/// let scopers: &[Box<dyn ScopedViewBuildStep>] = &[Box::new(Regex::default())];
 ///
-/// let mut input = Cursor::new("Gruess Gott!\n");
-/// let mut output: Vec<u8> = Vec::new();
+/// let mut input = "Gruess Gott!\n";
 ///
-/// apply(&stages, &Scope::default(), &mut input, &mut output);
-///
-/// assert_eq!(output, "Grüß Gott!\n".as_bytes());
+/// let result = apply(input, &scopers, &stages).unwrap();
+/// assert_eq!(result, "Grüß Gott!\n");
 /// ```
 ///
 /// # Errors
@@ -66,23 +66,21 @@ pub const GLOBAL_SCOPE: &str = r".*";
 /// - when the destination cannot be written to
 /// - when the destination cannot be flushed before exiting
 pub fn apply(
-    scopers: &[Box<dyn Scoper>],
-    mut view: ScopedView,
+    input: &str,
+    scopers: &[Box<dyn ScopedViewBuildStep>],
     stages: &[Box<dyn Stage>],
-    destination: &mut impl Write,
-) -> Result<(), Error> {
+) -> Result<String, Error> {
+    let mut builder = ScopedViewBuilder::new(input);
     for scoper in scopers {
-        view.explode(|s| scoper.scope(s));
+        builder = builder.explode(|s| scoper.scope(s));
     }
+
+    let mut view = builder.build();
 
     for stage in stages {
         debug!("Applying stage {:?}", stage);
-        stage.substitute(&mut view);
+        stage.map(&mut view);
     }
 
-    destination.write_all(view.to_string().as_bytes())?;
-    destination.flush()?;
-
-    info!("Exiting");
-    Ok(())
+    Ok(view.to_string())
 }
