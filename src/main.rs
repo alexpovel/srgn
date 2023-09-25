@@ -1,7 +1,5 @@
 use betterletters::scoping::{
-    langs::{python::Python, LanguageScoperError},
-    literal::Literal,
-    ScopedViewBuildStep,
+    langs::python::Python, literal::Literal, ScopedViewBuildStep, ScoperBuildError,
 };
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
@@ -17,10 +15,9 @@ use betterletters::stages::SqueezeStage;
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
-use betterletters::{apply, scoping::regex::Regex, RegexPattern, Stage};
+use betterletters::{apply, scoping::regex::Regex, Stage};
 use log::{debug, info, warn, LevelFilter};
 use std::io::{self, Error, Read, Write};
-use unescape::unescape;
 
 fn main() -> Result<(), Error> {
     let args = cli::Cli::init();
@@ -37,19 +34,25 @@ fn main() -> Result<(), Error> {
         Ok(s) => s,
         Err(e) => match e {
             // Kinda abusive of these `io::ErrorKind`s...
-            AssemblyError::InvalidRegexPattern(r) => {
+            ScoperBuildError::RegexError(r) => {
                 return Err(Error::new(io::ErrorKind::InvalidInput, r))
             }
-            AssemblyError::InvalidLiteralString(l) => {
+            ScoperBuildError::LiteralError(l) => {
                 return Err(Error::new(io::ErrorKind::InvalidInput, l))
             }
-            AssemblyError::LanguageScoperError(e) => {
+            ScoperBuildError::LanguageScoperError(e) => {
                 return Err(Error::new(io::ErrorKind::InvalidInput, e.to_string()))
+            }
+            ScoperBuildError::EmptyScope => {
+                return Err(Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Empty scope is not allowed",
+                ))
             }
         },
     };
 
-    let stages = assemble_stages(&args);
+    let stages = assemble_stages(&args).map_err(|e| Error::new(io::ErrorKind::InvalidInput, e))?;
 
     let mut buf = String::new();
     std::io::stdin().read_to_string(&mut buf)?;
@@ -63,20 +66,9 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Debug)]
-enum AssemblyError {
-    InvalidRegexPattern(String),
-    InvalidLiteralString(String),
-    LanguageScoperError(LanguageScoperError),
-}
-
-impl From<LanguageScoperError> for AssemblyError {
-    fn from(e: LanguageScoperError) -> Self {
-        Self::LanguageScoperError(e)
-    }
-}
-
-fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, AssemblyError> {
+fn assemble_scopers(
+    args: &cli::Cli,
+) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, ScoperBuildError> {
     let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
@@ -84,26 +76,20 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn ScopedViewBuildStep>>
     }
 
     if args.options.literal_string {
-        let literal = unescape(&args.scope.clone()).ok_or(AssemblyError::InvalidLiteralString(
-            "Failed to unescape literal string".to_string(),
-        ))?;
-        scopers.push(Box::new(Literal::new(literal)));
+        scopers.push(Box::new(Literal::try_from(args.scope.clone())?));
     } else {
-        scopers.push(Box::new(Regex::new(
-            RegexPattern::new(&args.scope)
-                .map_err(|e| AssemblyError::InvalidRegexPattern(e.to_string()))?,
-        )));
+        scopers.push(Box::new(Regex::try_from(args.scope.clone())?));
     }
 
     Ok(scopers)
 }
 
-fn assemble_stages(args: &cli::Cli) -> Vec<Box<dyn Stage>> {
+fn assemble_stages(args: &cli::Cli) -> Result<Vec<Box<dyn Stage>>, String> {
     let mut stages: Vec<Box<dyn Stage>> = Vec::new();
 
     #[cfg(feature = "replace")]
     if let Some(replacement) = args.composable_stages.replace.clone() {
-        stages.push(Box::new(ReplacementStage::new(replacement)));
+        stages.push(Box::new(ReplacementStage::try_from(replacement)?));
         debug!("Loaded stage: Replacement");
     }
 
@@ -157,7 +143,7 @@ fn assemble_stages(args: &cli::Cli) -> Vec<Box<dyn Stage>> {
         warn!("No stages loaded, will return input unchanged");
     }
 
-    stages
+    Ok(stages)
 }
 
 /// To the default log level found in the environment, adds the requested additional

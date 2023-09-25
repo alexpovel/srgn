@@ -1,14 +1,34 @@
 use super::{ScopedViewBuildStep, ScopedViewBuilder};
 use log::trace;
-use std::ops::Range;
+use std::{error::Error, fmt, ops::Range};
+use unescape::unescape;
 
 #[derive(Debug)]
 pub struct Literal(String);
 
-impl Literal {
-    #[must_use]
-    pub fn new(literal: String) -> Self {
-        Self(literal)
+#[derive(Debug)]
+pub enum LiteralError {
+    Inunescapable(String),
+}
+
+impl fmt::Display for LiteralError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Inunescapable(literal) => write!(f, "Could not unescape literal '{literal}'"),
+        }
+    }
+}
+
+impl Error for LiteralError {}
+
+impl TryFrom<String> for Literal {
+    type Error = LiteralError;
+
+    fn try_from(literal: String) -> Result<Self, Self::Error> {
+        let unescaped =
+            unescape(&literal).ok_or(LiteralError::Inunescapable(literal.to_string()))?;
+
+        Ok(Self(unescaped))
     }
 }
 
@@ -59,7 +79,7 @@ mod tests {
         #[case] literal: &str,
         #[case] expected: ScopedView,
     ) {
-        let literal = Literal::new(literal.to_owned());
+        let literal = Literal::try_from(literal.to_owned()).unwrap();
         let actual = literal.scope(input).build();
 
         assert_eq!(actual, expected);

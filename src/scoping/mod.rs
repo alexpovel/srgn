@@ -1,4 +1,6 @@
-// use crate::scoped::ScopeStatus::{self, In, Out};
+use self::langs::LanguageScoperError;
+use self::literal::LiteralError;
+use self::regex::RegexError;
 use itertools::Itertools;
 use log::{debug, trace};
 use std::fmt;
@@ -7,6 +9,32 @@ use std::{borrow::Cow, ops::Range};
 pub mod langs;
 pub mod literal;
 pub mod regex;
+
+#[derive(Debug)]
+pub enum ScoperBuildError {
+    EmptyScope,
+    RegexError(RegexError),
+    LiteralError(LiteralError),
+    LanguageScoperError(LanguageScoperError),
+}
+
+impl From<LiteralError> for ScoperBuildError {
+    fn from(e: LiteralError) -> Self {
+        Self::LiteralError(e)
+    }
+}
+
+impl From<RegexError> for ScoperBuildError {
+    fn from(e: RegexError) -> Self {
+        Self::RegexError(e)
+    }
+}
+
+impl From<LanguageScoperError> for ScoperBuildError {
+    fn from(e: LanguageScoperError) -> Self {
+        Self::LanguageScoperError(e)
+    }
+}
 
 pub trait ScopedViewBuildStep {
     fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a>;
@@ -219,30 +247,6 @@ impl<'a> ScopedView<'a> {
         self.scopes.as_mut()
     }
 }
-
-// implement equality check against &str
-// impl PartialEq<&str> for ScopedView<'_> {
-//     fn eq(&self, other: &&str) -> bool {
-//         self.to_string() == *other
-//     }
-// }
-
-// impl<'a> From<Vec<Scope<'a, &str>>> for ReadWriteScopedView<'a> {
-//     fn from(scopes: Vec<Scope<'a, &str>>) -> Self {
-//         Self { scopes }
-//     }
-// }
-
-// impl From<ReadWriteScopedView<'_>> for &'_ str {
-//     fn from(view: ReadWriteScopedView) -> Self {
-//         let mut s = String::new();
-//         for scope in view.scopes {
-//             let s: &str = scope.into();
-//             s.push_str(s);
-//         }
-//         s.as_str()
-//     }
-// }
 
 impl fmt::Display for ScopedView<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

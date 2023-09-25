@@ -10,6 +10,7 @@
 #![warn(missing_docs)]
 #![allow(clippy::multiple_crate_versions)]
 #![allow(missing_docs)]
+#![allow(clippy::module_name_repetitions)]
 //! Substitute alternative, ASCII-only spellings of special characters with their
 //! Unicode equivalents.
 //!
@@ -25,10 +26,10 @@ use std::io::Error;
 
 /// Items related to scopes, which are used to limit the application of stages.
 pub mod scoped;
+pub mod scoping;
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;
-
-pub mod scoping;
+pub mod text;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";

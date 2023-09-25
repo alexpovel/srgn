@@ -2,6 +2,8 @@ use super::{ScopedViewBuildStep, ScopedViewBuilder};
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
 use log::{debug, trace};
+use std::error::Error;
+use std::fmt;
 use std::ops::Range;
 
 #[derive(Debug)]
@@ -13,6 +15,27 @@ impl Regex {
     #[must_use]
     pub fn new(pattern: RegexPattern) -> Self {
         Self { pattern }
+    }
+}
+
+#[derive(Debug)]
+pub struct RegexError(fancy_regex::Error);
+
+impl fmt::Display for RegexError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Invalid regex: {}", self.0)
+    }
+}
+
+impl Error for RegexError {}
+
+impl TryFrom<String> for Regex {
+    type Error = RegexError;
+
+    fn try_from(pattern: String) -> Result<Self, Self::Error> {
+        let pattern = RegexPattern::new(&pattern).map_err(RegexError)?;
+
+        Ok(Self::new(pattern))
     }
 }
 

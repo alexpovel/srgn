@@ -1,5 +1,5 @@
 use super::ScopedViewBuildStep;
-use std::fmt;
+use std::{error::Error, fmt};
 use tree_sitter::QueryError;
 pub use tree_sitter::{Language, Parser, Query, QueryCursor};
 
@@ -23,6 +23,8 @@ impl fmt::Display for LanguageScoperError {
         }
     }
 }
+
+impl Error for LanguageScoperError {}
 
 pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
     fn lang() -> Language;
