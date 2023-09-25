@@ -104,3 +104,65 @@ fn shatter(range: &Range<usize>) -> Vec<Range<usize>> {
 
     ranges
 }
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+
+    use crate::scoping::{
+        Scope::{In, Out},
+        ScopedView,
+    };
+    use std::borrow::Cow::Borrowed;
+
+    use super::*;
+
+    #[rstest]
+    #[case("a", "a", ScopedView::new(vec![In(Borrowed("a"))]))]
+    #[case("aa", "a", ScopedView::new(vec![In(Borrowed("a")), In(Borrowed("a"))]))]
+    #[case("aba", "a", ScopedView::new(vec![In(Borrowed("a")), Out("b"), In(Borrowed("a"))]))]
+    //
+    #[case(".", ".", ScopedView::new(vec![In(Borrowed("."))]))]
+    #[case(r"\.", ".", ScopedView::new(vec![In(Borrowed(r"\")), In(Borrowed("."))]))]
+    #[case(r".", r"\.", ScopedView::new(vec![In(Borrowed(r"."))]))]
+    #[case(r"\.", r"\.", ScopedView::new(vec![Out(r"\"), In(Borrowed(r"."))]))]
+    #[case(r"\w", r"\w", ScopedView::new(vec![Out(r"\"), In(Borrowed(r"w"))]))]
+    //
+    // Capture groups
+    #[case(r"Hello", r"\w+", ScopedView::new(vec![In(Borrowed(r"Hello"))]))]
+    #[case(
+        r"Hello", r"(\w+)",
+        ScopedView::new(
+            vec![
+                In(Borrowed(r"H")),
+                In(Borrowed(r"e")),
+                In(Borrowed(r"l")),
+                In(Borrowed(r"l")),
+                In(Borrowed(r"o"))
+            ]
+        )
+    )]
+    #[case(
+        r"Hello World", r"Hello (\w+)",
+        ScopedView::new(
+            vec![
+                In(Borrowed(r"Hello ")),
+                In(Borrowed(r"W")),
+                In(Borrowed(r"o")),
+                In(Borrowed(r"r")),
+                In(Borrowed(r"l")),
+                In(Borrowed(r"d"))
+            ]
+        )
+    )]
+    fn test_regex_scoping(
+        #[case] input: &str,
+        #[case] pattern: &str,
+        #[case] expected: ScopedView,
+    ) {
+        let regex = Regex::new(RegexPattern::new(pattern).unwrap());
+        let actual = regex.scope(input).build();
+
+        assert_eq!(actual, expected);
+    }
+}

@@ -23,9 +23,11 @@ pub use german::GermanStage;
 pub use lower::LowerStage;
 #[cfg(feature = "replace")]
 pub use replace::ReplacementStage;
+#[cfg(feature = "squeeze")]
 pub use squeeze::SqueezeStage;
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::SymbolsInversionStage, SymbolsStage};
+#[cfg(feature = "upper")]
 pub use upper::UpperStage;
 
 use crate::scoping::ScopedView;

@@ -5,7 +5,7 @@ use std::fmt;
 use std::{borrow::Cow, ops::Range};
 
 pub mod langs;
-
+pub mod literal;
 pub mod regex;
 
 pub trait ScopedViewBuildStep {
@@ -178,11 +178,10 @@ pub struct ScopedView<'a> {
 }
 
 impl<'a> ScopedView<'a> {
-    // #[must_use]
-    // pub fn new(input: &'a str) -> Self {
-    //     let scopes = vec![Scope::In(Cow::Borrowed(input))];
-    //     Self { scopes }
-    // }
+    #[must_use]
+    pub fn new(scopes: RWScopes<'a>) -> Self {
+        Self { scopes }
+    }
 
     /// For API discoverability.
     #[must_use]

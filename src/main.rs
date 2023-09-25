@@ -1,5 +1,8 @@
-use betterletters::scoping::langs::python::Python;
-use betterletters::scoping::ScopedViewBuildStep;
+use betterletters::scoping::{
+    langs::{python::Python, LanguageScoperError},
+    literal::Literal,
+    ScopedViewBuildStep,
+};
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
@@ -14,10 +17,10 @@ use betterletters::stages::SqueezeStage;
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
-use betterletters::Stage;
-use betterletters::{apply, scoping::regex::Regex};
+use betterletters::{apply, scoping::regex::Regex, RegexPattern, Stage};
 use log::{debug, info, warn, LevelFilter};
 use std::io::{self, Error, Read, Write};
+use unescape::unescape;
 
 fn main() -> Result<(), Error> {
     let args = cli::Cli::init();
@@ -30,7 +33,22 @@ fn main() -> Result<(), Error> {
 
     info!("Launching app with args: {:?}", args);
 
-    let scopers = assemble_scopers(&args);
+    let scopers = match assemble_scopers(&args) {
+        Ok(s) => s,
+        Err(e) => match e {
+            // Kinda abusive of these `io::ErrorKind`s...
+            AssemblyError::InvalidRegexPattern(r) => {
+                return Err(Error::new(io::ErrorKind::InvalidInput, r))
+            }
+            AssemblyError::InvalidLiteralString(l) => {
+                return Err(Error::new(io::ErrorKind::InvalidInput, l))
+            }
+            AssemblyError::LanguageScoperError(e) => {
+                return Err(Error::new(io::ErrorKind::InvalidInput, e.to_string()))
+            }
+        },
+    };
+
     let stages = assemble_stages(&args);
 
     let mut buf = String::new();
@@ -45,16 +63,39 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn assemble_scopers(args: &cli::Cli) -> Vec<Box<dyn ScopedViewBuildStep>> {
+#[derive(Debug)]
+enum AssemblyError {
+    InvalidRegexPattern(String),
+    InvalidLiteralString(String),
+    LanguageScoperError(LanguageScoperError),
+}
+
+impl From<LanguageScoperError> for AssemblyError {
+    fn from(e: LanguageScoperError) -> Self {
+        Self::LanguageScoperError(e)
+    }
+}
+
+fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, AssemblyError> {
     let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
-        scopers.push(Box::new(Python::new(&python)));
+        scopers.push(Box::new(Python::try_from(python.as_str())?));
     }
 
-    scopers.push(Box::new(Regex::new(args.scope.clone())));
+    if args.options.literal_string {
+        let literal = unescape(&args.scope.clone()).ok_or(AssemblyError::InvalidLiteralString(
+            "Failed to unescape literal string".to_string(),
+        ))?;
+        scopers.push(Box::new(Literal::new(literal)));
+    } else {
+        scopers.push(Box::new(Regex::new(
+            RegexPattern::new(&args.scope)
+                .map_err(|e| AssemblyError::InvalidRegexPattern(e.to_string()))?,
+        )));
+    }
 
-    scopers
+    Ok(scopers)
 }
 
 fn assemble_stages(args: &cli::Cli) -> Vec<Box<dyn Stage>> {
@@ -143,8 +184,8 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::{RegexPattern, GLOBAL_SCOPE};
-    use clap::{ArgAction, Parser};
+    use betterletters::GLOBAL_SCOPE;
+    use clap::{builder::ArgPredicate, ArgAction, Parser};
 
     /// Main CLI entrypoint.
     ///
@@ -155,14 +196,21 @@ mod cli {
     pub(super) struct Cli {
         /// Scope to apply to, as a regular expression pattern
         ///
+        /// If string literal mode is requested, will be interpreted as a literal string.
+        ///
         /// Stages will apply their transformations within this scope only.
         ///
         /// The default is the global scope, matching the entire input.
         ///
         /// Where that default is meaningless (e.g., deletion), this argument is
         /// _required_.
-        #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE, verbatim_doc_comment)]
-        pub scope: RegexPattern,
+        #[arg(
+            value_name = "SCOPE",
+            default_value = GLOBAL_SCOPE,
+            verbatim_doc_comment,
+            default_value_if("literal_string", ArgPredicate::IsPresent, None)
+        )]
+        pub scope: String,
 
         #[command(flatten)]
         pub composable_stages: ComposableStages,
@@ -204,6 +252,10 @@ mod cli {
         #[cfg(feature = "symbols")]
         #[arg(short, long, env, requires = "symbols", verbatim_doc_comment)]
         pub invert: bool,
+        /// Do not interpret the scope as a regex. Instead, interpret it as a literal
+        /// string. Will require a scope to be passed.
+        #[arg(short('L'), long, env, verbatim_doc_comment)]
+        pub literal_string: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable

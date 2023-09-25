@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 
-use super::{Language, LanguageScopedViewBuildStep, Parser, Query, QueryCursor};
+use super::{
+    Language, LanguageScopedViewBuildStep, LanguageScoperError, Parser, Query, QueryCursor,
+};
 use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
 
 #[derive(Debug)]
@@ -8,12 +10,13 @@ pub struct Python {
     query: Query,
 }
 
-impl Python {
-    #[must_use]
-    pub fn new(query: &str) -> Self {
-        let query = Query::new(Self::lang(), query).expect("Invalid query.");
+impl TryFrom<&str> for Python {
+    type Error = LanguageScoperError;
 
-        Self { query }
+    fn try_from(query: &str) -> Result<Self, Self::Error> {
+        let query = Query::new(Self::lang(), query)?;
+
+        Ok(Self { query })
     }
 }
 
