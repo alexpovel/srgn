@@ -1,31 +1,39 @@
 # betterletters
 
-`tr`, with Unicode support and gimmicks, and a *scoping* concept.
+[`tr`][tr], with Unicode support and gimmicks, and a *scoping* concept.
 
 ## Usage
 
-1. Conventional
-   1. Actions
-2. Unicode tricks
-3. Scoping
+The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
+the input to process. Actions then perform the processing. Generally, actions are
+composable. Both are optional (but taking no action is pointless); specifying no scope
+implies the entire input is in scope.
 
-### Conventional
+At the same time, there is considerable overlap with plain [`tr`][tr]: the tool is
+designed to have close correspondence in the most common use cases, and only go beyond
+when needed.
 
-There is considerable overlap with plain `tr`: the tool is designed to have close to
-drop-in compatibility for the most common use cases. As such, the tool can be used
-'conventionally'.
+Let's start with actions first, as scopes will get more advanced.
 
-#### Replacements
+### Actions
 
-For example, simple replacements work as expected:
+The simplest action is replacement. It is specially accessed (as an argument, not an
+option) for compatibility with [`tr`][tr], and general ergonomics. All other actions are
+given as flags.
+
+#### Replacement
+
+For example, simple, single-character replacements work as in [`tr`][tr]:
 
 ```console
 $ echo 'Hello, World!' | betterletters 'H' 'J'
 Jello, World!
 ```
 
-However, there is no direct concept of character classes. Instead, the first argument is
-a regular expression pattern, so *its*
+The first argument is the scope (literal `H` in this case). Anything matched by it is
+subject to processing (replacement by `J`, the second argument, in this case). However,
+there is no direct concept of character classes. Instead, by default, the scope is a
+regular expression pattern, so *its*
 [classes](https://docs.rs/regex/1.9.5/regex/index.html#character-classes) can be used to
 similar effect:
 
@@ -49,7 +57,7 @@ capture group match* are treated *individually* for processing, allowing a repla
 to be repeated:
 
 ```console
-$ echo 'Hide ghp_th15 and ghp_m0r3' | betterletters '(ghp_[[:alnum:]]+)' '*'
+$ echo 'Hide ghp_th15 and ghp_th4t' | betterletters '(ghp_[[:alnum:]]+)' '*'
 Hide ******** and ********
 ```
 
@@ -75,15 +83,208 @@ $ echo '"Using regex, I now have no issues."' | betterletters 'no issues' '2 pro
 "Using regex, I now have 2 problems."
 ```
 
-#### Other actions
+The tool is fully Unicode-aware, with useful support for [certain advanced
+character
+classes](https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties):
+
+```console
+$ echo 'Mood: 🙂' | betterletters '🙂' '😀'
+Mood: 😀
+$ echo 'Mood: 🤮🤒🤧🦠 :(' | betterletters '\p{Emoji_Presentation}' '😷'
+Mood: 😷😷😷😷 :(
+```
+
+#### Beyond replacement
 
 Seeing how the replacement is merely a static string, its usefulness is limited. This is
 where [`tr`'s secret sauce](https://maizure.org/projects/decoded-gnu-coreutils/tr.html)
-comes into play using its character classes, which are valid in the second position as
-well, neatly translating from members of the first to the second. Here, those classes
-are instead regexes, and only valid in first position. A regular expression being a
-state machine, it is impossible to match onto a 'list of characters'. That concept is
-out the window, and its flexibility lost.
+ordinarily comes into play: using its character classes, which are valid in the second
+position as well, neatly translating from members of the first to the second. Here,
+those classes are instead regexes, and only valid in first position (the scope). A
+regular expression being a state machine, it is impossible to match onto a 'list of
+characters', which in `tr` is the second (optional) argument. That concept is out the
+window, and its flexibility lost.
+
+Instead, the offered actions, all of them **fixed**, are used. A peek at [the most
+common use cases for `tr`](#common-tr-use-cases) reveals that the provided set of
+actions covers virtually all of them! Feel free to file an issue if your use case is not
+covered.
+
+Onto the next action.
+
+#### Deletion
+
+Removes whatever is found from the input. Same flag name as in `tr`.
+<!--
+```console
+$ echo 'Hello, World!' | betterletters -d '(H|W|!)'
+ello, orld
+``` -->
+
+As the default scope is to match the entire input, it is an error to specify deletion
+without a scope.
+
+#### Squeezing
+
+Squeezes repeats of characters matching the scope into single occurrences. Same flag
+name as in `tr`.
+<!--
+```console
+$ echo 'Helloooo Woooorld!!!' | betterletters -s '(o|!)'
+Hello World!
+``` -->
+
+If a character class is passed, all members of that class are squeezed into whatever
+occurred first:
+
+```console
+$ echo 'The number is: 3490834' | betterletters -s '\d'
+The number is: 3
+```
+
+Greediness in matching is not modified, so take care:
+
+```console
+$ echo 'Winter is coming... 🌞🌞🌞' | betterletters -s '🌞+'
+Winter is coming... 🌞🌞🌞
+```
+
+The pattern matched the entire string of suns, so there's nothing to squeeze. Summer
+prevails.
+
+Again, as with [deletion](#deletion), specifying squeezing without an *explicit* scope
+is an error. Squeezing the entire input is probably not what you want.
+
+#### Character casing
+
+A good chunk of `tr` usage [falls into this category](#changing-character-casing). It's
+very straightforward.
+
+```console
+$ echo 'Hello, World!' | betterletters --lower
+hello, world!
+$ echo 'Hello, World!' | betterletters --upper
+HELLO, WORLD!
+$ echo 'hello, world!' | betterletters --titlecase
+Hello, World!
+```
+
+#### Normalization
+
+Decomposes input according to [Normalization Form
+D](https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms), and then discards
+code points of the [Mark
+category](https://en.wikipedia.org/wiki/Unicode_character_property#General_Category)
+(see [examples](https://www.compart.com/en/unicode/category/Mn)). That roughly means:
+take fancy character, rip off dangly bits, throw those away.
+
+```console
+$ echo 'Naïve jalapeño ärgert mgła' | betterletters -d '\P{ASCII}' # Naive approach
+Nave jalapeo rgert mga
+$ echo 'Naïve jalapeño ärgert mgła' | betterletters --normalize # Normalize is smarter
+Naive jalapeno argert mgła
+```
+
+Notice how `mgła` is out of scope for NFD, as it is not decomposable (at least that's
+what ChatGPT whispers in my ear).
+
+#### Symbols
+
+This action replaces multi-character ASCII symbols with their single-code point native
+Unicode counterparts.
+
+```console
+$ echo '(A --> B) != C --- obviously' | betterletters --symbols
+(A ⟶ B) ≠ C — obviously
+```
+
+Alternatively, if you're only interested in en- and em dashes, make use of scoping:
+
+```console
+$ echo 'A <= B --- More is--obviously--possible' | betterletters --symbols -- '---?'
+A <= B — More is–obviously–possible
+```
+
+As there is a [1:1 correspondence](https://en.wikipedia.org/wiki/Bijection) between an
+ASCII symbol and its replacement, the effect is reversible[^1]:
+
+```console
+$ echo 'A ⇒ B' | betterletters --symbols --invert
+A => B
+```
+
+There is only a limited set of symbols supported as of right now, but more can be added.
+
+#### German
+
+This action replaces alternative spellings of German special characters (ae, oe, ue, ss)
+with their native versions (ä, ö, ü, ß).
+
+```console
+$ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | betterletters --german
+Grüß Gott, Poeten und Abenteuergrütze!
+```
+
+This action is based on a word list. Note:
+
+- empty scope and replacement: the entire input will be processed, and no replacement is
+  performed,
+- `Poeten` remained as-is, instead of being naively converted to `Pöten`,
+- as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
+  word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was handled
+  properly nonetheless.
+
+### Combining Actions
+
+Most actions are composable, unless it would not make sense (like for
+[deletion](#deletion)). Their order of application is fixed, so the *order* of the flags
+given has no influence. Replacements always occur first. Generally, the CLI is designed
+to prevent misuse and surprises: it prefers crashing to doing something unexpected. Note
+that lots of combinations *are* technically possible, but might yield nonsensical
+results.
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu
+KOEFFIZIENTEN ≠ BRÜCKEN...
+```
+
+A more narrow scope can be specified, and will apply to *all* actions equally:
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu '\b\w{1,8}\b'
+Koeffizienten != BRÜCKEN...
+```
+
+The [word boundaries](https://www.regular-expressions.info/wordboundaries.html) are
+required as otherwise `Koeffizienten` is matched as `Koeffizi` and `enten`. Note how the
+trailing periods cannot be, for example, squeezed. The required scope of `\.` would
+interfere with the given one. Regular piping solves this:
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu '\b\w{1,8}\b' | betterletters -s '\.'
+Koeffizienten != BRÜCKEN.
+```
+
+The specially treated replacement action is also composable:
+
+```console
+$ echo 'Mooood: 🤮🤒🤧🦠!!!' | betterletters -s '\p{Emoji}' '😷'
+Mooood: 😷!!!
+```
+
+Emojis are first all replaced, then squeezed. Notice how nothing else is squeezed.
+
+### Scopes
+
+<!-- TODO -->
+
+## Rust library
+
+<!-- TODO -->
+
+## Contributing
+
+<!-- TODO -->
 
 ## Common `tr` use cases
 
@@ -415,3 +616,8 @@ A straightforward use case. Upper- and lowercase are often used.
     - [`tr '[a-z]' '[A-Z]'`](https://github.com/basho/riak-zabbix/blob/423e21c31821a345bf59ec4b2baba06d532a7f30/build_templates.sh#L40)
     - [`tr "[:lower:]" "[:upper:]"`](https://github.com/Fivium/Oracle-Backup-and-Sync/blob/036aace4a8eb45ab7e6e226ddceb08f35c46b9f3/dbsync/scripts/dbsync.sh#L122)
     - [`tr "[:lower:]" "[:upper:]"`](https://github.com/jorgeazevedo/xenomai-lab/blob/a2ce85a86f37fd9762905026ce4a1542684c714b/data/.xenomailab/blocks/template/rename.sh#L5)
+
+[tr]: https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html
+[^1]: Currently, reversibility is not possible for any other action. For example,
+    lowercasing is not the inverse of uppercasing. Information is lost, so it cannot be
+    undone. Structure (imagine mixed case) was lost. Something something entropy...

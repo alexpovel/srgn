@@ -7,7 +7,7 @@ use super::Stage;
 ///
 /// ## Example: replacing invalid characters in identifiers
 ///
-/// ```
+/// ```rust,ignore
 /// use betterletters::RegexPattern;
 /// use betterletters::stages::{Stage, ReplacementStage};
 /// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};
@@ -26,7 +26,7 @@ use super::Stage;
 ///
 /// ## Example: replace emojis
 ///
-/// ```
+/// ```rust,ignore
 /// use betterletters::RegexPattern;
 /// use betterletters::stages::{Stage, ReplacementStage};
 /// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};

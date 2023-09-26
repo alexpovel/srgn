@@ -7,10 +7,14 @@ use betterletters::stages::DeletionStage;
 use betterletters::stages::GermanStage;
 #[cfg(feature = "lower")]
 use betterletters::stages::LowerStage;
+#[cfg(feature = "normalization")]
+use betterletters::stages::NormalizationStage;
 #[cfg(feature = "replace")]
 use betterletters::stages::ReplacementStage;
 #[cfg(feature = "squeeze")]
 use betterletters::stages::SqueezeStage;
+#[cfg(feature = "titlecase")]
+use betterletters::stages::TitlecaseStage;
 #[cfg(feature = "upper")]
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
@@ -136,6 +140,18 @@ fn assemble_stages(args: &cli::Cli) -> Result<Vec<Box<dyn Stage>>, String> {
     if args.composable_stages.lower {
         stages.push(Box::<LowerStage>::default());
         debug!("Loaded stage: Lower");
+    }
+
+    #[cfg(feature = "titlecase")]
+    if args.composable_stages.titlecase {
+        stages.push(Box::<TitlecaseStage>::default());
+        debug!("Loaded stage: Titlecase");
+    }
+
+    #[cfg(feature = "normalization")]
+    if args.composable_stages.normalize {
+        stages.push(Box::<NormalizationStage>::default());
+        debug!("Loaded stage: Normalization");
     }
 
     if stages.is_empty() {
@@ -276,6 +292,14 @@ mod cli {
         #[cfg(feature = "lower")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub lower: bool,
+        /// Titlecase scope
+        #[cfg(feature = "titlecase")]
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub titlecase: bool,
+        /// Normalize (Normalization Form D) scope, and throw away marks
+        #[cfg(feature = "normalization")]
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub normalize: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
         /// 'Abenteuergrüße'
         ///

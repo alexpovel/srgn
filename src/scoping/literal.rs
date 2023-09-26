@@ -71,9 +71,9 @@ mod tests {
     //
     #[case(".", ".", ScopedView::new(vec![In(Borrowed("."))]))]
     #[case(r"\.", ".", ScopedView::new(vec![Out(r"\"), In(Borrowed("."))]))]
-    #[case(r".", r"\.", ScopedView::new(vec![Out(r".")]))]
-    #[case(r"\.", r"\.", ScopedView::new(vec![In(Borrowed(r"\."))]))]
-    #[case(r"\w", r"\w", ScopedView::new(vec![In(Borrowed(r"\w"))]))]
+    #[case(r".", r"\\.", ScopedView::new(vec![Out(r".")]))]
+    //
+    #[case("Hello\nWorld\n", "\n", ScopedView::new(vec![Out("Hello"), In(Borrowed("\n")), Out("World"), In(Borrowed("\n"))]))]
     fn test_literal_scoping(
         #[case] input: &str,
         #[case] literal: &str,

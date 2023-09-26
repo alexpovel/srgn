@@ -4,12 +4,16 @@ mod deletion;
 mod german;
 #[cfg(feature = "lower")]
 mod lower;
+#[cfg(feature = "normalization")]
+mod normalization;
 #[cfg(feature = "replace")]
 mod replace;
 #[cfg(feature = "squeeze")]
 mod squeeze;
 #[cfg(feature = "symbols")]
 mod symbols;
+#[cfg(feature = "titlecase")]
+mod titlecase;
 #[cfg(feature = "upper")]
 mod upper;
 
@@ -21,12 +25,16 @@ pub use deletion::DeletionStage;
 pub use german::GermanStage;
 #[cfg(feature = "lower")]
 pub use lower::LowerStage;
+#[cfg(feature = "normalization")]
+pub use normalization::NormalizationStage;
 #[cfg(feature = "replace")]
 pub use replace::ReplacementStage;
 #[cfg(feature = "squeeze")]
 pub use squeeze::SqueezeStage;
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::SymbolsInversionStage, SymbolsStage};
+#[cfg(feature = "titlecase")]
+pub use titlecase::TitlecaseStage;
 #[cfg(feature = "upper")]
 pub use upper::UpperStage;
 

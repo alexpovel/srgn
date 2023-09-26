@@ -32,17 +32,32 @@ tree-sitter = "0.20.10"
 tree-sitter-python = "0.20.4"
 fancy-regex = "0.11.0"
 unescape = "0.1.0"
+titlecase = "2.2.1"
+unicode-normalization = "0.1.22"
+unicode_categories = "0.1.1"
 
 [features]
 default = ["all"]
-all = ["german", "deletion", "squeeze", "upper", "lower", "replace", "symbols"]
-german = []
-symbols = []
+all = [
+    "deletion",
+    "german",
+    "lower",
+    "normalization",
+    "replace",
+    "squeeze",
+    "symbols",
+    "titlecase",
+    "upper",
+]
 deletion = []
-squeeze = []
-upper = []
+german = []
 lower = []
+normalization = []
 replace = []
+squeeze = []
+symbols = []
+titlecase = []
+upper = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
