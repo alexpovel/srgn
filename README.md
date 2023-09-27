@@ -115,11 +115,11 @@ Onto the next action.
 #### Deletion
 
 Removes whatever is found from the input. Same flag name as in `tr`.
-<!--
+
 ```console
 $ echo 'Hello, World!' | betterletters -d '(H|W|!)'
 ello, orld
-``` -->
+```
 
 As the default scope is to match the entire input, it is an error to specify deletion
 without a scope.
@@ -128,11 +128,11 @@ without a scope.
 
 Squeezes repeats of characters matching the scope into single occurrences. Same flag
 name as in `tr`.
-<!--
+
 ```console
 $ echo 'Helloooo Woooorld!!!' | betterletters -s '(o|!)'
 Hello World!
-``` -->
+```
 
 If a character class is passed, all members of that class are squeezed into whatever
 occurred first:
@@ -198,11 +198,11 @@ $ echo '(A --> B) != C --- obviously' | betterletters --symbols
 (A ⟶ B) ≠ C — obviously
 ```
 
-Alternatively, if you're only interested in en- and em dashes, make use of scoping:
+Alternatively, if you're only interested in math, make use of scoping:
 
 ```console
-$ echo 'A <= B --- More is--obviously--possible' | betterletters --symbols -- '---?'
-A <= B — More is–obviously–possible
+$ echo 'A <= B --- More is--obviously--possible' | betterletters --symbols '<='
+A ≤ B --- More is--obviously--possible
 ```
 
 As there is a [1:1 correspondence](https://en.wikipedia.org/wiki/Bijection) between an
