@@ -1,35 +1,32 @@
 #[cfg(test)]
 mod tests {
-    use core::fmt;
-    use std::{cell::RefCell, collections::VecDeque, rc::Rc};
-
     use assert_cmd::Command;
     use comrak::{
         nodes::{NodeCodeBlock, NodeValue},
         parse_document, Arena, ComrakOptions,
     };
-
+    use core::fmt;
     use nom::{
         branch::alt,
-        bytes::complete::{escaped, tag, take_till, take_until, take_while1},
-        character::{
-            complete::{
-                alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending,
-                multispace0, multispace1, none_of, space0, space1,
-            },
-            is_alphanumeric,
+        bytes::complete::{escaped, is_not, tag, take_until, take_while1},
+        character::complete::{
+            alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending,
+            none_of, space0,
         },
-        combinator::{map, opt, recognize},
+        combinator::map,
         error::ParseError,
         multi::{many0, many1, separated_list1},
-        sequence::{delimited, preceded, tuple, Tuple},
+        sequence::{delimited, tuple},
         Finish, IResult,
     };
-    use shell_words::split;
+    use std::{cell::RefCell, collections::VecDeque, rc::Rc};
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
+    /// A flag, either short or long.
+    ///
+    /// Does not have a value, e.g. `--flag` or `-f`.
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum Flag {
         Short(char),
@@ -39,12 +36,6 @@ mod tests {
     impl From<char> for Flag {
         fn from(c: char) -> Self {
             Self::Short(c)
-        }
-    }
-
-    impl From<String> for Flag {
-        fn from(s: String) -> Self {
-            Self::Long(s)
         }
     }
 
@@ -63,12 +54,7 @@ mod tests {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    struct Option_ {
-        name: Flag,
-        value: String,
-    }
-
+    /// A positional argument.
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct Arg(String);
 
@@ -78,68 +64,17 @@ mod tests {
         }
     }
 
-    impl From<Arg> for String {
-        fn from(a: Arg) -> Self {
-            a.0
-        }
-    }
-
-    impl<'a> From<&'a Arg> for &'a str {
-        fn from(a: &'a Arg) -> Self {
-            &a.0
-        }
-    }
-
     impl fmt::Display for Arg {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.0)
         }
     }
 
-    // #[derive(Debug, Clone, PartialEq, Eq, Default)]
-    // enum Name {
-    //     Echo,
-    //     Self_,
-    //     #[default]
-    //     None,
-    // }
-
-    // impl TryFrom<&str> for Name {
-    //     type Error = ();
-
-    //     fn try_from(value: &str) -> Result<Self, Self::Error> {
-    //         match value {
-    //             "echo" => Ok(Self::Echo),
-    //             PROGRAM_NAME => Ok(Self::Self_),
-    //             _ => Err(()),
-    //         }
-    //     }
-    // }
-
-    // impl fmt::Display for Name {
-    //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    //         match self {
-    //             Self::Echo => write!(f, "echo"),
-    //             Self::Self_ => write!(f, "{}", PROGRAM_NAME),
-    //             Self::None => write!(f, ""),
-    //         }
-    //     }
-    // }
-
-    // impl TryFrom<String> for ProgramName {
-    //     type Error = ();
-
-    //     fn try_from(value: String) -> Result<Self, Self::Error> {
-    //         Self::try_from(value.as_str())
-    //     }
-    // }
-
+    /// A collected, whole invocation of a program, including all bits and pieces
+    /// required for running *except* the program name itself.
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     struct Invocation {
-        // name: Name,
-        //
         flags: Vec<Flag>,
-        // options: Vec<ProgramFlag>,
         args: Vec<Arg>,
         //
         stdin: Option<String>,
@@ -148,17 +83,14 @@ mod tests {
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum Program {
+        /// The `echo` program, used to generate stdin for the program under test.
         Echo(Invocation),
+        /// The binary under test itself.
         Self_(Invocation),
     }
 
-    // enum ProgramCreationError {
-    //     UnsupportedName,
-    //     InvalidEscapeSequence,
-    // }
-
     impl Program {
-        fn new(name: &str, mut invocation: Invocation) -> Self {
+        fn from_name(name: &str, mut invocation: Invocation) -> Self {
             match name {
                 "echo" => {
                     if invocation.flags.contains(&Flag::Short('e')) {
@@ -198,9 +130,9 @@ mod tests {
             let name = prog.name().to_string();
 
             match prog {
-                Program::Echo(_) => panic!("Echo cannot be run, only used to generate stdin"),
+                Program::Echo(_) => Err("Echo cannot be run, only used to generate stdin"),
                 Program::Self_(inv) => {
-                    let mut cmd = Command::cargo_bin(name).unwrap();
+                    let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
 
                     for flag in inv.flags {
                         cmd.arg(flag.to_string());
@@ -225,6 +157,11 @@ mod tests {
     struct PipedPrograms(VecDeque<Program>);
 
     impl PipedPrograms {
+        /// Assembles a list of programs into a pipe.
+        ///
+        /// The first program is specially treated, and needs to be able to produce some
+        /// stdin. The passed `stdout` is the expected output of the last program, aka
+        /// the entire pipe.
         fn assemble(chain: impl Iterator<Item = Program>, stdout: &str) -> Result<Self, &str> {
             let mut chain = chain.collect::<VecDeque<_>>();
 
@@ -244,17 +181,14 @@ mod tests {
                 .front_mut()
                 .expect("No second program to assemble with")
             {
-                Program::Echo(_) => panic!("Echo should not be in the middle of a pipe"),
+                Program::Echo(_) => return Err("Echo should not be in the middle of a pipe"),
                 Program::Self_(inv) => {
-                    inv.stdin = Some(stdin.into());
+                    inv.stdin = Some(stdin.to_string());
                 }
             }
 
-            match chain
-                .back_mut()
-                .expect("No second program to assemble with")
-            {
-                Program::Echo(_) => panic!("Echo should not be at the end of a pipe"),
+            match chain.back_mut().expect("No last program to assemble with") {
+                Program::Echo(_) => return Err("Echo should not be at the end of a pipe"),
                 Program::Self_(inv) => {
                     inv.stdout = Some(stdout.into());
                 }
@@ -272,12 +206,6 @@ mod tests {
             self.0.into_iter()
         }
     }
-
-    // #[derive(Debug, Clone, PartialEq, Eq)]
-    // struct EchoFlags {
-    //     no_newline: bool,
-    //     escape: bool,
-    // }
 
     /// Parses a code block such as:
     ///
@@ -298,99 +226,28 @@ mod tests {
     /// $ echo 'some other input' | program arg1
     /// some other output
     /// ```
-    fn parse_command_output_pair(input: &str) -> IResult<&str, PipedPrograms> {
-        let (input, _terminal_prompt) = char('$')(input)?;
-
-        // let (input, echo) = invocation(input)?;
+    fn parse_piped_programs_with_prompt_and_output(input: &str) -> IResult<&str, PipedPrograms> {
+        let prompt = '$';
+        let (input, _) = char(prompt)(input)?;
         let (input, _) = space0(input)?;
-        // eprintln!("Parsed echo: {:#?}", echo);
 
-        // let (input, _echo_cmd) = maybe_ws(tag("echo"))(input)?;
+        let (input, programs) = parse_piped_programs(input)?;
+        eprintln!("Parsed programs: {:#?}", programs);
 
-        // let mut echo_flags = None;
-        // let (input, maybe_echo_option) = opt(char('-'))(input)?;
-        // let input = match maybe_echo_option {
-        //     Some(_) => {
-        //         let (input, options) = ascii_alpha1(input)?;
-
-        //         echo_flags = Some(EchoFlags {
-        //             no_newline: options.contains('n'),
-        //             escape: options.contains('e'),
-        //         });
-
-        //         let (input, _) = space0(input)?;
-
-        //         input
-        //     }
-        //     None => input,
-        // };
-
-        // let (input, stdin) = parse_quoted(input)?;
-
-        // let (input, _) = space0(input)?;
-
-        let (input, cmds) = parse_pipe_components(input)?;
-        eprintln!("Parsed commands: {:#?}", cmds);
-
+        // Advance to end; this eats optional comments and trailing whitespace.
         let (input, _) = take_until("\n")(input)?;
         let (input, _) = line_ending(input)?;
 
-        let (input, stdout) = take_till(|c| c == '\0' || c == '$')(input)?;
+        // Parse stdout; anything up to the next prompt.
+        let (input, stdout) = is_not(prompt.to_string().as_str())(input)?;
         eprintln!("Parsed stdout: {:#?}", stdout);
-        // let (input, _) = char('@')(input)?;
 
-        let stdout = stdout.trim_end();
-        // let (input, _) = space0(input)?;
-
-        // let mut stdin = match echo_flags {
-        //     Some(flags) => {
-        //         let mut out = stdin.to_string();
-
-        //         if flags.escape {
-        //             out = unescape(stdin).ok_or(nom::Err::Error(nom::error::Error::new(
-        //                 // Not really a great conversion but maybe prettier than panic?
-        //                 input,
-        //                 nom::error::ErrorKind::Escaped,
-        //             )))?;
-        //         }
-
-        //         if flags.no_newline {
-        //             out = out.trim_end().to_string();
-        //         }
-
-        //         Some(out)
-        //     }
-
-        //     None => Some(stdin.to_string()),
-        // };
-
-        // assert!(stdin.is_some(), "Should have a stdin by now");
-
-        // let mut cuts = VecDeque::new();
-        // for (_program_name, short_flags, long_flags, first_arg, second_arg) in cmds {
-        //     let cut = ProgramInvocation {
-        //         stdin,
-        //         short_flags: short_flags.into_iter().map(String::from).collect(),
-        //         long_flags: long_flags.into_iter().map(String::from).collect(),
-        //         args: [first_arg, second_arg]
-        //             .into_iter()
-        //             .filter_map(|s| s.map(String::from))
-        //             .collect(),
-        //         stdout: None,
-        //     };
-
-        //     // Only first command has a stdin, rest won't have any.
-        //     stdin = None;
-
-        //     cuts.push(cut);
-        // }
-
-        // Analogously to how the initial command is the only one with stdin.
-        // cuts.last_mut().unwrap().stdout = Some(stdout.to_string());
+        let stdout = stdout.trim_end(); // Removes flakiness and hard-to-diff stuff
 
         Ok((
             input,
-            PipedPrograms::assemble(cmds.into_iter(), stdout).expect("Should be able to assemble"),
+            PipedPrograms::assemble(programs.into_iter(), stdout)
+                .expect("Should be able to assemble"),
         ))
     }
 
@@ -406,54 +263,20 @@ mod tests {
         delimited(space0, inner, space0)
     }
 
-    // fn invocation<'a, F: 'a, O, E: ParseError<&'a str>>(
-    //     // inner: F,
-    // ) -> impl FnMut(&str) -> IResult<(&'a str, Vec<&'a str>, Vec<&'a str>, Option<&'a str>, Option<&'a str>), O, E>
-    // // where
-    // //     F: Fn(&'a str) -> IResult<&'a str, O, E>,
-    // {
-    //     tuple((
-    //         ws(ascii_alpha1), // Program name
-    //         // Short flags precede long flags; this is hard-coded.
-    //         many0(
-    //             // Short flags, like `-s`, but also `-sGu`. No values.
-    //             delimited(char('-'), ascii_alphanumeric1, space0),
-    //         ),
-    //         many0(delimited(
-    //             // Long flags, like `--long-flag`. No values. Can contain hyphens
-    //             // itself.
-    //             tag("--"),
-    //             take_while1(|c: char| c == '-' || c.is_ascii_alphanumeric()),
-    //             space0,
-    //         )),
-    //         // First argument.
-    //         opt(ws(parse_quoted)),
-    //         // Second argument
-    //         opt(ws(parse_quoted)),
-    //     ))
-    // }
-    fn program(input: &str) -> IResult<&str, Program>
-// where
-        // nom::Err<E>: From<nom::Err<nom::error::Error<&'a str>>>,
-        //     F: Fn(&'a str) -> IResult<&'a str, O, E>,
-    {
+    /// Parses a single, whole program invocation.
+    fn parse_program(input: &str) -> IResult<&str, Program> {
+        // Interior mutability is fine, as the different closures aliasing this run
+        // sequentially, never at once (is using this and `map` of `nom` an
+        // anti-pattern? works quite well...)
         let inv = Rc::new(RefCell::new(Invocation::default()));
 
-        let (input, (name, _)) = tuple((
-            // map(
+        let (input, (name, _flags, _args)) = tuple((
             maybe_ws(ascii_alpha1),
-            //      |s| {
-            //     inv.borrow_mut().name = s
-            //         .try_into()
-            //         .unwrap_or_else(|_| panic!("Unsupported program name: {s}"));
-
-            //     s
-            // }),
             many0(alt((
                 map(
                     delimited(
-                        // Long flags, like `--long-flag`. No values. Can contain hyphens
-                        // itself.
+                        // Long flags, like `--long-flag`. No values. Can contain
+                        // hyphens itself.
                         tag("--"),
                         take_while1(|c: char| c == '-' || c.is_ascii_alphanumeric()),
                         space0,
@@ -472,36 +295,30 @@ mod tests {
                         s
                     },
                 ),
-                map(
-                    // Quoted, positional arguments
-                    maybe_ws(parse_quoted),
-                    |s: &str| {
-                        inv.borrow_mut().args.push(s.into());
-                        s
-                    },
-                ),
             ))),
+            many0(alt((map(
+                // Quoted, positional arguments
+                maybe_ws(parse_quoted),
+                |s: &str| {
+                    inv.borrow_mut().args.push(s.into());
+                    s
+                },
+            ),))),
         ))(input)?;
 
         let (input, _) = space0(input)?;
 
-        let program = Program::new(name, inv.borrow().clone());
+        let program = Program::from_name(name, inv.borrow().clone());
         Ok((input, program))
     }
 
-    // type Arg<'a> = Option<&'a str>;
-    // type Options<'a> = Vec<&'a str>;
-    fn parse_pipe_components(input: &str) -> IResult<&str, Vec<Program>> {
-        // Our list isn't `A | B | C` but rather `| B | C` (`A` is `echo` and already
-        // done). So kick off alternating list by eating initial pipe.
-        // let (input, _) = char('|')(input)?;
-
-        separated_list1(tag("|"), program)(input)
+    fn parse_piped_programs(input: &str) -> IResult<&str, Vec<Program>> {
+        separated_list1(tag("|"), parse_program)(input)
     }
 
     /// Parses multiple pairs of 'command and output' into a list of them.
     fn parse_code_blocks(input: &str) -> IResult<&str, Vec<PipedPrograms>> {
-        many1(parse_command_output_pair)(input)
+        many1(parse_piped_programs_with_prompt_and_output)(input)
     }
 
     /// https://stackoverflow.com/a/58907488/11477374
@@ -522,8 +339,9 @@ mod tests {
             &ComrakOptions::default(),
         );
 
-        let mut cut_pipes = Vec::new();
+        let mut pipes = Vec::new();
         let console = String::from("console");
+
         root.descendants().for_each(|node| {
             let value = node.to_owned().data.borrow().value.clone();
 
@@ -532,12 +350,13 @@ mod tests {
                     let (_, commands) = parse_code_blocks(&literal)
                         .finish()
                         .expect("Anything in `console` should be parseable as a command");
-                    // println!("Found command to run: {:#?}", commands);
-                    cut_pipes.extend(commands);
+
+                    pipes.extend(commands);
                 }
             }
         });
-        cut_pipes
+
+        pipes
     }
 
     #[test]
@@ -549,33 +368,6 @@ mod tests {
             for program in pipe {
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
-
-                // for flag in cut.short_flags {
-                //     cmd.arg(format!("-{flag}"));
-                // }
-
-                // for flag in cut.long_flags {
-                //     cmd.arg(format!("--{flag}"));
-                // }
-
-                // for arg in cut.args {
-                //     cmd.arg(arg);
-                // }
-
-                // cmd.args(cut.short_flags.clone());
-
-                // match (invocation.stdin, previous_stdin) {
-                //     (Some(_), Some(_)) => {
-                //         unreachable!("Cannot have initial and previous stdin simultaneously")
-                //     }
-                //     (Some(s), None) => {
-                //         cmd.write_stdin(s);
-                //     }
-                //     (None, Some(p)) => {
-                //         cmd.write_stdin(p);
-                //     }
-                //     (None, None) => unreachable!("Should have a stdin at all points"),
-                // }
 
                 if let Some(previous_stdin) = previous_stdin {
                     cmd.write_stdin(previous_stdin);
@@ -596,7 +388,6 @@ mod tests {
                         .expect("Stdout should be given as UTF-8"),
                 );
             }
-            // break;
         }
     }
 }
