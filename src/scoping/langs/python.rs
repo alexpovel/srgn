@@ -1,11 +1,8 @@
-use super::{
-    LanguageScopedViewBuildStep, LanguageScoperError, TSLanguage, TSParser, TSQuery, TSQueryCursor,
-};
+use super::{LanguageScopedViewBuildStep, TSLanguage, TSParser, TSQuery, TSQueryCursor};
 use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
-use clap::{Parser, ValueEnum};
-use enum_iterator::Sequence;
+use clap::ValueEnum;
 use std::fmt::Debug;
-use strum::{Display, EnumString};
+use strum::Display;
 use tree_sitter::QueryError;
 
 #[derive(Debug, Clone)]
@@ -13,45 +10,13 @@ pub struct Python {
     pub query: PythonQuery,
 }
 
-// pub trait FromRawQuery {
-//     fn try_from_raw_query(query: &str) -> Result<Self, LanguageScoperError>
-//     where
-//         Self: Sized;
-
-//     fn try_from_raw_premade_query(query: &str) -> Result<Self, LanguageScoperError>
-//     where
-//         Self: Sized;
-// }
-
-// impl FromRawQuery for Python {
-//     fn try_from_raw_query(
-//         query: &str,
-//         // query: impl TryInto<MyBullshitQuery, Error = LanguageScoperError>,
-//     ) -> Result<Self, LanguageScoperError> {
-//         Ok(Self {
-//             query: PythonQuery::Custom(query.try_into()?),
-//         })
-//     }
-
-//     fn try_from_raw_premade_query(query: &str) -> Result<Self, LanguageScoperError> {
-//         let x = query
-//             .try_into()
-//             .map_err(|_| LanguageScoperError::NoSuchPremadeQuery(query.to_string()))?;
-
-//         Ok(Self {
-//             query: PythonQuery::Premade(x),
-//         })
-//     }
-// }
-
 #[derive(Debug, Display, Clone)]
 pub enum PythonQuery {
     Custom(CustomPythonQuery),
     Premade(PremadePythonQuery),
 }
 
-#[derive(Debug, Clone, Copy, EnumString, Display, Sequence, ValueEnum)]
-#[strum(serialize_all = "kebab-case")]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadePythonQuery {
     Comments,
     DocStrings,
@@ -76,19 +41,8 @@ impl From<&PremadePythonQuery> for TSQuery {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomPythonQuery(String);
-
-// impl TryFrom<&str> for CustomPythonQuery {
-//     type Error = LanguageScoperError;
-
-//     fn try_from(value: &str) -> Result<Self, Self::Error> {
-//         match TSQuery::new(tree_sitter_python::language(), value) {
-//             Ok(_) => Ok(Self(value.to_string())),
-//             Err(e) => Err(e.into()),
-//         }
-//     }
-// }
 
 impl TryFrom<String> for CustomPythonQuery {
     type Error = QueryError;
