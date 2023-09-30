@@ -1,27 +1,119 @@
-use std::fmt::Debug;
-
 use super::{
-    Language, LanguageScopedViewBuildStep, LanguageScoperError, Parser, Query, QueryCursor,
+    LanguageScopedViewBuildStep, LanguageScoperError, TSLanguage, TSParser, TSQuery, TSQueryCursor,
 };
 use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
+use clap::{Parser, ValueEnum};
+use enum_iterator::Sequence;
+use std::fmt::Debug;
+use strum::{Display, EnumString};
+use tree_sitter::QueryError;
 
-enum PythonQuery {
-    Custom(String),
-    Comments,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Python {
-    query: Query,
+    pub query: PythonQuery,
 }
 
-impl TryFrom<&str> for Python {
-    type Error = LanguageScoperError;
+// pub trait FromRawQuery {
+//     fn try_from_raw_query(query: &str) -> Result<Self, LanguageScoperError>
+//     where
+//         Self: Sized;
 
-    fn try_from(query: &str) -> Result<Self, Self::Error> {
-        let query = Query::new(Self::lang(), query)?;
+//     fn try_from_raw_premade_query(query: &str) -> Result<Self, LanguageScoperError>
+//     where
+//         Self: Sized;
+// }
 
-        Ok(Self { query })
+// impl FromRawQuery for Python {
+//     fn try_from_raw_query(
+//         query: &str,
+//         // query: impl TryInto<MyBullshitQuery, Error = LanguageScoperError>,
+//     ) -> Result<Self, LanguageScoperError> {
+//         Ok(Self {
+//             query: PythonQuery::Custom(query.try_into()?),
+//         })
+//     }
+
+//     fn try_from_raw_premade_query(query: &str) -> Result<Self, LanguageScoperError> {
+//         let x = query
+//             .try_into()
+//             .map_err(|_| LanguageScoperError::NoSuchPremadeQuery(query.to_string()))?;
+
+//         Ok(Self {
+//             query: PythonQuery::Premade(x),
+//         })
+//     }
+// }
+
+#[derive(Debug, Display, Clone)]
+pub enum PythonQuery {
+    Custom(CustomPythonQuery),
+    Premade(PremadePythonQuery),
+}
+
+#[derive(Debug, Clone, Copy, EnumString, Display, Sequence, ValueEnum)]
+#[strum(serialize_all = "kebab-case")]
+pub enum PremadePythonQuery {
+    Comments,
+    DocStrings,
+}
+
+impl From<&PremadePythonQuery> for TSQuery {
+    fn from(value: &PremadePythonQuery) -> Self {
+        TSQuery::new(
+            Python::lang(),
+            match value {
+                PremadePythonQuery::Comments => "(comment) @comment",
+                PremadePythonQuery::DocStrings => {
+                    r#"
+                    ((string) @docstring
+                        (#match? @docstring "^\"\"\"")
+                    )
+                    "#
+                }
+            },
+        )
+        .expect("Premade queries to be valid")
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CustomPythonQuery(String);
+
+// impl TryFrom<&str> for CustomPythonQuery {
+//     type Error = LanguageScoperError;
+
+//     fn try_from(value: &str) -> Result<Self, Self::Error> {
+//         match TSQuery::new(tree_sitter_python::language(), value) {
+//             Ok(_) => Ok(Self(value.to_string())),
+//             Err(e) => Err(e.into()),
+//         }
+//     }
+// }
+
+impl TryFrom<String> for CustomPythonQuery {
+    type Error = QueryError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match TSQuery::new(tree_sitter_python::language(), &value) {
+            Ok(_) => Ok(Self(value.to_string())),
+            Err(e) => Err(e),
+        }
+    }
+}
+
+impl From<&CustomPythonQuery> for TSQuery {
+    fn from(value: &CustomPythonQuery) -> Self {
+        TSQuery::new(tree_sitter_python::language(), &value.0)
+            .expect("Valid query, as object cannot be constructed otherwise")
+    }
+}
+
+impl From<&PythonQuery> for TSQuery {
+    fn from(value: &PythonQuery) -> Self {
+        match value {
+            PythonQuery::Custom(query) => query.into(),
+            PythonQuery::Premade(query) => query.into(),
+        }
     }
 }
 
@@ -36,8 +128,9 @@ impl ScopedViewBuildStep for Python {
                 .expect("No language set in parser, or other unrecoverable error");
             let root = tree.root_node();
 
-            let mut qc = QueryCursor::new();
-            let matches = qc.matches(&self.query, root, s.as_bytes());
+            let mut qc = TSQueryCursor::new();
+            let query: TSQuery = (&self.query).into();
+            let matches = qc.matches(&query, root, s.as_bytes());
 
             let ranges = matches
                 .flat_map(|query_match| query_match.captures)
@@ -49,12 +142,12 @@ impl ScopedViewBuildStep for Python {
 }
 
 impl LanguageScopedViewBuildStep for Python {
-    fn lang() -> Language {
+    fn lang() -> TSLanguage {
         tree_sitter_python::language()
     }
 
-    fn parser() -> Parser {
-        let mut parser = Parser::new();
+    fn parser() -> TSParser {
+        let mut parser = TSParser::new();
         parser
             .set_language(Self::lang())
             .expect("Error loading Python grammar");

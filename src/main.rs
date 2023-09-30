@@ -1,5 +1,7 @@
 use betterletters::scoping::{
-    langs::python::Python, literal::Literal, ScopedViewBuildStep, ScoperBuildError,
+    langs::python::{PremadePythonQuery, Python},
+    literal::Literal,
+    ScopedViewBuildStep, ScoperBuildError,
 };
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
@@ -20,6 +22,7 @@ use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
 use betterletters::{apply, scoping::regex::Regex, Stage};
+// use cli::PythonQuery;
 use log::{debug, info, warn, LevelFilter};
 use std::io::{self, Error, Read, Write};
 
@@ -75,9 +78,9 @@ fn assemble_scopers(
 ) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, ScoperBuildError> {
     let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
 
-    if let Some(python) = args.languages_scopes.python.clone() {
-        scopers.push(Box::new(Python::try_from(python.as_str())?));
-    }
+    // if let Some(python) = args.languages_scopes.python.clone() {
+    //     scopers.push(Box::new(Python::try_from(python).unwrap()));
+    // }
 
     if args.options.literal_string {
         scopers.push(Box::new(Literal::try_from(args.scope.clone())?));
@@ -186,8 +189,29 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::GLOBAL_SCOPE;
-    use clap::{builder::ArgPredicate, ArgAction, Parser};
+    use std::{
+        error::Error,
+        fmt::{self, Display},
+        str::FromStr,
+        thread,
+        time::Duration,
+    };
+
+    use betterletters::{
+        scoping::langs::{
+            python::{CustomPythonQuery, PremadePythonQuery, Python, PythonQuery},
+            LanguageScoperError,
+        },
+        GLOBAL_SCOPE,
+    };
+    use clap::{
+        builder::{ArgPredicate, TypedValueParser},
+        error::{ContextKind, ContextValue, ErrorKind},
+        ArgAction, Parser, ValueEnum,
+    };
+    use enum_iterator::all;
+    use itertools::Itertools;
+    use tree_sitter::{Query, QueryError};
 
     /// Main CLI entrypoint.
     ///
@@ -353,17 +377,157 @@ mod cli {
         pub squeeze: bool,
     }
 
+    // #[derive(ValueEnum, Debug, Clone, Copy)]
+    // pub(super) enum PythonQuery {
+    //     Query,
+    //     Comments,
+    //     DocStrings,
+    // }
+
+    // impl fmt::Display for PythonQuery {
+    //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    //         match self {
+    //             PythonQuery::Query => write!(f, "query"),
+    //             PythonQuery::Comments => write!(f, "comments"),
+    //             PythonQuery::DocStrings => write!(f, "doc-strings"),
+    //         }
+    //     }
+    // }
+
+    // use betterletters::scoping::langs::python::PremadeQuery;
+
+    // impl Into<PremadeQuery> for PythonQuery {
+    //     fn into(self) -> PremadeQuery {
+    //         match self {
+    //             PythonQuery::Query => PremadeQuery::Comments,
+    //             PythonQuery::Comments => PremadeQuery::Comments,
+    //             PythonQuery::DocStrings => PremadeQuery::DocStrings,
+    //         }
+    //     }
+    // }
+
+    // impl From<PythonQuery> for PremadeQuery {
+    //     fn from(value: PythonQuery) -> Self {
+    //         match value {
+    //             PythonQuery::Query => PremadeQuery::Comments,
+    //             PythonQuery::Comments => PremadeQuery::Comments,
+    //             PythonQuery::DocStrings => PremadeQuery::DocStrings,
+    //         }
+    //     }
+    // }
+
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Language scopes")]
     pub(super) struct LanguageScopes {
         /// Python
         #[arg(long, env, verbatim_doc_comment)]
-        pub python: Option<String>,
+        pub python: Option<PremadePythonQuery>,
+        #[arg(
+            long,
+            env,
+            verbatim_doc_comment,
+            value_parser = try_into_query::<CustomPythonQuery>,
+        )]
+        pub python_query: Option<CustomPythonQuery>,
     }
 
-    // fn parse_query(input: &str) -> Result<Query, &str> {
-    //     Ok(Query::new(PythonScoper::lang(), input).unwrap())
+    fn try_into_query<T>(value: &str) -> Result<T, String>
+    where
+        T: TryFrom<String, Error = QueryError>,
+    {
+        T::try_from(value.to_string()).map_err(|e| e.to_string())
+    }
+
+    // #[derive(Clone)]
+    // struct LanguageScoperParser<T> {
+    //     lang: T,
+    // }
+    // <T: FromRawQuery + Clone>;
+
+    // impl<T: FromRawQuery + Clone + Sync + Send + 'static> TypedValueParser for LanguageScoperParser<T> {
+    //     type Value = T;
+
+    //     fn parse_ref(
+    //         &self,
+    //         cmd: &clap::Command,
+    //         arg: Option<&clap::Arg>,
+    //         value: &std::ffi::OsStr,
+    //     ) -> Result<Self::Value, clap::Error> {
+    //         let value = value.to_string_lossy().to_string();
+
+    //         match value.split_once('=') {
+    //             Some(("query", query)) => Ok(T::try_from_raw_query(query).or({
+    //                 // query: PythonQuery::Custom(query.try_into().or({
+    //                 let mut err = clap::Error::new(ErrorKind::ValueValidation).with_cmd(cmd);
+
+    //                 err.insert(
+    //                     ContextKind::InvalidArg,
+    //                     ContextValue::String("query".to_string()),
+    //                 );
+
+    //                 err.insert(
+    //                     ContextKind::InvalidValue,
+    //                     ContextValue::String(query.to_string()),
+    //                 );
+
+    //                 Err(err)
+    //             })?),
+    //             // }),
+    //             _ => {
+    //                 // let premade: PremadePythonQuery = value.as_str().try_into().or({
+    //                 let premade = T::try_from_raw_premade_query(value.as_str())
+    //                     // .try_into()
+    //                     .or({
+    //                         let mut err =
+    //                             clap::Error::new(ErrorKind::ValueValidation).with_cmd(cmd);
+
+    //                         if let Some(arg) = arg {
+    //                             err.insert(
+    //                                 ContextKind::InvalidArg,
+    //                                 ContextValue::String(arg.to_string()),
+    //                             );
+    //                         }
+
+    //                         err.insert(
+    //                             ContextKind::InvalidValue,
+    //                             ContextValue::String(value.to_string()),
+    //                         );
+
+    //                         err.insert(
+    //                             ContextKind::SuggestedValue,
+    //                             ContextValue::Strings(
+    //                                 self.possible_values()
+    //                                     .expect("Possible values to be defined")
+    //                                     .map(|s| s.get_name().to_owned())
+    //                                     .collect_vec(),
+    //                             ),
+    //                         );
+
+    //                         Err(err)
+    //                     })?;
+
+    //                 Ok(premade)
+    //                 // Ok(Python {
+    //                 //     query: PythonQuery::Premade(premade),
+    //                 // })
+    //             }
+    //         }
+    //     }
+
+    //     fn possible_values(
+    //         &self,
+    //     ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
+    //         Some(Box::new({
+    //             let premades = all::<PremadePythonQuery>().collect::<Vec<_>>();
+
+    //             premades
+    //                 .into_iter()
+    //                 .map(|p| p.to_string())
+    //                 .chain(vec!["query=<S EXPRESSION>".to_string()])
+    //                 .map(clap::builder::PossibleValue::new)
+    //         }))
+    //     }
     // }
 
     #[cfg(feature = "german")]

@@ -18,9 +18,9 @@ def do_thing():
     """
 
     pass  # Does the thing
+```
 
-
-class ThingDoer:
+<!-- class ThingDoer:
     """Does things."""
 
     def do_thing(self):
@@ -29,7 +29,24 @@ class ThingDoer:
         Does the thing as well.
         """
 
-        pass  # Does the thing
+        pass  # Does the thing -->
+
+with
+
+```bash
+cat thing.py | betterletters --python-docstrings 'thing' 'transaction'
+```
+
+will yield
+
+```python thing-output.py
+def do_thing():
+    """Free function docstring.
+
+    Does the transaction.
+    """
+
+    pass  # Does the thing
 ```
 
 ## Walkthrough
