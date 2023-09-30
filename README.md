@@ -10,7 +10,7 @@ TODO: Print help?
 
 #### Fixing all method docstrings (Python)
 
-```python,filename
+```python thing.py
 def do_thing():
     """Free function docstring.
 
