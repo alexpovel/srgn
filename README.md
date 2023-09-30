@@ -4,6 +4,36 @@
 
 ## Usage
 
+TODO: Print help?
+
+### Showcases
+
+#### Fixing all method docstrings (Python)
+
+```python,filename
+def do_thing():
+    """Free function docstring.
+
+    Does the thing.
+    """
+
+    pass  # Does the thing
+
+
+class ThingDoer:
+    """Does things."""
+
+    def do_thing(self):
+        """Method docstring.
+
+        Does the thing as well.
+        """
+
+        pass  # Does the thing
+```
+
+## Walkthrough
+
 The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
 the input to process. Actions then perform the processing. Generally, actions are
 composable. Both are optional (but taking no action is pointless); specifying no scope

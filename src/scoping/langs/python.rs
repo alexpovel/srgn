@@ -5,6 +5,11 @@ use super::{
 };
 use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
 
+enum PythonQuery {
+    Custom(String),
+    Comments,
+}
+
 #[derive(Debug)]
 pub struct Python {
     query: Query,
