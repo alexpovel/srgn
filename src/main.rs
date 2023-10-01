@@ -1,4 +1,8 @@
-use betterletters::scoping::{literal::Literal, ScopedViewBuildStep, ScoperBuildError};
+use betterletters::scoping::{
+    langs::python::{Python, PythonQuery},
+    literal::Literal,
+    ScopedViewBuildStep, ScoperBuildError,
+};
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
@@ -74,9 +78,17 @@ fn assemble_scopers(
 ) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, ScoperBuildError> {
     let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
 
-    // if let Some(python) = args.languages_scopes.python.clone() {
-    //     scopers.push(Box::new(Python::try_from(python).unwrap()));
-    // }
+    if let Some(python) = args.languages_scopes.python.clone() {
+        if let Some(premade) = python.python {
+            let query = PythonQuery::Premade(premade);
+
+            scopers.push(Box::new(Python::new(query)));
+        } else if let Some(custom) = python.python_query {
+            let query = PythonQuery::Custom(custom);
+
+            scopers.push(Box::new(Python::new(query)));
+        }
+    }
 
     if args.options.literal_string {
         scopers.push(Box::new(Literal::try_from(args.scope.clone())?));
@@ -360,9 +372,18 @@ mod cli {
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Language scopes")]
     pub(super) struct LanguageScopes {
-        /// Python
+        #[command(flatten)]
+        pub python: Option<PythonScope>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct PythonScope {
+        /// Scope Python code using a premade query.
         #[arg(long, env, verbatim_doc_comment)]
         pub python: Option<PremadePythonQuery>,
+
+        /// Scope Python code using a custom tree-sitter query.
         #[arg(
             long,
             env,
@@ -370,13 +391,6 @@ mod cli {
             value_parser = try_into_query::<CustomPythonQuery>,
         )]
         pub python_query: Option<CustomPythonQuery>,
-    }
-
-    fn try_into_query<T>(value: &str) -> Result<T, String>
-    where
-        T: TryFrom<String, Error = QueryError>,
-    {
-        T::try_from(value.to_string()).map_err(|e| e.to_string())
     }
 
     #[cfg(feature = "german")]
@@ -406,6 +420,13 @@ mod cli {
         pub(super) fn init() -> Self {
             Self::parse()
         }
+    }
+
+    fn try_into_query<T>(value: &str) -> Result<T, String>
+    where
+        T: TryFrom<String, Error = QueryError>,
+    {
+        T::try_from(value.to_string()).map_err(|e| e.to_string())
     }
 }
 
