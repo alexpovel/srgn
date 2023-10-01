@@ -1,4 +1,3 @@
-use self::langs::LanguageScoperError;
 use self::literal::LiteralError;
 use self::regex::RegexError;
 use itertools::Itertools;
@@ -15,7 +14,6 @@ pub enum ScoperBuildError {
     EmptyScope,
     RegexError(RegexError),
     LiteralError(LiteralError),
-    LanguageScoperError(LanguageScoperError),
 }
 
 impl From<LiteralError> for ScoperBuildError {
@@ -27,12 +25,6 @@ impl From<LiteralError> for ScoperBuildError {
 impl From<RegexError> for ScoperBuildError {
     fn from(e: RegexError) -> Self {
         Self::RegexError(e)
-    }
-}
-
-impl From<LanguageScoperError> for ScoperBuildError {
-    fn from(e: LanguageScoperError) -> Self {
-        Self::LanguageScoperError(e)
     }
 }
 

@@ -47,9 +47,6 @@ fn main() -> Result<(), Error> {
             ScoperBuildError::LiteralError(l) => {
                 return Err(Error::new(io::ErrorKind::InvalidInput, l))
             }
-            ScoperBuildError::LanguageScoperError(e) => {
-                return Err(Error::new(io::ErrorKind::InvalidInput, e.to_string()))
-            }
             ScoperBuildError::EmptyScope => {
                 return Err(Error::new(
                     io::ErrorKind::InvalidInput,
