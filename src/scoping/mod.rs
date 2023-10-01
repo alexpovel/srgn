@@ -124,7 +124,11 @@ impl<'a> ScopedViewBuilder<'a> {
     #[must_use]
     pub fn explode_from_ranges(self, exploder: impl Fn(&str) -> Vec<Range<usize>>) -> Self {
         self.explode(|s| {
+            trace!("Exploding from ranges: {:?}", s);
+
             let ranges = exploder(s);
+            trace!("Raw ranges after exploding: {:?}", ranges);
+
             let mut scopes = Vec::new();
 
             let mut last_end = 0;
@@ -176,19 +180,13 @@ impl<'a> ScopedViewBuilder<'a> {
                 // compile error
                 Scope::Out("") => {}
                 out @ Scope::Out(_) => new.push(out),
-                // I cannot get this owned junk out of here to save my life, SORRY. A
-                // better Rustacean would know how. Problem is: we own a `String` here,
-                // but `f` takes a reference *and returns an object with identical
-                // lifetime*, which will die as the owned `String` in this scope dies.
-                // ScopeStatus::In(Cow::Owned(_)) => return Err(()),
             }
 
-            trace!("Exploded scope, new scopes looks like: {:?}", new);
+            trace!("Exploded scope, new scopes are: {:?}", new);
         }
         trace!("Done exploding scopes.");
 
         ScopedViewBuilder { scopes: new }
-        // Ok(())
     }
 }
 
@@ -213,7 +211,6 @@ impl<'a> ScopedView<'a> {
     pub fn map<F>(&mut self, f: &F) -> &mut Self
     where
         F: Fn(&str) -> <str as ToOwned>::Owned,
-        // F: Stage + ?Sized,
     {
         for scope in &mut self.scopes {
             match scope {

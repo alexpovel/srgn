@@ -1,4 +1,5 @@
 use super::{ScopedViewBuildStep, ScopedViewBuilder};
+use log::{debug, trace};
 use std::str::FromStr;
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
@@ -59,10 +60,17 @@ pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
             // tree-sitter is about incremental parsing, which we don't use here
             let old_tree = None;
 
+            trace!("Parsing into AST: {:?}", s);
+
             let tree = Self::parser()
                 .parse(s, old_tree)
                 .expect("No language set in parser, or other unrecoverable error");
+
             let root = tree.root_node();
+            debug!(
+                "S expression of parsed source code is: {:?}",
+                root.to_sexp()
+            );
 
             let mut qc = TSQueryCursor::new();
             let query = self.query();
