@@ -11,6 +11,8 @@ pub type PythonQuery = CodeQuery<CustomPythonQuery, PremadePythonQuery>;
 pub enum PremadePythonQuery {
     Comments,
     DocStrings,
+    FunctionNames,
+    FunctionCalls,
 }
 
 impl From<PremadePythonQuery> for TSQuery {
@@ -29,6 +31,20 @@ impl From<PremadePythonQuery> for TSQuery {
                             (string) @string
                             (#match? @string "^\"\"\"")
                         )
+                    )
+                    "#
+                }
+                PremadePythonQuery::FunctionNames => {
+                    r#"
+                    (function_definition
+                        name: (identifier) @function-name
+                    )
+                    "#
+                }
+                PremadePythonQuery::FunctionCalls => {
+                    r#"
+                    (call
+                        function: (identifier) @function-name
                     )
                     "#
                 }

@@ -52,6 +52,50 @@ def GNU_says_moo():
 
 No `gnu`s other than docstring ones were harmed in the process.
 
+#### Converting `print` calls to proper `logging` (Python)
+
+Say there's code making liberal use of `print`:
+
+```python money.py
+def print_money():
+    """Let's print money 💸."""
+
+    amount = 32
+    print("Got here.")
+
+    print_more = lambda s: print(f"Printed {s}")
+    print_more(23)  # print the stuff
+
+print_money()
+print("Done.")
+```
+
+and a move to [`logging`](https://docs.python.org/3/library/logging.html) is desired.
+That's fully automated by a call of
+
+```bash
+cat money.py | betterletters --python 'function-calls' '^print$' 'logging.info'
+```
+
+yielding
+
+```python output-money.py
+def print_money():
+    """Let's print money 💸."""
+
+    amount = 32
+    logging.info("Got here.")
+
+    print_more = lambda s: logging.info(f"Printed {s}")
+    print_more(23)  # print the stuff
+
+print_money()
+logging.info("Done.")
+```
+
+Notice the [anchors](https://www.regular-expressions.info/anchors.html): `print_more` is
+a function call as well, but `^print$` ensures it's not matched.
+
 ## Walkthrough
 
 The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
