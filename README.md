@@ -14,7 +14,7 @@ Imagine you [dislike acronyms and
 abbreviations](https://www.instituteccp.com/a-case-against-abbreviations-and-acronyms/),
 and want to rid documentation strings, but not any code of them. The Python snippet
 
-```python thing.py
+```python gnu.py
 """GNU module."""
 
 def GNU_says_moo():
@@ -30,12 +30,12 @@ def GNU_says_moo():
 can be manipulated with an invocation of
 
 ```bash
-cat thing.py | betterletters --python 'doc-strings' 'GNU' 'GNU 🐂 is not Unix'
+cat gnu.py | betterletters --python 'doc-strings' 'GNU' 'GNU 🐂 is not Unix'
 ```
 
 to read
 
-```python output-thing.py
+```python output-gnu.py
 """GNU 🐂 is not Unix module."""
 
 def GNU_says_moo():
