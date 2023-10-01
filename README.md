@@ -12,7 +12,9 @@ TODO: Print help?
 
 Imagine you [dislike acronyms and
 abbreviations](https://www.instituteccp.com/a-case-against-abbreviations-and-acronyms/),
-and want to rid documentation strings, but not any code of them. The Python snippet
+and would thus like to expand all of them. However, simple search-and-replace is
+dangerous: actual code might be hit, rendering it syntactically invalid. Let's assume
+we'd only like to hit documentation. The Python snippet
 
 ```python gnu.py
 """GNU module."""
