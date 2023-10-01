@@ -1,4 +1,3 @@
-use crate::scoped::Scoped;
 use crate::stages::{
     german::{
         machine::{StateMachine, Transition},
@@ -39,7 +38,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let result = stage.substitute("Gruess Gott!");
+/// let result = stage.process("Gruess Gott!");
 /// assert_eq!(result, "Grüß Gott!");
 /// ```
 ///
@@ -52,7 +51,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let result = stage.substitute("Du Suesswassertagtraeumer!");
+/// let result = stage.process("Du Suesswassertagtraeumer!");
 /// assert_eq!(result, "Du Süßwassertagträumer!");
 /// ```
 ///
@@ -80,7 +79,7 @@ use unicode_titlecase::StrTitleCase;
 ///     "Steuerung",     // should not be "Steürung"
 /// ] {
 ///     let stage = GermanStage::default();
-///     let result = stage.substitute(word);
+///     let result = stage.process(word);
 ///     assert_eq!(result, word.to_string());
 /// }
 /// ```
@@ -120,7 +119,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let result = stage.substitute("aEpFeL");
+/// let result = stage.process("aEpFeL");
 ///
 /// // Error: MiXeD CaSe noun without leading capital letter
 /// assert_eq!(result, "aEpFeL");
@@ -137,7 +136,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let result: String = stage.substitute("AePfEl");
+/// let result: String = stage.process("AePfEl");
 ///
 /// // OK: MiXeD CaSe words nouns are okay, *if* starting with a capital letter
 /// assert_eq!(result, "ÄPfEl");
@@ -149,7 +148,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let f = |word: &str| -> String {stage.substitute(word)};
+/// let f = |word: &str| -> String {stage.process(word)};
 ///
 /// // OK: The normal case, adjective lowercase
 /// assert_eq!(f("Voll suess!"), "Voll süß!");
@@ -216,7 +215,7 @@ use unicode_titlecase::StrTitleCase;
 /// use betterletters::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
-/// let result = stage.substitute("\0Schoener    你好 Satz... 👋🏻\r\n\n");
+/// let result = stage.process("\0Schoener    你好 Satz... 👋🏻\r\n\n");
 /// assert_eq!(result, "\0Schöner    你好 Satz... 👋🏻\r\n\n");
 /// ```
 ///
@@ -303,12 +302,12 @@ impl GermanStage {
     /// ] {
     ///     let mut stage = GermanStage::default();
     ///     stage.prefer_replacement();
-    ///     let result = stage.substitute(original);
+    ///     let result = stage.process(original);
     ///     assert_eq!(result, output.to_string());
     ///
     ///    let mut stage = GermanStage::default();
     ///    stage.prefer_original();
-    ///    let result = stage.substitute(original);
+    ///    let result = stage.process(original);
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
@@ -326,18 +325,18 @@ impl GermanStage {
     /// ] {
     ///    let mut stage = GermanStage::default();
     ///    stage.naive();
-    ///    let result = stage.substitute(original);
+    ///    let result = stage.process(original);
     ///    assert_eq!(result, output.to_string());
     ///
     ///    // However, this is overridden by:
     ///    stage.prefer_original();
-    ///    let result = stage.substitute(original);
+    ///    let result = stage.process(original);
     ///    assert_eq!(result, original.to_string());
     ///
     ///    // The usual behavior:
     ///    let mut stage = GermanStage::default();
     ///    stage.sophisticated();
-    ///    let result = stage.substitute(original);
+    ///    let result = stage.process(original);
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
@@ -386,13 +385,9 @@ impl Default for GermanStage {
     }
 }
 
-impl Scoped for GermanStage {}
-
 impl Stage for GermanStage {
-    fn substitute(&self, input: &str) -> String {
+    fn process(&self, input: &str) -> String {
         const INDICATOR: char = '\0';
-
-        debug!("Working on input '{}'", input.escape_debug());
 
         let mut output = String::with_capacity(input.len());
         let mut machine = StateMachine::new();
@@ -448,7 +443,6 @@ impl Stage for GermanStage {
 
         debug!("Final output string is '{}'", output.escape_debug());
 
-        // Ok(output.into())
         output
     }
 }
@@ -732,7 +726,7 @@ mod tests {
     )]
     fn test_substitution(#[case] input: &str, #[case] expected: &str) {
         let stage = GermanStage::default();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
         assert_eq!(result, expected);
     }
 
@@ -759,7 +753,7 @@ mod tests {
     fn test_casing_when_being_naive(#[case] input: &str, #[case] expected: &str) {
         let mut stage = GermanStage::default();
         stage.naive();
-        let result = stage.substitute(input);
+        let result = stage.process(input);
         assert_eq!(result, expected);
     }
 }

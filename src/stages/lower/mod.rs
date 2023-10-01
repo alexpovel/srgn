@@ -1,4 +1,4 @@
-use crate::scoped::Scoped;
+use log::info;
 
 use super::Stage;
 
@@ -7,10 +7,9 @@ use super::Stage;
 #[allow(clippy::module_name_repetitions)]
 pub struct LowerStage {}
 
-impl Scoped for LowerStage {}
-
 impl Stage for LowerStage {
-    fn substitute(&self, input: &str) -> String {
+    fn process(&self, input: &str) -> String {
+        info!("Lowercasing: '{}'", input);
         input.to_lowercase()
     }
 }
@@ -51,6 +50,6 @@ mod tests {
     // Emojis
     #[case("👋\0", "👋\0")]
     fn substitute(#[case] input: &str, #[case] expected: &str) {
-        assert_eq!(LowerStage {}.substitute(input), expected);
+        assert_eq!(LowerStage {}.process(input), expected);
     }
 }

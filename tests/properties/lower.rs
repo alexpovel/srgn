@@ -1,7 +1,10 @@
-use betterletters::stages::LowerStage;
+use betterletters::{
+    scoping::ScopedViewBuilder,
+    stages::{LowerStage, Stage},
+};
 use proptest::prelude::*;
 
-use crate::properties::{apply_with_default_scope, DEFAULT_NUMBER_OF_TEST_CASES};
+use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES))]
@@ -11,6 +14,11 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Lowercase_Letter}*"
     ) {
-        assert_eq!(apply_with_default_scope(&LowerStage::default(), &input), input);
+        let stage = LowerStage::default();
+        let mut view = ScopedViewBuilder::new(&input).build();
+        stage.map(&mut view);
+        let res = view.to_string();
+
+        assert_eq!(res, input);
     }
 }

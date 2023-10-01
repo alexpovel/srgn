@@ -1,4 +1,4 @@
-use crate::scoped::Scoped;
+use log::info;
 
 use super::Stage;
 
@@ -7,10 +7,9 @@ use super::Stage;
 #[allow(clippy::module_name_repetitions)]
 pub struct DeletionStage {}
 
-impl Scoped for DeletionStage {}
-
 impl Stage for DeletionStage {
-    fn substitute(&self, _input: &str) -> String {
+    fn process(&self, input: &str) -> String {
+        info!("Deleting: '{}'", input);
         String::new()
     }
 }

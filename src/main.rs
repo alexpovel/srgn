@@ -1,20 +1,30 @@
-use betterletters::apply;
+use betterletters::scoping::{
+    langs::python::{Python, PythonQuery},
+    literal::Literal,
+    ScopedViewBuildStep, ScoperBuildError,
+};
 #[cfg(feature = "deletion")]
 use betterletters::stages::DeletionStage;
 #[cfg(feature = "german")]
 use betterletters::stages::GermanStage;
 #[cfg(feature = "lower")]
 use betterletters::stages::LowerStage;
+#[cfg(feature = "normalization")]
+use betterletters::stages::NormalizationStage;
 #[cfg(feature = "replace")]
 use betterletters::stages::ReplacementStage;
 #[cfg(feature = "squeeze")]
 use betterletters::stages::SqueezeStage;
+#[cfg(feature = "titlecase")]
+use betterletters::stages::TitlecaseStage;
 #[cfg(feature = "upper")]
 use betterletters::stages::UpperStage;
 #[cfg(feature = "symbols")]
 use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
+use betterletters::{apply, scoping::regex::Regex, Stage};
+// use cli::PythonQuery;
 use log::{debug, info, warn, LevelFilter};
-use std::io::{self, BufReader, Error};
+use std::io::{self, Error, Read, Write};
 
 fn main() -> Result<(), Error> {
     let args = cli::Cli::init();
@@ -27,18 +37,81 @@ fn main() -> Result<(), Error> {
 
     info!("Launching app with args: {:?}", args);
 
-    let mut stages: Vec<Box<dyn betterletters::Stage>> = Vec::new();
+    let scopers = match assemble_scopers(&args) {
+        Ok(s) => s,
+        Err(e) => match e {
+            // Kinda abusive of these `io::ErrorKind`s...
+            ScoperBuildError::RegexError(r) => {
+                return Err(Error::new(io::ErrorKind::InvalidInput, r))
+            }
+            ScoperBuildError::LiteralError(l) => {
+                return Err(Error::new(io::ErrorKind::InvalidInput, l))
+            }
+            ScoperBuildError::EmptyScope => {
+                return Err(Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "Empty scope is not allowed",
+                ))
+            }
+        },
+    };
 
-    if let Some(replacement) = args.composable_stages.replace {
-        stages.push(Box::new(ReplacementStage::new(replacement)));
+    let stages = assemble_stages(&args).map_err(|e| Error::new(io::ErrorKind::InvalidInput, e))?;
+
+    let mut buf = String::new();
+    std::io::stdin().read_to_string(&mut buf)?;
+
+    let result = apply(&buf, &scopers, &stages)?;
+
+    let mut destination = io::stdout();
+    destination.write_all(result.as_bytes())?;
+
+    info!("Done, exiting");
+    Ok(())
+}
+
+fn assemble_scopers(
+    args: &cli::Cli,
+) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, ScoperBuildError> {
+    let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
+
+    if let Some(python) = args.languages_scopes.python.clone() {
+        if let Some(premade) = python.python {
+            let query = PythonQuery::Premade(premade);
+
+            scopers.push(Box::new(Python::new(query)));
+        } else if let Some(custom) = python.python_query {
+            let query = PythonQuery::Custom(custom);
+
+            scopers.push(Box::new(Python::new(query)));
+        }
+    }
+
+    if args.options.literal_string {
+        scopers.push(Box::new(Literal::try_from(args.scope.clone())?));
+    } else {
+        scopers.push(Box::new(Regex::try_from(args.scope.clone())?));
+    }
+
+    Ok(scopers)
+}
+
+fn assemble_stages(args: &cli::Cli) -> Result<Vec<Box<dyn Stage>>, String> {
+    let mut stages: Vec<Box<dyn Stage>> = Vec::new();
+
+    #[cfg(feature = "replace")]
+    if let Some(replacement) = args.composable_stages.replace.clone() {
+        stages.push(Box::new(ReplacementStage::try_from(replacement)?));
         debug!("Loaded stage: Replacement");
     }
 
+    #[cfg(feature = "squeeze")]
     if args.standalone_stages.squeeze {
         stages.push(Box::<SqueezeStage>::default());
         debug!("Loaded stage: Squeeze");
     }
 
+    #[cfg(feature = "german")]
     if args.composable_stages.german {
         stages.push(Box::new(GermanStage::new(
             // Smell? Bug if bools swapped.
@@ -48,6 +121,7 @@ fn main() -> Result<(), Error> {
         debug!("Loaded stage: German");
     }
 
+    #[cfg(feature = "symbols")]
     if args.composable_stages.symbols {
         if args.options.invert {
             stages.push(Box::<SymbolsInversionStage>::default());
@@ -58,32 +132,42 @@ fn main() -> Result<(), Error> {
         }
     }
 
+    #[cfg(feature = "deletion")]
     if args.standalone_stages.delete {
         stages.push(Box::<DeletionStage>::default());
         debug!("Loaded stage: Deletion");
     }
 
+    #[cfg(feature = "upper")]
     if args.composable_stages.upper {
         stages.push(Box::<UpperStage>::default());
         debug!("Loaded stage: Upper");
     }
 
+    #[cfg(feature = "lower")]
     if args.composable_stages.lower {
         stages.push(Box::<LowerStage>::default());
         debug!("Loaded stage: Lower");
     }
 
-    let mut source = BufReader::new(io::stdin());
-    let mut destination = io::stdout();
+    #[cfg(feature = "titlecase")]
+    if args.composable_stages.titlecase {
+        stages.push(Box::<TitlecaseStage>::default());
+        debug!("Loaded stage: Titlecase");
+    }
+
+    #[cfg(feature = "normalization")]
+    if args.composable_stages.normalize {
+        stages.push(Box::<NormalizationStage>::default());
+        debug!("Loaded stage: Normalization");
+    }
 
     if stages.is_empty() {
         // Doesn't hurt, but warn loudly
         warn!("No stages loaded, will return input unchanged");
     }
 
-    apply(&stages, &args.scope.into(), &mut source, &mut destination)?;
-    info!("Done, exiting");
-    Ok(())
+    Ok(stages)
 }
 
 /// To the default log level found in the environment, adds the requested additional
@@ -110,8 +194,11 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::GLOBAL_SCOPE;
-    use clap::{ArgAction, Parser};
+    use betterletters::{
+        scoping::langs::python::{CustomPythonQuery, PremadePythonQuery},
+        GLOBAL_SCOPE,
+    };
+    use clap::{builder::ArgPredicate, ArgAction, Parser};
 
     /// Main CLI entrypoint.
     ///
@@ -122,14 +209,21 @@ mod cli {
     pub(super) struct Cli {
         /// Scope to apply to, as a regular expression pattern
         ///
+        /// If string literal mode is requested, will be interpreted as a literal string.
+        ///
         /// Stages will apply their transformations within this scope only.
         ///
         /// The default is the global scope, matching the entire input.
         ///
         /// Where that default is meaningless (e.g., deletion), this argument is
         /// _required_.
-        #[arg(value_name = "SCOPE", default_value = GLOBAL_SCOPE, verbatim_doc_comment)]
-        pub scope: regex::Regex,
+        #[arg(
+            value_name = "SCOPE",
+            default_value = GLOBAL_SCOPE,
+            verbatim_doc_comment,
+            default_value_if("literal_string", ArgPredicate::IsPresent, None)
+        )]
+        pub scope: String,
 
         #[command(flatten)]
         pub composable_stages: ComposableStages,
@@ -140,6 +234,10 @@ mod cli {
         #[command(flatten)]
         pub options: GlobalOptions,
 
+        #[command(flatten)]
+        pub languages_scopes: LanguageScopes,
+
+        #[cfg(feature = "german")]
         #[command(flatten)]
         pub german_options: GermanStageOptions,
     }
@@ -164,8 +262,13 @@ mod cli {
         ///
         /// These may still be passed, but will be ignored for inversion and applied
         /// normally
+        #[cfg(feature = "symbols")]
         #[arg(short, long, env, requires = "symbols", verbatim_doc_comment)]
         pub invert: bool,
+        /// Do not interpret the scope as a regex. Instead, interpret it as a literal
+        /// string. Will require a scope to be passed.
+        #[arg(short('L'), long, env, verbatim_doc_comment)]
+        pub literal_string: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
@@ -189,14 +292,25 @@ mod cli {
         /// Specially treated stage for ergonomics and compatibility with `tr`.
         ///
         /// If given, will run before any other stage.
+        #[cfg(feature = "replace")]
         #[arg(value_name = "REPLACEMENT", env, verbatim_doc_comment)]
         pub replace: Option<String>,
         /// Uppercase scope
+        #[cfg(feature = "upper")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub upper: bool,
         /// Lowercase scope
+        #[cfg(feature = "lower")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub lower: bool,
+        /// Titlecase scope
+        #[cfg(feature = "titlecase")]
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub titlecase: bool,
+        /// Normalize (Normalization Form D) scope, and throw away marks
+        #[cfg(feature = "normalization")]
+        #[arg(short, long, env, verbatim_doc_comment)]
+        pub normalize: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
         /// 'Abenteuergrüße'
         ///
@@ -208,11 +322,13 @@ mod cli {
         /// Words legally containing alternative spellings are not modified.
         ///
         /// Words require correct spelling to be detected.
+        #[cfg(feature = "german")]
         #[arg(short, long, verbatim_doc_comment)]
         pub german: bool,
         /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
         ///
         /// Helps translate 'ASCII art' into native Unicode representations.
+        #[cfg(feature = "symbols")]
         #[arg(short = 'S', long, verbatim_doc_comment)]
         pub symbols: bool,
     }
@@ -226,6 +342,7 @@ mod cli {
         /// Cannot be used with any other stage: no point in deleting and performing any
         /// other action. Sibling stages would either receive empty input or have their
         /// work wiped.
+        #[cfg(feature = "deletion")]
         #[arg(
             short,
             long,
@@ -242,10 +359,32 @@ mod cli {
         /// 'A1337B' -> 'A1B' for a scope of '\d+' (no '?' required).
         ///
         /// A greedy scope ('\d+?') would match all of '1337' and replace nothing.
+        #[cfg(feature = "squeeze")]
         #[arg(short, long, env, requires = "scope", verbatim_doc_comment)]
         pub squeeze: bool,
     }
 
+    #[derive(Parser, Debug)]
+    #[group(required = false, multiple = false)]
+    #[command(next_help_heading = "Language scopes")]
+    pub(super) struct LanguageScopes {
+        #[command(flatten)]
+        pub python: Option<PythonScope>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct PythonScope {
+        /// Scope Python code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub python: Option<PremadePythonQuery>,
+
+        /// Scope Python code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub python_query: Option<CustomPythonQuery>,
+    }
+
+    #[cfg(feature = "german")]
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (german)")]

@@ -1,8 +1,11 @@
-use betterletters::{scoped::Scope, stages::SqueezeStage};
+use betterletters::{
+    scoping::{regex::Regex, ScopedViewBuilder},
+    stages::SqueezeStage,
+    RegexPattern, Stage,
+};
 use proptest::prelude::*;
-use regex::Regex;
 
-use crate::properties::{apply, DEFAULT_NUMBER_OF_TEST_CASES};
+use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES))]
@@ -12,7 +15,14 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Any}*AA\p{Any}*"
     ) {
-        let scope = Scope::from(Regex::new("A").unwrap());
-        assert!(apply(&SqueezeStage::default(), &input, scope).len() < input.len());
+        let stage = SqueezeStage::default();
+        let mut view = ScopedViewBuilder::new(&input).explode_from_scoper(
+            &Regex::new(RegexPattern::new("A").unwrap())
+        ).build();
+
+        stage.map(&mut view);
+        let res = view.to_string();
+
+        assert!(res.len() < input.len());
     }
 }

@@ -1,49 +1,41 @@
 use super::Stage;
-use crate::scoped::{Scope, ScopeStatus::InScope, Scoped};
-use regex::Regex;
+use crate::scoping::{Scope, ScopedView};
+use log::{debug, trace};
 
 /// Squeezes all consecutive matched scopes into a single occurrence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 #[allow(clippy::module_name_repetitions)]
 pub struct SqueezeStage {}
 
-impl Scoped for SqueezeStage {}
-
 impl Stage for SqueezeStage {
-    fn substitute(&self, _input: &str) -> String {
-        // Refer to `apply`, which this stage *overrides*.
-        unimplemented!("Squeezing works without substituting")
+    fn process(&self, _input: &str) -> String {
+        unimplemented!("Stage works without processing individual input")
     }
 
-    fn apply(&self, input: &str, scope: &Scope) -> String {
-        let mut out = String::with_capacity(input.len());
+    fn map<'a, 'b>(&self, view: &'b mut ScopedView<'a>) -> &'b mut ScopedView<'a> {
+        debug!("Squeezing input by collapsing all consecutive in-scope occurrences.");
+        let v = view.into_inner_mut();
 
-        let scope = Scope::from(
-            Regex::new(&format!(r"(?U){}", Regex::from(scope)))
-                .expect("should be able to prepend (?U) to pattern"),
-        );
+        let mut prev_was_in = false;
+        v.retain(|scope| {
+            let keep = !(prev_was_in && matches!(scope, Scope::In(_)));
+            prev_was_in = matches!(scope, Scope::In(_));
+            trace!("keep: {}, scope: {:?}", keep, scope);
+            keep
+        });
 
-        let mut previous = None;
-        for scope in self.split_by_scope(input, &scope) {
-            if let InScope(_) = scope {
-                if let Some(InScope(_)) = previous {
-                    continue;
-                }
-            }
+        debug!("Squeezed: {:?}", v);
 
-            out.push_str((&scope).into());
-            previous = Some(scope);
-        }
-
-        out
+        view
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
-
     use super::*;
+    use crate::scoping::ScopedViewBuilder;
+    use crate::RegexPattern;
+    use rstest::rstest;
 
     #[rstest]
     // Pattern only
@@ -99,45 +91,33 @@ mod tests {
     #[case("ababa", r"aba", "ababa")]
     #[case("ababab", r"aba", "ababab")]
     #[case("abababa", r"aba", "abababa")]
-    //
     #[case("aba", r"aba", "aba")]
     #[case("abaaba", r"aba", "aba")]
     //
-    // Turns greedy quantifiers into non-greedy ones automatically
-    #[case("ab", r"\s+", "ab")]
-    #[case("a b", r"\s+", "a b")]
-    #[case("a\t\tb", r"\s+", "a\tb")]
-    //
-    // Turns greedy quantifiers into non-greedy ones automatically, even if user
-    // specified themselves (extra option ignored)
-    #[case("ab", r"(?U)\s+", "ab")]
-    #[case("a b", r"(?U)\s+", "a b")]
-    #[case("a\t\tb", r"(?U)\s+", "a\tb")]
-    //
-    // Inversion works (if user specified non-greedy manually, it becomes greedy). `+`
-    // and `*` will make the concept of 'consecutive matches' meaningless!
+    // Requires non-greedy matches for meaningful results
     #[case("ab", r"\s+?", "ab")]
     #[case("a b", r"\s+?", "a b")]
-    #[case("a\t\tb", r"\s+?", "a\t\tb")]
-    #[case("a\t\t\t\tb", r"\s+?", "a\t\t\t\tb")]
+    #[case("a\t\tb", r"\s+?", "a\tb")]
+    #[case("a\t\t  b", r"\s+?", "a\tb")]
     //
     // Deals with more complex patterns
     #[case("ab", "", "ab")] // Matches nothing
     //
     #[case("ab", r"[ab]", "a")]
-    #[case("ab", r"[ab]+", "a")]
-    #[case("ab", r"[ab]+?", "ab")]
+    #[case("ab", r"[ab]+", "ab")]
+    #[case("ab", r"[ab]+?", "a")]
     //
     #[case("abab", r"\D", "a")]
     //
-    #[case("abab", r"(ab){2}", "abab")]
-    #[case("ababa", r"(ab){2}", "ababa")]
-    #[case("ababab", r"(ab){2}", "ababab")]
-    #[case("abababa", r"(ab){2}", "abababa")]
-    #[case("abababab", r"(ab){2}", "abab")]
-    #[case("ababababa", r"(ab){2}", "ababa")]
-    #[case("ababababab", r"(ab){2}", "ababab")]
-    #[case("abababababab", r"(ab){2}", "abab")]
+    // Builds up properly; need non-capturing group
+    #[case("abab", r"(?:ab){2}", "abab")]
+    #[case("ababa", r"(?:ab){2}", "ababa")]
+    #[case("ababab", r"(?:ab){2}", "ababab")]
+    #[case("abababa", r"(?:ab){2}", "abababa")]
+    #[case("abababab", r"(?:ab){2}", "abab")]
+    #[case("ababababa", r"(?:ab){2}", "ababa")]
+    #[case("ababababab", r"(?:ab){2}", "ababab")]
+    #[case("abababababab", r"(?:ab){2}", "abab")]
     //
     #[case("Anything whatsoever gets rEkT", r".", "A")]
     #[case(
@@ -163,10 +143,15 @@ mod tests {
         r" ",
         " dirty Strings \t with \t\t messed up whitespace\n\n\n"
     )]
-    fn test_squeeze(#[case] input: &str, #[case] pattern: Regex, #[case] expected: &str) {
+    fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
         let stage = SqueezeStage {};
 
-        let result = stage.apply(input, &Scope::new(pattern));
+        let builder = ScopedViewBuilder::new(input)
+            .explode_from_scoper(&crate::scoping::regex::Regex::new(pattern.clone()));
+        let mut view = builder.build();
+
+        stage.map(&mut view);
+        let result = view.to_string();
 
         assert_eq!(result, expected);
     }
