@@ -169,6 +169,7 @@ dependencies = [
  "titlecase",
  "tree-sitter",
  "tree-sitter-python",
+ "tree-sitter-typescript",
  "unescape",
  "unicode-normalization",
  "unicode_categories",
@@ -1847,6 +1848,16 @@ name = "tree-sitter-python"
 version = "0.20.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6c93b1b1fbd0d399db3445f51fd3058e43d0b4dcff62ddbdb46e66550978aa5"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-typescript"
+version = "0.20.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "079c695c32d39ad089101c66393aeaca30e967fba3486a91f573d2f0e12d290a"
 dependencies = [
  "cc",
  "tree-sitter",

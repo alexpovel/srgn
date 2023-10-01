@@ -52,6 +52,41 @@ def GNU_says_moo():
 
 No `gnu`s other than docstring ones were harmed in the process.
 
+#### Assigning `TODO`s
+
+Perhaps you're using a system of `TODO` notes in comments:
+
+```typescript todo.ts
+class TODOApp {
+    // TODO app for writing TODO lists
+    addTodo(todo: TODO): void {
+        // TODO: everything, actually 🤷‍♀️
+    }
+}
+```
+
+and *usually* assign people to each note. It's possible to automate assigning yourself
+to every unassigned note (lucky you!) using
+
+```bash
+cat todo.ts | betterletters --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
+```
+
+which in this case gives
+
+```typescript output-todo.ts
+class TODOApp {
+    // TODO app for writing TODO lists
+    addTodo(todo: TODO): void {
+        // TODO(@poorguy): everything, actually 🤷‍♀️
+    }
+}
+```
+
+Notice the [positive lookahead](https://www.regular-expressions.info/lookaround.html) of
+`(?=:)`, ensuring an actual `TODO` note is hit (`TODO:`). Otherwise, the other `TODO`s
+mentioned around the comments would be matched as well.
+
 #### Converting `print` calls to proper `logging` (Python)
 
 Say there's code making liberal use of `print`:

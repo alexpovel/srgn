@@ -6,6 +6,7 @@ pub use tree_sitter::{
 };
 
 pub mod python;
+pub mod typescript;
 
 #[derive(Debug)]
 pub struct Language<Q> {

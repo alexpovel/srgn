@@ -1,5 +1,8 @@
 use betterletters::scoping::{
-    langs::python::{Python, PythonQuery},
+    langs::{
+        python::{Python, PythonQuery},
+        typescript::{TypeScript, TypeScriptQuery},
+    },
     literal::Literal,
     ScopedViewBuildStep, ScoperBuildError,
 };
@@ -84,6 +87,18 @@ fn assemble_scopers(
             let query = PythonQuery::Custom(custom);
 
             scopers.push(Box::new(Python::new(query)));
+        }
+    }
+
+    if let Some(typescript) = args.languages_scopes.typescript.clone() {
+        if let Some(premade) = typescript.typescript {
+            let query = TypeScriptQuery::Premade(premade);
+
+            scopers.push(Box::new(TypeScript::new(query)));
+        } else if let Some(custom) = typescript.typescript_query {
+            let query = TypeScriptQuery::Custom(custom);
+
+            scopers.push(Box::new(TypeScript::new(query)));
         }
     }
 
@@ -195,7 +210,10 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 
 mod cli {
     use betterletters::{
-        scoping::langs::python::{CustomPythonQuery, PremadePythonQuery},
+        scoping::langs::{
+            python::{CustomPythonQuery, PremadePythonQuery},
+            typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
+        },
         GLOBAL_SCOPE,
     };
     use clap::{builder::ArgPredicate, ArgAction, Parser};
@@ -370,6 +388,8 @@ mod cli {
     pub(super) struct LanguageScopes {
         #[command(flatten)]
         pub python: Option<PythonScope>,
+        #[command(flatten)]
+        pub typescript: Option<TypeScriptScope>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -382,6 +402,18 @@ mod cli {
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub python_query: Option<CustomPythonQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct TypeScriptScope {
+        /// Scope TypeScript code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub typescript: Option<PremadeTypeScriptQuery>,
+
+        /// Scope TypeScript code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub typescript_query: Option<CustomTypeScriptQuery>,
     }
 
     #[cfg(feature = "german")]
