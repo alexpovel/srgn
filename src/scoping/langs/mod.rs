@@ -5,6 +5,7 @@ pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
 };
 
+pub mod csharp;
 pub mod python;
 pub mod typescript;
 

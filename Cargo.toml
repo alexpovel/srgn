@@ -37,6 +37,7 @@ unicode-normalization = "0.1.22"
 unicode_categories = "0.1.1"
 enum-iterator = "1.4.1"
 tree-sitter-typescript = "0.20.2"
+tree-sitter-c-sharp = "0.20.0"
 
 [features]
 default = ["all"]

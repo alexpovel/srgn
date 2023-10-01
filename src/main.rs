@@ -1,5 +1,6 @@
 use betterletters::scoping::{
     langs::{
+        csharp::{CSharp, CSharpQuery},
         python::{Python, PythonQuery},
         typescript::{TypeScript, TypeScriptQuery},
     },
@@ -99,6 +100,18 @@ fn assemble_scopers(
             let query = TypeScriptQuery::Custom(custom);
 
             scopers.push(Box::new(TypeScript::new(query)));
+        }
+    }
+
+    if let Some(csharp) = args.languages_scopes.csharp.clone() {
+        if let Some(premade) = csharp.csharp {
+            let query = CSharpQuery::Premade(premade);
+
+            scopers.push(Box::new(CSharp::new(query)));
+        } else if let Some(custom) = csharp.csharp_query {
+            let query = CSharpQuery::Custom(custom);
+
+            scopers.push(Box::new(CSharp::new(query)));
         }
     }
 
@@ -211,6 +224,7 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 mod cli {
     use betterletters::{
         scoping::langs::{
+            csharp::{CustomCSharpQuery, PremadeCSharpQuery},
             python::{CustomPythonQuery, PremadePythonQuery},
             typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
         },
@@ -390,6 +404,8 @@ mod cli {
         pub python: Option<PythonScope>,
         #[command(flatten)]
         pub typescript: Option<TypeScriptScope>,
+        #[command(flatten)]
+        pub csharp: Option<CSharpScope>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -414,6 +430,18 @@ mod cli {
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub typescript_query: Option<CustomTypeScriptQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct CSharpScope {
+        /// Scope CSharp code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub csharp: Option<PremadeCSharpQuery>,
+
+        /// Scope CSharp code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub csharp_query: Option<CustomCSharpQuery>,
     }
 
     #[cfg(feature = "german")]

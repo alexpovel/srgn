@@ -370,16 +370,24 @@ mod tests {
                             // `try_get_matches` with it, but cannot/don't want to
                             // expose (`pub`) that.
                             tag("--"),
-                            alt((tag("python"), tag("python-query"))),
+                            alt((
+                                tag("python"),
+                                tag("python-query"),
+                                tag("typescript"),
+                                tag("typescript-query"),
+                                tag("csharp"),
+                                tag("csharp-query"),
+                            )),
                         ),
                         cut(
                             // `cut`: should we get here, and not succeed, parsing has
                             // to fail entirely. Else we continue with bad data.
-                            preceded(
+                            delimited(
                                 space1,
                                 // Quoting always is technically overkill, but much
                                 // simpler and safer
                                 parse_quoted,
+                                space1,
                             ),
                         ),
                     )),
