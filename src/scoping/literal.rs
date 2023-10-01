@@ -8,13 +8,15 @@ pub struct Literal(String);
 
 #[derive(Debug)]
 pub enum LiteralError {
-    Inunescapable(String),
+    InvalidEscapeSequences(String),
 }
 
 impl fmt::Display for LiteralError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Inunescapable(literal) => write!(f, "Could not unescape literal '{literal}'"),
+            Self::InvalidEscapeSequences(literal) => {
+                write!(f, "Contains invalid escape sequences: '{literal}'")
+            }
         }
     }
 }
@@ -26,7 +28,7 @@ impl TryFrom<String> for Literal {
 
     fn try_from(literal: String) -> Result<Self, Self::Error> {
         let unescaped =
-            unescape(&literal).ok_or(LiteralError::Inunescapable(literal.to_string()))?;
+            unescape(&literal).ok_or(LiteralError::InvalidEscapeSequences(literal.to_string()))?;
 
         Ok(Self(unescaped))
     }
