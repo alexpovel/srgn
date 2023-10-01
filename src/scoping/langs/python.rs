@@ -1,7 +1,7 @@
 use super::{CodeQuery, Language, LanguageScopedViewBuildStep, TSLanguage, TSQuery};
 use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
 use clap::ValueEnum;
-use std::fmt::Debug;
+use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
 pub type Python = Language<PythonQuery>;
@@ -35,12 +35,12 @@ impl From<PremadePythonQuery> for TSQuery {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomPythonQuery(String);
 
-impl TryFrom<String> for CustomPythonQuery {
-    type Error = QueryError;
+impl FromStr for CustomPythonQuery {
+    type Err = QueryError;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match TSQuery::new(Python::lang(), &value) {
-            Ok(_) => Ok(Self(value.to_string())),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match TSQuery::new(Python::lang(), s) {
+            Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
     }

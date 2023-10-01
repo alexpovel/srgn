@@ -1,4 +1,5 @@
 use super::{ScopedViewBuildStep, ScopedViewBuilder};
+use std::str::FromStr;
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
 };
@@ -19,7 +20,7 @@ impl<Q> Language<Q> {
 #[derive(Debug, Clone)]
 pub enum CodeQuery<C, P>
 where
-    C: TryFrom<String> + Into<TSQuery>,
+    C: FromStr + Into<TSQuery>,
     P: Into<TSQuery>,
 {
     Custom(C),
@@ -28,7 +29,7 @@ where
 
 impl<C, P> From<CodeQuery<C, P>> for TSQuery
 where
-    C: TryFrom<String> + Into<TSQuery>,
+    C: FromStr + Into<TSQuery>,
     P: Into<TSQuery>,
 {
     fn from(value: CodeQuery<C, P>) -> Self {

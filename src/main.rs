@@ -199,7 +199,6 @@ mod cli {
         GLOBAL_SCOPE,
     };
     use clap::{builder::ArgPredicate, ArgAction, Parser};
-    use tree_sitter::QueryError;
 
     /// Main CLI entrypoint.
     ///
@@ -381,12 +380,7 @@ mod cli {
         pub python: Option<PremadePythonQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
-        #[arg(
-            long,
-            env,
-            verbatim_doc_comment,
-            value_parser = try_into_query::<CustomPythonQuery>,
-        )]
+        #[arg(long, env, verbatim_doc_comment)]
         pub python_query: Option<CustomPythonQuery>,
     }
 
@@ -417,13 +411,6 @@ mod cli {
         pub(super) fn init() -> Self {
             Self::parse()
         }
-    }
-
-    fn try_into_query<T>(value: &str) -> Result<T, String>
-    where
-        T: TryFrom<String, Error = QueryError>,
-    {
-        T::try_from(value.to_string()).map_err(|e| e.to_string())
     }
 }
 
