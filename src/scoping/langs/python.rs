@@ -20,9 +20,15 @@ impl From<PremadePythonQuery> for TSQuery {
             match value {
                 PremadePythonQuery::Comments => "(comment) @comment",
                 PremadePythonQuery::DocStrings => {
+                    // Triple-quotes are also used for multi-line strings. So look only
+                    // for stand-alone expressions, which are not part of some variable
+                    // assignment.
                     r#"
-                    ((string) @docstring
-                        (#match? @docstring "^\"\"\"")
+                    (
+                        (expression_statement
+                            (string) @string
+                            (#match? @string "^\"\"\"")
+                        )
                     )
                     "#
                 }

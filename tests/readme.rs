@@ -13,13 +13,17 @@ mod tests {
             alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending,
             none_of, space0, space1,
         },
-        combinator::{cut, map},
+        combinator::{cut, map, opt},
         error::ParseError,
         multi::{many0, many1, separated_list1},
         sequence::{delimited, preceded, tuple},
         Finish, IResult,
     };
-    use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+    use std::{
+        cell::RefCell,
+        collections::{HashMap, VecDeque},
+        rc::Rc,
+    };
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
@@ -102,6 +106,8 @@ mod tests {
     enum Program {
         /// The `echo` program, used to generate stdin for the program under test.
         Echo(Invocation),
+        /// The `cat` program, used to generate stdin for the program under test.
+        Cat(Invocation),
         /// The binary under test itself.
         Self_(Invocation),
     }
@@ -120,6 +126,7 @@ mod tests {
 
                     Self::Echo(invocation)
                 }
+                "cat" => Self::Cat(invocation),
                 PROGRAM_NAME => Self::Self_(invocation),
                 _ => panic!("Unsupported program name: {}", name),
             }
@@ -128,6 +135,7 @@ mod tests {
         fn name(&self) -> &str {
             match self {
                 Self::Echo(_) => "echo",
+                Self::Cat(_) => "cat",
                 Self::Self_(_) => PROGRAM_NAME,
             }
         }
@@ -135,6 +143,7 @@ mod tests {
         fn stdout(&self) -> Option<String> {
             match self {
                 Self::Echo(inv) => inv.stdout.clone(),
+                Self::Cat(inv) => inv.stdout.clone(),
                 Self::Self_(inv) => inv.stdout.clone(),
             }
         }
@@ -147,7 +156,9 @@ mod tests {
             let name = prog.name().to_string();
 
             match prog {
-                Program::Echo(_) => Err("Echo cannot be run, only used to generate stdin"),
+                Program::Echo(_) | Program::Cat(_) => {
+                    Err("Cannot be run, only used to generate stdin")
+                }
                 Program::Self_(inv) => {
                     let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
 
@@ -195,35 +206,78 @@ mod tests {
         /// The first program is specially treated, and needs to be able to produce some
         /// stdin. The passed `stdout` is the expected output of the last program, aka
         /// the entire pipe.
-        fn assemble(chain: impl Iterator<Item = Program>, stdout: &str) -> Result<Self, &str> {
+        fn assemble(
+            chain: impl Iterator<Item = Program>,
+            stdout: Option<&str>,
+            snippets: Snippets,
+        ) -> Result<Self, &str> {
             let mut chain = chain.collect::<VecDeque<_>>();
 
-            let stdin = match chain.pop_front() {
-                Some(p) => match p {
-                    Program::Echo(mut inv) => {
-                        inv.args.pop().ok_or("Echo should have an argument")?
-                    }
-                    _ => return Err("First command should be able to produce stdin."),
-                },
-                None => {
-                    return Err("Should have at least one program in pipe");
+            let first = chain
+                .pop_front()
+                .ok_or("Should have at least one program in pipe")?;
+
+            let stdin = match &first {
+                Program::Echo(inv) => inv
+                    .args
+                    .first()
+                    .ok_or("Echo should have an argument")?
+                    .to_string(),
+                Program::Cat(inv) => {
+                    let file_name = inv.args.first().ok_or("Cat should have an argument")?;
+
+                    snippets
+                        .get(&file_name.0)
+                        .ok_or("Snippet should be present")?
+                        .original
+                        .clone()
+                        .ok_or("Snippet should have an original")?
                 }
+                _ => return Err("First command should be able to produce stdin."),
             };
 
             match chain
                 .front_mut()
                 .expect("No second program to assemble with")
             {
-                Program::Echo(_) => return Err("Echo should not be in the middle of a pipe"),
+                Program::Echo(_) | Program::Cat(_) => {
+                    return Err("Stdin-generating program should not be in the middle of a pipe")
+                }
                 Program::Self_(inv) => {
-                    inv.stdin = Some(stdin.to_string());
+                    inv.stdin = Some(stdin);
                 }
             }
 
             match chain.back_mut().expect("No last program to assemble with") {
-                Program::Echo(_) => return Err("Echo should not be at the end of a pipe"),
+                Program::Echo(_) | Program::Cat(_) => {
+                    return Err("Stdin-generating program should not be at the end of a pipe")
+                }
                 Program::Self_(inv) => {
-                    inv.stdout = Some(stdout.into());
+                    inv.stdout = if let Program::Cat(inv) = first {
+                        assert!(
+                            stdout.is_none(),
+                            "Cat output should be given as extra snippet, not inline"
+                        );
+
+                        Some(
+                            snippets
+                                .get(&inv.args.first().expect("Cat should have an argument").0)
+                                .ok_or("Snippet should be present")?
+                                .output
+                                .clone()
+                                .expect("Snippet should have an output"),
+                        )
+                    } else {
+                        Some(
+                            stdout
+                                .expect("Stdout should be given for non-`cat`-fed program")
+                                // No patience for hard-to-diff, fiddly, invisible
+                                // whitespace issues, even though it would be "more
+                                // correct"
+                                .trim_end()
+                                .to_string(),
+                        )
+                    }
                 }
             }
 
@@ -259,9 +313,12 @@ mod tests {
     /// $ echo 'some other input' | program arg1
     /// some other output
     /// ```
-    fn parse_piped_programs_with_prompt_and_output(input: &str) -> IResult<&str, PipedPrograms> {
+    fn parse_piped_programs_with_prompt_and_output(
+        input: &str,
+        snippets: Snippets,
+    ) -> IResult<&str, PipedPrograms> {
         let prompt = '$';
-        let (input, _) = char(prompt)(input)?;
+        let (input, _) = opt(char(prompt))(input)?;
         let (input, _) = space0(input)?;
 
         let (input, programs) = parse_piped_programs(input)?;
@@ -272,14 +329,12 @@ mod tests {
         let (input, _) = line_ending(input)?;
 
         // Parse stdout; anything up to the next prompt.
-        let (input, stdout) = is_not(prompt.to_string().as_str())(input)?;
+        let (input, stdout) = opt(is_not(prompt.to_string().as_str()))(input)?;
         eprintln!("Parsed stdout: {:#?}", stdout);
-
-        let stdout = stdout.trim_end(); // Removes flakiness and hard-to-diff stuff
 
         Ok((
             input,
-            PipedPrograms::assemble(programs.into_iter(), stdout)
+            PipedPrograms::assemble(programs.into_iter(), stdout, snippets)
                 .expect("Should be able to assemble"),
         ))
     }
@@ -365,14 +420,31 @@ mod tests {
                     },
                 ),
             ))),
-            many0(alt((map(
-                // Quoted, positional arguments
-                maybe_ws(parse_quoted),
-                |s: &str| {
-                    inv.borrow_mut().args.push(s.into());
-                    s
-                },
-            ),))),
+            many0(alt((
+                map(
+                    // Regular, quoted positional args
+                    maybe_ws(parse_quoted),
+                    |s: &str| {
+                        inv.borrow_mut().args.push(s.into());
+
+                        // Owned because type needs to align with other list members
+                        s.to_owned()
+                    },
+                ),
+                map(
+                    // There's also file names, which cannot occur quoted in shell
+                    // contexts
+                    tuple((ascii_alphanumeric1, char('.'), ascii_alphanumeric1)),
+                    |parts: (&str, char, &str)| {
+                        let (stem, sep, suffix) = parts;
+                        let file_name = format!("{}{}{}", stem, sep, suffix);
+
+                        inv.borrow_mut().args.push(file_name.as_str().into());
+
+                        file_name
+                    },
+                ),
+            ))),
         ))(input)?;
 
         let (input, _) = space0(input)?;
@@ -386,8 +458,8 @@ mod tests {
     }
 
     /// Parses multiple pairs of 'command and output' into a list of them.
-    fn parse_code_blocks(input: &str) -> IResult<&str, Vec<PipedPrograms>> {
-        many1(parse_piped_programs_with_prompt_and_output)(input)
+    fn parse_code_blocks(input: &str, snippets: Snippets) -> IResult<&str, Vec<PipedPrograms>> {
+        many1(|input| parse_piped_programs_with_prompt_and_output(input, snippets.clone()))(input)
     }
 
     /// https://stackoverflow.com/a/58907488/11477374
@@ -399,38 +471,96 @@ mod tests {
         Ok(res)
     }
 
-    fn get_all_commands_under_test_pipes_from_readme() -> Vec<PipedPrograms> {
-        let arena = Arena::new();
+    #[derive(Debug, Clone, PartialEq, Eq, Default)]
+    struct Snippet {
+        original: Option<String>,
+        output: Option<String>,
+    }
 
-        let root = parse_document(
-            &arena,
-            include_str!("../README.md"),
-            &ComrakOptions::default(),
-        );
+    impl Snippet {
+        fn join(self, other: Self) -> Self {
+            Self {
+                original: Some(
+                    self.original
+                        .or(other.original)
+                        .expect("After joining, snippet should have an original"),
+                ),
+                output: Some(
+                    self.output
+                        .or(other.output)
+                        .expect("After joining, snippet should have an output"),
+                ),
+            }
+        }
+    }
 
-        let mut pipes = Vec::new();
-        let console = String::from("console");
+    type Snippets = HashMap<String, Snippet>;
 
-        root.descendants().for_each(|node| {
-            let value = node.to_owned().data.borrow().value.clone();
+    fn get_readme_snippets() -> Snippets {
+        let mut snippets = HashMap::new();
 
-            if let NodeValue::CodeBlock(NodeCodeBlock { info, literal, .. }) = value {
-                if info == console {
-                    let (_, commands) = parse_code_blocks(&literal)
-                        .finish()
-                        .expect("Anything in `console` should be parseable as a command");
+        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
+            if let Some((_language, mut file_name)) = ncb.info.split_once(' ') {
+                let mut snippet = Snippet::default();
 
-                    pipes.extend(commands);
+                file_name = match file_name.strip_prefix("output-") {
+                    Some(stripped_file_name) => {
+                        snippet.output = Some(ncb.literal);
+                        stripped_file_name
+                    }
+                    None => {
+                        snippet.original = Some(ncb.literal);
+                        file_name
+                    }
+                };
+
+                if let Some((_, other)) = snippets.remove_entry(file_name) {
+                    snippet = snippet.join(other);
                 }
+
+                snippets.insert(file_name.to_owned(), snippet);
+            }
+        });
+
+        eprintln!("Snippets: {:#?}", snippets);
+
+        snippets
+    }
+
+    fn get_readme_program_pipes(snippets: Snippets) -> Vec<PipedPrograms> {
+        let mut pipes = Vec::new();
+
+        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
+            if ncb.info == "console" || ncb.info == "bash" {
+                let (_, commands) = parse_code_blocks(&ncb.literal, snippets.clone())
+                    .finish()
+                    .expect("Anything in `console` should be parseable as a command");
+
+                pipes.extend(commands);
             }
         });
 
         pipes
     }
 
+    fn map_on_markdown_codeblocks(markdown: &str, mut f: impl FnMut(NodeCodeBlock)) {
+        let arena = Arena::new();
+
+        let root = parse_document(&arena, markdown, &ComrakOptions::default());
+
+        root.descendants().for_each(|node| {
+            let value = node.to_owned().data.borrow().value.clone();
+
+            if let NodeValue::CodeBlock(ncb) = value {
+                f(ncb);
+            }
+        });
+    }
+
     #[test]
     fn test_readme_code_blocks() {
-        let pipes = get_all_commands_under_test_pipes_from_readme();
+        let snippets = get_readme_snippets();
+        let pipes = get_readme_program_pipes(snippets);
 
         for pipe in pipes {
             let mut previous_stdin = None;

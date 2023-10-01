@@ -2,52 +2,53 @@
 
 [`tr`][tr], with Unicode support and gimmicks, and a *scoping* concept.
 
-## Usage
+## Pitch
 
 TODO: Print help?
 
 ### Showcases
 
-#### Fixing all method docstrings (Python)
+#### Expanding acronyms in docstrings (Python)
+
+Imagine you [dislike acronyms and
+abbreviations](https://www.instituteccp.com/a-case-against-abbreviations-and-acronyms/),
+and want to rid documentation strings, but not any code of them. The Python snippet
 
 ```python thing.py
-def do_thing():
-    """Free function docstring.
+"""GNU module."""
 
-    Does the thing.
-    """
+def GNU_says_moo():
+    """Make the GNU say moo."""
 
-    pass  # Does the thing
+    GNU = """
+      GNU
+    """  # the GNU...
+
+    print(GNU + " says moo")  # ...says moo
 ```
 
-<!-- class ThingDoer:
-    """Does things."""
-
-    def do_thing(self):
-        """Method docstring.
-
-        Does the thing as well.
-        """
-
-        pass  # Does the thing -->
-
-with
+can be manipulated with an invocation of
 
 ```bash
-cat thing.py | betterletters --python-docstrings 'thing' 'transaction'
+cat thing.py | betterletters --python 'doc-strings' 'GNU' 'GNU 🐂 is not Unix'
 ```
 
-will yield
+to read
 
-```python thing-output.py
-def do_thing():
-    """Free function docstring.
+```python output-thing.py
+"""GNU 🐂 is not Unix module."""
 
-    Does the transaction.
-    """
+def GNU_says_moo():
+    """Make the GNU 🐂 is not Unix say moo."""
 
-    pass  # Does the thing
+    GNU = """
+      GNU
+    """  # the GNU...
+
+    print(GNU + " says moo")  # ...says moo
 ```
+
+No `gnu`s other than docstring ones were harmed in the process.
 
 ## Walkthrough
 
