@@ -11,12 +11,12 @@ mod tests {
         bytes::complete::{escaped, is_not, tag, take_until, take_while1},
         character::complete::{
             alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending,
-            none_of, space0,
+            none_of, space0, space1,
         },
-        combinator::map,
+        combinator::{cut, map},
         error::ParseError,
         multi::{many0, many1, separated_list1},
-        sequence::{delimited, tuple},
+        sequence::{delimited, preceded, tuple},
         Finish, IResult,
     };
     use std::{cell::RefCell, collections::VecDeque, rc::Rc};
@@ -54,6 +54,22 @@ mod tests {
         }
     }
 
+    /// An option, either short or long.
+    ///
+    /// Has a value, e.g. `--option value` or `-o value`.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum Opt {
+        #[allow(dead_code)] // Not used yet
+        Short(char, String),
+        Long(String, String),
+    }
+
+    impl From<(&str, &str)> for Opt {
+        fn from((s, v): (&str, &str)) -> Self {
+            Self::Long(s.to_string(), v.to_string())
+        }
+    }
+
     /// A positional argument.
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct Arg(String);
@@ -75,6 +91,7 @@ mod tests {
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     struct Invocation {
         flags: Vec<Flag>,
+        opts: Vec<Opt>,
         args: Vec<Arg>,
         //
         stdin: Option<String>,
@@ -140,6 +157,22 @@ mod tests {
 
                     for arg in inv.args {
                         cmd.arg(arg.to_string());
+                    }
+
+                    for opt in inv.opts {
+                        match opt {
+                            Opt::Short(name, value) => {
+                                // Push these separately, as `arg` will escape the
+                                // value, and something like `--option value` will be
+                                // taken as a single arg, breaking the test.
+                                cmd.arg(format!("-{name}"));
+                                cmd.arg(value);
+                            }
+                            Opt::Long(name, value) => {
+                                cmd.arg(format!("--{name}"));
+                                cmd.arg(value);
+                            }
+                        }
                     }
 
                     // Empty string will be overwritten later on anyway. This saves a bunch
@@ -274,25 +307,61 @@ mod tests {
             maybe_ws(ascii_alpha1),
             many0(alt((
                 map(
-                    delimited(
-                        // Long flags, like `--long-flag`. No values. Can contain
-                        // hyphens itself.
-                        tag("--"),
-                        take_while1(|c: char| c == '-' || c.is_ascii_alphanumeric()),
-                        space0,
-                    ),
-                    |s: &str| {
-                        inv.borrow_mut().flags.push(s.into());
-                        s
+                    tuple((
+                        preceded(
+                            // Long options. Hard-coded, as otherwise it's undecidable
+                            // whether an option is supposed to have a value or not
+                            // (just a flag). Alternatively, import `clap::Cli` here and
+                            // `try_get_matches` with it, but cannot/don't want to
+                            // expose (`pub`) that.
+                            tag("--"),
+                            alt((tag("python"), tag("python-query"))),
+                        ),
+                        cut(
+                            // `cut`: should we get here, and not succeed, parsing has
+                            // to fail entirely. Else we continue with bad data.
+                            preceded(
+                                space1,
+                                // Quoting always is technically overkill, but much
+                                // simpler and safer
+                                parse_quoted,
+                            ),
+                        ),
+                    )),
+                    |findings| {
+                        inv.borrow_mut().opts.push(findings.into());
+                        findings
                     },
                 ),
                 map(
-                    // Short flags, like `-s`, but also `-sGu`. No values.
-                    delimited(char('-'), ascii_alphanumeric1, space0),
-                    |s: &str| {
-                        s.chars()
+                    tuple((
+                        preceded(
+                            // Long flags, like `--long-flag`. No values. Can contain
+                            // hyphens itself.
+                            tag("--"),
+                            take_while1(|c: char| c == '-' || c.is_ascii_alphanumeric()),
+                        ),
+                        space0,
+                    )),
+                    |findings: (&str, &str)| {
+                        let (flag, _space) = findings;
+                        inv.borrow_mut().flags.push(flag.into());
+                        findings
+                    },
+                ),
+                map(
+                    tuple((
+                        // Short flags, like `-s`, but also `-sGu`. No values.
+                        preceded(char('-'), ascii_alphanumeric1),
+                        space0,
+                    )),
+                    |found: (&str, &str)| {
+                        let (flag, _space) = found;
+
+                        flag.chars()
                             .for_each(|c| inv.borrow_mut().flags.push(c.into()));
-                        s
+
+                        found
                     },
                 ),
             ))),
