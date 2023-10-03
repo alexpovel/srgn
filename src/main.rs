@@ -390,15 +390,15 @@ mod cli {
         )]
         pub delete: bool,
         /// Squeeze consecutive occurrences of scope into one
-        ///
-        /// For example, 'a++b' -> 'a+b' for a scope of '+'.
-        ///
-        /// Quantifiers in scope will have their greediness inverted, allowing for
-        /// 'A1337B' -> 'A1B' for a scope of '\d+' (no '?' required).
-        ///
-        /// A greedy scope ('\d+?') would match all of '1337' and replace nothing.
         #[cfg(feature = "squeeze")]
-        #[arg(short, long, env, requires = "scope", verbatim_doc_comment)]
+        #[arg(
+            short,
+            long,
+            visible_alias("squeeze-repeats"),
+            env,
+            requires = "scope",
+            verbatim_doc_comment
+        )]
         pub squeeze: bool,
     }
 
