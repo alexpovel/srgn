@@ -355,7 +355,13 @@ mod cli {
         ///
         /// Words require correct spelling to be detected.
         #[cfg(feature = "german")]
-        #[arg(short, long, verbatim_doc_comment)]
+        #[arg(
+            short,
+            long,
+            verbatim_doc_comment,
+            // `true` as string is very ugly, but there's no other way?
+            default_value_if("german-opts", ArgPredicate::IsPresent, "true")
+        )]
         pub german: bool,
         /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
         ///
@@ -446,7 +452,7 @@ mod cli {
 
     #[cfg(feature = "german")]
     #[derive(Parser, Debug)]
-    #[group(required = false, multiple = true)]
+    #[group(required = false, multiple = true, id("german-opts"))]
     #[command(next_help_heading = "Options (german)")]
     pub(super) struct GermanStageOptions {
         /// When some original version and its replacement are equally legal, prefer the
