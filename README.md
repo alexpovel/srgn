@@ -1,6 +1,13 @@
-# betterletters
+# sur
 
-[`tr`][tr], with Unicode support and gimmicks, and a *scoping* concept.
+A `sur`geon for precise text and code transplantation.
+
+Born a Unicode-capable [descendant of `tr`](#common-tr-use-cases), `sur` adds useful
+[*actions*](#actions), acting within precise, optionally language grammar-aware
+[*scopes*](#scopes). It fills the gap for use cases where regex [doesn't cut
+it](https://en.wikipedia.org/wiki/Pumping_lemma_for_regular_languages) anymore, and
+precise manipulation, not just matching, is required, optionally involving
+Unicode-specific procedures.
 
 ## Pitch
 
@@ -12,9 +19,9 @@ TODO: Print help?
 
 Imagine you [dislike acronyms and
 abbreviations](https://www.instituteccp.com/a-case-against-abbreviations-and-acronyms/),
-and would thus like to expand all of them. However, simple search-and-replace is
-dangerous: actual code might be hit, rendering it syntactically invalid. Let's assume
-we'd only like to hit documentation. The Python snippet
+and would thus like to expand them all. However, simple search-and-replace is dangerous:
+actual code might be hit, rendering it syntactically invalid. Let's assume we'd only
+like to operate on documentation. The Python snippet
 
 ```python gnu.py
 """GNU module."""
@@ -128,8 +135,12 @@ print_money()
 logging.info("Done.")
 ```
 
-Notice the [anchors](https://www.regular-expressions.info/anchors.html): `print_more` is
-a function call as well, but `^print$` ensures it's not matched.
+> [!NOTE]
+> Note the [anchors](https://www.regular-expressions.info/anchors.html): `print_more` is
+> a function call as well, but `^print$` ensures it's not matched.
+>
+> The regular expression applies *after* grammar scoping, so operates entirely within
+> the already-scoped context.
 
 #### Remove all comments (C#)
 
@@ -226,21 +237,20 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 ## Walkthrough
 
 The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
-the input to process. Actions then perform the processing. Generally, actions are
-composable. Both are optional (but taking no action is pointless); specifying no scope
-implies the entire input is in scope.
+the input to process. Actions then perform the processing. Generally, both scopes and
+actions are composable, so more than one of each may be passed. Both are optional (but
+taking no action is pointless); specifying no scope implies the entire input is in
+scope.
 
 At the same time, there is considerable overlap with plain [`tr`][tr]: the tool is
 designed to have close correspondence in the most common use cases, and only go beyond
 when needed.
 
-Let's start with actions first, as scopes will get more advanced.
-
 ### Actions
 
 The simplest action is replacement. It is specially accessed (as an argument, not an
 option) for compatibility with [`tr`][tr], and general ergonomics. All other actions are
-given as flags.
+given as flags, or options should they take a value.
 
 #### Replacement
 
@@ -253,8 +263,8 @@ Jello, World!
 
 The first argument is the scope (literal `H` in this case). Anything matched by it is
 subject to processing (replacement by `J`, the second argument, in this case). However,
-there is no direct concept of character classes. Instead, by default, the scope is a
-regular expression pattern, so *its*
+there is **no direct concept of character classes** as in [`tr`][tr]. Instead, by
+default, the scope is a regular expression pattern, so *its*
 [classes](https://docs.rs/regex/1.9.5/regex/index.html#character-classes) can be used to
 similar effect:
 
@@ -342,8 +352,9 @@ $ echo 'Hello, World!' | betterletters -d '(H|W|!)'
 ello, orld
 ```
 
-As the default scope is to match the entire input, it is an error to specify deletion
-without a scope.
+> [!NOTE]
+> As the default scope is to match the entire input, it is an error to specify
+> deletion without a scope.
 
 #### Squeezing
 
@@ -356,7 +367,7 @@ Hello World!
 ```
 
 If a character class is passed, all members of that class are squeezed into whatever
-occurred first:
+class member was encountered first:
 
 ```console
 $ echo 'The number is: 3490834' | betterletters -s '\d'
@@ -370,11 +381,20 @@ $ echo 'Winter is coming... 🌞🌞🌞' | betterletters -s '🌞+'
 Winter is coming... 🌞🌞🌞
 ```
 
-The pattern matched the entire string of suns, so there's nothing to squeeze. Summer
-prevails.
+> [!NOTE]
+> The pattern matched the *entire* run of suns, so there's nothing to squeeze. Summer
+> prevails.
 
-Again, as with [deletion](#deletion), specifying squeezing without an *explicit* scope
-is an error. Squeezing the entire input is probably not what you want.
+Invert greediness if the use case calls for it:
+
+```console
+$ echo 'Winter is coming... 🌞🌞🌞' | betterletters -s '🌞+?' '☃️'
+Winter is coming... ☃️
+```
+
+> [!NOTE]
+> Again, as with [deletion](#deletion), specifying squeezing without an *explicit* scope
+> is an error. Otherwise, the entire input is squeezed.
 
 #### Character casing
 
@@ -411,8 +431,8 @@ what ChatGPT whispers in my ear).
 
 #### Symbols
 
-This action replaces multi-character ASCII symbols with their single-code point native
-Unicode counterparts.
+This action replaces multi-character, ASCII symbols with appropriate single-code point,
+native Unicode counterparts.
 
 ```console
 $ echo '(A --> B) != C --- obviously' | betterletters --symbols
@@ -446,23 +466,65 @@ $ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | betterletters --german
 Grüß Gott, Poeten und Abenteuergrütze!
 ```
 
-This action is based on a word list. Note:
+This action is based on a word list.
 
-- empty scope and replacement: the entire input will be processed, and no replacement is
-  performed,
-- `Poeten` remained as-is, instead of being naively converted to `Pöten`,
-- as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
-  word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was handled
-  properly nonetheless.
+> [!NOTE]
+>
+> - empty scope and replacement: the entire input will be processed, and no replacement
+>  is performed
+> - `Poeten` remained as-is, instead of being naively and mistakenly converted to
+>   `Pöten`
+> - as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
+>   word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was
+>   handled properly nonetheless
+
+On request, replacements may be forced, as is potentially useful for names:
+
+```console
+$ echo 'Frau Loetter steht ueber der Mauer.' | betterletters --german-naive '(?<=Frau )\w+'
+Frau Lötter steht ueber der Mauer.
+```
+
+Through positive lookahead, nothing but the salutation was scoped and therefore changed.
+`Mauer` correctly remained as-is, but `ueber` was not processed. A second pass fixes
+this:
+
+```console
+$ echo 'Frau Loetter steht ueber der Mauer.' | betterletters --german-naive '(?<=Frau )\w+' | betterletters --german
+Frau Lötter steht über der Mauer.
+```
+
+> [!NOTE]
+>
+> Options and flags pertaining to some "parent" are prefixed with their parent's name,
+> and will *imply* their parent when given, such that the latter does not need to be
+> passed explicitly. That's why `--german-naive` is named as it is, and `--german`
+> needn't be passed.
+>
+> This behavior might change once `clap` supports [subcommand
+> chaining](https://github.com/clap-rs/clap/issues/2222).
+
+Some branches are undecidable for this modest tool, as it operates without language
+context. For example, both `Busse` (busses) and `Buße` (penance) are legal words. By
+default, replacements are greedily performed if legal (that's the [whole
+point](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) of this tool,
+after all), but there's a flag for toggling this behavior:
+
+```console
+$ echo 'Busse und Geluebte 🙏' | betterletters --german
+Buße und Gelübte 🙏
+$ echo 'Busse 🚌 und Fussgaenger 🚶‍♀️' | betterletters --german-prefer-original
+Busse 🚌 und Fußgänger 🚶‍♀️
+```
 
 ### Combining Actions
 
-Most actions are composable, unless it would not make sense (like for
+Most actions are composable, unless it would be nonsensical to do so (like for
 [deletion](#deletion)). Their order of application is fixed, so the *order* of the flags
-given has no influence. Replacements always occur first. Generally, the CLI is designed
-to prevent misuse and surprises: it prefers crashing to doing something unexpected. Note
-that lots of combinations *are* technically possible, but might yield nonsensical
-results.
+given has no influence (piping multiple runs is an alternative, if needed). Replacements
+always occur first. Generally, the CLI is designed to prevent misuse and surprises: it
+prefers crashing to doing something unexpected. Note that lots of combinations *are*
+technically possible, but might yield nonsensical results.
 
 ```console
 $ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu
