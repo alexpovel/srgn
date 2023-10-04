@@ -94,7 +94,7 @@ jobs:
       - uses: swatinem/rust-cache@v2
 
       - name: Publish
-      # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
+        # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
         run: >
           cargo publish
           --verbose
