@@ -66,7 +66,7 @@ scope of your actions, *combining* the power of both [regular
 expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
 [parsers](https://tree-sitter.github.io/tree-sitter/).
 
-> ![NOTE]
+> [!NOTE]
 >
 > Without exception, all code snippets in this README are automatically
 > [unit-tested](./tests/readme.rs) using the actual program binary. What is showcased
