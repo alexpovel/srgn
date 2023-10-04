@@ -1,8 +1,8 @@
-use betterletters::{
+use proptest::prelude::*;
+use srgn::{
     scoping::ScopedViewBuilder,
     stages::{LowerStage, Stage},
 };
-use proptest::prelude::*;
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 

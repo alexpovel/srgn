@@ -8,9 +8,9 @@ use super::Stage;
 /// ## Example: replacing invalid characters in identifiers
 ///
 /// ```rust
-/// use betterletters::RegexPattern;
-/// use betterletters::stages::{Stage, ReplacementStage};
-/// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};
+/// use srgn::RegexPattern;
+/// use srgn::stages::{Stage, ReplacementStage};
+/// use srgn::scoping::{ScopedViewBuilder, regex::Regex};
 ///
 /// let stage = ReplacementStage::try_from("_".to_string()).unwrap();
 /// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
@@ -27,9 +27,9 @@ use super::Stage;
 /// ## Example: replace emojis
 ///
 /// ```rust
-/// use betterletters::RegexPattern;
-/// use betterletters::stages::{Stage, ReplacementStage};
-/// use betterletters::scoping::{ScopedViewBuilder, regex::Regex};
+/// use srgn::RegexPattern;
+/// use srgn::stages::{Stage, ReplacementStage};
+/// use srgn::scoping::{ScopedViewBuilder, regex::Regex};
 ///
 /// let stage = ReplacementStage::try_from(":(".to_string()).unwrap();
 /// // A Unicode character class category. See also

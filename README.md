@@ -1,33 +1,27 @@
-# sur
+# srgn - a code surgeon
 
-A `sur`geon for precise text and code transplantation.
+A code **s**u**rg**eo**n** for precise text and code transplantation.
 
-Born a Unicode-capable [descendant of `tr`](#common-tr-use-cases), `sur` adds useful
+Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds useful
 [*actions*](#actions), acting within precise, optionally language grammar-aware
-[*scopes*](#scopes). It fills the gap for use cases where regex [doesn't cut
-it](https://en.wikipedia.org/wiki/Pumping_lemma_for_regular_languages) anymore, and
-precise manipulation, not just matching, is required, optionally involving
-Unicode-specific procedures.
+[*scopes*](#scopes). It suits use cases where...
 
-## Pitch
+- regex [doesn't cut
+  it](https://en.wikipedia.org/wiki/Pumping_lemma_for_regular_languages) anymore,
+- editor tools such as *Rename all* are too specific, and not automatable,
+- precise manipulation, not just matching, is required, and lastly and optionally,
+- Unicode-specific trickery is desired.
 
-TODO: Print help?
+## Usage
 
-### Showcases
-
-#### Expanding acronyms in docstrings (Python)
-
-Imagine you [dislike acronyms and
-abbreviations](https://www.instituteccp.com/a-case-against-abbreviations-and-acronyms/),
-and would thus like to expand them all. However, simple search-and-replace is dangerous:
-actual code might be hit, rendering it syntactically invalid. Let's assume we'd only
-like to operate on documentation. The Python snippet
+For an "end-to-end" example, consider this Python snippet (more languages are
+supported):
 
 ```python gnu.py
 """GNU module."""
 
 def GNU_says_moo():
-    """Make the GNU say moo."""
+    """The GNU -> say moo -> ✅"""
 
     GNU = """
       GNU
@@ -36,19 +30,19 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
-can be manipulated with an invocation of
+which with an invocation of
 
 ```bash
-cat gnu.py | betterletters --python 'doc-strings' 'GNU' 'GNU 🐂 is not Unix'
+cat gnu.py | srgn --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix' | srgn --symbols
 ```
 
-to read
+can be manipulated to read
 
 ```python output-gnu.py
 """GNU 🐂 is not Unix module."""
 
 def GNU_says_moo():
-    """Make the GNU 🐂 is not Unix say moo."""
+    """The GNU → say moo → ✅"""
 
     GNU = """
       GNU
@@ -57,9 +51,421 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
-No `gnu`s other than docstring ones were harmed in the process.
+which demonstrates:
 
-#### Assigning `TODO`s (TypeScript)
+- language grammar-aware operation: only Python docstrings were manipulated; virtually
+  impossible to replicate in just regex
+
+  Skip ahead to **[more such showcases](#showcases) below**.
+- advanced regex features such as, in this case, negative lookbehind are supported
+- Unicode is natively handled
+- features such as [ASCII symbol replacement](#symbols) are provided
+
+Hence the concept of surgical operation: `srgn` allows you to be quite precise about the
+scope of your actions, *combining* the power of both [regular
+expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
+[parsers](https://tree-sitter.github.io/tree-sitter/).
+
+> ![NOTE]
+>
+> Without exception, all code snippets in this README are automatically
+> [unit-tested](./tests/readme.rs) using the actual program binary. What is showcased
+> here is guaranteed to work.
+
+## Installation
+
+- binary
+- `cargo install`
+- in CI, `install-action`
+
+## Walkthrough
+
+The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
+the input to process. Actions then perform the processing. Generally, both scopes and
+actions are composable, so more than one of each may be passed. Both are optional (but
+taking no action is pointless); specifying no scope implies the entire input is in
+scope.
+
+At the same time, there is considerable overlap with plain [`tr`][tr]: the tool is
+designed to have close correspondence in the most common use cases, and only go beyond
+when needed.
+
+### Actions
+
+The simplest action is replacement. It is specially accessed (as an argument, not an
+option) for compatibility with [`tr`][tr], and general ergonomics. All other actions are
+given as flags, or options should they take a value.
+
+#### Replacement
+
+For example, simple, single-character replacements work as in [`tr`][tr]:
+
+```console
+$ echo 'Hello, World!' | srgn 'H' 'J'
+Jello, World!
+```
+
+The first argument is the scope (literal `H` in this case). Anything matched by it is
+subject to processing (replacement by `J`, the second argument, in this case). However,
+there is **no direct concept of character classes** as in [`tr`][tr]. Instead, by
+default, the scope is a regular expression pattern, so *its*
+[classes](https://docs.rs/regex/1.9.5/regex/index.html#character-classes) can be used to
+similar effect:
+
+```console
+$ echo 'Hello, World!' | srgn '[a-z]' '_'
+H____, W____!
+```
+
+The replacement occurs greedily across the entire match by default (note the [UTS
+character class](https://docs.rs/regex/1.9.5/regex/index.html#ascii-character-classes),
+reminiscent of [`tr`'s
+`[:alnum:]`](https://github.com/coreutils/coreutils/blob/769ace51e8a1129c44ee4e7e209c3b2df2111524/src/tr.c#L322C25-L322C25)):
+
+```console
+$ echo 'ghp_oHn0As3cr3T!!' | srgn 'ghp_[[:alnum:]]+' '*' # A GitHub token
+*!!
+```
+
+However, in the presence of capture groups, the *individual characters comprising a
+capture group match* are treated *individually* for processing, allowing a replacement
+to be repeated:
+
+```console
+$ echo 'Hide ghp_th15 and ghp_th4t' | srgn '(ghp_[[:alnum:]]+)' '*'
+Hide ******** and ********
+```
+
+Advanced regex features are
+[supported](https://docs.rs/fancy-regex/0.11.0/fancy_regex/index.html#syntax), for
+example lookarounds:
+
+```console
+$ echo 'ghp_oHn0As3cr3T' | srgn '(?<=ghp_)([[:alnum:]]+)' '*'
+ghp_***********
+```
+
+Take care in using these safely, as advanced patterns come without certain [safety and
+performance guarantees](https://docs.rs/regex/latest/regex/#untrusted-input). If they
+aren't used, [performance is not
+impacted](https://docs.rs/fancy-regex/0.11.0/fancy_regex/index.html#).
+
+The replacement is not limited to a single character. It can be any string, for example
+to fix [this quote](http://regex.info/blog/2006-09-15/247):
+
+```console
+$ echo '"Using regex, I now have no issues."' | srgn 'no issues' '2 problems'
+"Using regex, I now have 2 problems."
+```
+
+The tool is fully Unicode-aware, with useful support for [certain advanced
+character
+classes](https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties):
+
+```console
+$ echo 'Mood: 🙂' | srgn '🙂' '😀'
+Mood: 😀
+$ echo 'Mood: 🤮🤒🤧🦠 :(' | srgn '\p{Emoji_Presentation}' '😷'
+Mood: 😷😷😷😷 :(
+```
+
+#### Beyond replacement
+
+Seeing how the replacement is merely a static string, its usefulness is limited. This is
+where [`tr`'s secret sauce](https://maizure.org/projects/decoded-gnu-coreutils/tr.html)
+ordinarily comes into play: using its character classes, which are valid in the second
+position as well, neatly translating from members of the first to the second. Here,
+those classes are instead regexes, and only valid in first position (the scope). A
+regular expression being a state machine, it is impossible to match onto a 'list of
+characters', which in `tr` is the second (optional) argument. That concept is out the
+window, and its flexibility lost.
+
+Instead, the offered actions, all of them **fixed**, are used. A peek at [the most
+common use cases for `tr`](#use-cases-and-equivalences) reveals that the provided set of
+actions covers virtually all of them! Feel free to file an issue if your use case is not
+covered.
+
+Onto the next action.
+
+#### Deletion
+
+Removes whatever is found from the input. Same flag name as in `tr`.
+
+```console
+$ echo 'Hello, World!' | srgn -d '(H|W|!)'
+ello, orld
+```
+
+> [!NOTE]
+> As the default scope is to match the entire input, it is an error to specify
+> deletion without a scope.
+
+#### Squeezing
+
+Squeezes repeats of characters matching the scope into single occurrences. Same flag
+name as in `tr`.
+
+```console
+$ echo 'Helloooo Woooorld!!!' | srgn -s '(o|!)'
+Hello World!
+```
+
+If a character class is passed, all members of that class are squeezed into whatever
+class member was encountered first:
+
+```console
+$ echo 'The number is: 3490834' | srgn -s '\d'
+The number is: 3
+```
+
+Greediness in matching is not modified, so take care:
+
+```console
+$ echo 'Winter is coming... 🌞🌞🌞' | srgn -s '🌞+'
+Winter is coming... 🌞🌞🌞
+```
+
+> [!NOTE]
+> The pattern matched the *entire* run of suns, so there's nothing to squeeze. Summer
+> prevails.
+
+Invert greediness if the use case calls for it:
+
+```console
+$ echo 'Winter is coming... 🌞🌞🌞' | srgn -s '🌞+?' '☃️'
+Winter is coming... ☃️
+```
+
+> [!NOTE]
+> Again, as with [deletion](#deletion), specifying squeezing without an *explicit* scope
+> is an error. Otherwise, the entire input is squeezed.
+
+#### Character casing
+
+A good chunk of `tr` usage [falls into this category](#changing-character-casing). It's
+very straightforward.
+
+```console
+$ echo 'Hello, World!' | srgn --lower
+hello, world!
+$ echo 'Hello, World!' | srgn --upper
+HELLO, WORLD!
+$ echo 'hello, world!' | srgn --titlecase
+Hello, World!
+```
+
+#### Normalization
+
+Decomposes input according to [Normalization Form
+D](https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms), and then discards
+code points of the [Mark
+category](https://en.wikipedia.org/wiki/Unicode_character_property#General_Category)
+(see [examples](https://www.compart.com/en/unicode/category/Mn)). That roughly means:
+take fancy character, rip off dangly bits, throw those away.
+
+```console
+$ echo 'Naïve jalapeño ärgert mgła' | srgn -d '\P{ASCII}' # Naive approach
+Nave jalapeo rgert mga
+$ echo 'Naïve jalapeño ärgert mgła' | srgn --normalize # Normalize is smarter
+Naive jalapeno argert mgła
+```
+
+Notice how `mgła` is out of scope for NFD, as it is not decomposable (at least that's
+what ChatGPT whispers in my ear).
+
+#### Symbols
+
+This action replaces multi-character, ASCII symbols with appropriate single-code point,
+native Unicode counterparts.
+
+```console
+$ echo '(A --> B) != C --- obviously' | srgn --symbols
+(A ⟶ B) ≠ C — obviously
+```
+
+Alternatively, if you're only interested in math, make use of scoping:
+
+```console
+$ echo 'A <= B --- More is--obviously--possible' | srgn --symbols '<='
+A ≤ B --- More is--obviously--possible
+```
+
+As there is a [1:1 correspondence](https://en.wikipedia.org/wiki/Bijection) between an
+ASCII symbol and its replacement, the effect is reversible[^1]:
+
+```console
+$ echo 'A ⇒ B' | srgn --symbols --invert
+A => B
+```
+
+There is only a limited set of symbols supported as of right now, but more can be added.
+
+#### German
+
+This action replaces alternative spellings of German special characters (ae, oe, ue, ss)
+with their native versions (ä, ö, ü, ß).
+
+```console
+$ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | srgn --german
+Grüß Gott, Poeten und Abenteuergrütze!
+```
+
+This action is based on a word list.
+
+> [!NOTE]
+>
+> - empty scope and replacement: the entire input will be processed, and no replacement
+>  is performed
+> - `Poeten` remained as-is, instead of being naively and mistakenly converted to
+>   `Pöten`
+> - as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
+>   word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was
+>   handled properly nonetheless
+
+On request, replacements may be forced, as is potentially useful for names:
+
+```console
+$ echo 'Frau Loetter steht ueber der Mauer.' | srgn --german-naive '(?<=Frau )\w+'
+Frau Lötter steht ueber der Mauer.
+```
+
+Through positive lookahead, nothing but the salutation was scoped and therefore changed.
+`Mauer` correctly remained as-is, but `ueber` was not processed. A second pass fixes
+this:
+
+```console
+$ echo 'Frau Loetter steht ueber der Mauer.' | srgn --german-naive '(?<=Frau )\w+' | srgn --german
+Frau Lötter steht über der Mauer.
+```
+
+> [!NOTE]
+>
+> Options and flags pertaining to some "parent" are prefixed with their parent's name,
+> and will *imply* their parent when given, such that the latter does not need to be
+> passed explicitly. That's why `--german-naive` is named as it is, and `--german`
+> needn't be passed.
+>
+> This behavior might change once `clap` supports [subcommand
+> chaining](https://github.com/clap-rs/clap/issues/2222).
+
+Some branches are undecidable for this modest tool, as it operates without language
+context. For example, both `Busse` (busses) and `Buße` (penance) are legal words. By
+default, replacements are greedily performed if legal (that's the [whole
+point](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) of `srgn`,
+after all), but there's a flag for toggling this behavior:
+
+```console
+$ echo 'Busse und Geluebte 🙏' | srgn --german
+Buße und Gelübte 🙏
+$ echo 'Busse 🚌 und Fussgaenger 🚶‍♀️' | srgn --german-prefer-original
+Busse 🚌 und Fußgänger 🚶‍♀️
+```
+
+### Combining Actions
+
+Most actions are composable, unless it would be nonsensical to do so (like for
+[deletion](#deletion)). Their order of application is fixed, so the *order* of the flags
+given has no influence (piping multiple runs is an alternative, if needed). Replacements
+always occur first. Generally, the CLI is designed to prevent misuse and surprises: it
+prefers crashing to doing something unexpected. Note that lots of combinations *are*
+technically possible, but might yield nonsensical results.
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | srgn -Sgu
+KOEFFIZIENTEN ≠ BRÜCKEN...
+```
+
+A more narrow scope can be specified, and will apply to *all* actions equally:
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | srgn -Sgu '\b\w{1,8}\b'
+Koeffizienten != BRÜCKEN...
+```
+
+The [word boundaries](https://www.regular-expressions.info/wordboundaries.html) are
+required as otherwise `Koeffizienten` is matched as `Koeffizi` and `enten`. Note how the
+trailing periods cannot be, for example, squeezed. The required scope of `\.` would
+interfere with the given one. Regular piping solves this:
+
+```console
+$ echo 'Koeffizienten != Bruecken...' | srgn -Sgu '\b\w{1,8}\b' | srgn -s '\.'
+Koeffizienten != BRÜCKEN.
+```
+
+The specially treated replacement action is also composable:
+
+```console
+$ echo 'Mooood: 🤮🤒🤧🦠!!!' | srgn -s '\p{Emoji}' '😷'
+Mooood: 😷!!!
+```
+
+Emojis are first all replaced, then squeezed. Notice how nothing else is squeezed.
+
+### Scopes
+
+Scopes are the second driving concept to `srgn`. In the default case, the main scope is
+a regular expression. The [actions](#actions) section showcased this use case in some
+detail, so it's not repeated here. It is given as a first positional argument.
+
+#### Language grammar-aware scopes
+
+`srgn` extends this through premade, language grammar-aware scopes, made possible
+through the excellent [`tree-sitter`](https://tree-sitter.github.io/tree-sitter/)
+library. It offers a
+[queries](https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax) feature,
+which works much like pattern matching against a [tree data
+structure](https://en.wikipedia.org/wiki/Parse_tree).
+
+`srgn` comes bundled with a handful of the most useful of these queries. Through its
+discoverable API (either [as a library](#rust-library) or via CLI, `srgn --help`), one
+can learn of the supported languages and available, premade queries. Each supported
+language comes with an escape hatch, allowing you to run your own, custom ad-hoc
+queries. The hatch comes in the form of `--lang-query <S EXPRESSION>`. It allows you to write small, ad-hoc linters, for example to catch code such as:
+
+```python cond.py
+if x:
+    return left
+else:
+    return right
+```
+
+which, with an invocation of
+
+```bash
+cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --upper
+```
+
+will give (TODO: IMPLEMENT `--fail`)
+
+```python output-cond.py
+IF X:
+    RETURN LEFT
+ELSE:
+    RETURN RIGHT
+```
+
+A couple resources exist for getting started with your own queries:
+
+- the [official docs on
+  querying](https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries)
+- the great [official playground](https://tree-sitter.github.io/tree-sitter/playground)
+  for interactive use
+- [*How to write a linter using tree-sitter in an
+  hour*](https://siraben.dev/2022/03/22/tree-sitter-linter.html), a great introduction
+  to the topic in general
+- the official [`tree-sitter`
+  CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
+- using `srgn` with high verbosity (`-vvvv`) is supposed to grant detailed insights into
+  what's happening to your input, including a [representation of the parsed
+  tree](https://docs.rs/tree-sitter/latest/tree_sitter/struct.Node.html#method.to_sexp)
+
+> ![NOTE]
+> Language scopes are applied *first*, so whatever regex aka main scope you pass, it
+> operates on each matched language construct individually.
+
+##### Showcases
+
+###### Assigning `TODO`s (TypeScript)
 
 Perhaps you're using a system of `TODO` notes in comments:
 
@@ -76,7 +482,7 @@ and *usually* assign people to each note. It's possible to automate assigning yo
 to every unassigned note (lucky you!) using
 
 ```bash
-cat todo.ts | betterletters --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
+cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
 ```
 
 which in this case gives
@@ -94,7 +500,7 @@ Notice the [positive lookahead](https://www.regular-expressions.info/lookaround.
 `(?=:)`, ensuring an actual `TODO` note is hit (`TODO:`). Otherwise, the other `TODO`s
 mentioned around the comments would be matched as well.
 
-#### Converting `print` calls to proper `logging` (Python)
+###### Converting `print` calls to proper `logging` (Python)
 
 Say there's code making liberal use of `print`:
 
@@ -116,7 +522,7 @@ and a move to [`logging`](https://docs.python.org/3/library/logging.html) is des
 That's fully automated by a call of
 
 ```bash
-cat money.py | betterletters --python 'function-calls' '^print$' 'logging.info'
+cat money.py | srgn --python 'function-calls' '^print$' 'logging.info'
 ```
 
 yielding
@@ -142,7 +548,7 @@ logging.info("Done.")
 > The regular expression applies *after* grammar scoping, so operates entirely within
 > the already-scoped context.
 
-#### Remove all comments (C#)
+###### Remove all comments (C#)
 
 Overdone, comments can turn into [smells](https://refactoring.guru/smells/comments). If
 not tended to, they might very well start lying:
@@ -190,7 +596,7 @@ public class UserService
 So, should you count purging comments among your fetishes, more power to you:
 
 ```bash
-cat UserService.cs | betterletters --csharp 'comments' -d '.*' | betterletters -d '[[:blank:]]+\n'
+cat UserService.cs | srgn --csharp 'comments' -d '.*' | srgn -d '[[:blank:]]+\n'
 ```
 
 The result is a tidy, yet taciturn:
@@ -234,332 +640,11 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 > [!NOTE]
 > When deleting (`-d`), for reasons of safety and sanity, a scope is *required*.
 
-## Walkthrough
-
-The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
-the input to process. Actions then perform the processing. Generally, both scopes and
-actions are composable, so more than one of each may be passed. Both are optional (but
-taking no action is pointless); specifying no scope implies the entire input is in
-scope.
-
-At the same time, there is considerable overlap with plain [`tr`][tr]: the tool is
-designed to have close correspondence in the most common use cases, and only go beyond
-when needed.
-
-### Actions
-
-The simplest action is replacement. It is specially accessed (as an argument, not an
-option) for compatibility with [`tr`][tr], and general ergonomics. All other actions are
-given as flags, or options should they take a value.
-
-#### Replacement
-
-For example, simple, single-character replacements work as in [`tr`][tr]:
-
-```console
-$ echo 'Hello, World!' | betterletters 'H' 'J'
-Jello, World!
-```
-
-The first argument is the scope (literal `H` in this case). Anything matched by it is
-subject to processing (replacement by `J`, the second argument, in this case). However,
-there is **no direct concept of character classes** as in [`tr`][tr]. Instead, by
-default, the scope is a regular expression pattern, so *its*
-[classes](https://docs.rs/regex/1.9.5/regex/index.html#character-classes) can be used to
-similar effect:
-
-```console
-$ echo 'Hello, World!' | betterletters '[a-z]' '_'
-H____, W____!
-```
-
-The replacement occurs greedily across the entire match by default (note the [UTS
-character class](https://docs.rs/regex/1.9.5/regex/index.html#ascii-character-classes),
-reminiscent of [`tr`'s
-`[:alnum:]`](https://github.com/coreutils/coreutils/blob/769ace51e8a1129c44ee4e7e209c3b2df2111524/src/tr.c#L322C25-L322C25)):
-
-```console
-$ echo 'ghp_oHn0As3cr3T!!' | betterletters 'ghp_[[:alnum:]]+' '*' # A GitHub token
-*!!
-```
-
-However, in the presence of capture groups, the *individual characters comprising a
-capture group match* are treated *individually* for processing, allowing a replacement
-to be repeated:
-
-```console
-$ echo 'Hide ghp_th15 and ghp_th4t' | betterletters '(ghp_[[:alnum:]]+)' '*'
-Hide ******** and ********
-```
-
-Advanced regex features are
-[supported](https://docs.rs/fancy-regex/0.11.0/fancy_regex/index.html#syntax), for
-example lookarounds:
-
-```console
-$ echo 'ghp_oHn0As3cr3T' | betterletters '(?<=ghp_)([[:alnum:]]+)' '*'
-ghp_***********
-```
-
-Take care in using these safely, as advanced patterns come without certain [safety and
-performance guarantees](https://docs.rs/regex/latest/regex/#untrusted-input). If they
-aren't used, [performance is not
-impacted](https://docs.rs/fancy-regex/0.11.0/fancy_regex/index.html#).
-
-The replacement is not limited to a single character. It can be any string, for example
-to fix [this quote](http://regex.info/blog/2006-09-15/247):
-
-```console
-$ echo '"Using regex, I now have no issues."' | betterletters 'no issues' '2 problems'
-"Using regex, I now have 2 problems."
-```
-
-The tool is fully Unicode-aware, with useful support for [certain advanced
-character
-classes](https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties):
-
-```console
-$ echo 'Mood: 🙂' | betterletters '🙂' '😀'
-Mood: 😀
-$ echo 'Mood: 🤮🤒🤧🦠 :(' | betterletters '\p{Emoji_Presentation}' '😷'
-Mood: 😷😷😷😷 :(
-```
-
-#### Beyond replacement
-
-Seeing how the replacement is merely a static string, its usefulness is limited. This is
-where [`tr`'s secret sauce](https://maizure.org/projects/decoded-gnu-coreutils/tr.html)
-ordinarily comes into play: using its character classes, which are valid in the second
-position as well, neatly translating from members of the first to the second. Here,
-those classes are instead regexes, and only valid in first position (the scope). A
-regular expression being a state machine, it is impossible to match onto a 'list of
-characters', which in `tr` is the second (optional) argument. That concept is out the
-window, and its flexibility lost.
-
-Instead, the offered actions, all of them **fixed**, are used. A peek at [the most
-common use cases for `tr`](#common-tr-use-cases) reveals that the provided set of
-actions covers virtually all of them! Feel free to file an issue if your use case is not
-covered.
-
-Onto the next action.
-
-#### Deletion
-
-Removes whatever is found from the input. Same flag name as in `tr`.
-
-```console
-$ echo 'Hello, World!' | betterletters -d '(H|W|!)'
-ello, orld
-```
-
-> [!NOTE]
-> As the default scope is to match the entire input, it is an error to specify
-> deletion without a scope.
-
-#### Squeezing
-
-Squeezes repeats of characters matching the scope into single occurrences. Same flag
-name as in `tr`.
-
-```console
-$ echo 'Helloooo Woooorld!!!' | betterletters -s '(o|!)'
-Hello World!
-```
-
-If a character class is passed, all members of that class are squeezed into whatever
-class member was encountered first:
-
-```console
-$ echo 'The number is: 3490834' | betterletters -s '\d'
-The number is: 3
-```
-
-Greediness in matching is not modified, so take care:
-
-```console
-$ echo 'Winter is coming... 🌞🌞🌞' | betterletters -s '🌞+'
-Winter is coming... 🌞🌞🌞
-```
-
-> [!NOTE]
-> The pattern matched the *entire* run of suns, so there's nothing to squeeze. Summer
-> prevails.
-
-Invert greediness if the use case calls for it:
-
-```console
-$ echo 'Winter is coming... 🌞🌞🌞' | betterletters -s '🌞+?' '☃️'
-Winter is coming... ☃️
-```
-
-> [!NOTE]
-> Again, as with [deletion](#deletion), specifying squeezing without an *explicit* scope
-> is an error. Otherwise, the entire input is squeezed.
-
-#### Character casing
-
-A good chunk of `tr` usage [falls into this category](#changing-character-casing). It's
-very straightforward.
-
-```console
-$ echo 'Hello, World!' | betterletters --lower
-hello, world!
-$ echo 'Hello, World!' | betterletters --upper
-HELLO, WORLD!
-$ echo 'hello, world!' | betterletters --titlecase
-Hello, World!
-```
-
-#### Normalization
-
-Decomposes input according to [Normalization Form
-D](https://en.wikipedia.org/wiki/Unicode_equivalence#Normal_forms), and then discards
-code points of the [Mark
-category](https://en.wikipedia.org/wiki/Unicode_character_property#General_Category)
-(see [examples](https://www.compart.com/en/unicode/category/Mn)). That roughly means:
-take fancy character, rip off dangly bits, throw those away.
-
-```console
-$ echo 'Naïve jalapeño ärgert mgła' | betterletters -d '\P{ASCII}' # Naive approach
-Nave jalapeo rgert mga
-$ echo 'Naïve jalapeño ärgert mgła' | betterletters --normalize # Normalize is smarter
-Naive jalapeno argert mgła
-```
-
-Notice how `mgła` is out of scope for NFD, as it is not decomposable (at least that's
-what ChatGPT whispers in my ear).
-
-#### Symbols
-
-This action replaces multi-character, ASCII symbols with appropriate single-code point,
-native Unicode counterparts.
-
-```console
-$ echo '(A --> B) != C --- obviously' | betterletters --symbols
-(A ⟶ B) ≠ C — obviously
-```
-
-Alternatively, if you're only interested in math, make use of scoping:
-
-```console
-$ echo 'A <= B --- More is--obviously--possible' | betterletters --symbols '<='
-A ≤ B --- More is--obviously--possible
-```
-
-As there is a [1:1 correspondence](https://en.wikipedia.org/wiki/Bijection) between an
-ASCII symbol and its replacement, the effect is reversible[^1]:
-
-```console
-$ echo 'A ⇒ B' | betterletters --symbols --invert
-A => B
-```
-
-There is only a limited set of symbols supported as of right now, but more can be added.
-
-#### German
-
-This action replaces alternative spellings of German special characters (ae, oe, ue, ss)
-with their native versions (ä, ö, ü, ß).
-
-```console
-$ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | betterletters --german
-Grüß Gott, Poeten und Abenteuergrütze!
-```
-
-This action is based on a word list.
-
-> [!NOTE]
->
-> - empty scope and replacement: the entire input will be processed, and no replacement
->  is performed
-> - `Poeten` remained as-is, instead of being naively and mistakenly converted to
->   `Pöten`
-> - as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
->   word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was
->   handled properly nonetheless
-
-On request, replacements may be forced, as is potentially useful for names:
-
-```console
-$ echo 'Frau Loetter steht ueber der Mauer.' | betterletters --german-naive '(?<=Frau )\w+'
-Frau Lötter steht ueber der Mauer.
-```
-
-Through positive lookahead, nothing but the salutation was scoped and therefore changed.
-`Mauer` correctly remained as-is, but `ueber` was not processed. A second pass fixes
-this:
-
-```console
-$ echo 'Frau Loetter steht ueber der Mauer.' | betterletters --german-naive '(?<=Frau )\w+' | betterletters --german
-Frau Lötter steht über der Mauer.
-```
-
-> [!NOTE]
->
-> Options and flags pertaining to some "parent" are prefixed with their parent's name,
-> and will *imply* their parent when given, such that the latter does not need to be
-> passed explicitly. That's why `--german-naive` is named as it is, and `--german`
-> needn't be passed.
->
-> This behavior might change once `clap` supports [subcommand
-> chaining](https://github.com/clap-rs/clap/issues/2222).
-
-Some branches are undecidable for this modest tool, as it operates without language
-context. For example, both `Busse` (busses) and `Buße` (penance) are legal words. By
-default, replacements are greedily performed if legal (that's the [whole
-point](https://en.wikipedia.org/wiki/Principle_of_least_astonishment) of this tool,
-after all), but there's a flag for toggling this behavior:
-
-```console
-$ echo 'Busse und Geluebte 🙏' | betterletters --german
-Buße und Gelübte 🙏
-$ echo 'Busse 🚌 und Fussgaenger 🚶‍♀️' | betterletters --german-prefer-original
-Busse 🚌 und Fußgänger 🚶‍♀️
-```
-
-### Combining Actions
-
-Most actions are composable, unless it would be nonsensical to do so (like for
-[deletion](#deletion)). Their order of application is fixed, so the *order* of the flags
-given has no influence (piping multiple runs is an alternative, if needed). Replacements
-always occur first. Generally, the CLI is designed to prevent misuse and surprises: it
-prefers crashing to doing something unexpected. Note that lots of combinations *are*
-technically possible, but might yield nonsensical results.
-
-```console
-$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu
-KOEFFIZIENTEN ≠ BRÜCKEN...
-```
-
-A more narrow scope can be specified, and will apply to *all* actions equally:
-
-```console
-$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu '\b\w{1,8}\b'
-Koeffizienten != BRÜCKEN...
-```
-
-The [word boundaries](https://www.regular-expressions.info/wordboundaries.html) are
-required as otherwise `Koeffizienten` is matched as `Koeffizi` and `enten`. Note how the
-trailing periods cannot be, for example, squeezed. The required scope of `\.` would
-interfere with the given one. Regular piping solves this:
-
-```console
-$ echo 'Koeffizienten != Bruecken...' | betterletters -Sgu '\b\w{1,8}\b' | betterletters -s '\.'
-Koeffizienten != BRÜCKEN.
-```
-
-The specially treated replacement action is also composable:
-
-```console
-$ echo 'Mooood: 🤮🤒🤧🦠!!!' | betterletters -s '\p{Emoji}' '😷'
-Mooood: 😷!!!
-```
-
-Emojis are first all replaced, then squeezed. Notice how nothing else is squeezed.
-
-### Scopes
-
-<!-- TODO -->
+#### Literal scope
+
+This causes whatever was passed as the regex scope to be interpreted literally. Useful
+for scopes containing lots of special characters that otherwise would need to be
+escaped.
 
 ## Rust library
 
@@ -567,20 +652,29 @@ Emojis are first all replaced, then squeezed. Notice how nothing else is squeeze
 
 ## Contributing
 
-<!-- TODO -->
+See [guidelines](CONTRIBUTING.md).
 
-## Common `tr` use cases
+## Similar tools
 
-In theory, `tr` is quite flexible. In practice, it is commonly used mainly across a
-couple specific tasks. Next to its two positional arguments ('arrays of characters'),
-one finds four flags:
+An unordered list of similar tools you might be interested in.
+
+- [Semgrep](https://semgrep.dev/)
+- [`sd`](https://github.com/chmln/sd)
+- [ripgrep-structured](https://github.com/orf/ripgrep-structured)
+
+## Comparison with `tr`
+
+`srgn` is inspired by `tr`, and in its simplest form behaves similarly, but not
+identically. In theory, `tr` is quite flexible. In practice, it is commonly used mainly
+across a couple specific tasks. Next to its two positional arguments ('arrays of
+characters'), one finds four flags:
 
 1. `-c`, `-C`, `--complement`: complement the first array
 2. `-d`, `--delete`: delete characters in the first first array
 3. `-s`, `--squeeze-repeats`: squeeze repeats of characters in the first array
 4. `-t`, `--truncate-set1`: truncate the first array to the length of the second
 
-In this tool, these are implemented as follows:
+In `srgn`, these are implemented as follows:
 
 1. is not available directly as an option; instead, negation of regular expression
    classes can be used (e.g., `[^a-z]`), to much more potent, flexible and well-known
@@ -590,10 +684,10 @@ In this tool, these are implemented as follows:
 4. not available: it's inapplicable to regular expressions, not commonly used and, if
    used, often misused
 
-To show how uses of `tr` found in the wild can translate to this tool, consider the
+To show how uses of `tr` found in the wild can translate to `srgn`, consider the
 following section.
 
-### Use cases and equivalences in this tool
+### Use cases and equivalences
 
 The following sections are the approximate categories much of `tr` usage falls into.
 They were found using [GitHub's code search](https://cs.github.com). The corresponding
@@ -615,7 +709,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo 'some-variable? 🤔' | betterletters '[^[:alnum:]_\n]' '_'
+    $ echo 'some-variable? 🤔' | srgn '[^[:alnum:]_\n]' '_'
     some_variable___
     ```
 
@@ -636,7 +730,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo 'some  variablê' | betterletters '[^[:alnum:]]' '_'
+    $ echo 'some  variablê' | srgn '[^[:alnum:]]' '_'
     some__variabl_
     ```
 
@@ -646,7 +740,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo '🙂 hellö???' | betterletters -s '[^[:alnum:]]' '-'
+    $ echo '🙂 hellö???' | srgn -s '[^[:alnum:]]' '-'
     -hell-
     ```
 
@@ -662,7 +756,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo 'x86_64 arm64 i386' | betterletters ' ' ';'
+    $ echo 'x86_64 arm64 i386' | srgn ' ' ';'
     x86_64;arm64;i386
     ```
 
@@ -679,11 +773,11 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo '3.12.1' | betterletters --literal-string '.' '\n'  # Escape sequence works
+    $ echo '3.12.1' | srgn --literal-string '.' '\n'  # Escape sequence works
     3
     12
     1
-    $ echo '3.12.1' | betterletters '\.' '\n'  # Escape regex otherwise
+    $ echo '3.12.1' | srgn '\.' '\n'  # Escape regex otherwise
     3
     12
     1
@@ -695,7 +789,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo -ne 'Some\nMulti\nLine\nText' | betterletters --literal-string '\n' ','
+    $ echo -ne 'Some\nMulti\nLine\nText' | srgn --literal-string '\n' ','
     Some,Multi,Line,Text
     ```
 
@@ -704,7 +798,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     otherwise interpreted by the tool as a newline:
 
     ```console
-    $ echo -nE 'Some\nMulti\nLine\nText' | betterletters --literal-string '\\n' ','
+    $ echo -nE 'Some\nMulti\nLine\nText' | srgn --literal-string '\\n' ','
     Some,Multi,Line,Text
     ```
 
@@ -731,7 +825,7 @@ Very useful to remove whole categories in one fell swoop.
     translates to:
 
     ```console
-    $ echo 'Lots... of... punctuation, man.' | betterletters -d '[[:punct:]]'
+    $ echo 'Lots... of... punctuation, man.' | srgn -d '[[:punct:]]'
     Lots of punctuation man
     ```
 
@@ -745,7 +839,7 @@ Lots of use cases also call for **inverting**, then removing a character class.
     Translates to:
 
     ```console
-    $ echo 'i RLY love LOWERCASING everything!' | betterletters -d '[^[:lower:]]'
+    $ echo 'i RLY love LOWERCASING everything!' | srgn -d '[^[:lower:]]'
     iloveeverything
     ```
 
@@ -755,7 +849,7 @@ Lots of use cases also call for **inverting**, then removing a character class.
     Translates to:
 
     ```console
-    $ echo 'All0wed ??? 💥' | betterletters -d '[^[:alnum:]]'
+    $ echo 'All0wed ??? 💥' | srgn -d '[^[:alnum:]]'
     All0wed
     ```
 
@@ -765,7 +859,7 @@ Lots of use cases also call for **inverting**, then removing a character class.
    Translates to:
 
     ```console
-    $ echo '{"id": 34987, "name": "Harold"}' | betterletters -d '[^[:digit:]]'
+    $ echo '{"id": 34987, "name": "Harold"}' | srgn -d '[^[:digit:]]'
     34987
     ```
 
@@ -780,7 +874,7 @@ Identical to replacing them with the empty string.
     Translates to:
 
     ```console
-    $ echo '1632485561.123456' | betterletters -d '\.'  # Unix timestamp
+    $ echo '1632485561.123456' | srgn -d '\.'  # Unix timestamp
     1632485561123456
     ```
 
@@ -794,7 +888,7 @@ Identical to replacing them with the empty string.
     Translates to:
 
     ```console
-    $ echo -e 'DOS-Style\r\n\r\nLines' | betterletters -d '\r\n'
+    $ echo -e 'DOS-Style\r\n\r\nLines' | srgn -d '\r\n'
     DOS-StyleLines
     ```
 
@@ -814,7 +908,7 @@ Remove repeated whitespace, as it often occurs when slicing and dicing text.
     Translates to:
 
     ```console
-    $ echo 'Lots   of  space !' | betterletters -s '[[:space:]]'  # Single space stays
+    $ echo 'Lots   of  space !' | srgn -s '[[:space:]]'  # Single space stays
     Lots of space !
     ```
 
@@ -838,7 +932,7 @@ Remove repeated whitespace, as it often occurs when slicing and dicing text.
     Translates to:
 
     ```console
-    $ echo '1969-12-28    13:37:45Z' | betterletters -s ' ' 'T'  # ISO8601
+    $ echo '1969-12-28    13:37:45Z' | srgn -s ' ' 'T'  # ISO8601
     1969-12-28T13:37:45Z
     ```
 
@@ -847,7 +941,7 @@ Remove repeated whitespace, as it often occurs when slicing and dicing text.
     Translates to:
 
     ```console
-    $ echo -e '/usr/local/sbin \t /usr/local/bin' | betterletters -s '[[:blank:]]' ':'
+    $ echo -e '/usr/local/sbin \t /usr/local/bin' | srgn -s '[[:blank:]]' ':'
     /usr/local/sbin:/usr/local/bin
     ```
 
@@ -864,7 +958,7 @@ A straightforward use case. Upper- and lowercase are often used.
     Translates to:
 
     ```console
-    $ echo 'WHY ARE WE YELLING?' | betterletters --lower
+    $ echo 'WHY ARE WE YELLING?' | srgn --lower
     why are we yelling?
     ```
 
@@ -872,7 +966,7 @@ A straightforward use case. Upper- and lowercase are often used.
     example:
 
     ```console
-    $ echo 'WHY ARE WE YELLING?' | betterletters --lower '\b\w{,3}\b'
+    $ echo 'WHY ARE WE YELLING?' | srgn --lower '\b\w{,3}\b'
     why are we YELLING?
     ```
 
@@ -890,7 +984,7 @@ A straightforward use case. Upper- and lowercase are often used.
     Translates to:
 
     ```console
-    $ echo 'why are we not yelling?' | betterletters --upper
+    $ echo 'why are we not yelling?' | srgn --upper
     WHY ARE WE NOT YELLING?
     ```
 

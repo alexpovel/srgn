@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'betterletters' using 'German'",
+            "name": "Debug executable 'srgn' using 'German'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=betterletters",
-                    "--package=betterletters"
+                    "--bin=srgn",
+                    "--package=srgn"
                 ],
                 "filter": {
-                    "name": "betterletters",
+                    "name": "srgn",
                     "kind": "bin"
                 }
             },
@@ -31,16 +31,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'betterletters'",
+            "name": "Debug unit tests in executable 'srgn'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=betterletters",
-                    "--package=betterletters"
+                    "--bin=srgn",
+                    "--package=srgn"
                 ],
                 "filter": {
-                    "name": "betterletters",
+                    "name": "srgn",
                     "kind": "bin"
                 }
             },

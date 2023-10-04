@@ -1,5 +1,5 @@
-use betterletters::{scoping::ScopedViewBuilder, stages::UpperStage, Stage};
 use proptest::prelude::*;
+use srgn::{scoping::ScopedViewBuilder, stages::UpperStage, Stage};
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 proptest! {

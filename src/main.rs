@@ -1,4 +1,5 @@
-use betterletters::scoping::{
+use log::{debug, info, warn, LevelFilter};
+use srgn::scoping::{
     langs::{
         csharp::{CSharp, CSharpQuery},
         python::{Python, PythonQuery},
@@ -8,26 +9,24 @@ use betterletters::scoping::{
     ScopedViewBuildStep, ScoperBuildError,
 };
 #[cfg(feature = "deletion")]
-use betterletters::stages::DeletionStage;
+use srgn::stages::DeletionStage;
 #[cfg(feature = "german")]
-use betterletters::stages::GermanStage;
+use srgn::stages::GermanStage;
 #[cfg(feature = "lower")]
-use betterletters::stages::LowerStage;
+use srgn::stages::LowerStage;
 #[cfg(feature = "normalization")]
-use betterletters::stages::NormalizationStage;
+use srgn::stages::NormalizationStage;
 #[cfg(feature = "replace")]
-use betterletters::stages::ReplacementStage;
+use srgn::stages::ReplacementStage;
 #[cfg(feature = "squeeze")]
-use betterletters::stages::SqueezeStage;
+use srgn::stages::SqueezeStage;
 #[cfg(feature = "titlecase")]
-use betterletters::stages::TitlecaseStage;
+use srgn::stages::TitlecaseStage;
 #[cfg(feature = "upper")]
-use betterletters::stages::UpperStage;
+use srgn::stages::UpperStage;
 #[cfg(feature = "symbols")]
-use betterletters::stages::{SymbolsInversionStage, SymbolsStage};
-use betterletters::{apply, scoping::regex::Regex, Stage};
-// use cli::PythonQuery;
-use log::{debug, info, warn, LevelFilter};
+use srgn::stages::{SymbolsInversionStage, SymbolsStage};
+use srgn::{apply, scoping::regex::Regex, Stage};
 use std::io::{self, Error, Read, Write};
 
 fn main() -> Result<(), Error> {
@@ -222,7 +221,8 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use betterletters::{
+    use clap::{builder::ArgPredicate, ArgAction, Parser};
+    use srgn::{
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
             python::{CustomPythonQuery, PremadePythonQuery},
@@ -230,7 +230,6 @@ mod cli {
         },
         GLOBAL_SCOPE,
     };
-    use clap::{builder::ArgPredicate, ArgAction, Parser};
 
     /// Main CLI entrypoint.
     ///

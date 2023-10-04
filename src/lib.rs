@@ -51,7 +51,7 @@ pub use fancy_regex::Regex as RegexPattern;
 ///
 ///
 /// ```
-/// use betterletters::{apply, scoping::{ScopedViewBuildStep, regex::Regex}, stages::GermanStage, Stage};
+/// use srgn::{apply, scoping::{ScopedViewBuildStep, regex::Regex}, stages::GermanStage, Stage};
 ///
 /// let stages: &[Box<dyn Stage>] = &[Box::new(GermanStage::default())];
 /// let scopers: &[Box<dyn ScopedViewBuildStep>] = &[Box::new(Regex::default())];

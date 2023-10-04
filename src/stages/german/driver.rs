@@ -35,7 +35,7 @@ use unicode_titlecase::StrTitleCase;
 /// # Example: A simple greeting, with Umlaut and Eszett
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let result = stage.process("Gruess Gott!");
@@ -48,7 +48,7 @@ use unicode_titlecase::StrTitleCase;
 /// *elaborate* word list!), but is still handled, as its constituents are.
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let result = stage.process("Du Suesswassertagtraeumer!");
@@ -62,7 +62,7 @@ use unicode_titlecase::StrTitleCase;
 /// [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// for word in &[
 ///     // "ae"
@@ -116,7 +116,7 @@ use unicode_titlecase::StrTitleCase;
 ///
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let result = stage.process("aEpFeL");
@@ -133,7 +133,7 @@ use unicode_titlecase::StrTitleCase;
 /// output is `Äpfel`
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let result: String = stage.process("AePfEl");
@@ -145,7 +145,7 @@ use unicode_titlecase::StrTitleCase;
 /// ## Subexample: other cases
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let f = |word: &str| -> String {stage.process(word)};
@@ -212,7 +212,7 @@ use unicode_titlecase::StrTitleCase;
 /// ([`str`]).
 ///
 /// ```
-/// use betterletters::{Stage, stages::GermanStage};
+/// use srgn::{Stage, stages::GermanStage};
 ///
 /// let stage = GermanStage::default();
 /// let result = stage.process("\0Schoener    你好 Satz... 👋🏻\r\n\n");
@@ -246,7 +246,7 @@ use unicode_titlecase::StrTitleCase;
 ///
 /// For more info, an overview of the methods tried
 /// ([`phf`](https://crates.io/crates/phf) and more), and benchmarks, see [this
-/// issue](https://github.com/alexpovel/betterletters/issues/9) and [this
+/// issue](https://github.com/alexpovel/srgn/issues/9) and [this
 /// thread](https://users.rust-lang.org/t/fast-string-lookup-in-a-single-str-containing-millions-of-unevenly-sized-substrings/98040).
 #[derive(Debug, Clone, Copy)]
 pub struct GermanStage {
@@ -294,7 +294,7 @@ impl GermanStage {
     /// much more likely than for Umlauts.
     ///
     /// ```
-    /// use betterletters::{Stage, stages::GermanStage};
+    /// use srgn::{Stage, stages::GermanStage};
     ///
     /// for (original, output) in &[
     ///     ("Busse", "Buße"), // busses / penance
@@ -317,7 +317,7 @@ impl GermanStage {
     /// Naive mode is essentially forcing a maximum number of replacements.
     ///
     /// ```
-    /// use betterletters::{Stage, stages::GermanStage};
+    /// use srgn::{Stage, stages::GermanStage};
     ///
     /// for (original, output) in &[
     ///     ("Frau Schroekedaek", "Frau Schrökedäk"), // Names are not in the word list
