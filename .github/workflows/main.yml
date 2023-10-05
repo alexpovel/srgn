@@ -32,23 +32,27 @@ jobs:
           --verbose
 
       - name: Run tests (without coverage)
-        if: matrix.os != 'ubuntu-latest'
         run: >
           cargo test
           --verbose
 
+  build-test-coverage:
+    name: Build and test with coverage
+
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Install cargo-tarpaulin (for coverage)
         # As recommened by `cargo-binstall` team:
         # https://github.com/cargo-bins/cargo-binstall/tree/d5549ce99ebc82b1ceee93a41375137b7dbd1a1f#faq
         uses: taiki-e/install-action@v2
-        if: matrix.os == 'ubuntu-latest'
         with:
           tool: cargo-tarpaulin
+
       - name: Install (minimal) nightly toolchain
-        if: matrix.os == 'ubuntu-latest'
         run: rustup toolchain install --profile minimal nightly
+
       - name: Run tests (with coverage)
-        if: matrix.os == 'ubuntu-latest'
         # `--all-targets` does not include `--doc`
         run: >
           cargo tarpaulin
@@ -56,8 +60,8 @@ jobs:
           --engine llvm
           --all-targets
           --doc
+
       - name: Upload coverage reports to Codecov
-        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v3
 
   release-please:
