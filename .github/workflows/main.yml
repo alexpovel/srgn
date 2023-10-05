@@ -42,6 +42,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+
       - name: Install cargo-tarpaulin (for coverage)
         # As recommened by `cargo-binstall` team:
         # https://github.com/cargo-bins/cargo-binstall/tree/d5549ce99ebc82b1ceee93a41375137b7dbd1a1f#faq
