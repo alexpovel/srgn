@@ -75,7 +75,6 @@ jobs:
       pull-requests: write
 
     runs-on: ubuntu-latest
-    needs: build-test
 
     outputs:
       created: ${{ steps.release.outputs.release_created }}
@@ -91,7 +90,9 @@ jobs:
     name: Publish to crates.io
 
     runs-on: ubuntu-latest
-    needs: release-please
+    needs:
+      - release-please
+      - build-test
     if: needs.release-please.outputs.created
 
     environment: crates.io
