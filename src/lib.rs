@@ -11,12 +11,6 @@
 #![allow(clippy::multiple_crate_versions)]
 #![allow(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
-//! Substitute alternative, ASCII-only spellings of special characters with their
-//! Unicode equivalents.
-//!
-//! Given an input text and a list of stages to use, processes the input, applying each
-//! stage in order, like a pipeline. In fact, the result should be the same as if you
-//! piped using a shell, but processing will be more performant.
 
 use crate::scoping::ScopedViewBuilder;
 pub use crate::stages::Stage;
