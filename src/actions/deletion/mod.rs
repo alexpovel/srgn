@@ -1,14 +1,13 @@
 use log::info;
 
-use super::Stage;
+use super::Action;
 
 /// Deletes everything in the input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct DeletionStage {}
+pub struct Deletion {}
 
-impl Stage for DeletionStage {
-    fn process(&self, input: &str) -> String {
+impl Action for Deletion {
+    fn act(&self, input: &str) -> String {
         info!("Deleting: '{}'", input);
         String::new()
     }

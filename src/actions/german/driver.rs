@@ -1,9 +1,9 @@
-use crate::stages::{
+use crate::actions::{
     german::{
         machine::{StateMachine, Transition},
         words::{Replace, Replacement, WordCasing},
     },
-    Stage,
+    Action,
 };
 use cached::proc_macro::cached;
 use cached::SizedCache;
@@ -14,9 +14,9 @@ use log::{debug, trace};
 use once_cell::sync::Lazy;
 use unicode_titlecase::StrTitleCase;
 
-/// German language stage, responsible for Umlauts and Eszett.
+/// German language action, responsible for Umlauts and Eszett.
 ///
-/// This stage is responsible for applying the following rules, [**where
+/// This action is responsible for applying the following rules, [**where
 /// applicable**](#example-words-validly-containing-alternative-umlaut-spelling):
 /// - [*Umlauts*](https://en.wikipedia.org/wiki/Umlaut_(diacritic)): replace `ue`, `oe`,
 ///   `ae` with `ü`, `ö`, `ä`, respectively,
@@ -26,7 +26,7 @@ use unicode_titlecase::StrTitleCase;
 /// - both lower- and uppercase variants are handled correctly,
 /// - compound words are handled correctly.
 ///
-/// Towards this, this stage does *not* simply replace all occurrences, but performs
+/// Towards this, this action does *not* simply replace all occurrences, but performs
 /// checks to ensure only valid replacements are made. The core of these checks is an
 /// exhaustive word list. The better the word list, the better the results. As such, any
 /// errors in processing could be the result of a faulty word list *or* faulty
@@ -35,10 +35,10 @@ use unicode_titlecase::StrTitleCase;
 /// # Example: A simple greeting, with Umlaut and Eszett
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let result = stage.process("Gruess Gott!");
+/// let action = German::default();
+/// let result = action.act("Gruess Gott!");
 /// assert_eq!(result, "Grüß Gott!");
 /// ```
 ///
@@ -48,10 +48,10 @@ use unicode_titlecase::StrTitleCase;
 /// *elaborate* word list!), but is still handled, as its constituents are.
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let result = stage.process("Du Suesswassertagtraeumer!");
+/// let action = German::default();
+/// let result = action.act("Du Suesswassertagtraeumer!");
 /// assert_eq!(result, "Du Süßwassertagträumer!");
 /// ```
 ///
@@ -62,7 +62,7 @@ use unicode_titlecase::StrTitleCase;
 /// [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
 /// for word in &[
 ///     // "ae"
@@ -78,19 +78,19 @@ use unicode_titlecase::StrTitleCase;
 ///     "Mauer",         // should not be "Maür"
 ///     "Steuerung",     // should not be "Steürung"
 /// ] {
-///     let stage = GermanStage::default();
-///     let result = stage.process(word);
+///     let action = German::default();
+///     let result = action.act(word);
 ///     assert_eq!(result, word.to_string());
 /// }
 /// ```
 ///
 /// Note that `ss`/`ß` is not mentioned, as it is handled
-/// [elsewhere][`GermanStage::new`], dealing with the topic of words with valid
+/// [elsewhere][`German::new`], dealing with the topic of words with valid
 /// alternative *and* special character spellings.
 ///
 /// # Example: Upper- and mixed case
 ///
-/// This stage can handle any case, but assumes **nouns are never lower case** (a pretty
+/// This action can handle any case, but assumes **nouns are never lower case** (a pretty
 /// mild assumption). The **first letter governs the case** of the entity (Umlaut,
 /// Eszett or entire word) in question:
 ///
@@ -116,10 +116,10 @@ use unicode_titlecase::StrTitleCase;
 ///
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let result = stage.process("aEpFeL");
+/// let action = German::default();
+/// let result = action.act("aEpFeL");
 ///
 /// // Error: MiXeD CaSe noun without leading capital letter
 /// assert_eq!(result, "aEpFeL");
@@ -133,10 +133,10 @@ use unicode_titlecase::StrTitleCase;
 /// output is `Äpfel`
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let result: String = stage.process("AePfEl");
+/// let action = German::default();
+/// let result: String = action.act("AePfEl");
 ///
 /// // OK: MiXeD CaSe words nouns are okay, *if* starting with a capital letter
 /// assert_eq!(result, "ÄPfEl");
@@ -145,10 +145,10 @@ use unicode_titlecase::StrTitleCase;
 /// ## Subexample: other cases
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let f = |word: &str| -> String {stage.process(word)};
+/// let action = German::default();
+/// let f = |word: &str| -> String {action.act(word)};
 ///
 /// // OK: The normal case, adjective lowercase
 /// assert_eq!(f("Voll suess!"), "Voll süß!");
@@ -204,7 +204,7 @@ use unicode_titlecase::StrTitleCase;
 ///
 /// # Example: Other bytes
 ///
-/// This stage handles the German alphabet *only*, and will leave other input bytes
+/// This action handles the German alphabet *only*, and will leave other input bytes
 /// untouched. You get to keep your trailing newlines, emojis (also multi-[`char`]
 /// ones), and everything else.
 ///
@@ -212,16 +212,16 @@ use unicode_titlecase::StrTitleCase;
 /// ([`str`]).
 ///
 /// ```
-/// use srgn::{Stage, stages::GermanStage};
+/// use srgn::{Action, actions::German};
 ///
-/// let stage = GermanStage::default();
-/// let result = stage.process("\0Schoener    你好 Satz... 👋🏻\r\n\n");
+/// let action = German::default();
+/// let result = action.act("\0Schoener    你好 Satz... 👋🏻\r\n\n");
 /// assert_eq!(result, "\0Schöner    你好 Satz... 👋🏻\r\n\n");
 /// ```
 ///
 /// # Performance
 ///
-/// This stage is implemented as a [finite state
+/// This action is implemented as a [finite state
 /// machine](https://en.wikipedia.org/wiki/Finite-state_machine), which means it runs in
 /// linear time as well as constant space. It should therefore be quite fast and memory
 /// efficient, requiring only a single pass over the input [`str`].
@@ -249,13 +249,13 @@ use unicode_titlecase::StrTitleCase;
 /// issue](https://github.com/alexpovel/srgn/issues/9) and [this
 /// thread](https://users.rust-lang.org/t/fast-string-lookup-in-a-single-str-containing-millions-of-unevenly-sized-substrings/98040).
 #[derive(Debug, Clone, Copy)]
-pub struct GermanStage {
+pub struct German {
     prefer_original: bool,
     naive: bool,
 }
 
-impl GermanStage {
-    /// Create a new [`GermanStage`].
+impl German {
+    /// Create a new [`German`].
     ///
     /// # Arguments
     ///
@@ -279,7 +279,7 @@ impl GermanStage {
     /// reached for this crate in the first place), what do they mean? Such cases are
     /// tricky, as there isn't an easy solution without reaching for full-blown
     /// [NLP](https://en.wikipedia.org/wiki/Natural_language_processing) or ML, as the
-    /// word's context would be required. This stage is much too limited for that. A
+    /// word's context would be required. This action is much too limited for that. A
     /// choice has to be made:
     ///
     /// - do not replace: keep alternative spelling, or
@@ -294,20 +294,20 @@ impl GermanStage {
     /// much more likely than for Umlauts.
     ///
     /// ```
-    /// use srgn::{Stage, stages::GermanStage};
+    /// use srgn::{Action, actions::German};
     ///
     /// for (original, output) in &[
     ///     ("Busse", "Buße"), // busses / penance
     ///     ("Masse", "Maße"), // mass / measurements
     /// ] {
-    ///     let mut stage = GermanStage::default();
-    ///     stage.prefer_replacement();
-    ///     let result = stage.process(original);
+    ///     let mut action = German::default();
+    ///     action.prefer_replacement();
+    ///     let result = action.act(original);
     ///     assert_eq!(result, output.to_string());
     ///
-    ///    let mut stage = GermanStage::default();
-    ///    stage.prefer_original();
-    ///    let result = stage.process(original);
+    ///    let mut action = German::default();
+    ///    action.prefer_original();
+    ///    let result = action.act(original);
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
@@ -317,26 +317,26 @@ impl GermanStage {
     /// Naive mode is essentially forcing a maximum number of replacements.
     ///
     /// ```
-    /// use srgn::{Stage, stages::GermanStage};
+    /// use srgn::{Action, actions::German};
     ///
     /// for (original, output) in &[
     ///     ("Frau Schroekedaek", "Frau Schrökedäk"), // Names are not in the word list
     ///     ("Abenteuer", "Abenteür"), // Illegal, but possible now
     /// ] {
-    ///    let mut stage = GermanStage::default();
-    ///    stage.naive();
-    ///    let result = stage.process(original);
+    ///    let mut action = German::default();
+    ///    action.naive();
+    ///    let result = action.act(original);
     ///    assert_eq!(result, output.to_string());
     ///
     ///    // However, this is overridden by:
-    ///    stage.prefer_original();
-    ///    let result = stage.process(original);
+    ///    action.prefer_original();
+    ///    let result = action.act(original);
     ///    assert_eq!(result, original.to_string());
     ///
     ///    // The usual behavior:
-    ///    let mut stage = GermanStage::default();
-    ///    stage.sophisticated();
-    ///    let result = stage.process(original);
+    ///    let mut action = German::default();
+    ///    action.sophisticated();
+    ///    let result = action.act(original);
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
@@ -374,10 +374,10 @@ impl GermanStage {
     }
 }
 
-impl Default for GermanStage {
-    /// Create a new [`GermanStage`] with default settings.
+impl Default for German {
+    /// Create a new [`German`] with default settings.
     ///
-    /// Default settings are such that features of this stage are leveraged most.
+    /// Default settings are such that features of this action are leveraged most.
     fn default() -> Self {
         let prefer_original = false;
         let naive = false;
@@ -385,8 +385,8 @@ impl Default for GermanStage {
     }
 }
 
-impl Stage for GermanStage {
-    fn process(&self, input: &str) -> String {
+impl Action for German {
+    fn act(&self, input: &str) -> String {
         const INDICATOR: char = '\0';
 
         let mut output = String::with_capacity(input.len());
@@ -725,8 +725,8 @@ mod tests {
         "Öl ist ein wichtiger Bestandteil von Öl."
     )]
     fn test_substitution(#[case] input: &str, #[case] expected: &str) {
-        let stage = GermanStage::default();
-        let result = stage.process(input);
+        let action = German::default();
+        let result = action.act(input);
         assert_eq!(result, expected);
     }
 
@@ -751,9 +751,9 @@ mod tests {
     #[case("Guessa", "Güßa")]
     #[case("GUESSA", "GÜẞA")]
     fn test_casing_when_being_naive(#[case] input: &str, #[case] expected: &str) {
-        let mut stage = GermanStage::default();
-        stage.naive();
-        let result = stage.process(input);
+        let mut action = German::default();
+        action.naive();
+        let result = action.act(input);
         assert_eq!(result, expected);
     }
 }

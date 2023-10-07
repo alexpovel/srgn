@@ -1,12 +1,11 @@
-use super::Stage;
+use super::Action;
 
 /// Renders in uppercase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct UpperStage {}
+pub struct Upper {}
 
-impl Stage for UpperStage {
-    fn process(&self, input: &str) -> String {
+impl Action for Upper {
+    fn act(&self, input: &str) -> String {
         input.replace('ß', "ẞ").to_uppercase()
     }
 }
@@ -47,7 +46,7 @@ mod tests {
     // Emojis
     #[case("👋\0", "👋\0")]
     fn substitute(#[case] input: &str, #[case] expected: &str) {
-        let result = UpperStage::default().process(input);
+        let result = Upper::default().act(input);
         assert_eq!(result, expected);
     }
 }

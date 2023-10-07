@@ -1,8 +1,8 @@
 use proptest::prelude::*;
 use srgn::{
+    actions::Squeeze,
     scoping::{regex::Regex, ScopedViewBuilder},
-    stages::SqueezeStage,
-    RegexPattern, Stage,
+    Action, RegexPattern,
 };
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -15,12 +15,12 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Any}*AA\p{Any}*"
     ) {
-        let stage = SqueezeStage::default();
+        let action = Squeeze::default();
         let mut view = ScopedViewBuilder::new(&input).explode_from_scoper(
             &Regex::new(RegexPattern::new("A").unwrap())
         ).build();
 
-        stage.map(&mut view);
+        action.map(&mut view);
         let res = view.to_string();
 
         assert!(res.len() < input.len());

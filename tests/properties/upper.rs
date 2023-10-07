@@ -1,5 +1,5 @@
 use proptest::prelude::*;
-use srgn::{scoping::ScopedViewBuilder, stages::UpperStage, Stage};
+use srgn::{actions::Upper, scoping::ScopedViewBuilder, Action};
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 proptest! {
@@ -10,10 +10,10 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Uppercase_Letter}*"
     ) {
-        let stage = UpperStage::default();
+        let action = Upper::default();
         let mut view = ScopedViewBuilder::new(&input).build();
 
-        stage.map(&mut view);
+        action.map(&mut view);
         let res = view.to_string();
 
         assert_eq!(res, input);

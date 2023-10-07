@@ -1,8 +1,8 @@
 use proptest::prelude::*;
 use srgn::{
+    actions::{Symbols, SymbolsInversion},
     scoping::ScopedViewBuilder,
-    stages::{SymbolsInversionStage, SymbolsStage},
-    Stage,
+    Action,
 };
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -10,8 +10,8 @@ use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES * 2))]
     /// Cannot be idempotent on non-ASCII input. Input might contain e.g. en-dash, which
-    /// the symbols stage will leave untouched, but will be decomposed into two hyphens
-    /// by the symbols inversion stage.
+    /// the symbols action will leave untouched, but will be decomposed into two hyphens
+    /// by the symbols inversion action.
     #[test]
     fn test_inverting_symbols_is_idempotent_on_ascii_input(
         // https://docs.rs/regex/latest/regex/#matching-one-character
@@ -20,13 +20,13 @@ proptest! {
     ) {
         let applied = {
             let mut view = ScopedViewBuilder::new(&input).build();
-            SymbolsStage::default().map(&mut view);
+            Symbols::default().map(&mut view);
             view.to_string()
         };
 
         let inverted = {
             let mut view = ScopedViewBuilder::new(&applied).build();
-            SymbolsInversionStage::default().map(&mut view);
+            SymbolsInversion::default().map(&mut view);
             view.to_string()
         };
 

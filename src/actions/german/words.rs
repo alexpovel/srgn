@@ -202,7 +202,7 @@ impl Replace for String {
         // Assert sorting, such that reversing actually does the right thing.
         if cfg!(debug_assertions) {
             let mut cloned = replacements.iter().cloned().collect_vec();
-            cloned.sort_by_key(crate::stages::german::words::Replacement::start);
+            cloned.sort_by_key(crate::actions::german::words::Replacement::start);
             assert_eq!(cloned, replacements);
         }
 

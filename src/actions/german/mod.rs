@@ -7,5 +7,5 @@ const EXPECTABLE_AVERAGE_MATCHES_PER_WORD: u8 = 2;
 
 // Re-export symbols.
 #[allow(clippy::module_name_repetitions)]
-pub use driver::GermanStage;
+pub use driver::German;
 use words::{LetterCasing, SpecialCharacter, Umlaut, Word};

@@ -1,13 +1,12 @@
-use super::Stage;
+use super::Action;
 use titlecase::titlecase;
 
 /// Renders in titlecase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct TitlecaseStage {}
+pub struct Titlecase {}
 
-impl Stage for TitlecaseStage {
-    fn process(&self, input: &str) -> String {
+impl Action for Titlecase {
+    fn act(&self, input: &str) -> String {
         titlecase(input)
     }
 }
@@ -27,7 +26,7 @@ mod tests {
     //
     #[case("a dime a dozen", "A Dime a Dozen")]
     fn test_titlecasing(#[case] input: &str, #[case] expected: &str) {
-        let result = TitlecaseStage::default().process(input);
+        let result = Titlecase::default().act(input);
         assert_eq!(result, expected);
     }
 }

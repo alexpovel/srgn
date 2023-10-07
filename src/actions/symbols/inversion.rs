@@ -1,24 +1,23 @@
-use crate::Stage;
+use crate::Action;
 
 use super::Symbol;
 
-/// Inverts all symbols inserted by [`SymbolsStage`].
+/// Inverts all symbols inserted by [`Symbols`].
 ///
-/// This is guaranteed to be the inverse of [`SymbolsStage`], as the replacements and
+/// This is guaranteed to be the inverse of [`Symbols`], as the replacements and
 /// originals form a [bijection](https://en.wikipedia.org/wiki/Bijection).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct SymbolsInversionStage {}
+pub struct SymbolsInversion {}
 
-impl Stage for SymbolsInversionStage {
-    fn process(&self, input: &str) -> String {
+impl Action for SymbolsInversion {
+    fn act(&self, input: &str) -> String {
         input
             .chars()
             .map(|c| match Symbol::try_from(c) {
                 Ok(s) => match s {
                     // This is *horrible* as in the current implementation, we cannot
                     // access these symbols. They are implicitly encoded in the
-                    // `substitute` method of `SymbolsStage`. As such, this inversion
+                    // `substitute` method of `Symbols`. As such, this inversion
                     // can get out of sync with the original. There is a property test
                     // in place to catch this.
                     Symbol::EmDash => "---",

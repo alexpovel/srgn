@@ -1,4 +1,22 @@
 use log::{debug, info, warn, LevelFilter};
+#[cfg(feature = "deletion")]
+use srgn::actions::Deletion;
+#[cfg(feature = "german")]
+use srgn::actions::German;
+#[cfg(feature = "lower")]
+use srgn::actions::Lower;
+#[cfg(feature = "normalization")]
+use srgn::actions::Normalization;
+#[cfg(feature = "replace")]
+use srgn::actions::Replacement;
+#[cfg(feature = "squeeze")]
+use srgn::actions::Squeeze;
+#[cfg(feature = "titlecase")]
+use srgn::actions::Titlecase;
+#[cfg(feature = "upper")]
+use srgn::actions::Upper;
+#[cfg(feature = "symbols")]
+use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::scoping::{
     langs::{
         csharp::{CSharp, CSharpQuery},
@@ -8,25 +26,7 @@ use srgn::scoping::{
     literal::Literal,
     ScopedViewBuildStep, ScoperBuildError,
 };
-#[cfg(feature = "deletion")]
-use srgn::stages::DeletionStage;
-#[cfg(feature = "german")]
-use srgn::stages::GermanStage;
-#[cfg(feature = "lower")]
-use srgn::stages::LowerStage;
-#[cfg(feature = "normalization")]
-use srgn::stages::NormalizationStage;
-#[cfg(feature = "replace")]
-use srgn::stages::ReplacementStage;
-#[cfg(feature = "squeeze")]
-use srgn::stages::SqueezeStage;
-#[cfg(feature = "titlecase")]
-use srgn::stages::TitlecaseStage;
-#[cfg(feature = "upper")]
-use srgn::stages::UpperStage;
-#[cfg(feature = "symbols")]
-use srgn::stages::{SymbolsInversionStage, SymbolsStage};
-use srgn::{apply, scoping::regex::Regex, Stage};
+use srgn::{apply, scoping::regex::Regex, Action};
 use std::io::{self, Error, Read, Write};
 
 fn main() -> Result<(), Error> {
@@ -59,12 +59,13 @@ fn main() -> Result<(), Error> {
         },
     };
 
-    let stages = assemble_stages(&args).map_err(|e| Error::new(io::ErrorKind::InvalidInput, e))?;
+    let actions =
+        assemble_actions(&args).map_err(|e| Error::new(io::ErrorKind::InvalidInput, e))?;
 
     let mut buf = String::new();
     std::io::stdin().read_to_string(&mut buf)?;
 
-    let result = apply(&buf, &scopers, &stages)?;
+    let result = apply(&buf, &scopers, &actions)?;
 
     let mut destination = io::stdout();
     destination.write_all(result.as_bytes())?;
@@ -123,78 +124,78 @@ fn assemble_scopers(
     Ok(scopers)
 }
 
-fn assemble_stages(args: &cli::Cli) -> Result<Vec<Box<dyn Stage>>, String> {
-    let mut stages: Vec<Box<dyn Stage>> = Vec::new();
+fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
+    let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
     #[cfg(feature = "replace")]
-    if let Some(replacement) = args.composable_stages.replace.clone() {
-        stages.push(Box::new(ReplacementStage::try_from(replacement)?));
-        debug!("Loaded stage: Replacement");
+    if let Some(replacement) = args.composable_actions.replace.clone() {
+        actions.push(Box::new(Replacement::try_from(replacement)?));
+        debug!("Loaded action: Replacement");
     }
 
     #[cfg(feature = "squeeze")]
-    if args.standalone_stages.squeeze {
-        stages.push(Box::<SqueezeStage>::default());
-        debug!("Loaded stage: Squeeze");
+    if args.standalone_actions.squeeze {
+        actions.push(Box::<Squeeze>::default());
+        debug!("Loaded action: Squeeze");
     }
 
     #[cfg(feature = "german")]
-    if args.composable_stages.german {
-        stages.push(Box::new(GermanStage::new(
+    if args.composable_actions.german {
+        actions.push(Box::new(German::new(
             // Smell? Bug if bools swapped.
             args.german_options.german_prefer_original,
             args.german_options.german_naive,
         )));
-        debug!("Loaded stage: German");
+        debug!("Loaded action: German");
     }
 
     #[cfg(feature = "symbols")]
-    if args.composable_stages.symbols {
+    if args.composable_actions.symbols {
         if args.options.invert {
-            stages.push(Box::<SymbolsInversionStage>::default());
-            debug!("Loaded stage: SymbolsInversion");
+            actions.push(Box::<SymbolsInversion>::default());
+            debug!("Loaded action: SymbolsInversion");
         } else {
-            stages.push(Box::<SymbolsStage>::default());
-            debug!("Loaded stage: Symbols");
+            actions.push(Box::<Symbols>::default());
+            debug!("Loaded action: Symbols");
         }
     }
 
     #[cfg(feature = "deletion")]
-    if args.standalone_stages.delete {
-        stages.push(Box::<DeletionStage>::default());
-        debug!("Loaded stage: Deletion");
+    if args.standalone_actions.delete {
+        actions.push(Box::<Deletion>::default());
+        debug!("Loaded action: Deletion");
     }
 
     #[cfg(feature = "upper")]
-    if args.composable_stages.upper {
-        stages.push(Box::<UpperStage>::default());
-        debug!("Loaded stage: Upper");
+    if args.composable_actions.upper {
+        actions.push(Box::<Upper>::default());
+        debug!("Loaded action: Upper");
     }
 
     #[cfg(feature = "lower")]
-    if args.composable_stages.lower {
-        stages.push(Box::<LowerStage>::default());
-        debug!("Loaded stage: Lower");
+    if args.composable_actions.lower {
+        actions.push(Box::<Lower>::default());
+        debug!("Loaded action: Lower");
     }
 
     #[cfg(feature = "titlecase")]
-    if args.composable_stages.titlecase {
-        stages.push(Box::<TitlecaseStage>::default());
-        debug!("Loaded stage: Titlecase");
+    if args.composable_actions.titlecase {
+        actions.push(Box::<Titlecase>::default());
+        debug!("Loaded action: Titlecase");
     }
 
     #[cfg(feature = "normalization")]
-    if args.composable_stages.normalize {
-        stages.push(Box::<NormalizationStage>::default());
-        debug!("Loaded stage: Normalization");
+    if args.composable_actions.normalize {
+        actions.push(Box::<Normalization>::default());
+        debug!("Loaded action: Normalization");
     }
 
-    if stages.is_empty() {
+    if actions.is_empty() {
         // Doesn't hurt, but warn loudly
-        warn!("No stages loaded, will return input unchanged");
+        warn!("No actions loaded, will return input unchanged");
     }
 
-    Ok(stages)
+    Ok(actions)
 }
 
 /// To the default log level found in the environment, adds the requested additional
@@ -242,7 +243,7 @@ mod cli {
         ///
         /// If string literal mode is requested, will be interpreted as a literal string.
         ///
-        /// Stages will apply their transformations within this scope only.
+        /// Actions will apply their transformations within this scope only.
         ///
         /// The default is the global scope, matching the entire input.
         ///
@@ -257,10 +258,10 @@ mod cli {
         pub scope: String,
 
         #[command(flatten)]
-        pub composable_stages: ComposableStages,
+        pub composable_actions: ComposableActions,
 
         #[command(flatten)]
-        pub standalone_stages: StandaloneStages,
+        pub standalone_actions: StandaloneActions,
 
         #[command(flatten)]
         pub options: GlobalOptions,
@@ -270,21 +271,21 @@ mod cli {
 
         #[cfg(feature = "german")]
         #[command(flatten)]
-        pub german_options: GermanStageOptions,
+        pub german_options: GermanOptions,
     }
 
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (global)")]
     pub(super) struct GlobalOptions {
-        /// Undo the effects of passed stages, where applicable
+        /// Undo the effects of passed actions, where applicable
         ///
         /// Requires a 1:1 mapping (bijection) between replacements and original, which
         /// is currently available for:
         ///
         /// - symbols: '≠' <-> '!=' etc.
         ///
-        /// Other stages:
+        /// Other actions:
         ///
         /// - german: inverting e.g. 'Ä' is ambiguous (can be 'Ae' or 'AE')
         ///
@@ -316,13 +317,13 @@ mod cli {
 
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
-    #[command(next_help_heading = "Composable Stages")]
-    pub(super) struct ComposableStages {
+    #[command(next_help_heading = "Composable Actions")]
+    pub(super) struct ComposableActions {
         /// Replace scope by this (fixed) value
         ///
-        /// Specially treated stage for ergonomics and compatibility with `tr`.
+        /// Specially treated action for ergonomics and compatibility with `tr`.
         ///
-        /// If given, will run before any other stage.
+        /// If given, will run before any other action.
         #[cfg(feature = "replace")]
         #[arg(value_name = "REPLACEMENT", env, verbatim_doc_comment)]
         pub replace: Option<String>,
@@ -372,19 +373,19 @@ mod cli {
 
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = false)]
-    #[command(next_help_heading = "Standalone Stages (only usable alone)")]
-    pub(super) struct StandaloneStages {
+    #[command(next_help_heading = "Standalone Actions (only usable alone)")]
+    pub(super) struct StandaloneActions {
         /// Delete scope
         ///
-        /// Cannot be used with any other stage: no point in deleting and performing any
-        /// other action. Sibling stages would either receive empty input or have their
+        /// Cannot be used with any other action: no point in deleting and performing any
+        /// other action. Sibling actions would either receive empty input or have their
         /// work wiped.
         #[cfg(feature = "deletion")]
         #[arg(
             short,
             long,
             requires = "scope",
-            conflicts_with = stringify!(ComposableStages),
+            conflicts_with = stringify!(ComposableActions),
             verbatim_doc_comment
         )]
         pub delete: bool,
@@ -453,7 +454,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true, id("german-opts"))]
     #[command(next_help_heading = "Options (german)")]
-    pub(super) struct GermanStageOptions {
+    pub(super) struct GermanOptions {
         /// When some original version and its replacement are equally legal, prefer the
         /// original and do not modify.
         ///

@@ -1,4 +1,4 @@
-use super::Stage;
+use super::Action;
 use unicode_categories::UnicodeCategories;
 use unicode_normalization::UnicodeNormalization;
 
@@ -6,11 +6,10 @@ use unicode_normalization::UnicodeNormalization;
 ///
 /// Uses NFD (Normalization Form D), canonical decomposition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct NormalizationStage {}
+pub struct Normalization {}
 
-impl Stage for NormalizationStage {
-    fn process(&self, input: &str) -> String {
+impl Action for Normalization {
+    fn act(&self, input: &str) -> String {
         input.nfd().filter(|c| !c.is_mark()).collect()
     }
 }

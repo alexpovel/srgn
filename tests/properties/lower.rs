@@ -1,7 +1,7 @@
 use proptest::prelude::*;
 use srgn::{
+    actions::{Action, Lower},
     scoping::ScopedViewBuilder,
-    stages::{LowerStage, Stage},
 };
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
@@ -14,9 +14,9 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Lowercase_Letter}*"
     ) {
-        let stage = LowerStage::default();
+        let action = Lower::default();
         let mut view = ScopedViewBuilder::new(&input).build();
-        stage.map(&mut view);
+        action.map(&mut view);
         let res = view.to_string();
 
         assert_eq!(res, input);

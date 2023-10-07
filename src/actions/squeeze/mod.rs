@@ -1,15 +1,14 @@
-use super::Stage;
+use super::Action;
 use crate::scoping::{Scope, ScopedView};
 use log::{debug, trace};
 
 /// Squeezes all consecutive matched scopes into a single occurrence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct SqueezeStage {}
+pub struct Squeeze {}
 
-impl Stage for SqueezeStage {
-    fn process(&self, _input: &str) -> String {
-        unimplemented!("Stage works without processing individual input")
+impl Action for Squeeze {
+    fn act(&self, _input: &str) -> String {
+        unimplemented!("Action works without processing individual input")
     }
 
     fn map<'viewee, 'a>(&self, view: &'a mut ScopedView<'viewee>) -> &'a mut ScopedView<'viewee> {
@@ -144,13 +143,13 @@ mod tests {
         " dirty Strings \t with \t\t messed up whitespace\n\n\n"
     )]
     fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
-        let stage = SqueezeStage {};
+        let action = Squeeze {};
 
         let builder = ScopedViewBuilder::new(input)
             .explode_from_scoper(&crate::scoping::regex::Regex::new(pattern.clone()));
         let mut view = builder.build();
 
-        stage.map(&mut view);
+        action.map(&mut view);
         let result = view.to_string();
 
         assert_eq!(result, expected);

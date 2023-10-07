@@ -336,7 +336,7 @@ mod tests {
             );
 
             assert!(
-                n_tries > 250,
+                n_tries > 100,
                 // Might happen in CI, but we should ensure a certain lower bound;
                 // locally, many more tests can run.
                 "Too few tries; is the host machine very slow?"

@@ -1,14 +1,13 @@
 use log::info;
 
-use super::Stage;
+use super::Action;
 
 /// Renders in lowercase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct LowerStage {}
+pub struct Lower {}
 
-impl Stage for LowerStage {
-    fn process(&self, input: &str) -> String {
+impl Action for Lower {
+    fn act(&self, input: &str) -> String {
         info!("Lowercasing: '{}'", input);
         input.to_lowercase()
     }
@@ -50,6 +49,6 @@ mod tests {
     // Emojis
     #[case("👋\0", "👋\0")]
     fn substitute(#[case] input: &str, #[case] expected: &str) {
-        assert_eq!(LowerStage {}.process(input), expected);
+        assert_eq!(Lower {}.act(input), expected);
     }
 }
