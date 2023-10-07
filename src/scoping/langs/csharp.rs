@@ -46,7 +46,7 @@ impl From<CustomCSharpQuery> for TSQuery {
 }
 
 impl ScopedViewBuildStep for CSharp {
-    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         self.scope_via_query(input)
     }
 }

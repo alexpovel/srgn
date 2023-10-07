@@ -12,7 +12,7 @@ impl Stage for SqueezeStage {
         unimplemented!("Stage works without processing individual input")
     }
 
-    fn map<'a, 'b>(&self, view: &'b mut ScopedView<'a>) -> &'b mut ScopedView<'a> {
+    fn map<'viewee, 'a>(&self, view: &'a mut ScopedView<'viewee>) -> &'a mut ScopedView<'viewee> {
         debug!("Squeezing input by collapsing all consecutive in-scope occurrences.");
         let v = view.into_inner_mut();
 

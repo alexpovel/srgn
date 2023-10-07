@@ -31,7 +31,7 @@ impl From<RegexError> for ScoperBuildError {
 }
 
 pub trait ScopedViewBuildStep {
-    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a>;
+    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee>;
 }
 
 impl fmt::Debug for dyn ScopedViewBuildStep {
@@ -42,22 +42,22 @@ impl fmt::Debug for dyn ScopedViewBuildStep {
 
 /// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Scope<'a, T> {
+pub enum Scope<'viewee, T> {
     /// The given part is in scope for processing.
     In(T),
     /// The given part is out of scope for processing.
     ///
     /// Treated as immutable, view-only.
-    Out(&'a str),
+    Out(&'viewee str),
 }
 
-type ROScope<'a> = Scope<'a, &'a str>;
-type ROScopes<'a> = Vec<ROScope<'a>>;
+type ROScope<'viewee> = Scope<'viewee, &'viewee str>;
+type ROScopes<'viewee> = Vec<ROScope<'viewee>>;
 
-type RWScope<'a> = Scope<'a, Cow<'a, str>>;
-type RWScopes<'a> = Vec<RWScope<'a>>;
+type RWScope<'viewee> = Scope<'viewee, Cow<'viewee, str>>;
+type RWScopes<'viewee> = Vec<RWScope<'viewee>>;
 
-impl<'a> ROScope<'a> {
+impl<'viewee> ROScope<'viewee> {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         let s: &str = self.into();
@@ -65,19 +65,19 @@ impl<'a> ROScope<'a> {
     }
 }
 
-impl<'a> From<&'a ROScope<'a>> for &'a str {
+impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// Get the underlying string slice of a [`ScopeStatus`].
     ///
     /// All variants contain such a slice, so this is a convenient method.
-    fn from(s: &'a ROScope) -> Self {
+    fn from(s: &'viewee ROScope) -> Self {
         match s {
             Scope::In(s) | Scope::Out(s) => s,
         }
     }
 }
 
-impl<'a> From<ROScope<'a>> for RWScope<'a> {
-    fn from(s: ROScope<'a>) -> Self {
+impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
+    fn from(s: ROScope<'viewee>) -> Self {
         match s {
             Scope::In(s) => RWScope::In(Cow::Borrowed(s)),
             Scope::Out(s) => RWScope::Out(s),
@@ -85,11 +85,11 @@ impl<'a> From<ROScope<'a>> for RWScope<'a> {
     }
 }
 
-impl<'a> From<&'a RWScope<'a>> for &'a str {
+impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// Get the underlying string slice of a [`ScopeStatus`].
     ///
     /// All variants contain such a slice, so this is a convenient method.
-    fn from(s: &'a RWScope) -> Self {
+    fn from(s: &'viewee RWScope) -> Self {
         match s {
             Scope::In(s) => s,
             Scope::Out(s) => s,
@@ -98,20 +98,20 @@ impl<'a> From<&'a RWScope<'a>> for &'a str {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScopedViewBuilder<'a> {
-    scopes: ROScopes<'a>,
+pub struct ScopedViewBuilder<'viewee> {
+    scopes: ROScopes<'viewee>,
 }
 
-impl<'a> ScopedViewBuilder<'a> {
+impl<'viewee> ScopedViewBuilder<'viewee> {
     #[must_use]
-    pub fn new(input: &'a str) -> Self {
+    pub fn new(input: &'viewee str) -> Self {
         Self {
             scopes: vec![Scope::In(input)],
         }
     }
 
     #[must_use]
-    pub fn build(self) -> ScopedView<'a> {
+    pub fn build(self) -> ScopedView<'viewee> {
         ScopedView {
             scopes: self
                 .scopes
@@ -122,17 +122,17 @@ impl<'a> ScopedViewBuilder<'a> {
     }
 }
 
-impl<'a> IntoIterator for ScopedViewBuilder<'a> {
-    type Item = ROScope<'a>;
+impl<'viewee> IntoIterator for ScopedViewBuilder<'viewee> {
+    type Item = ROScope<'viewee>;
 
-    type IntoIter = std::vec::IntoIter<ROScope<'a>>;
+    type IntoIter = std::vec::IntoIter<ROScope<'viewee>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.scopes.into_iter()
     }
 }
 
-impl<'a> ScopedViewBuilder<'a> {
+impl<'viewee> ScopedViewBuilder<'viewee> {
     #[must_use]
     pub fn explode_from_ranges(self, exploder: impl Fn(&str) -> Vec<Range<usize>>) -> Self {
         self.explode(|s| {
@@ -170,7 +170,7 @@ impl<'a> ScopedViewBuilder<'a> {
     #[must_use]
     pub fn explode<F>(mut self, exploder: F) -> Self
     where
-        F: Fn(&'a str) -> Self,
+        F: Fn(&'viewee str) -> Self,
     {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.len());
@@ -203,19 +203,19 @@ impl<'a> ScopedViewBuilder<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScopedView<'a> {
-    scopes: RWScopes<'a>,
+pub struct ScopedView<'viewee> {
+    scopes: RWScopes<'viewee>,
 }
 
-impl<'a> ScopedView<'a> {
+impl<'viewee> ScopedView<'viewee> {
     #[must_use]
-    pub fn new(scopes: RWScopes<'a>) -> Self {
+    pub fn new(scopes: RWScopes<'viewee>) -> Self {
         Self { scopes }
     }
 
     /// For API discoverability.
     #[must_use]
-    pub fn builder(input: &'a str) -> ScopedViewBuilder<'a> {
+    pub fn builder(input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         ScopedViewBuilder::new(input)
     }
 
@@ -244,7 +244,7 @@ impl<'a> ScopedView<'a> {
         self
     }
 
-    pub fn into_inner_mut(&mut self) -> &mut RWScopes<'a> {
+    pub fn into_inner_mut(&mut self) -> &mut RWScopes<'viewee> {
         self.scopes.as_mut()
     }
 }

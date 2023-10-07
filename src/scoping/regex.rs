@@ -46,7 +46,7 @@ impl Default for Regex {
 }
 
 impl ScopedViewBuildStep for Regex {
-    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         ScopedViewBuilder::new(input).explode_from_ranges(|s| {
             let has_capture_groups = self.pattern.captures_len() > 1;
 

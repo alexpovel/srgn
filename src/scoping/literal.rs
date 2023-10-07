@@ -35,7 +35,7 @@ impl TryFrom<String> for Literal {
 }
 
 impl ScopedViewBuildStep for Literal {
-    fn scope<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         ScopedViewBuilder::new(input).explode_from_ranges(|s| {
             let len = self.0.len();
 

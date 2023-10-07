@@ -57,7 +57,7 @@ pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
         parser
     }
 
-    fn scope_via_query<'a>(&self, input: &'a str) -> ScopedViewBuilder<'a> {
+    fn scope_via_query<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         ScopedViewBuilder::new(input).explode_from_ranges(|s| {
             // tree-sitter is about incremental parsing, which we don't use here
             let old_tree = None;

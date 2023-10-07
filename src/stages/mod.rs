@@ -60,7 +60,7 @@ pub trait Stage: Send + Sync + Debug {
     ///
     /// This is infallible: it cannot fail in the sense of [`Result`]. It can only
     /// return incorrect results, which would be bugs (please report).
-    fn map<'a, 'b>(&self, view: &'b mut ScopedView<'a>) -> &'b mut ScopedView<'a> {
+    fn map<'viewee, 'a>(&self, view: &'a mut ScopedView<'viewee>) -> &'a mut ScopedView<'viewee> {
         view.map(&|s| self.process(s))
     }
 }
