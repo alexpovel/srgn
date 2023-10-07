@@ -1,8 +1,8 @@
 use proptest::prelude::*;
 use srgn::{
-    actions::Squeeze,
+    actions::{Action, Squeeze},
     scoping::{regex::Regex, ScopedViewBuilder},
-    Action, RegexPattern,
+    RegexPattern,
 };
 
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;

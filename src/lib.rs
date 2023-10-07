@@ -12,7 +12,7 @@
 #![allow(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
-pub use crate::actions::Action;
+use crate::actions::Action;
 use crate::scoping::ScopedViewBuilder;
 use log::debug;
 use scoping::ScopedViewBuildStep;
@@ -43,7 +43,7 @@ pub use fancy_regex::Regex as RegexPattern;
 ///
 ///
 /// ```
-/// use srgn::{apply, scoping::{ScopedViewBuildStep, regex::Regex}, actions::German, Action};
+/// use srgn::{apply, scoping::{ScopedViewBuildStep, regex::Regex}, actions::{Action, German}};
 ///
 /// let actions: &[Box<dyn Action>] = &[Box::new(German::default())];
 /// let scopers: &[Box<dyn ScopedViewBuildStep>] = &[Box::new(Regex::default())];

@@ -17,16 +17,20 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::scoping::{
-    langs::{
-        csharp::{CSharp, CSharpQuery},
-        python::{Python, PythonQuery},
-        typescript::{TypeScript, TypeScriptQuery},
+use srgn::{
+    actions::Action,
+    apply,
+    scoping::{
+        langs::{
+            csharp::{CSharp, CSharpQuery},
+            python::{Python, PythonQuery},
+            typescript::{TypeScript, TypeScriptQuery},
+        },
+        literal::Literal,
+        regex::Regex,
+        ScopedViewBuildStep, ScoperBuildError,
     },
-    literal::Literal,
-    ScopedViewBuildStep, ScoperBuildError,
 };
-use srgn::{apply, scoping::regex::Regex, Action};
 use std::io::{self, Error, Read, Write};
 
 fn main() -> Result<(), Error> {

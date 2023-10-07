@@ -35,7 +35,7 @@ use unicode_titlecase::StrTitleCase;
 /// # Example: A simple greeting, with Umlaut and Eszett
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let result = action.act("Gruess Gott!");
@@ -48,7 +48,7 @@ use unicode_titlecase::StrTitleCase;
 /// *elaborate* word list!), but is still handled, as its constituents are.
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let result = action.act("Du Suesswassertagtraeumer!");
@@ -62,7 +62,7 @@ use unicode_titlecase::StrTitleCase;
 /// [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// for word in &[
 ///     // "ae"
@@ -116,7 +116,7 @@ use unicode_titlecase::StrTitleCase;
 ///
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let result = action.act("aEpFeL");
@@ -133,7 +133,7 @@ use unicode_titlecase::StrTitleCase;
 /// output is `Äpfel`
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let result: String = action.act("AePfEl");
@@ -145,7 +145,7 @@ use unicode_titlecase::StrTitleCase;
 /// ## Subexample: other cases
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let f = |word: &str| -> String {action.act(word)};
@@ -212,7 +212,7 @@ use unicode_titlecase::StrTitleCase;
 /// ([`str`]).
 ///
 /// ```
-/// use srgn::{Action, actions::German};
+/// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
 /// let result = action.act("\0Schoener    你好 Satz... 👋🏻\r\n\n");
@@ -294,7 +294,7 @@ impl German {
     /// much more likely than for Umlauts.
     ///
     /// ```
-    /// use srgn::{Action, actions::German};
+    /// use srgn::actions::{Action, German};
     ///
     /// for (original, output) in &[
     ///     ("Busse", "Buße"), // busses / penance
@@ -317,7 +317,7 @@ impl German {
     /// Naive mode is essentially forcing a maximum number of replacements.
     ///
     /// ```
-    /// use srgn::{Action, actions::German};
+    /// use srgn::actions::{Action, German};
     ///
     /// for (original, output) in &[
     ///     ("Frau Schroekedaek", "Frau Schrökedäk"), // Names are not in the word list

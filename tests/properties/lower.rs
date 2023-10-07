@@ -1,10 +1,9 @@
+use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 use proptest::prelude::*;
 use srgn::{
     actions::{Action, Lower},
     scoping::ScopedViewBuilder,
 };
-
-use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES))]
