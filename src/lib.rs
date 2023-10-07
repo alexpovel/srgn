@@ -24,8 +24,6 @@ use log::debug;
 use scoping::ScopedViewBuildStep;
 use std::io::Error;
 
-/// Items related to scopes, which are used to limit the application of stages.
-pub mod scoped;
 pub mod scoping;
 /// Main components around [`Stage`]s and their [processing][Stage::substitute].
 pub mod stages;

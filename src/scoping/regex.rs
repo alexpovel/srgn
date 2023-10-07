@@ -136,32 +136,53 @@ mod tests {
         Scope::{In, Out},
         ScopedView,
     };
-    use std::borrow::Cow::Borrowed;
+    use std::borrow::Cow::Borrowed as B;
 
     use super::*;
 
     #[rstest]
-    #[case("a", "a", ScopedView::new(vec![In(Borrowed("a"))]))]
-    #[case("aa", "a", ScopedView::new(vec![In(Borrowed("a")), In(Borrowed("a"))]))]
-    #[case("aba", "a", ScopedView::new(vec![In(Borrowed("a")), Out("b"), In(Borrowed("a"))]))]
+    #[case("a", "a", ScopedView::new(vec![In(B("a"))]))]
+    #[case("aa", "a", ScopedView::new(vec![In(B("a")), In(B("a"))]))]
+    #[case("aba", "a", ScopedView::new(vec![In(B("a")), Out("b"), In(B("a"))]))]
     //
-    #[case(".", ".", ScopedView::new(vec![In(Borrowed("."))]))]
-    #[case(r"\.", ".", ScopedView::new(vec![In(Borrowed(r"\")), In(Borrowed("."))]))]
-    #[case(r".", r"\.", ScopedView::new(vec![In(Borrowed(r"."))]))]
-    #[case(r"\.", r"\.", ScopedView::new(vec![Out(r"\"), In(Borrowed(r"."))]))]
-    #[case(r"\w", r"\w", ScopedView::new(vec![Out(r"\"), In(Borrowed(r"w"))]))]
+    #[case("a", "", ScopedView::new(vec![Out("a")]))]
+    #[case("", "a", ScopedView::new(vec![]))] // Empty results are discarded
+    //
+    #[case("a", "a", ScopedView::new(vec![In(B("a"))]))]
+    #[case("a", "b", ScopedView::new(vec![Out("a")]))]
+    //
+    #[case("a", ".*", ScopedView::new(vec![In(B("a"))]))]
+    #[case("a", ".+?", ScopedView::new(vec![In(B("a"))]))]
+    //
+    #[case("a\na", ".*", ScopedView::new(vec![In(B("a")), Out("\n"), In(B("a"))]))]
+    #[case("a\na", "(?s).*", ScopedView::new(vec![In(B("a\na"))]))] // Dot matches newline
+    //
+    #[case("abc", "a", ScopedView::new(vec![In(B("a")), Out("bc")]))]
+    //
+    #[case("abc", r"\w", ScopedView::new(vec![In(B("a")), In(B("b")), In(B("c"))]))]
+    #[case("abc", r"\W", ScopedView::new(vec![Out("abc")]))]
+    #[case("abc", r"\w+", ScopedView::new(vec![In(B("abc"))]))]
+    //
+    #[case("Work 69 on 420 words", r"\w+", ScopedView::new(vec![In(B("Work")), Out(" "), In(B("69")), Out(" "), In(B("on")), Out(" "), In(B("420")), Out(" "), In(B("words"))]))]
+    #[case("Ignore 69 the 420 digits", r"\p{letter}+", ScopedView::new(vec![In(B("Ignore")), Out(" 69 "), In(B("the")), Out(" 420 "), In(B("digits"))]))]
+    //
+    #[case(".", ".", ScopedView::new(vec![In(B("."))]))]
+    #[case(r"\.", ".", ScopedView::new(vec![In(B(r"\")), In(B("."))]))]
+    #[case(r".", r"\.", ScopedView::new(vec![In(B(r"."))]))]
+    #[case(r"\.", r"\.", ScopedView::new(vec![Out(r"\"), In(B(r"."))]))]
+    #[case(r"\w", r"\w", ScopedView::new(vec![Out(r"\"), In(B(r"w"))]))]
     //
     // Capture groups
-    #[case(r"Hello", r"\w+", ScopedView::new(vec![In(Borrowed(r"Hello"))]))]
+    #[case(r"Hello", r"\w+", ScopedView::new(vec![In(B(r"Hello"))]))]
     #[case(
         r"Hello", r"(\w+)",
         ScopedView::new(
             vec![
-                In(Borrowed(r"H")),
-                In(Borrowed(r"e")),
-                In(Borrowed(r"l")),
-                In(Borrowed(r"l")),
-                In(Borrowed(r"o"))
+                In(B(r"H")),
+                In(B(r"e")),
+                In(B(r"l")),
+                In(B(r"l")),
+                In(B(r"o"))
             ]
         )
     )]
@@ -169,12 +190,12 @@ mod tests {
         r"Hello World", r"Hello (\w+)",
         ScopedView::new(
             vec![
-                In(Borrowed(r"Hello ")),
-                In(Borrowed(r"W")),
-                In(Borrowed(r"o")),
-                In(Borrowed(r"r")),
-                In(Borrowed(r"l")),
-                In(Borrowed(r"d"))
+                In(B(r"Hello ")),
+                In(B(r"W")),
+                In(B(r"o")),
+                In(B(r"r")),
+                In(B(r"l")),
+                In(B(r"d"))
             ]
         )
     )]
@@ -187,5 +208,139 @@ mod tests {
         let actual = regex.scope(input).build();
 
         assert_eq!(actual, expected);
+    }
+
+    mod fuzzyish {
+        use std::time::{Duration, Instant};
+
+        use super::*;
+
+        use log::info;
+        use rand;
+        use rand::seq::SliceRandom;
+        use rand::Rng;
+        use test_log::test;
+
+        fn generate_random_regex(mut rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
+            let atoms: [&str; 7] = [".", "\\d", "\\D", "\\w", "\\W", "\\s", "\\S"];
+            let quantifiers: [&str; 5] = ["*", "+", "?", "{2,5}", "{3}"];
+            let others: [&str; 3] = ["|", "^", "$"];
+            let letters: [&str; 26] = [
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
+                "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+            ];
+
+            let mut regex = String::new();
+
+            for _ in 0..rng.gen_range(1..=2) {
+                if rng.gen_bool(0.3) {
+                    regex.push_str(atoms.choose(&mut rng).unwrap());
+                }
+
+                if rng.gen_bool(0.6) {
+                    let letter = letters.choose(&mut rng).unwrap();
+                    if rng.gen_bool(0.5) {
+                        let uc = letter.to_uppercase();
+                        regex.push_str(uc.as_str());
+                    } else {
+                        regex.push_str(letter);
+                    }
+                }
+
+                if rng.gen_bool(0.3) {
+                    regex.push_str(quantifiers.choose(&mut rng).unwrap());
+                }
+
+                if rng.gen_bool(0.1) {
+                    regex.push_str(others.choose(&mut rng).unwrap());
+                }
+            }
+
+            RegexPattern::new(regex.as_str()).ok()
+        }
+
+        /// Run fuzz-like testing.
+        ///
+        /// This is much like fuzzing, but a bit more manually controlled and part of
+        /// the core test harness, hence running always. Property testing like
+        /// `proptest` would be much better ("given some input in this shape, and some
+        /// regex, test the property that reassembly works"), but setup for that crate
+        /// is substantial. The below approach is 'good enough' and emulates property
+        /// testing a fair bit. We just need some random inputs and some short-ish but
+        /// random regex to split by (generating random, valid regex is... interesting).
+        ///
+        /// Run for a duration instead of a fixed number of tries, as we would have to
+        /// choose that fixed number rather low for CI to not be too slow. That would
+        /// waste potential when running locally.
+        #[test]
+        fn test_regex_scoping_randomly() {
+            let mut n_tries = 0;
+            let mut n_matches = 0;
+
+            let duration = if std::env::var("CI").is_ok() {
+                Duration::from_secs(5)
+            } else {
+                // SORRY if this crashed the test on your machine. Flaky one :(
+                Duration::from_millis(500)
+            };
+
+            let mut rng = rand::thread_rng();
+
+            // "Anything but 'other'", see also:
+            // https://docs.rs/regex/latest/regex/#matching-one-character
+            // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
+            let pattern = r"\P{other}+";
+            let gen = rand_regex::Regex::compile(pattern, 100).unwrap();
+
+            let now = Instant::now();
+
+            loop {
+                n_tries += 1;
+
+                let Some(regex) = generate_random_regex(&mut rng) else {
+                    continue;
+                };
+                let scope = Regex::new(regex);
+                let input: String = rng.sample(&gen);
+
+                let view = scope.scope(&input);
+
+                if view.scopes.iter().any(|s| match s {
+                    In(_) => true,
+                    Out(_) => false,
+                }) {
+                    n_matches += 1;
+                }
+
+                let mut reassembled = String::new();
+                for scope in view {
+                    reassembled.push_str((&scope).into());
+                }
+
+                assert_eq!(input, reassembled);
+
+                if now.elapsed() > duration {
+                    break;
+                }
+            }
+
+            info!(
+                // To test anything, we actually need matches so splits happen.
+                "Processed {} inputs, of which {} were matched and successfully reassembled",
+                n_tries, n_matches
+            );
+
+            assert!(
+                n_matches >= n_tries / 20,
+                "Too few regex matches; try lowering regex length"
+            );
+
+            assert!(
+                n_tries > 250,
+                // Might happen in CI, but we should ensure a certain lower bound;
+                // locally, many more tests can run.
+                "Too few tries; is the host machine very slow?"
+            );
+        }
     }
 }

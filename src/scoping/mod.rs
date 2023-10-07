@@ -1,3 +1,5 @@
+//! Items for defining the scope actions are applied within.
+
 use self::literal::LiteralError;
 use self::regex::RegexError;
 use itertools::Itertools;
@@ -117,6 +119,16 @@ impl<'a> ScopedViewBuilder<'a> {
                 .map(std::convert::Into::into)
                 .collect(),
         }
+    }
+}
+
+impl<'a> IntoIterator for ScopedViewBuilder<'a> {
+    type Item = ROScope<'a>;
+
+    type IntoIter = std::vec::IntoIter<ROScope<'a>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.scopes.into_iter()
     }
 }
 
