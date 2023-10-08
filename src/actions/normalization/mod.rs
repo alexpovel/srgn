@@ -29,7 +29,7 @@ impl Action for Normalization {
 //     //
 //     #[case("a dime a dozen", "A Dime a Dozen")]
 //     fn test_titlecasing(#[case] input: &str, #[case] expected: &str) {
-//         let result = TitlecaseStage::default().process(input);
+//         let result = Titlecase::default().process(input);
 //         assert_eq!(result, expected);
 //     }
 // }
