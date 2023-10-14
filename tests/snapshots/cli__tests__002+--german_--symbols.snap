@@ -1,14 +1,7 @@
 ---
 source: tests/cli.rs
-expression: "&stdout"
+expression: "CommandResult { stdout, exit_code }"
 ---
-
-
-
-Dübel
-
-😂
-
-
-
+stdout: "\n\n\nDübel\n\n😂\n\n\u0010\n\n"
+exit_code: 0
 

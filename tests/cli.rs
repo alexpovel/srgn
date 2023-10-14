@@ -8,6 +8,7 @@
 mod tests {
     use assert_cmd::Command;
     use rstest::rstest;
+    use serde::Serialize;
 
     // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
     // integration tests only with valid UTF8.
@@ -36,6 +37,12 @@ Duebel
         r#"Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫"#,
     ];
 
+    #[derive(Debug, Serialize)]
+    struct CommandResult {
+        stdout: String,
+        exit_code: u8,
+    }
+
     #[rstest]
     fn test_cli(
         // This will generate all permutations of all `values`, which is a lot but
@@ -58,20 +65,19 @@ Duebel
         cmd.args(args).write_stdin(sample.clone());
 
         let output = cmd.output().expect("failed to execute process");
-        assert!(
-            // Don't forget this; not manually checked by the framework!
-            output.status.success(),
-            "Command failed: {:?}",
-            cmd
-        );
 
+        let exit_code = output
+            .status
+            .code()
+            .expect("Process unexpectedly terminated via signal, not `exit`.")
+            as u8;
         let stdout = String::from_utf8(output.stdout).unwrap();
 
         let padded_sample_number = format!("{:03}", n_sample);
 
         let snapshot_name =
             (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
-        insta::assert_snapshot!(snapshot_name, &stdout);
+        insta::assert_yaml_snapshot!(snapshot_name, CommandResult { stdout, exit_code });
     }
 
     #[test]

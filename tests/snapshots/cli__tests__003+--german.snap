@@ -1,5 +1,7 @@
 ---
 source: tests/cli.rs
-expression: "&stdout"
+expression: "CommandResult { stdout, exit_code }"
 ---
-Dübel -> 1.5mm; Wand != 3m²... ÜBELTÄTER! 😫
+stdout: Dübel -> 1.5mm; Wand != 3m²... ÜBELTÄTER! 😫
+exit_code: 0
+
