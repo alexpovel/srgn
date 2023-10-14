@@ -55,6 +55,8 @@ Duebel
             &["--symbols"],
             &["--german", "--symbols"],
             &["--delete", r"\p{Emoji_Presentation}"],
+            &["--fail-any", r"\d"],
+            &["--fail-none", r"\d"],
         )]
         args: &'static [&'static str],
     ) {

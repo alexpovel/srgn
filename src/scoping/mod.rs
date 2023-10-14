@@ -58,6 +58,7 @@ type RWScope<'viewee> = Scope<'viewee, Cow<'viewee, str>>;
 type RWScopes<'viewee> = Vec<RWScope<'viewee>>;
 
 impl<'viewee> ROScope<'viewee> {
+    /// Check whether the scope is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         let s: &str = self.into();
@@ -246,6 +247,15 @@ impl<'viewee> ScopedView<'viewee> {
 
     pub fn into_inner_mut(&mut self) -> &mut RWScopes<'viewee> {
         self.scopes.as_mut()
+    }
+
+    /// Check whether anything is in scope.
+    #[must_use]
+    pub fn has_any_in_scope(&self) -> bool {
+        self.scopes.iter().any(|s| match s {
+            Scope::In(_) => true,
+            Scope::Out(_) => false,
+        })
     }
 }
 

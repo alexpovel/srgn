@@ -15,8 +15,10 @@
 use crate::actions::Action;
 use crate::scoping::ScopedViewBuilder;
 use log::debug;
-use scoping::ScopedViewBuildStep;
-use std::io::Error;
+#[cfg(doc)]
+use scoping::Scope::In;
+use scoping::{ScopedView, ScopedViewBuildStep};
+use std::{error::Error, fmt};
 
 /// Main components around [`Action`]s and their [processing][Action::substitute].
 pub mod actions;
@@ -29,6 +31,32 @@ pub const GLOBAL_SCOPE: &str = r".*";
 /// The type of regular expression used throughout the crate. Abstracts away the
 /// underlying implementation.
 pub use fancy_regex::Regex as RegexPattern;
+
+/// An error as returned by [`apply`].
+#[derive(Debug, Clone)]
+pub enum ApplicationError<'viewee> {
+    /// After scoping, the resulting [`ScopedView`] was found to contain nothing [`In`]
+    /// scope. No action was applied.
+    ViewWithoutAnyInScope {
+        /// The original input application was tried on.
+        input: &'viewee str,
+        /// The built view over the input.
+        view: ScopedView<'viewee>,
+    },
+}
+
+impl fmt::Display for ApplicationError<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ApplicationError::ViewWithoutAnyInScope { input, view } => {
+                // Use debug representation for more debuggable feedback.
+                write!(f, "View has nothing in scope: {view:?} (input: {input})")
+            }
+        }
+    }
+}
+
+impl Error for ApplicationError<'_> {}
 
 /// Apply the list of [actions][Action] to a source, writing results to the given
 /// destination.
@@ -56,23 +84,22 @@ pub use fancy_regex::Regex as RegexPattern;
 ///
 /// # Errors
 ///
-/// An error will be returned in the following cases:
-///
-/// - when an [`Action`] fails its substitution
-/// - when the source cannot be read
-/// - when the destination cannot be written to
-/// - when the destination cannot be flushed before exiting
-pub fn apply(
-    input: &str,
+/// Refer to [`ApplicationError`].
+pub fn apply<'viewee>(
+    input: &'viewee str,
     scopers: &[Box<dyn ScopedViewBuildStep>],
     actions: &[Box<dyn Action>],
-) -> Result<String, Error> {
+) -> Result<String, ApplicationError<'viewee>> {
     let mut builder = ScopedViewBuilder::new(input);
     for scoper in scopers {
         builder = builder.explode(|s| scoper.scope(s));
     }
 
     let mut view = builder.build();
+
+    if !view.has_any_in_scope() {
+        return Err(ApplicationError::ViewWithoutAnyInScope { input, view });
+    }
 
     for action in actions {
         debug!("Applying action {:?}", action);

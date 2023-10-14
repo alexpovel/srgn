@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: "CommandResult { args, stdin, stdout, exit_code }"
+---
+args:
+  - "--fail-any"
+  - "\\d"
+stdin: "\n\n\nDuebel\n\n😂\n\n\u0010\n\n"
+stdout: "\n\n\nDuebel\n\n😂\n\n\u0010\n\n"
+exit_code: 0
+

@@ -1,0 +1,11 @@
+---
+source: tests/cli.rs
+expression: "CommandResult { args, stdin, stdout, exit_code }"
+---
+args:
+  - "--fail-none"
+  - "\\d"
+stdin: Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫
+stdout: Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫
+exit_code: 0
+

@@ -30,10 +30,11 @@ use srgn::{
         regex::Regex,
         ScopedViewBuildStep, ScoperBuildError,
     },
+    ApplicationError,
 };
-use std::io::{self, Error, Read, Write};
+use std::io::{self, Read, Write};
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), String> {
     let args = cli::Cli::init();
 
     let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
@@ -44,35 +45,67 @@ fn main() -> Result<(), Error> {
 
     info!("Launching app with args: {:?}", args);
 
+    debug!("Assembling scopers.");
     let scopers = match assemble_scopers(&args) {
         Ok(s) => s,
         Err(e) => match e {
-            // Kinda abusive of these `io::ErrorKind`s...
             ScoperBuildError::RegexError(r) => {
-                return Err(Error::new(io::ErrorKind::InvalidInput, r))
+                return Err(format!("Error building regex scope: {r}"))
             }
             ScoperBuildError::LiteralError(l) => {
-                return Err(Error::new(io::ErrorKind::InvalidInput, l))
+                return Err(format!("Error building literal scope: {l}"))
             }
             ScoperBuildError::EmptyScope => {
-                return Err(Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Empty scope is not allowed",
-                ))
+                return Err(String::from("Error building scope: empty."))
             }
         },
     };
+    debug!("Done assembling scopers.");
 
-    let actions =
-        assemble_actions(&args).map_err(|e| Error::new(io::ErrorKind::InvalidInput, e))?;
+    debug!("Assembling actions.");
+    let actions = assemble_actions(&args)?;
+    debug!("Done assembling actions.");
 
+    debug!("Reading stdin.");
     let mut buf = String::new();
-    std::io::stdin().read_to_string(&mut buf)?;
+    std::io::stdin()
+        .read_to_string(&mut buf)
+        .map_err(|e| format!("Error reading stdin: {e}"))?;
+    debug!("Done reading stdin.");
 
-    let result = apply(&buf, &scopers, &actions)?;
+    debug!("Applying.");
+    let result = match apply(&buf, &scopers, &actions) {
+        Ok(r) => {
+            // Landing here implies application took place, aka we did *not* return
+            // early due to nothing in scope, so *something* was in scope.
+            if args.options.fail_any {
+                return Err("Some input was in scope, and explicit failure requested.".to_string());
+            };
+
+            r
+        }
+        Err(ae @ ApplicationError::ViewWithoutAnyInScope { input, .. }) => {
+            if args.options.fail_none {
+                return Err(format!(
+                    "Nothing in scope and explicit failure requested: {ae}"
+                ));
+            };
+
+            debug_assert_eq!(
+                input, buf,
+                "With nothing in scope, input should remain unmodified"
+            );
+            buf // Saves copying the string: we already have the owned version
+        }
+    };
+    debug!("Done applying.");
 
     let mut destination = io::stdout();
-    destination.write_all(result.as_bytes())?;
+    debug!("Writing to stdout.");
+    destination
+        .write_all(result.as_bytes())
+        .map_err(|e| format!("Error writing to destination: {e}"))?;
+    debug!("Done writing to stdout.");
 
     info!("Done, exiting");
     Ok(())
@@ -305,6 +338,16 @@ mod cli {
         /// string. Will require a scope to be passed.
         #[arg(short('L'), long, env, verbatim_doc_comment)]
         pub literal_string: bool,
+        /// If anything at all is found to be in scope, fail.
+        ///
+        /// The default is to continue processing normally.
+        #[arg(long, verbatim_doc_comment)]
+        pub fail_any: bool,
+        /// If nothing is found to be in scope, fail.
+        ///
+        /// The default is to return the input unchanged (without failure).
+        #[arg(long, verbatim_doc_comment)]
+        pub fail_none: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
