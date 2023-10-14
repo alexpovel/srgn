@@ -10,21 +10,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-github-app-token:
-    name: Create GitHub App token
-    runs-on: ubuntu-latest
-
-    outputs:
-      token: ${{ steps.app-token.outputs.token }}
-
-    steps:
-      # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app-in-a-github-actions-workflow
-      - uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
   build-test:
     name: Build and test (${{ matrix.os }})
 
@@ -85,9 +70,6 @@ jobs:
   release-please:
     name: Execute release chores
 
-    needs:
-      - create-github-app-token
-
     runs-on: ubuntu-latest
 
     outputs:
@@ -95,11 +77,18 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
 
     steps:
+      # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app-in-a-github-actions-workflow
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: google-github-actions/release-please-action@v3
         id: release
         with:
           # Token needs: `contents: write`, `pull-requests: write`
-          token: ${{ needs.create-github-app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token }}
           release-type: rust
 
   publish:
