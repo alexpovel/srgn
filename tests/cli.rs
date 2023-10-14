@@ -39,6 +39,8 @@ Duebel
 
     #[derive(Debug, Serialize)]
     struct CommandResult {
+        args: &'static [&'static str],
+        stdin: String,
         stdout: String,
         exit_code: u8,
     }
@@ -54,7 +56,7 @@ Duebel
             &["--german", "--symbols"],
             &["--delete", r"\p{Emoji_Presentation}"],
         )]
-        args: &[&str],
+        args: &'static [&'static str],
     ) {
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
@@ -62,7 +64,8 @@ Duebel
         let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
 
         let sample = SAMPLES[n_sample - 1];
-        cmd.args(args).write_stdin(sample.clone());
+        let stdin = sample.to_owned();
+        cmd.args(args).write_stdin(stdin.as_str());
 
         let output = cmd.output().expect("failed to execute process");
 
@@ -77,7 +80,15 @@ Duebel
 
         let snapshot_name =
             (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
-        insta::assert_yaml_snapshot!(snapshot_name, CommandResult { stdout, exit_code });
+        insta::assert_yaml_snapshot!(
+            snapshot_name,
+            CommandResult {
+                args,
+                stdin,
+                stdout,
+                exit_code
+            }
+        );
     }
 
     #[test]
