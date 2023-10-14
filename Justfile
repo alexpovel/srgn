@@ -7,12 +7,11 @@ set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 set ignore-comments := true
 
 # Runs onboarding steps, installing dependencies and setting up the environment.
-onboard:
-    pip install pre-commit && pre-commit install --hook-type pre-push --hook-type pre-commit --hook-type commit-msg
-    cargo install \
+onboard: install-binstall install-pre-commit install-flamegraph
+    pre-commit install --hook-type pre-push --hook-type pre-commit --hook-type commit-msg
+    cargo binstall \
         cargo-tarpaulin \
-        cargo-insta \
-        flamegraph
+        cargo-insta
 
 # Profiles the execution of the program, generating a flamegraph.
 [windows]
@@ -32,8 +31,8 @@ profile +ARGS='german': install-flamegraph
 
 # Installs the `flamegraph` Cargo tool.
 [unix]
-install-flamegraph: install-flamegraph-prerequisites
-    command -v flamegraph > /dev/null || cargo install flamegraph
+install-flamegraph: install-flamegraph-prerequisites install-binstall
+    command -v flamegraph > /dev/null || cargo binstall flamegraph
 
 # Installs the prerequisites for `flamegraph-rs`, assuming Debian.
 [unix]
@@ -55,3 +54,13 @@ install-flamegraph-prerequisites:
 sort FILE:
     python -c "for line in sorted(open('{{ invocation_directory() / FILE }}').read().splitlines()): print(line)" > {{ FILE }}.sorted
     mv {{ FILE }}.sorted {{ invocation_directory() / FILE }}
+
+# Installs the `pre-commit` framework, assuming Debian.
+[unix]
+install-pre-commit:
+    sudo apt update && sudo apt install pre-commit
+
+# Installs `cargo-binstall`.
+[unix]
+install-binstall:
+    command -v cargo-binstall > /dev/null || cargo install cargo-binstall
