@@ -198,7 +198,13 @@ mod tests {
 
     /// Multiple commands can be piped together.
     #[derive(Debug, Clone, PartialEq, Eq)]
-    struct PipedPrograms(VecDeque<Program>);
+    struct PipedPrograms {
+        /// The program forming the pipe.
+        programs: VecDeque<Program>,
+        /// The expected outcome of the *entire* pipe. Any failure anywhere in the pipe
+        /// should cause overall failure (like `pipefail`).
+        should_fail: bool,
+    }
 
     impl PipedPrograms {
         /// Assembles a list of programs into a pipe.
@@ -210,10 +216,11 @@ mod tests {
             chain: impl Iterator<Item = Program>,
             stdout: Option<&str>,
             snippets: Snippets,
+            should_fail: bool,
         ) -> Result<Self, &str> {
-            let mut chain = chain.collect::<VecDeque<_>>();
+            let mut programs = chain.collect::<VecDeque<_>>();
 
-            let first = chain
+            let first = programs
                 .pop_front()
                 .ok_or("Should have at least one program in pipe")?;
 
@@ -236,7 +243,7 @@ mod tests {
                 _ => return Err("First command should be able to produce stdin."),
             };
 
-            match chain
+            match programs
                 .front_mut()
                 .expect("No second program to assemble with")
             {
@@ -248,12 +255,18 @@ mod tests {
                 }
             }
 
-            match chain.back_mut().expect("No last program to assemble with") {
+            match programs
+                .back_mut()
+                .expect("No last program to assemble with")
+            {
                 Program::Echo(_) | Program::Cat(_) => {
                     return Err("Stdin-generating program should not be at the end of a pipe")
                 }
                 Program::Self_(inv) => {
-                    inv.stdout = if let Program::Cat(inv) = first {
+                    inv.stdout = if should_fail {
+                        // No stdout needed if command fails anyway
+                        None
+                    } else if let Program::Cat(inv) = first {
                         assert!(
                             stdout.is_none(),
                             "Cat output should be given as extra snippet, not inline"
@@ -281,7 +294,10 @@ mod tests {
                 }
             }
 
-            Ok(Self(chain))
+            Ok(Self {
+                programs,
+                should_fail,
+            })
         }
     }
 
@@ -290,7 +306,7 @@ mod tests {
         type IntoIter = std::collections::vec_deque::IntoIter<Self::Item>;
 
         fn into_iter(self) -> Self::IntoIter {
-            self.0.into_iter()
+            self.programs.into_iter()
         }
     }
 
@@ -325,7 +341,8 @@ mod tests {
         eprintln!("Parsed programs: {:#?}", programs);
 
         // Advance to end; this eats optional comments and trailing whitespace.
-        let (input, _) = take_until("\n")(input)?;
+        let (input, tail) = take_until("\n")(input)?;
+        let should_fail = tail.contains("will fail");
         let (input, _) = line_ending(input)?;
 
         // Parse stdout; anything up to the next prompt.
@@ -334,7 +351,7 @@ mod tests {
 
         Ok((
             input,
-            PipedPrograms::assemble(programs.into_iter(), stdout, snippets)
+            PipedPrograms::assemble(programs.into_iter(), stdout, snippets, should_fail)
                 .expect("Should be able to assemble"),
         ))
     }
@@ -572,6 +589,7 @@ mod tests {
 
         for pipe in pipes {
             let mut previous_stdin = None;
+            let should_fail = pipe.should_fail;
             for program in pipe {
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
@@ -582,11 +600,16 @@ mod tests {
 
                 eprintln!("Running command: {:?}", cmd);
 
-                if let Some(stdout) = program.stdout().clone() {
-                    // `success` takes ownership so can't test separately.
-                    cmd.assert().success().stdout(stdout);
+                let mut assertion = cmd.assert();
+
+                assertion = if should_fail {
+                    assertion.failure()
                 } else {
-                    cmd.assert().success();
+                    assertion.success()
+                };
+
+                if let Some(stdout) = program.stdout().clone() {
+                    assertion.stdout(stdout);
                 }
 
                 // Pipe stdout to stdin of next run...

@@ -640,6 +640,49 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 > [!NOTE]
 > When deleting (`-d`), for reasons of safety and sanity, a scope is *required*.
 
+#### Explicit failure for (mis)matches
+
+After all scopes are applied, it might turn out no matches were found. The default
+behavior is to silently succeed:
+
+```console
+$ echo 'Some input...' | srgn --delete '\d'
+Some input...
+```
+
+The output matches the specification: all digits are removed. There just happened to be
+none. No matter how many actions are applied, **the input is returned unprocessed** once
+this situation is detected. Hence, no unnecessary work is done.
+
+One might prefer receiving explicit feedback (exit code other than zero) on failure:
+
+```bash
+echo 'Some input...' | srgn --delete --fail-none '\d'  # will fail
+```
+
+The inverse scenario is also supported: **failing if anything matched**. This is useful
+for checks (for example, in CI) against "undesirable" content. This works much like a
+custom, ad-hoc linter.
+
+Take for example "old-style" Python code, where type hints are not yet [surfaced to the
+syntax-level](https://docs.python.org/3/library/typing.html):
+
+```python oldtyping.py
+def square(a):
+    """Squares a number.
+
+    :param a: The number (type: int or float)
+    """
+
+    return a**2
+```
+
+This style can be checked against and "forbidden" using:
+
+```bash
+cat oldtyping.py | srgn --python 'doc-strings' --fail-any 'param.+type'  # will fail
+```
+
 #### Literal scope
 
 This causes whatever was passed as the regex scope to be interpreted literally. Useful
