@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/alexpovel/srgn/compare/v0.1.0...v0.2.0) (2023-10-14)
+
+
+### Features
+
+* `fail-any` and `fail-none` feature flags ([1dd3dcb](https://github.com/alexpovel/srgn/commit/1dd3dcb3b233d787abc91622ddc7ce019c764878))
+
+
+### Bug Fixes
+
+* **ci:** Linking/cc fails for tarpaulin; try w/o cache ([ab40957](https://github.com/alexpovel/srgn/commit/ab409571417881a599c3fd32645dd26a5c9d8349))
+* Do not `pub use` `Action` ([1e2c663](https://github.com/alexpovel/srgn/commit/1e2c663473f5c6140f065301f815f3cd3726837a))
+
 ## 0.1.0 (2023-10-05)
 
 
