@@ -141,7 +141,7 @@ jobs:
         shell: bash
         env:
           DIR: ${{ matrix.crate }}
-        run: |
+        run: >
           mkdir "$DIR"
           && mv
           "target/${{ matrix.target }}/release/${{ matrix.binary }}${{ matrix.extension }}"
@@ -154,7 +154,7 @@ jobs:
           "$DIR"
 
       - name: Attach binary to release
-        run: |
+        run: >
           gh release upload
           ${{ needs.release-please.outputs.tag_name }}
           "$ASSET_FILE"
