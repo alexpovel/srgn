@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/alexpovel/srgn/compare/v0.4.0...v0.4.1) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Checkout before running gh CLI ([490d822](https://github.com/alexpovel/srgn/commit/490d8226eb4517937f61d5567966e888125445ce))
+
 ## [0.4.0](https://github.com/alexpovel/srgn/compare/v0.3.2...v0.4.0) (2023-10-22)
 
 
