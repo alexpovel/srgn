@@ -33,7 +33,7 @@ impl Action for SymbolsInversion {
                     Symbol::GreaterThanOrEqual => ">=",
                 }
                 .into(),
-                Err(_) => c.to_string(),
+                Err(()) => c.to_string(),
             })
             .collect()
     }

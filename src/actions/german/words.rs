@@ -251,6 +251,7 @@ mod tests {
     }
 }
 #[cfg(test)]
+#[allow(clippy::ignored_unit_patterns)] // in `proptest` macro, cannot be avoided
 mod properties {
     use super::*;
     use proptest::prelude::*;
