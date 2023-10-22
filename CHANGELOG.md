@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/alexpovel/srgn/compare/v0.3.2...v0.4.0) (2023-10-22)
+
+
+### Features
+
+* **ci:** Test installation via binstall ([ecc35b4](https://github.com/alexpovel/srgn/commit/ecc35b43fd322fe3d24cc43ae58411d66b6fc46f))
+
 ## [0.3.2](https://github.com/alexpovel/srgn/compare/v0.3.1...v0.3.2) (2023-10-22)
 
 
