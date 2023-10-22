@@ -132,6 +132,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
       - name: Build
+        shell: bash
         run: >
           cargo build
           --release
@@ -165,6 +166,7 @@ jobs:
           path: "$ASSET_FILE"
 
       - name: Attach binary to release
+        shell: bash
         env:
           # `gh` blows up without token, cf.
           # https://josh-ops.com/posts/gh-auth-login-in-actions/#example-2---env-variable
