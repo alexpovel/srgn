@@ -137,7 +137,6 @@ jobs:
           --bin ${{ matrix.binary }}
 
       - name: Package binary (for cargo-binstall)
-        # if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         shell: bash
         env:
           DIR: ${{ matrix.crate }}
