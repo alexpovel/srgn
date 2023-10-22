@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/alexpovel/srgn/compare/v0.4.2...v0.4.3) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Use cargo-binstall non-interactively ([78dbba9](https://github.com/alexpovel/srgn/commit/78dbba966761f0f2337dea602d3eb9832e819b79))
+
 ## [0.4.2](https://github.com/alexpovel/srgn/compare/v0.4.1...v0.4.2) (2023-10-22)
 
 
