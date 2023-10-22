@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/alexpovel/srgn/compare/v0.4.1...v0.4.2) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Adjust GitHub token permissions for gh CLI ([243878b](https://github.com/alexpovel/srgn/commit/243878b7095770167cf781f01ed26f8ae67ad7f9))
+
 ## [0.4.1](https://github.com/alexpovel/srgn/compare/v0.4.0...v0.4.1) (2023-10-22)
 
 
