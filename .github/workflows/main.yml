@@ -195,7 +195,7 @@ jobs:
 
     environment:
       name: crates.io
-      url: https://crates.io/crates/srgn/
+      url: https://crates.io/crates/srgn/${{ needs.release-please.outputs.tag_name_without_v }}
 
     steps:
       - uses: actions/checkout@v4
