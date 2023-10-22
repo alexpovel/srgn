@@ -174,14 +174,6 @@ jobs:
           --file "$ASSET_FILE"
           "$DIR"
 
-      - name: Upload binary artifact
-        # Why? So should any later steps fail, we can recover the artifact (and attach
-        # to release manually, for example).
-        uses: actions/upload-artifact@v3
-        with:
-          name: "$ASSET_FILE"
-          path: "$ASSET_FILE"
-
       - name: Attach binary to release
         shell: bash
         env:
