@@ -257,6 +257,7 @@ jobs:
     steps:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install binary
+        shell: bash
         # Get the current version that was just released, and fail if no binaries are
         # directly available (don't allow fallback to compilation from source).
         run: >
@@ -266,8 +267,10 @@ jobs:
           --no-confirm
           srgn
       - name: Print version
+        shell: bash
         run: srgn --version
       - name: Print help
+        shell: bash
         run: srgn --help
       - name: Test version matches release
         shell: bash
