@@ -74,9 +74,66 @@ expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
 
 ## Installation
 
-- binary
-- `cargo install`
-- in CI, `install-action`
+### Prebuilt binaries
+
+Download a prebuilt binary from the
+[releases](https://github.com/alexpovel/srgn/releases/latest).
+
+### cargo-binstall
+
+This crate provides its binaries in a format
+[compatible](https://github.com/cargo-bins/cargo-binstall/blob/9cfc0cd5f97300925ae60f67712b74970a380aca/SUPPORT.md#support-for-cargo-binstall)
+with [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall):
+
+1. Install the [Rust toolchain](https://www.rust-lang.org/tools/install)
+2. Run `cargo install cargo-binstall` (might take a while)
+3. Run `cargo binstall srgn` (couple seconds, as it downloads [prebuilt
+   binaries](#prebuilt-binaries) from GitHub)
+
+These steps are guaranteed to work™, as they are [tested in
+CI](./.github/workflows/main.yml). They also work if no prebuilt binaries are available
+for your platform, as the tool will fall back to [compiling from
+source](#cargo-compile-from-source).
+
+### CI (GitHub Actions)
+
+All [GitHub Actions runner
+images](https://github.com/actions/runner-images/tree/main/images) come with `cargo`
+preinstalled, and `cargo-binstall` provides a convenient [GitHub
+Action](https://github.com/marketplace/actions/install-cargo-binstall):
+
+```yaml
+jobs:
+  srgn:
+    name: Install srgn in CI
+    # All three major OSes work
+    runs-on: ubuntu-latest
+    steps:
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install binary
+        run: >
+          cargo binstall
+          --no-confirm
+          srgn
+      - name: Use binary
+        run: srgn --version
+```
+
+The above concludes in just [5 seconds
+total](https://github.com/alexpovel/srgn/actions/runs/6605290729/job/17940329899), as no
+compilation is required. For more context, see [`cargo-binstall`'s advise on
+CI](https://github.com/cargo-bins/cargo-binstall#can-i-use-it-in-ci).
+
+### Cargo (compile from source)
+
+1. Install the [Rust toolchain](https://www.rust-lang.org/tools/install)
+2. A C compiler is required:
+   1. On Linux, `gcc` works (tested).
+   2. On macOS, try `clang` (untested).
+   3. On Windows, [MSVC](https://visualstudio.microsoft.com/downloads/) works (tested).
+
+      Select "Desktop development with C++" on installation.
+3. Run `cargo install srgn`
 
 ## Walkthrough
 
