@@ -102,7 +102,9 @@ jobs:
         # attached yet.
         if: steps.release.outputs.release_created
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # `secrets.GITHUB_TOKEN` would work here (with appropriate `permissions`),
+          # but just reuse what we already have.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: >
           gh release edit
           ${{ steps.release.outputs.tag_name }}
@@ -225,6 +227,9 @@ jobs:
     needs:
       - release-please
       - build-upload
+
+    permissions:
+      contents: write # For `gh` to edit release
 
     steps:
       - uses: actions/checkout@v4
