@@ -98,7 +98,7 @@ jobs:
 
     needs: release-please
 
-    if: needs.release-please.outputs.created
+    # if: needs.release-please.outputs.created
 
     strategy:
       matrix:
@@ -121,6 +121,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      ASSET_FILE: "${{ matrix.crate }}-${{ matrix.target }}-${{ needs.release-please.outputs.tag_name }}.tgz"
+
     steps:
       - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
@@ -133,12 +136,28 @@ jobs:
           --target ${{ matrix.target }}
           --bin ${{ matrix.binary }}
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@v3
-        with:
-          name: "${{ matrix.crate }}-${{ matrix.target }}-${{ needs.release-please.outputs.tag_name }}"
-          path: "target/${{ matrix.target }}/release/${{ matrix.binary }}${{ matrix.extension }}"
-          if-no-files-found: error
+      - name: Package binary (for cargo-binstall)
+        # if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        shell: bash
+        env:
+          DIR: ${{ matrix.crate }}
+        run: |
+          mkdir "$DIR"
+          && mv
+          "target/${{ matrix.target }}/release/${{ matrix.binary }}${{ matrix.extension }}"
+          "$DIR"
+          && tar
+          --create
+          --verbose
+          --gzip
+          --file "$ASSET_FILE"
+          "$DIR"
+
+      - name: Attach binary to release
+        run: |
+          gh release upload
+          ${{ needs.release-please.outputs.tag_name }}
+          "$ASSET_FILE"
 
   publish:
     name: Publish to crates.io
