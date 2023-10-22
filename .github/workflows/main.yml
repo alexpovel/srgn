@@ -125,6 +125,9 @@ jobs:
     env:
       ASSET_FILE: "${{ matrix.crate }}-${{ matrix.target }}-${{ needs.release-please.outputs.tag_name }}.tgz"
 
+    permissions:
+      contents: write # For `gh` to upload asset to release
+
     steps:
       - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
