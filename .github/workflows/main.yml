@@ -114,7 +114,7 @@ jobs:
     needs: release-please
     # Assumption: if release created, tests ran in corresponding PR, so it's safe to not
     # `needs` tests here.
-    # if: needs.release-please.outputs.created
+    if: needs.release-please.outputs.created
 
     strategy:
       matrix:
