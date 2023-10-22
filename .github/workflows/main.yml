@@ -197,7 +197,9 @@ jobs:
     # `needs` tests here.
     if: needs.release-please.outputs.created
 
-    environment: crates.io
+    environment:
+      name: crates.io
+      url: https://crates.io/crates/srgn/
 
     steps:
       - uses: actions/checkout@v4
