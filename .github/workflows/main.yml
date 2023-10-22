@@ -162,6 +162,10 @@ jobs:
           path: "$ASSET_FILE"
 
       - name: Attach binary to release
+        env:
+          # `gh` blows up without token, cf.
+          # https://josh-ops.com/posts/gh-auth-login-in-actions/#example-2---env-variable
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           gh release upload
           ${{ needs.release-please.outputs.tag_name }}
