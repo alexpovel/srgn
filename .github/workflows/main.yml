@@ -98,7 +98,7 @@ jobs:
 
     needs: release-please
 
-    # if: needs.release-please.outputs.created
+    if: needs.release-please.outputs.created
 
     strategy:
       matrix:
@@ -158,7 +158,6 @@ jobs:
           gh release upload
           ${{ needs.release-please.outputs.tag_name }}
           "$ASSET_FILE"
-          || true
 
   publish:
     name: Publish to crates.io
