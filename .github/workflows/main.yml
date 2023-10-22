@@ -97,7 +97,8 @@ jobs:
     name: Build and upload binaries
 
     needs: release-please
-
+    # Assumption: if release created, tests ran in corresponding PR, so it's safe to not
+    # `needs` tests here.
     if: needs.release-please.outputs.created
 
     strategy:
@@ -164,7 +165,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - release-please
-      - build-test
+    # Assumption: if release created, tests ran in corresponding PR, so it's safe to not
+    # `needs` tests here.
     if: needs.release-please.outputs.created
 
     environment: crates.io
