@@ -17,7 +17,7 @@ repos:
         types: [rust]
       - id: clippy
         name: clippy
-        entry: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        entry: cargo clippy --workspace --all-targets --all-features -- --deny warnings
         language: system
         pass_filenames: false
         types: [rust]
