@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/alexpovel/srgn/compare/v0.3.1...v0.3.2) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Force bash shell on all OSs ([f34af16](https://github.com/alexpovel/srgn/commit/f34af16aa7455f26f8788200c0f1dfb39a077871))
+
 ## [0.3.1](https://github.com/alexpovel/srgn/compare/v0.3.0...v0.3.1) (2023-10-22)
 
 
