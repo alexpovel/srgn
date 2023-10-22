@@ -114,7 +114,7 @@ jobs:
     needs: release-please
     # Assumption: if release created, tests ran in corresponding PR, so it's safe to not
     # `needs` tests here.
-    if: needs.release-please.outputs.created
+    # if: needs.release-please.outputs.created
 
     strategy:
       matrix:
@@ -126,6 +126,11 @@ jobs:
             extension: ""
           - os: macos-latest
             target: x86_64-apple-darwin
+            crate: srgn
+            binary: srgn
+            extension: ""
+          - os: macos-latest-xlarge
+            target: aarch64-apple-darwin
             crate: srgn
             binary: srgn
             extension: ""
@@ -146,6 +151,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
+
+      - name: Add rustup target
+        # Idempotent, so just succeeds if already added.
+        run: rustup target add ${{ matrix.target }}
+
       - name: Build
         shell: bash
         run: >
