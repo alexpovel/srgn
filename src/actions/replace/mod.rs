@@ -50,6 +50,13 @@ pub struct Replacement {
     replacement: String,
 }
 
+impl Replacement {
+    #[must_use]
+    pub fn new(replacement: String) -> Self {
+        Self { replacement }
+    }
+}
+
 impl TryFrom<String> for Replacement {
     type Error = String;
 

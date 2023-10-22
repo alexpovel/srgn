@@ -1,5 +1,7 @@
 //! Items for defining the scope actions are applied within.
 
+use crate::actions::{self, Action};
+
 use self::literal::LiteralError;
 use self::regex::RegexError;
 use itertools::Itertools;
@@ -256,6 +258,69 @@ impl<'viewee> ScopedView<'viewee> {
             Scope::In(_) => true,
             Scope::Out(_) => false,
         })
+    }
+}
+
+/// Implementations of all available actions as dedicated methods.
+///
+/// Where actions don't take arguments, neither do the methods.
+impl<'viewee> ScopedView<'viewee> {
+    pub fn map_action<A: Action>(&mut self, action: &A) -> &mut Self {
+        self.map(&|s| action.act(s))
+    }
+
+    pub fn delete(&mut self) -> &mut Self {
+        let action = actions::Deletion::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn german(&mut self) -> &mut Self {
+        let action = actions::German::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn lower(&mut self) -> &mut Self {
+        let action = actions::Lower::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn normalize(&mut self) -> &mut Self {
+        let action = actions::Normalization::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn replace(&mut self, replacement: String) -> &mut Self {
+        let action = actions::Replacement::new(replacement);
+
+        self.map_action(&action)
+    }
+
+    pub fn squeeze(&mut self) -> &mut Self {
+        let action = actions::Squeeze::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn symbols(&mut self) -> &mut Self {
+        let action = actions::Symbols::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn titlecase(&mut self) -> &mut Self {
+        let action = actions::Titlecase::default();
+
+        self.map_action(&action)
+    }
+
+    pub fn upper(&mut self) -> &mut Self {
+        let action = actions::Upper::default();
+
+        self.map_action(&action)
     }
 }
 
