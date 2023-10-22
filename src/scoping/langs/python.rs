@@ -35,18 +35,18 @@ impl From<PremadePythonQuery> for TSQuery {
                     "#
                 }
                 PremadePythonQuery::FunctionNames => {
-                    r#"
+                    r"
                     (function_definition
                         name: (identifier) @function-name
                     )
-                    "#
+                    "
                 }
                 PremadePythonQuery::FunctionCalls => {
-                    r#"
+                    r"
                     (call
                         function: (identifier) @function-name
                     )
-                    "#
+                    "
                 }
             },
         )
