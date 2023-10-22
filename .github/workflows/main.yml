@@ -69,45 +69,6 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
 
-  build-upload:
-    name: Build and upload binaries
-
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            crate: srgn
-            binary: srgn
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            crate: srgn
-            binary: srgn
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            crate: srgn
-            binary: srgn
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: swatinem/rust-cache@v2
-      - name: Build
-        run: >
-          cargo build
-          --release
-          --locked
-          --verbose
-          --target ${{ matrix.target }}
-          --bin ${{ matrix.binary }}
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v3
-        with:
-          name: "${{ matrix.crate }}-${{ matrix.target }}-v0.0.1"
-          path: "target/${{ matrix.target }}/release/${{ matrix.binary }}"
-
   release-please:
     name: Execute release chores
 
@@ -131,6 +92,51 @@ jobs:
           # Token needs: `contents: write`, `pull-requests: write`
           token: ${{ steps.app-token.outputs.token }}
           release-type: rust
+
+  build-upload:
+    name: Build and upload binaries
+
+    needs: release-please
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            crate: srgn
+            binary: srgn
+            extension: ""
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            crate: srgn
+            binary: srgn
+            extension: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            crate: srgn
+            binary: srgn
+            extension: ".exe"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+      - name: Build
+        run: >
+          cargo build
+          --release
+          --locked
+          --verbose
+          --target ${{ matrix.target }}
+          --bin ${{ matrix.binary }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: "${{ matrix.crate }}-${{ matrix.target }}-${{ needs.release-please.outputs.tag_name }}"
+          path: "target/${{ matrix.target }}/release/${{ matrix.binary }}${{ matrix.extension }}"
+          if-no-files-found: error
 
   publish:
     name: Publish to crates.io
