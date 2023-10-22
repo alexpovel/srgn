@@ -96,6 +96,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           release-type: rust
 
+      - uses: actions/checkout@v4
       - name: Mark release as draft
         # To prevent race conditions where release is created, but no binaries are
         # attached yet.
@@ -226,6 +227,7 @@ jobs:
       - build-upload
 
     steps:
+      - uses: actions/checkout@v4
       - name: Remove draft status from release
         # Now that everything is done, fully release.
         if: needs.release-please.outputs.created
