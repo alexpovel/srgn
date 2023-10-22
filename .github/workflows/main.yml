@@ -271,6 +271,7 @@ jobs:
           cargo binstall
           --version "$VERSION_WITHOUT_V"
           --strategies crate-meta-data
+          --no-confirm
           srgn
       - name: Print version
         run: srgn --version
