@@ -420,7 +420,9 @@ structure](https://en.wikipedia.org/wiki/Parse_tree).
 discoverable API (either [as a library](#rust-library) or via CLI, `srgn --help`), one
 can learn of the supported languages and available, premade queries. Each supported
 language comes with an escape hatch, allowing you to run your own, custom ad-hoc
-queries. The hatch comes in the form of `--lang-query <S EXPRESSION>`. It allows you to write small, ad-hoc linters, for example to catch code such as:
+queries. The hatch comes in the form of `--lang-query <S EXPRESSION>`, where `lang` is a
+language such as `python`. It allows you to write small, ad-hoc linters, for example
+to catch code such as
 
 ```python cond.py
 if x:
@@ -429,22 +431,16 @@ else:
     return right
 ```
 
-which, with an invocation of
+with an invocation of
 
 ```bash
-cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --upper
+cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --fail-any # will fail
 ```
 
-will give (TODO: IMPLEMENT `--fail`)
+(The code can be rewritten as `return left if x else right`)
 
-```python output-cond.py
-IF X:
-    RETURN LEFT
-ELSE:
-    RETURN RIGHT
-```
-
-A couple resources exist for getting started with your own queries:
+The expression required for matching this case is a mouthful. A couple resources exist
+for getting started with your own queries:
 
 - the [official docs on
   querying](https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries)
