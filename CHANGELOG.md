@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.5](https://github.com/alexpovel/srgn/compare/v0.4.4...v0.4.5) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Only build binaries on release creation ([6eaac7b](https://github.com/alexpovel/srgn/commit/6eaac7b1975b4139695eced6c1caa0aaf1bf59ae))
+* **ci:** Skip entire job, not just its single step ([9787306](https://github.com/alexpovel/srgn/commit/978730619eac7695b3891f53cb294817c3356cfc))
+
 ## [0.4.4](https://github.com/alexpovel/srgn/compare/v0.4.3...v0.4.4) (2023-10-22)
 
 
