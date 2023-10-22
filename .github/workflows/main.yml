@@ -182,16 +182,16 @@ jobs:
           --file "$ASSET_FILE"
           "$DIR"
 
-      - name: Attach binary to release
-        shell: bash
-        env:
-          # `gh` blows up without token, cf.
-          # https://josh-ops.com/posts/gh-auth-login-in-actions/#example-2---env-variable
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >
-          gh release upload
-          ${{ needs.release-please.outputs.tag_name }}
-          "$ASSET_FILE"
+      # - name: Attach binary to release
+      #   shell: bash
+      #   env:
+      #     # `gh` blows up without token, cf.
+      #     # https://josh-ops.com/posts/gh-auth-login-in-actions/#example-2---env-variable
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: >
+      #     gh release upload
+      #     ${{ needs.release-please.outputs.tag_name }}
+      #     "$ASSET_FILE"
 
   publish:
     name: Publish to crates.io
