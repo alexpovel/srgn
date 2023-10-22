@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/alexpovel/srgn/compare/v0.3.0...v0.3.1) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Provide credentials token to gh CLI ([1c9c21f](https://github.com/alexpovel/srgn/commit/1c9c21f6be6be7e9f0b9d0f5996df8e96c379ad2))
+
 ## [0.3.0](https://github.com/alexpovel/srgn/compare/v0.2.0...v0.3.0) (2023-10-22)
 
 
