@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/alexpovel/srgn/compare/v0.4.3...v0.4.4) (2023-10-22)
+
+
+### Bug Fixes
+
+* **ci:** Switch from env var to native GitHub Actions variable ([816cc54](https://github.com/alexpovel/srgn/commit/816cc54f6d29299b8b39b28ee5b6ca69b0ecf0e4))
+* **ci:** Use bash for all platforms ([9fcb348](https://github.com/alexpovel/srgn/commit/9fcb34853f52b1ae7298e8e6836d69ebbccf1980))
+
 ## [0.4.3](https://github.com/alexpovel/srgn/compare/v0.4.2...v0.4.3) (2023-10-22)
 
 
