@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/alexpovel/srgn/compare/v0.2.0...v0.3.0) (2023-10-22)
+
+
+### Features
+
+* **ci:** Provide binaries (x86/64bit for macOS, Linux, Windows) ([f4c009f](https://github.com/alexpovel/srgn/commit/f4c009fe0002e3944ebcf79183f134ceaf4f936e))
+
+
+### Bug Fixes
+
+* **ci:** Windows binary extension and version string ([d93004b](https://github.com/alexpovel/srgn/commit/d93004b5775e110e803f5a4543ad53d10d98a32e))
+
 ## [0.2.0](https://github.com/alexpovel/srgn/compare/v0.1.0...v0.2.0) (2023-10-14)
 
 
