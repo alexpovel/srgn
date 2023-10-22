@@ -227,6 +227,7 @@ jobs:
     needs:
       - release-please
       - build-upload
+    if: needs.release-please.outputs.created
 
     permissions:
       contents: write # For `gh` to edit release
@@ -235,7 +236,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Remove draft status from release
         # Now that everything is done, fully release.
-        if: needs.release-please.outputs.created
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
