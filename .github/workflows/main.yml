@@ -77,9 +77,7 @@ jobs:
     outputs:
       created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
-      major: ${{ steps.release.outputs.major }}
-      minor: ${{ steps.release.outputs.minor }}
-      patch: ${{ steps.release.outputs.patch }}
+      tag_name_without_v: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
 
     steps:
       # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app-in-a-github-actions-workflow
@@ -251,28 +249,22 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    env:
-      VERSION_WITHOUT_V: ${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}.${{ needs.release-please.outputs.patch }}
-
     steps:
       - uses: cargo-bins/cargo-binstall@main
       - name: Install binary
-        shell: bash
         # Get the current version that was just released, and fail if no binaries are
         # directly available (don't allow fallback to compilation from source).
         run: >
           cargo binstall
-          --version "$VERSION_WITHOUT_V"
+          --version ${{ needs.release-please.outputs.tag_name_without_v }}
           --strategies crate-meta-data
           --no-confirm
           srgn
       - name: Print version
-        shell: bash
         run: srgn --version
       - name: Print help
-        shell: bash
         run: srgn --help
       - name: Test version matches release
         shell: bash
         run: >
-          [[ $(srgn --version) == "srgn $VERSION_WITHOUT_V" ]]
+          [[ $(srgn --version) == "srgn ${{ needs.release-please.outputs.tag_name_without_v }}" ]]
