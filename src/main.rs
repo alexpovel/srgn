@@ -9,8 +9,6 @@ use srgn::actions::Lower;
 use srgn::actions::Normalization;
 #[cfg(feature = "replace")]
 use srgn::actions::Replacement;
-#[cfg(feature = "squeeze")]
-use srgn::actions::Squeeze;
 #[cfg(feature = "titlecase")]
 use srgn::actions::Titlecase;
 #[cfg(feature = "upper")]
@@ -19,7 +17,6 @@ use srgn::actions::Upper;
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::{
     actions::Action,
-    apply,
     scoping::{
         langs::{
             csharp::{CSharp, CSharpQuery},
@@ -28,9 +25,8 @@ use srgn::{
         },
         literal::Literal,
         regex::Regex,
-        ScopedViewBuildStep, ScoperBuildError,
+        ScopedViewBuildStep, ScopedViewBuilder, ScoperBuildError,
     },
-    ApplicationError,
 };
 use std::io::{self, Read, Write};
 
@@ -73,34 +69,43 @@ fn main() -> Result<(), String> {
         .map_err(|e| format!("Error reading stdin: {e}"))?;
     debug!("Done reading stdin.");
 
-    debug!("Applying.");
-    let result = match apply(&buf, &scopers, &actions) {
-        Ok(r) => {
-            // Landing here implies application took place, aka we did *not* return
-            // early due to nothing in scope, so *something* was in scope.
-            if args.options.fail_any {
-                return Err("Some input was in scope, and explicit failure requested.".to_string());
-            };
+    debug!("Building view.");
+    let mut builder = ScopedViewBuilder::new(&buf);
+    for scoper in scopers {
+        builder = builder.explode(|s| scoper.scope(s));
+    }
+    let mut view = builder.build();
+    debug!("Done building view: {view:?}");
 
-            r
+    debug!("Applying actions to view.");
+    let result = {
+        if args.options.fail_none && !view.has_any_in_scope() {
+            return Err(format!(
+                "Nothing in scope and explicit failure requested: {view:?}"
+            ));
         }
-        Err(ae @ ApplicationError::ViewWithoutAnyInScope { input, .. }) => {
-            if args.options.fail_none {
-                return Err(format!(
-                    "Nothing in scope and explicit failure requested: {ae}"
-                ));
-            };
 
-            debug_assert_eq!(
-                input, buf,
-                "With nothing in scope, input should remain unmodified"
-            );
-            buf // Saves copying the string: we already have the owned version
+        if args.options.fail_any && view.has_any_in_scope() {
+            return Err(format!(
+                "Some input was in scope, and explicit failure requested: {view:?}"
+            ));
+        };
+
+        if args.standalone_actions.squeeze {
+            view.squeeze();
         }
+
+        for action in actions {
+            debug!("Applying action {:?}", action);
+            view.map(&|s| action.act(s));
+        }
+
+        view.to_string()
     };
-    debug!("Done applying.");
+    debug!("Done applying actions to view.");
 
     let mut destination = io::stdout();
+
     debug!("Writing to stdout.");
     destination
         .write_all(result.as_bytes())
@@ -168,12 +173,6 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
     if let Some(replacement) = args.composable_actions.replace.clone() {
         actions.push(Box::new(Replacement::try_from(replacement)?));
         debug!("Loaded action: Replacement");
-    }
-
-    #[cfg(feature = "squeeze")]
-    if args.standalone_actions.squeeze {
-        actions.push(Box::<Squeeze>::default());
-        debug!("Loaded action: Squeeze");
     }
 
     #[cfg(feature = "german")]

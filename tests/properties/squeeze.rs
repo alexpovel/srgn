@@ -1,6 +1,5 @@
 use proptest::prelude::*;
 use srgn::{
-    actions::{Action, Squeeze},
     scoping::{regex::Regex, ScopedViewBuilder},
     RegexPattern,
 };
@@ -15,12 +14,11 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Any}*AA\p{Any}*"
     ) {
-        let action = Squeeze::default();
         let mut view = ScopedViewBuilder::new(&input).explode_from_scoper(
             &Regex::new(RegexPattern::new("A").unwrap())
         ).build();
 
-        action.map(&mut view);
+        view.squeeze();
         let res = view.to_string();
 
         assert!(res.len() < input.len());

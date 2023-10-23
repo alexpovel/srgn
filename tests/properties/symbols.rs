@@ -1,9 +1,6 @@
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 use proptest::prelude::*;
-use srgn::{
-    actions::{Action, Symbols, SymbolsInversion},
-    scoping::ScopedViewBuilder,
-};
+use srgn::scoping::ScopedViewBuilder;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES * 2))]
@@ -18,13 +15,13 @@ proptest! {
     ) {
         let applied = {
             let mut view = ScopedViewBuilder::new(&input).build();
-            Symbols::default().map(&mut view);
+            view.symbols();
             view.to_string()
         };
 
         let inverted = {
             let mut view = ScopedViewBuilder::new(&applied).build();
-            SymbolsInversion::default().map(&mut view);
+            view.invert_symbols();
             view.to_string()
         };
 

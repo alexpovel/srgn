@@ -9,17 +9,15 @@ use super::Action;
 ///
 /// ```rust
 /// use srgn::RegexPattern;
-/// use srgn::actions::{Action, Replacement};
 /// use srgn::scoping::{ScopedViewBuilder, regex::Regex};
 ///
-/// let action = Replacement::try_from("_".to_string()).unwrap();
 /// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
 /// let mut view = ScopedViewBuilder::new("hyphenated-variable-name").explode_from_scoper(
 ///     &scoper
 /// ).build();
 ///
 /// assert_eq!(
-///    action.map(&mut view).to_string(),
+///    view.replace("_".to_string()).to_string(),
 ///   "hyphenated_variable_name"
 /// );
 /// ```
@@ -28,10 +26,8 @@ use super::Action;
 ///
 /// ```rust
 /// use srgn::RegexPattern;
-/// use srgn::actions::{Action, Replacement};
 /// use srgn::scoping::{ScopedViewBuilder, regex::Regex};
 ///
-/// let action = Replacement::try_from(":(".to_string()).unwrap();
 /// // A Unicode character class category. See also
 /// // https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties
 /// let scoper = Regex::new(RegexPattern::new(r"\p{Emoji}").unwrap());
@@ -40,7 +36,7 @@ use super::Action;
 /// ).build();
 ///
 /// assert_eq!(
-///    action.map(&mut view).to_string(),
+///    view.replace(":(".to_string()).to_string(),
 ///    // Party is over, sorry ¯\_(ツ)_/¯
 ///   "Party! :( :( :( :( So much fun! ╰(°▽°)╯"
 /// );
