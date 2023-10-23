@@ -20,7 +20,7 @@ use scoping::Scope::In;
 use scoping::{ScopedView, ScopedViewBuildStep};
 use std::{error::Error, fmt};
 
-/// Main components around [`Action`]s and their [processing][Action::substitute].
+/// Main components around [`Action`]s.
 pub mod actions;
 pub mod scoping;
 pub mod text;
