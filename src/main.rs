@@ -96,8 +96,7 @@ fn main() -> Result<(), String> {
         }
 
         for action in actions {
-            debug!("Applying action {:?}", action);
-            view.map(&|s| action.act(s));
+            view.map(&action);
         }
 
         view.to_string()

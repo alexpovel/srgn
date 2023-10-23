@@ -210,6 +210,7 @@ pub struct ScopedView<'viewee> {
     scopes: RWScopes<'viewee>,
 }
 
+/// Core implementations.
 impl<'viewee> ScopedView<'viewee> {
     #[must_use]
     pub fn new(scopes: RWScopes<'viewee>) -> Self {
@@ -222,15 +223,14 @@ impl<'viewee> ScopedView<'viewee> {
         ScopedViewBuilder::new(input)
     }
 
-    /// submit a function to be applied to each in-scope, returning out-scopes unchanged
-    pub fn map<F>(&mut self, f: &F) -> &mut Self
-    where
-        F: Fn(&str) -> <str as ToOwned>::Owned,
-    {
+    /// Apply an action to all in-scope occurrences.
+    ///
+    /// See implementors of [`Action`] for available types.
+    pub fn map(&mut self, action: &impl Action) -> &mut Self {
         for scope in &mut self.scopes {
             match scope {
                 Scope::In(s) => {
-                    let res = f(s);
+                    let res = action.act(s);
                     debug!(
                         "Replacing '{}' with '{}'",
                         s.escape_debug(),
@@ -279,62 +279,58 @@ impl<'viewee> ScopedView<'viewee> {
 ///
 /// Where actions don't take arguments, neither do the methods.
 impl<'viewee> ScopedView<'viewee> {
-    pub fn map_action<A: Action>(&mut self, action: &A) -> &mut Self {
-        self.map(&|s| action.act(s))
-    }
-
     pub fn delete(&mut self) -> &mut Self {
         let action = actions::Deletion::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn german(&mut self) -> &mut Self {
         let action = actions::German::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn lower(&mut self) -> &mut Self {
         let action = actions::Lower::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn normalize(&mut self) -> &mut Self {
         let action = actions::Normalization::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn replace(&mut self, replacement: String) -> &mut Self {
         let action = actions::Replacement::new(replacement);
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn symbols(&mut self) -> &mut Self {
         let action = actions::Symbols::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn invert_symbols(&mut self) -> &mut Self {
         let action = actions::SymbolsInversion::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn titlecase(&mut self) -> &mut Self {
         let action = actions::Titlecase::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 
     pub fn upper(&mut self) -> &mut Self {
         let action = actions::Upper::default();
 
-        self.map_action(&action)
+        self.map(&action)
     }
 }
 
