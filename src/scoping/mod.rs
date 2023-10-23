@@ -69,7 +69,7 @@ impl<'viewee> ROScope<'viewee> {
 }
 
 impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
-    /// Get the underlying string slice of a [`ScopeStatus`].
+    /// Get the underlying string slice.
     ///
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
@@ -89,7 +89,7 @@ impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
 }
 
 impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
-    /// Get the underlying string slice of a [`ScopeStatus`].
+    /// Get the underlying string slice.
     ///
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {

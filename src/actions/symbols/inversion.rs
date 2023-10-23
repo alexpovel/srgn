@@ -1,6 +1,8 @@
 use crate::actions::Action;
 
 use super::Symbol;
+#[cfg(doc)]
+use super::Symbols;
 
 /// Inverts all symbols inserted by [`Symbols`].
 ///

@@ -32,7 +32,7 @@ pub use titlecase::Titlecase;
 #[cfg(feature = "upper")]
 pub use upper::Upper;
 
-/// An action in the processing pipeline, as initiated by [`crate::apply`].
+/// An action in the processing pipeline.
 ///
 /// Actions are the core of the text processing pipeline and can be applied in any
 /// order, [any number of times each](https://en.wikipedia.org/wiki/Idempotence) (more
