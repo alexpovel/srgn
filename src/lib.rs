@@ -17,7 +17,6 @@ use crate::actions::Action;
 /// Main components around [`Action`]s.
 pub mod actions;
 pub mod scoping;
-pub mod text;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
