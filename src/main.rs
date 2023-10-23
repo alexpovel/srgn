@@ -25,7 +25,7 @@ use srgn::{
         },
         literal::Literal,
         regex::Regex,
-        ScopedViewBuildStep, ScopedViewBuilder, ScoperBuildError,
+        ScopedViewBuilder, Scoper, ScoperBuildError,
     },
 };
 use std::io::{self, Read, Write};
@@ -115,10 +115,8 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn assemble_scopers(
-    args: &cli::Cli,
-) -> Result<Vec<Box<dyn ScopedViewBuildStep>>, ScoperBuildError> {
-    let mut scopers: Vec<Box<dyn ScopedViewBuildStep>> = Vec::new();
+fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>, ScoperBuildError> {
+    let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
         if let Some(premade) = python.python {

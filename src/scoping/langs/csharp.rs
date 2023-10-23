@@ -1,5 +1,5 @@
 use super::{CodeQuery, Language, LanguageScopedViewBuildStep, TSLanguage, TSQuery};
-use crate::scoping::{ScopedViewBuildStep, ScopedViewBuilder};
+use crate::scoping::{ROScopes, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
@@ -45,8 +45,8 @@ impl From<CustomCSharpQuery> for TSQuery {
     }
 }
 
-impl ScopedViewBuildStep for CSharp {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
+impl Scoper for CSharp {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
         self.scope_via_query(input)
     }
 }

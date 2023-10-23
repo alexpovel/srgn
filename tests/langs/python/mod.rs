@@ -1,7 +1,7 @@
 use rstest::rstest;
 use srgn::scoping::{
     langs::python::{PremadePythonQuery, Python, PythonQuery},
-    ScopedViewBuildStep,
+    ScopedViewBuilder,
 };
 
 use super::get_input_output;
@@ -22,7 +22,8 @@ fn test_python(#[case] file: &str, #[case] query: PythonQuery) {
 
     let (input, output) = get_input_output("python", file);
 
-    let mut view = lang.scope(&input).build();
+    let builder = ScopedViewBuilder::new(&input);
+    let mut view = builder.explode_from_scoper(&lang).build();
     view.delete();
 
     assert_eq!(view.to_string(), output);

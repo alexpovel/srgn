@@ -1,4 +1,5 @@
-use super::{ScopedViewBuildStep, ScopedViewBuilder};
+use super::ROScopes;
+use super::Scoper;
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
 use log::{debug, trace};
@@ -45,30 +46,17 @@ impl Default for Regex {
     }
 }
 
-impl ScopedViewBuildStep for Regex {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
-        ScopedViewBuilder::new(input).explode_from_ranges(|s| {
-            let has_capture_groups = self.pattern.captures_len() > 1;
+impl Scoper for Regex {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+        let has_capture_groups = self.pattern.captures_len() > 1;
 
-            if !has_capture_groups {
-                trace!(
-                    "No capture groups in pattern '{}', short-circuiting",
-                    s.escape_debug()
-                );
-                return self
-                    .pattern
-                    .find_iter(s)
-                    .flatten()
-                    .map(|m| m.range())
-                    .collect();
-            }
-
+        let ranges = if has_capture_groups {
             trace!(
                 "Pattern '{}' has capture groups, iterating over matches",
-                s.escape_debug()
+                input.escape_debug()
             );
             let mut ranges = Vec::new();
-            for cap in self.pattern.captures_iter(s).flatten() {
+            for cap in self.pattern.captures_iter(input).flatten() {
                 let mut it = cap.iter();
 
                 let overall_match = it
@@ -109,7 +97,20 @@ impl ScopedViewBuildStep for Regex {
 
             debug!("Ranges to scope after regex: {:?}", ranges);
             ranges
-        })
+        } else {
+            trace!(
+                "No capture groups in pattern '{}', short-circuiting",
+                input.escape_debug()
+            );
+
+            self.pattern
+                .find_iter(input)
+                .flatten()
+                .map(|m| m.range())
+                .collect()
+        };
+
+        ROScopes::from_raw_ranges(input, ranges)
     }
 }
 
@@ -133,6 +134,7 @@ mod tests {
     use rstest::rstest;
 
     use crate::scoping::{
+        RWScope, RWScopes,
         Scope::{In, Out},
         ScopedView,
     };
@@ -141,77 +143,80 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case("a", "a", ScopedView::new(vec![In(B("a"))]))]
-    #[case("aa", "a", ScopedView::new(vec![In(B("a")), In(B("a"))]))]
-    #[case("aba", "a", ScopedView::new(vec![In(B("a")), Out("b"), In(B("a"))]))]
+    #[case("a", "a", ScopedView::new(RWScopes(vec![RWScope(In(B("a")))])))]
+    #[case("aa", "a", ScopedView::new(RWScopes(vec![RWScope(In(B("a"))), RWScope(In(B("a")))])))]
+    #[case("aba", "a", ScopedView::new(RWScopes(vec![RWScope(In(B("a"))), RWScope(Out("b")), RWScope(In(B("a")))])))]
     //
-    #[case("a", "", ScopedView::new(vec![Out("a")]))]
-    #[case("", "a", ScopedView::new(vec![]))] // Empty results are discarded
+    #[case("a", "", ScopedView::new(RWScopes(vec![RWScope(Out("a"))])))]
+    #[case("", "a", ScopedView::new(RWScopes(vec![])))] // Empty results are discarded
     //
-    #[case("a", "a", ScopedView::new(vec![In(B("a"))]))]
-    #[case("a", "b", ScopedView::new(vec![Out("a")]))]
+    #[case("a", "a", ScopedView::new(RWScopes(vec![RWScope(In(B("a")))])))]
+    #[case("a", "b", ScopedView::new(RWScopes(vec![RWScope(Out("a"))])))]
     //
-    #[case("a", ".*", ScopedView::new(vec![In(B("a"))]))]
-    #[case("a", ".+?", ScopedView::new(vec![In(B("a"))]))]
+    #[case("a", ".*", ScopedView::new(RWScopes(vec![RWScope(In(B("a")))])))]
+    #[case("a", ".+?", ScopedView::new(RWScopes(vec![RWScope(In(B("a")))])))]
     //
-    #[case("a\na", ".*", ScopedView::new(vec![In(B("a")), Out("\n"), In(B("a"))]))]
-    #[case("a\na", "(?s).*", ScopedView::new(vec![In(B("a\na"))]))] // Dot matches newline
+    #[case("a\na", ".*", ScopedView::new(RWScopes(vec![RWScope(In(B("a"))), RWScope(Out("\n")), RWScope(In(B("a")))])))]
+    #[case("a\na", "(?s).*", ScopedView::new(RWScopes(vec![RWScope(In(B("a\na")))])))] // Dot matches newline
     //
-    #[case("abc", "a", ScopedView::new(vec![In(B("a")), Out("bc")]))]
+    #[case("abc", "a", ScopedView::new(RWScopes(vec![RWScope(In(B("a"))), RWScope(Out("bc"))])))]
     //
-    #[case("abc", r"\w", ScopedView::new(vec![In(B("a")), In(B("b")), In(B("c"))]))]
-    #[case("abc", r"\W", ScopedView::new(vec![Out("abc")]))]
-    #[case("abc", r"\w+", ScopedView::new(vec![In(B("abc"))]))]
+    #[case("abc", r"\w", ScopedView::new(RWScopes(vec![RWScope(In(B("a"))), RWScope(In(B("b"))), RWScope(In(B("c")))])))]
+    #[case("abc", r"\W", ScopedView::new(RWScopes(vec![RWScope(Out("abc"))])))]
+    #[case("abc", r"\w+", ScopedView::new(RWScopes(vec![RWScope(In(B("abc")))])))]
     //
-    #[case("Work 69 on 420 words", r"\w+", ScopedView::new(vec![In(B("Work")), Out(" "), In(B("69")), Out(" "), In(B("on")), Out(" "), In(B("420")), Out(" "), In(B("words"))]))]
-    #[case("Ignore 69 the 420 digits", r"\p{letter}+", ScopedView::new(vec![In(B("Ignore")), Out(" 69 "), In(B("the")), Out(" 420 "), In(B("digits"))]))]
+    #[case("Work 69 on 420 words", r"\w+", ScopedView::new(RWScopes(vec![RWScope(In(B("Work"))), RWScope(Out(" ")), RWScope(In(B("69"))), RWScope(Out(" ")), RWScope(In(B("on"))), RWScope(Out(" ")), RWScope(In(B("420"))), RWScope(Out(" ")), RWScope(In(B("words")))])))]
+    #[case("Ignore 69 the 420 digits", r"\p{letter}+", ScopedView::new(RWScopes(vec![RWScope(In(B("Ignore"))), RWScope(Out(" 69 ")), RWScope(In(B("the"))), RWScope(Out(" 420 ")), RWScope(In(B("digits")))])))]
     //
-    #[case(".", ".", ScopedView::new(vec![In(B("."))]))]
-    #[case(r"\.", ".", ScopedView::new(vec![In(B(r"\")), In(B("."))]))]
-    #[case(r".", r"\.", ScopedView::new(vec![In(B(r"."))]))]
-    #[case(r"\.", r"\.", ScopedView::new(vec![Out(r"\"), In(B(r"."))]))]
-    #[case(r"\w", r"\w", ScopedView::new(vec![Out(r"\"), In(B(r"w"))]))]
+    #[case(".", ".", ScopedView::new(RWScopes(vec![RWScope(In(B(".")))])))]
+    #[case(r"\.", ".", ScopedView::new(RWScopes(vec![RWScope(In(B(r"\"))), RWScope(In(B(".")))])))]
+    #[case(r".", r"\.", ScopedView::new(RWScopes(vec![RWScope(In(B(r".")))])))]
+    #[case(r"\.", r"\.", ScopedView::new(RWScopes(vec![RWScope(Out(r"\")), RWScope(In(B(r".")))])))]
+    #[case(r"\w", r"\w", ScopedView::new(RWScopes(vec![RWScope(Out(r"\")), RWScope(In(B(r"w")))])))]
     //
     // Capture groups
-    #[case(r"Hello", r"\w+", ScopedView::new(vec![In(B(r"Hello"))]))]
+    #[case(r"Hello", r"\w+", ScopedView::new(RWScopes(vec![RWScope(In(B(r"Hello")))])))]
     #[case(
         r"Hello", r"(\w+)",
-        ScopedView::new(
+        ScopedView::new(RWScopes(
             vec![
-                In(B(r"H")),
-                In(B(r"e")),
-                In(B(r"l")),
-                In(B(r"l")),
-                In(B(r"o"))
+                RWScope(In(B(r"H"))),
+                RWScope(In(B(r"e"))),
+                RWScope(In(B(r"l"))),
+                RWScope(In(B(r"l"))),
+                RWScope(In(B(r"o")))
             ]
-        )
+        ))
     )]
     #[case(
         r"Hello World", r"Hello (\w+)",
-        ScopedView::new(
+        ScopedView::new(RWScopes(
             vec![
-                In(B(r"Hello ")),
-                In(B(r"W")),
-                In(B(r"o")),
-                In(B(r"r")),
-                In(B(r"l")),
-                In(B(r"d"))
+                RWScope(In(B(r"Hello "))),
+                RWScope(In(B(r"W"))),
+                RWScope(In(B(r"o"))),
+                RWScope(In(B(r"r"))),
+                RWScope(In(B(r"l"))),
+                RWScope(In(B(r"d")))
             ]
-        )
+        ))
     )]
     fn test_regex_scoping(
         #[case] input: &str,
         #[case] pattern: &str,
         #[case] expected: ScopedView,
     ) {
+        let builder = crate::scoping::ScopedViewBuilder::new(input);
         let regex = Regex::new(RegexPattern::new(pattern).unwrap());
-        let actual = regex.scope(input).build();
+        let actual = builder.explode_from_scoper(&regex).build();
 
         assert_eq!(actual, expected);
     }
 
     mod fuzzyish {
         use std::time::{Duration, Instant};
+
+        use crate::scoping::ROScope;
 
         use super::*;
 
@@ -303,17 +308,17 @@ mod tests {
                 let scope = Regex::new(regex);
                 let input: String = rng.sample(&gen);
 
-                let view = scope.scope(&input);
+                let scopes = scope.scope(&input);
 
-                if view.scopes.iter().any(|s| match s {
-                    In(_) => true,
-                    Out(_) => false,
+                if scopes.0.iter().any(|s| match s {
+                    ROScope(In(_)) => true,
+                    ROScope(Out(_)) => false,
                 }) {
                     n_matches += 1;
                 }
 
                 let mut reassembled = String::new();
-                for scope in view {
+                for scope in scopes.0 {
                     reassembled.push_str((&scope).into());
                 }
 

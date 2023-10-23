@@ -1,4 +1,4 @@
-use super::{ScopedViewBuildStep, ScopedViewBuilder};
+use super::{ROScopes, Scoper};
 use log::{debug, trace};
 use std::str::FromStr;
 pub use tree_sitter::{
@@ -43,7 +43,7 @@ where
     }
 }
 
-pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
+pub trait LanguageScopedViewBuildStep: Scoper {
     fn lang() -> TSLanguage;
     fn query(&self) -> TSQuery;
 
@@ -57,15 +57,15 @@ pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
         parser
     }
 
-    fn scope_via_query<'viewee>(&self, input: &'viewee str) -> ScopedViewBuilder<'viewee> {
-        ScopedViewBuilder::new(input).explode_from_ranges(|s| {
+    fn scope_via_query<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+        let ranges = {
             // tree-sitter is about incremental parsing, which we don't use here
             let old_tree = None;
 
-            trace!("Parsing into AST: {:?}", s);
+            trace!("Parsing into AST: {:?}", input);
 
             let tree = Self::parser()
-                .parse(s, old_tree)
+                .parse(input, old_tree)
                 .expect("No language set in parser, or other unrecoverable error");
 
             let root = tree.root_node();
@@ -76,13 +76,15 @@ pub trait LanguageScopedViewBuildStep: ScopedViewBuildStep {
 
             let mut qc = TSQueryCursor::new();
             let query = self.query();
-            let matches = qc.matches(&query, root, s.as_bytes());
+            let matches = qc.matches(&query, root, input.as_bytes());
 
             let ranges = matches
                 .flat_map(|query_match| query_match.captures)
                 .map(|capture| capture.node.byte_range());
 
             ranges.collect()
-        })
+        };
+
+        ROScopes::from_raw_ranges(input, ranges)
     }
 }
