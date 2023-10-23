@@ -1,4 +1,4 @@
-use crate::Action;
+use crate::actions::Action;
 
 use super::Symbol;
 

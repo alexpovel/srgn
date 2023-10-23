@@ -12,10 +12,14 @@
 #![allow(missing_docs)]
 #![allow(clippy::module_name_repetitions)]
 
+#[cfg(doc)]
 use crate::actions::Action;
+#[cfg(doc)]
+use crate::scoping::ScopedView;
 
 /// Main components around [`Action`]s.
 pub mod actions;
+/// Main components around [`ScopedView`].
 pub mod scoping;
 
 /// Pattern signalling global scope, aka matching entire inputs.

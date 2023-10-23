@@ -1,6 +1,6 @@
 #[cfg(doc)]
 use super::German;
-use crate::Action;
+use crate::actions::Action;
 #[cfg(test)]
 use enum_iterator::{all, Sequence};
 use std::collections::VecDeque;
