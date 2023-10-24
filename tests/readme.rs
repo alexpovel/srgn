@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(all(test, feature = "all"))]
 mod tests {
     use assert_cmd::Command;
     use comrak::{

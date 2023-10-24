@@ -288,6 +288,7 @@ impl<'viewee> ScopedView<'viewee> {
         self.map(&action)
     }
 
+    #[cfg(feature = "german")]
     pub fn german(&mut self) -> &mut Self {
         let action = actions::German::default();
 
@@ -312,12 +313,14 @@ impl<'viewee> ScopedView<'viewee> {
         self.map(&action)
     }
 
+    #[cfg(feature = "symbols")]
     pub fn symbols(&mut self) -> &mut Self {
         let action = actions::Symbols::default();
 
         self.map(&action)
     }
 
+    #[cfg(feature = "symbols")]
     pub fn invert_symbols(&mut self) -> &mut Self {
         let action = actions::SymbolsInversion::default();
 

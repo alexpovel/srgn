@@ -1,10 +1,7 @@
-#[cfg(feature = "lower")]
 mod lower;
-#[cfg(feature = "squeeze")]
 mod squeeze;
 #[cfg(feature = "symbols")]
 mod symbols;
-#[cfg(feature = "upper")]
 mod upper;
 
 // https://proptest-rs.github.io/proptest/proptest/tutorial/config.html

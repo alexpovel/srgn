@@ -1,17 +1,11 @@
 use log::{debug, info, warn, LevelFilter};
-#[cfg(feature = "deletion")]
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
-#[cfg(feature = "lower")]
 use srgn::actions::Lower;
-#[cfg(feature = "normalization")]
 use srgn::actions::Normalization;
-#[cfg(feature = "replace")]
 use srgn::actions::Replacement;
-#[cfg(feature = "titlecase")]
 use srgn::actions::Titlecase;
-#[cfg(feature = "upper")]
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
@@ -166,7 +160,6 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>, ScoperBuild
 fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
     let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
-    #[cfg(feature = "replace")]
     if let Some(replacement) = args.composable_actions.replace.clone() {
         actions.push(Box::new(Replacement::try_from(replacement)?));
         debug!("Loaded action: Replacement");
@@ -193,31 +186,26 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
         }
     }
 
-    #[cfg(feature = "deletion")]
     if args.standalone_actions.delete {
         actions.push(Box::<Deletion>::default());
         debug!("Loaded action: Deletion");
     }
 
-    #[cfg(feature = "upper")]
     if args.composable_actions.upper {
         actions.push(Box::<Upper>::default());
         debug!("Loaded action: Upper");
     }
 
-    #[cfg(feature = "lower")]
     if args.composable_actions.lower {
         actions.push(Box::<Lower>::default());
         debug!("Loaded action: Lower");
     }
 
-    #[cfg(feature = "titlecase")]
     if args.composable_actions.titlecase {
         actions.push(Box::<Titlecase>::default());
         debug!("Loaded action: Titlecase");
     }
 
-    #[cfg(feature = "normalization")]
     if args.composable_actions.normalize {
         actions.push(Box::<Normalization>::default());
         debug!("Loaded action: Normalization");
@@ -367,23 +355,18 @@ mod cli {
         /// Specially treated action for ergonomics and compatibility with `tr`.
         ///
         /// If given, will run before any other action.
-        #[cfg(feature = "replace")]
         #[arg(value_name = "REPLACEMENT", env, verbatim_doc_comment)]
         pub replace: Option<String>,
         /// Uppercase scope
-        #[cfg(feature = "upper")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub upper: bool,
         /// Lowercase scope
-        #[cfg(feature = "lower")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub lower: bool,
         /// Titlecase scope
-        #[cfg(feature = "titlecase")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub titlecase: bool,
         /// Normalize (Normalization Form D) scope, and throw away marks
-        #[cfg(feature = "normalization")]
         #[arg(short, long, env, verbatim_doc_comment)]
         pub normalize: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
@@ -423,7 +406,6 @@ mod cli {
         /// Cannot be used with any other action: no point in deleting and performing any
         /// other action. Sibling actions would either receive empty input or have their
         /// work wiped.
-        #[cfg(feature = "deletion")]
         #[arg(
             short,
             long,
@@ -433,7 +415,6 @@ mod cli {
         )]
         pub delete: bool,
         /// Squeeze consecutive occurrences of scope into one
-        #[cfg(feature = "squeeze")]
         #[arg(
             short,
             long,

@@ -41,26 +41,9 @@ tree-sitter-c-sharp = "0.20.0"
 
 [features]
 default = ["all"]
-all = [
-    "deletion",
-    "german",
-    "lower",
-    "normalization",
-    "replace",
-    "squeeze",
-    "symbols",
-    "titlecase",
-    "upper",
-]
-deletion = []
+all = ["german", "symbols"]
 german = []
-lower = []
-normalization = []
-replace = []
-squeeze = []
 symbols = []
-titlecase = []
-upper = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

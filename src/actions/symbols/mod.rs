@@ -1,4 +1,4 @@
-#[cfg(doc)]
+#[cfg(all(doc, feature = "german"))]
 use super::German;
 use crate::actions::Action;
 #[cfg(test)]
