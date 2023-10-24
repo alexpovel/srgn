@@ -36,6 +36,21 @@ jobs:
           cargo test
           --verbose
 
+  build-test-feature-powerset:
+    name: Build and test feature powerset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack
+      - name: Run tests
+        run: >
+          cargo hack
+          --feature-powerset
+          test
+
   build-test-coverage:
     name: Build and test with coverage
 

@@ -10,6 +10,7 @@ set ignore-comments := true
 onboard: install-binstall install-pre-commit install-flamegraph
     pre-commit install --hook-type pre-push --hook-type pre-commit --hook-type commit-msg
     cargo binstall \
+        cargo-hack \
         cargo-tarpaulin \
         cargo-insta
 
