@@ -1,14 +1,18 @@
-use super::{CodeQuery, Language, LanguageScopedViewBuildStep, TSLanguage, TSQuery};
+use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{ROScopes, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
+/// The TypeScript language.
 pub type TypeScript = Language<TypeScriptQuery>;
+/// A query for TypeScript.
 pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PremadeTypeScriptQuery>;
 
+/// Premade tree-sitter queries for TypeScript.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadeTypeScriptQuery {
+    /// Comments.
     Comments,
 }
 
@@ -24,6 +28,7 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
     }
 }
 
+/// A custom tree-sitter query for TypeScript.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomTypeScriptQuery(String);
 
@@ -51,7 +56,7 @@ impl Scoper for TypeScript {
     }
 }
 
-impl LanguageScopedViewBuildStep for TypeScript {
+impl LanguageScoper for TypeScript {
     fn lang() -> TSLanguage {
         tree_sitter_typescript::language_typescript()
     }

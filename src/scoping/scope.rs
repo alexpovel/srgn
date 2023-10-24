@@ -1,3 +1,5 @@
+#[cfg(doc)]
+use crate::scoping::scope::Scope::{In, Out};
 use itertools::Itertools;
 use log::debug;
 use std::{borrow::Cow, ops::Range};
@@ -13,13 +15,19 @@ pub enum Scope<'viewee, T> {
     Out(&'viewee str),
 }
 
+/// A read-only scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ROScope<'viewee>(pub Scope<'viewee, &'viewee str>);
+
+/// Multiple read-only scopes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ROScopes<'viewee>(pub Vec<ROScope<'viewee>>);
 
+/// A read-write scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RWScope<'viewee>(pub Scope<'viewee, Cow<'viewee, str>>);
+
+/// Multiple read-write scopes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RWScopes<'viewee>(pub Vec<RWScope<'viewee>>);
 
@@ -33,6 +41,15 @@ impl<'viewee> ROScope<'viewee> {
 }
 
 impl<'viewee> ROScopes<'viewee> {
+    /// Construct a new instance from the given raw ranges.
+    ///
+    /// The passed `input` will be traversed according to `ranges`: all specified
+    /// `ranges` are taken as [`In`] scope, everything not covered by a range is [`Out`]
+    /// of scope.
+    ///
+    /// ## Panics
+    ///
+    /// Panics if the given `ranges` contain indices out-of-bounds for `input`.
     #[must_use]
     pub fn from_raw_ranges(input: &'viewee str, ranges: Vec<Range<usize>>) -> Self {
         let mut scopes = Vec::with_capacity(ranges.len());

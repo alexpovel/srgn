@@ -14,9 +14,9 @@ proptest! {
         // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
         input in r"\p{Any}*AA\p{Any}*"
     ) {
-        let mut view = ScopedViewBuilder::new(&input).explode(
-            &Regex::new(RegexPattern::new("A").unwrap())
-        ).build();
+        let mut builder = ScopedViewBuilder::new(&input);
+        builder.explode(&Regex::new(RegexPattern::new("A").unwrap()));
+        let mut view = builder.build();
 
         view.squeeze();
         let res = view.to_string();

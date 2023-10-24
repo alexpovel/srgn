@@ -69,7 +69,7 @@ fn main() -> Result<(), String> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(&buf);
     for scoper in scopers {
-        builder = builder.explode(&scoper);
+        builder.explode(&scoper);
     }
     let mut view = builder.build();
     debug!("Done building view: {view:?}");

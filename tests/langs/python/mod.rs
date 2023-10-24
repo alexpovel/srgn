@@ -22,8 +22,9 @@ fn test_python(#[case] file: &str, #[case] query: PythonQuery) {
 
     let (input, output) = get_input_output("python", file);
 
-    let builder = ScopedViewBuilder::new(&input);
-    let mut view = builder.explode(&lang).build();
+    let mut builder = ScopedViewBuilder::new(&input);
+    builder.explode(&lang);
+    let mut view = builder.build();
     view.delete();
 
     assert_eq!(view.to_string(), output);

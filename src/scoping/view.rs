@@ -93,12 +93,14 @@ impl<'viewee> ScopedView<'viewee> {
 ///
 /// Where actions don't take arguments, neither do the methods.
 impl<'viewee> ScopedView<'viewee> {
+    /// Apply the default [`actions::Deletion`] action to this view (see [`Self::map`]).
     pub fn delete(&mut self) -> &mut Self {
         let action = actions::Deletion::default();
 
         self.map(&action)
     }
 
+    /// Apply the default [`actions::German`] action to this view (see [`Self::map`]).
     #[cfg(feature = "german")]
     pub fn german(&mut self) -> &mut Self {
         let action = actions::German::default();
@@ -106,24 +108,31 @@ impl<'viewee> ScopedView<'viewee> {
         self.map(&action)
     }
 
+    /// Apply the default [`actions::Lower`] action to this view (see [`Self::map`]).
     pub fn lower(&mut self) -> &mut Self {
         let action = actions::Lower::default();
 
         self.map(&action)
     }
 
+    /// Apply the default [`actions::Normalization`] action to this view (see
+    /// [`Self::map`]).
     pub fn normalize(&mut self) -> &mut Self {
         let action = actions::Normalization::default();
 
         self.map(&action)
     }
 
+    /// Apply the [`actions::Replacement`] action to this view (see [`Self::map`]).
+    ///
+    /// The `replacement` is used as-is.
     pub fn replace(&mut self, replacement: String) -> &mut Self {
         let action = actions::Replacement::new(replacement);
 
         self.map(&action)
     }
 
+    /// Apply the [`actions::Symbols`] action to this view (see [`Self::map`]).
     #[cfg(feature = "symbols")]
     pub fn symbols(&mut self) -> &mut Self {
         let action = actions::Symbols::default();
@@ -131,6 +140,7 @@ impl<'viewee> ScopedView<'viewee> {
         self.map(&action)
     }
 
+    /// Apply the [`actions::SymbolsInversion`] action to this view (see [`Self::map`]).
     #[cfg(feature = "symbols")]
     pub fn invert_symbols(&mut self) -> &mut Self {
         let action = actions::SymbolsInversion::default();
@@ -138,12 +148,14 @@ impl<'viewee> ScopedView<'viewee> {
         self.map(&action)
     }
 
+    /// Apply the default [`actions::Titlecase`] action to this view (see [`Self::map`]).
     pub fn titlecase(&mut self) -> &mut Self {
         let action = actions::Titlecase::default();
 
         self.map(&action)
     }
 
+    /// Apply the default [`actions::Upper`] action to this view (see [`Self::map`]).
     pub fn upper(&mut self) -> &mut Self {
         let action = actions::Upper::default();
 
@@ -212,8 +224,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// - or partially [`In`] scope, partially [`Out`] of scope
     ///
     /// after application. Anything [`Out`] out of scope can never be brought back.
-    #[must_use]
-    pub fn explode(mut self, scoper: &impl Scoper) -> Self {
+    pub fn explode(&mut self, scoper: &impl Scoper) -> &mut Self {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.0.len());
         for scope in self.scopes.0.drain(..) {
@@ -240,9 +251,8 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
         }
         trace!("Done exploding scopes.");
 
-        ScopedViewBuilder {
-            scopes: ROScopes(new),
-        }
+        self.scopes.0 = new;
+        self
     }
 }
 
@@ -369,8 +379,8 @@ mod tests {
         " dirty Strings \t with \t\t messed up whitespace\n\n\n"
     )]
     fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
-        let builder = ScopedViewBuilder::new(input)
-            .explode(&crate::scoping::regex::Regex::new(pattern.clone()));
+        let mut builder = ScopedViewBuilder::new(input);
+        builder.explode(&crate::scoping::regex::Regex::new(pattern.clone()));
         let mut view = builder.build();
 
         view.squeeze();

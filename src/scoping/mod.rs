@@ -5,11 +5,11 @@ use crate::scoping::scope::ROScopes;
 use crate::scoping::{scope::Scope, view::ScopedView};
 use std::fmt;
 
-/// Create views using programming language grammar-aware types.
+/// Create scoped views using programming language grammar-aware types.
 pub mod langs;
-/// Create views using string literals.
+/// Create scoped views using string literals.
 pub mod literal;
-/// Create views using regular expressions.
+/// Create scoped views using regular expressions.
 pub mod regex;
 /// [`Scope`] and its various wrappers.
 pub mod scope;

@@ -3,11 +3,14 @@ use log::trace;
 use std::{error::Error, fmt, ops::Range};
 use unescape::unescape;
 
+/// A literal string for querying.
 #[derive(Debug)]
 pub struct Literal(String);
 
+/// An error that can occur when parsing a literal.
 #[derive(Debug)]
 pub enum LiteralError {
+    /// The literal contains invalid escape sequences.
     InvalidEscapeSequences(String),
 }
 
@@ -86,9 +89,10 @@ mod tests {
         #[case] literal: &str,
         #[case] expected: ScopedView,
     ) {
-        let builder = crate::scoping::view::ScopedViewBuilder::new(input);
+        let mut builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let literal = Literal::try_from(literal.to_owned()).unwrap();
-        let actual = builder.explode(&literal).build();
+        builder.explode(&literal);
+        let actual = builder.build();
 
         assert_eq!(actual, expected);
     }

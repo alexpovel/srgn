@@ -12,12 +12,13 @@ use super::Action;
 /// use srgn::scoping::{view::ScopedViewBuilder, regex::Regex};
 ///
 /// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
-/// let mut view = ScopedViewBuilder::new("hyphenated-variable-name").explode(
-///     &scoper
-/// ).build();
+/// let mut builder = ScopedViewBuilder::new("hyphenated-variable-name");
+/// builder.explode(&scoper);
+/// let mut view = builder.build();
+/// view.replace("_".to_string());
 ///
 /// assert_eq!(
-///    view.replace("_".to_string()).to_string(),
+///    view.to_string(),
 ///   "hyphenated_variable_name"
 /// );
 /// ```
@@ -31,12 +32,13 @@ use super::Action;
 /// // A Unicode character class category. See also
 /// // https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties
 /// let scoper = Regex::new(RegexPattern::new(r"\p{Emoji}").unwrap());
-/// let mut view = ScopedViewBuilder::new("Party! 😁 💃 🎉 🥳 So much fun! ╰(°▽°)╯").explode(
-///     &scoper
-/// ).build();
+/// let mut builder = ScopedViewBuilder::new("Party! 😁 💃 🎉 🥳 So much fun! ╰(°▽°)╯");
+/// builder.explode(&scoper);
+/// let mut view = builder.build();
+/// view.replace(":(".to_string());
 ///
 /// assert_eq!(
-///    view.replace(":(".to_string()).to_string(),
+///    view.to_string(),
 ///    // Party is over, sorry ¯\_(ツ)_/¯
 ///   "Party! :( :( :( :( So much fun! ╰(°▽°)╯"
 /// );
@@ -47,6 +49,7 @@ pub struct Replacement {
 }
 
 impl Replacement {
+    /// Creates a new replacement.
     #[must_use]
     pub fn new(replacement: String) -> Self {
         Self { replacement }

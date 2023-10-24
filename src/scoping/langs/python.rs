@@ -1,17 +1,26 @@
-use super::{CodeQuery, Language, LanguageScopedViewBuildStep, TSLanguage, TSQuery};
+use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{ROScopes, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
+/// The Python language.
 pub type Python = Language<PythonQuery>;
+/// A query for Python.
 pub type PythonQuery = CodeQuery<CustomPythonQuery, PremadePythonQuery>;
 
+/// Premade tree-sitter queries for Python.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadePythonQuery {
+    /// Comments.
     Comments,
+    /// Docstrings.
+    ///
+    /// Does not cover multi-line strings.
     DocStrings,
+    /// Function names, at the definition site.
     FunctionNames,
+    /// Function calls.
     FunctionCalls,
 }
 
@@ -54,6 +63,7 @@ impl From<PremadePythonQuery> for TSQuery {
     }
 }
 
+/// A custom tree-sitter query for Python.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomPythonQuery(String);
 
@@ -81,7 +91,7 @@ impl Scoper for Python {
     }
 }
 
-impl LanguageScopedViewBuildStep for Python {
+impl LanguageScoper for Python {
     fn lang() -> TSLanguage {
         tree_sitter_python::language()
     }

@@ -1,14 +1,20 @@
-use super::{CodeQuery, Language, LanguageScopedViewBuildStep, TSLanguage, TSQuery};
+use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{ROScopes, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
+/// The C# language.
 pub type CSharp = Language<CSharpQuery>;
+/// A query for C#.
 pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PremadeCSharpQuery>;
 
+/// Premade tree-sitter queries for C#.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadeCSharpQuery {
+    /// Comments.
+    ///
+    /// Covers all comments, including XML doc comments and inline comments.
     Comments,
 }
 
@@ -24,6 +30,7 @@ impl From<PremadeCSharpQuery> for TSQuery {
     }
 }
 
+/// A custom tree-sitter query for C#.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomCSharpQuery(String);
 
@@ -51,7 +58,7 @@ impl Scoper for CSharp {
     }
 }
 
-impl LanguageScopedViewBuildStep for CSharp {
+impl LanguageScoper for CSharp {
     fn lang() -> TSLanguage {
         tree_sitter_c_sharp::language()
     }

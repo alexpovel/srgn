@@ -7,18 +7,23 @@ use std::error::Error;
 use std::fmt;
 use std::ops::Range;
 
+/// A regular expression for querying.
 #[derive(Debug)]
 pub struct Regex {
     pattern: RegexPattern,
 }
 
 impl Regex {
+    /// Create a new regular expression.
     #[must_use]
     pub fn new(pattern: RegexPattern) -> Self {
         Self { pattern }
     }
 }
 
+/// An error that can occur when parsing a regular expression.
+///
+/// Simple wrapper.
 #[derive(Debug)]
 pub struct RegexError(fancy_regex::Error);
 
@@ -208,9 +213,10 @@ mod tests {
         #[case] pattern: &str,
         #[case] expected: ScopedView,
     ) {
-        let builder = crate::scoping::view::ScopedViewBuilder::new(input);
+        let mut builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let regex = Regex::new(RegexPattern::new(pattern).unwrap());
-        let actual = builder.explode(&regex).build();
+        builder.explode(&regex);
+        let actual = builder.build();
 
         assert_eq!(actual, expected);
     }
