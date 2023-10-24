@@ -1,6 +1,6 @@
 use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 use proptest::prelude::*;
-use srgn::scoping::ScopedViewBuilder;
+use srgn::scoping::view::ScopedViewBuilder;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES * 2))]

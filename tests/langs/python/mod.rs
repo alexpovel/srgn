@@ -1,7 +1,7 @@
 use rstest::rstest;
 use srgn::scoping::{
     langs::python::{PremadePythonQuery, Python, PythonQuery},
-    ScopedViewBuilder,
+    view::ScopedViewBuilder,
 };
 
 use super::get_input_output;

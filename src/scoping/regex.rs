@@ -134,9 +134,11 @@ mod tests {
     use rstest::rstest;
 
     use crate::scoping::{
-        RWScope, RWScopes,
-        Scope::{In, Out},
-        ScopedView,
+        scope::{
+            RWScope, RWScopes,
+            Scope::{In, Out},
+        },
+        view::ScopedView,
     };
     use std::borrow::Cow::Borrowed as B;
 
@@ -206,7 +208,7 @@ mod tests {
         #[case] pattern: &str,
         #[case] expected: ScopedView,
     ) {
-        let builder = crate::scoping::ScopedViewBuilder::new(input);
+        let builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let regex = Regex::new(RegexPattern::new(pattern).unwrap());
         let actual = builder.explode_from_scoper(&regex).build();
 
@@ -216,7 +218,7 @@ mod tests {
     mod fuzzyish {
         use std::time::{Duration, Instant};
 
-        use crate::scoping::ROScope;
+        use crate::scoping::scope::ROScope;
 
         use super::*;
 

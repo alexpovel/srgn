@@ -19,7 +19,8 @@ use srgn::{
         },
         literal::Literal,
         regex::Regex,
-        ScopedViewBuilder, Scoper, ScoperBuildError,
+        view::{ScopedViewBuilder, ScoperBuildError},
+        Scoper,
     },
 };
 use std::io::{self, Read, Write};

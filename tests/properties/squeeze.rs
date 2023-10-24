@@ -1,6 +1,6 @@
 use proptest::prelude::*;
 use srgn::{
-    scoping::{regex::Regex, ScopedViewBuilder},
+    scoping::{regex::Regex, view::ScopedViewBuilder},
     RegexPattern,
 };
 

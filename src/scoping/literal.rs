@@ -61,9 +61,11 @@ mod tests {
     use rstest::rstest;
 
     use crate::scoping::{
-        RWScope, RWScopes,
-        Scope::{In, Out},
-        ScopedView,
+        scope::{
+            RWScope, RWScopes,
+            Scope::{In, Out},
+        },
+        view::ScopedView,
     };
     use std::borrow::Cow::Borrowed;
 
@@ -84,7 +86,7 @@ mod tests {
         #[case] literal: &str,
         #[case] expected: ScopedView,
     ) {
-        let builder = crate::scoping::ScopedViewBuilder::new(input);
+        let builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let literal = Literal::try_from(literal.to_owned()).unwrap();
         let actual = builder.explode_from_scoper(&literal).build();
 

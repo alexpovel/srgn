@@ -15,7 +15,7 @@
 #[cfg(doc)]
 use crate::actions::Action;
 #[cfg(doc)]
-use crate::scoping::ScopedView;
+use crate::scoping::view::ScopedView;
 
 /// Main components around [`Action`]s.
 pub mod actions;
