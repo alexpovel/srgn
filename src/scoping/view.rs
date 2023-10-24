@@ -1,111 +1,20 @@
 use crate::actions::{self, Action};
-use crate::scoping::literal::LiteralError;
-use crate::scoping::regex::RegexError;
-use crate::scoping::scope::{ROScope, ROScopes, RWScope, RWScopes, Scope};
+use crate::scoping::scope::{
+    ROScope, ROScopes, RWScope, RWScopes,
+    Scope::{In, Out},
+};
 use crate::scoping::Scoper;
 use log::{debug, trace};
 use std::borrow::Cow;
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScopedViewBuilder<'viewee> {
-    scopes: ROScopes<'viewee>,
-}
-
-impl<'viewee> ScopedViewBuilder<'viewee> {
-    #[must_use]
-    pub fn new(input: &'viewee str) -> Self {
-        Self {
-            scopes: ROScopes(vec![ROScope(Scope::In(input))]),
-        }
-    }
-
-    #[must_use]
-    pub fn build(self) -> ScopedView<'viewee> {
-        ScopedView {
-            scopes: RWScopes(
-                self.scopes
-                    .0
-                    .into_iter()
-                    .map(std::convert::Into::into)
-                    .collect(),
-            ),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum ScoperBuildError {
-    EmptyScope,
-    RegexError(RegexError),
-    LiteralError(LiteralError),
-}
-
-impl From<LiteralError> for ScoperBuildError {
-    fn from(e: LiteralError) -> Self {
-        Self::LiteralError(e)
-    }
-}
-
-impl From<RegexError> for ScoperBuildError {
-    fn from(e: RegexError) -> Self {
-        Self::RegexError(e)
-    }
-}
-
-impl<'viewee> IntoIterator for ScopedViewBuilder<'viewee> {
-    type Item = ROScope<'viewee>;
-
-    type IntoIter = std::vec::IntoIter<ROScope<'viewee>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.scopes.0.into_iter()
-    }
-}
-
-impl<'viewee> ScopedViewBuilder<'viewee> {
-    #[must_use]
-    pub fn explode_from_scoper(self, scoper: &impl Scoper) -> Self {
-        self.explode(|s| scoper.scope(s))
-    }
-
-    #[must_use]
-    pub fn explode<F>(mut self, exploder: F) -> Self
-    where
-        F: Fn(&'viewee str) -> ROScopes<'viewee>,
-    {
-        trace!("Exploding scopes: {:?}", self.scopes);
-        let mut new = Vec::with_capacity(self.scopes.0.len());
-        for scope in self.scopes.0.drain(..) {
-            trace!("Exploding scope: {:?}", scope);
-
-            if scope.is_empty() {
-                trace!("Skipping empty scope");
-                continue;
-            }
-
-            match scope {
-                ROScope(Scope::In(s)) => {
-                    let mut new_scopes = exploder(s);
-                    new_scopes.0.retain(|s| !s.is_empty());
-                    new.extend(new_scopes.0);
-                }
-                // Be explicit about the `Out(_)` case, so changing the enum is a
-                // compile error
-                ROScope(Scope::Out("")) => {}
-                out @ ROScope(Scope::Out(_)) => new.push(out),
-            }
-
-            trace!("Exploded scope, new scopes are: {:?}", new);
-        }
-        trace!("Done exploding scopes.");
-
-        ScopedViewBuilder {
-            scopes: ROScopes(new),
-        }
-    }
-}
-
+/// A view of some input, sorted into parts, which are either [`In`] or [`Out`] of scope
+/// for processing.
+///
+/// The view is **writable**. It can be manipulated by [mapping][`Self::map`]
+/// [`Action`]s over it.
+///
+/// The main avenue for constructing a view is [`Self::builder`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScopedView<'viewee> {
     scopes: RWScopes<'viewee>,
@@ -113,33 +22,38 @@ pub struct ScopedView<'viewee> {
 
 /// Core implementations.
 impl<'viewee> ScopedView<'viewee> {
+    /// Create a new view from the given scopes.
     #[must_use]
     pub fn new(scopes: RWScopes<'viewee>) -> Self {
         Self { scopes }
     }
 
+    /// Return a builder for a view of the given input.
+    ///
     /// For API discoverability.
     #[must_use]
     pub fn builder(input: &'viewee str) -> ScopedViewBuilder<'viewee> {
         ScopedViewBuilder::new(input)
     }
 
-    /// Apply an action to all in-scope occurrences.
+    /// Apply an `action` to all [`In`] scope items contained in this view.
+    ///
+    /// They are **replaced** with whatever the action returns for the particular scope.
     ///
     /// See implementors of [`Action`] for available types.
     pub fn map(&mut self, action: &impl Action) -> &mut Self {
         for scope in &mut self.scopes.0 {
             match scope {
-                RWScope(Scope::In(s)) => {
+                RWScope(In(s)) => {
                     let res = action.act(s);
                     debug!(
                         "Replacing '{}' with '{}'",
                         s.escape_debug(),
                         res.escape_debug()
                     );
-                    *scope = RWScope(Scope::In(Cow::Owned(res)));
+                    *scope = RWScope(In(Cow::Owned(res)));
                 }
-                RWScope(Scope::Out(s)) => {
+                RWScope(Out(s)) => {
                     debug!("Appending '{}'", s.escape_debug());
                 }
             }
@@ -148,15 +62,14 @@ impl<'viewee> ScopedView<'viewee> {
         self
     }
 
-    /// Squeeze all consecutive [`Scope::In`] scopes into a single occurrence (the first
-    /// one).
+    /// Squeeze all consecutive [`In`] scopes into a single occurrence (the first one).
     pub fn squeeze(&mut self) -> &mut Self {
         debug!("Squeezing view by collapsing all consecutive in-scope occurrences.");
 
         let mut prev_was_in = false;
         self.scopes.0.retain(|scope| {
-            let keep = !(prev_was_in && matches!(scope, RWScope(Scope::In(_))));
-            prev_was_in = matches!(scope, RWScope(Scope::In(_)));
+            let keep = !(prev_was_in && matches!(scope, RWScope(In(_))));
+            prev_was_in = matches!(scope, RWScope(In(_)));
             trace!("keep: {}, scope: {:?}", keep, scope);
             keep
         });
@@ -166,12 +79,12 @@ impl<'viewee> ScopedView<'viewee> {
         self
     }
 
-    /// Check whether anything is in scope.
+    /// Check whether anything is [`In`] scope for this view.
     #[must_use]
     pub fn has_any_in_scope(&self) -> bool {
         self.scopes.0.iter().any(|s| match s {
-            RWScope(Scope::In(_)) => true,
-            RWScope(Scope::Out(_)) => false,
+            RWScope(In(_)) => true,
+            RWScope(Out(_)) => false,
         })
     }
 }
@@ -245,6 +158,101 @@ impl fmt::Display for ScopedView<'_> {
             write!(f, "{s}")?;
         }
         Ok(())
+    }
+}
+
+/// A builder for [`ScopedView`]. Chain [`Self::explode`] to build up the view, then
+/// finally call [`Self::build`].
+///
+/// Note: while building, the view is **read-only**: no manipulation of the contents is
+/// possible yet.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScopedViewBuilder<'viewee> {
+    scopes: ROScopes<'viewee>,
+}
+
+/// Core implementations.
+impl<'viewee> ScopedViewBuilder<'viewee> {
+    /// Create a new builder from the given input.
+    ///
+    /// Initially, the entire `input` is [`In`] scope.
+    #[must_use]
+    pub fn new(input: &'viewee str) -> Self {
+        Self {
+            scopes: ROScopes(vec![ROScope(In(input))]),
+        }
+    }
+
+    /// Build the view.
+    ///
+    /// This makes the view writable.
+    #[must_use]
+    pub fn build(self) -> ScopedView<'viewee> {
+        ScopedView {
+            scopes: RWScopes(
+                self.scopes
+                    .0
+                    .into_iter()
+                    .map(std::convert::Into::into)
+                    .collect(),
+            ),
+        }
+    }
+
+    /// Using a `scoper`, iterate over all scopes currently contained in this view under
+    /// construction, apply the scoper to all [`In`] scopes, and **replace** each with
+    /// whatever the scoper returned for the particular scope. These are *multiple*
+    /// entries (hence 'exploding' this view: after application, it will likely be
+    /// longer).
+    ///
+    /// Note this necessarily means a view can only be *narrowed*. What was previously
+    /// [`In`] scope can be:
+    ///
+    /// - either still fully [`In`] scope,
+    /// - or partially [`In`] scope, partially [`Out`] of scope
+    ///
+    /// after application. Anything [`Out`] out of scope can never be brought back.
+    #[must_use]
+    pub fn explode(mut self, scoper: &impl Scoper) -> Self {
+        trace!("Exploding scopes: {:?}", self.scopes);
+        let mut new = Vec::with_capacity(self.scopes.0.len());
+        for scope in self.scopes.0.drain(..) {
+            trace!("Exploding scope: {:?}", scope);
+
+            if scope.is_empty() {
+                trace!("Skipping empty scope");
+                continue;
+            }
+
+            match scope {
+                ROScope(In(s)) => {
+                    let mut new_scopes = scoper.scope(s);
+                    new_scopes.0.retain(|s| !s.is_empty());
+                    new.extend(new_scopes.0);
+                }
+                // Be explicit about the `Out(_)` case, so changing the enum is a
+                // compile error
+                ROScope(Out("")) => {}
+                out @ ROScope(Out(_)) => new.push(out),
+            }
+
+            trace!("Exploded scope, new scopes are: {:?}", new);
+        }
+        trace!("Done exploding scopes.");
+
+        ScopedViewBuilder {
+            scopes: ROScopes(new),
+        }
+    }
+}
+
+impl<'viewee> IntoIterator for ScopedViewBuilder<'viewee> {
+    type Item = ROScope<'viewee>;
+
+    type IntoIter = std::vec::IntoIter<ROScope<'viewee>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.scopes.0.into_iter()
     }
 }
 
@@ -362,7 +370,7 @@ mod tests {
     )]
     fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
         let builder = ScopedViewBuilder::new(input)
-            .explode_from_scoper(&crate::scoping::regex::Regex::new(pattern.clone()));
+            .explode(&crate::scoping::regex::Regex::new(pattern.clone()));
         let mut view = builder.build();
 
         view.squeeze();

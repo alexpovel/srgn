@@ -12,7 +12,7 @@ use super::Action;
 /// use srgn::scoping::{view::ScopedViewBuilder, regex::Regex};
 ///
 /// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
-/// let mut view = ScopedViewBuilder::new("hyphenated-variable-name").explode_from_scoper(
+/// let mut view = ScopedViewBuilder::new("hyphenated-variable-name").explode(
 ///     &scoper
 /// ).build();
 ///
@@ -31,7 +31,7 @@ use super::Action;
 /// // A Unicode character class category. See also
 /// // https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties
 /// let scoper = Regex::new(RegexPattern::new(r"\p{Emoji}").unwrap());
-/// let mut view = ScopedViewBuilder::new("Party! 😁 💃 🎉 🥳 So much fun! ╰(°▽°)╯").explode_from_scoper(
+/// let mut view = ScopedViewBuilder::new("Party! 😁 💃 🎉 🥳 So much fun! ╰(°▽°)╯").explode(
 ///     &scoper
 /// ).build();
 ///

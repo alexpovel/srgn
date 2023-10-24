@@ -210,7 +210,7 @@ mod tests {
     ) {
         let builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let regex = Regex::new(RegexPattern::new(pattern).unwrap());
-        let actual = builder.explode_from_scoper(&regex).build();
+        let actual = builder.explode(&regex).build();
 
         assert_eq!(actual, expected);
     }

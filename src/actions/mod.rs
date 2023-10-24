@@ -44,6 +44,7 @@ where
 }
 
 /// Any [`Action`] that can be boxed.
+// https://www.reddit.com/r/rust/comments/droxdg/why_arent_traits_impld_for_boxdyn_trait/
 impl Action for Box<dyn Action> {
     fn act(&self, input: &str) -> String {
         self.as_ref().act(input)

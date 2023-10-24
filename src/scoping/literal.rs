@@ -88,7 +88,7 @@ mod tests {
     ) {
         let builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let literal = Literal::try_from(literal.to_owned()).unwrap();
-        let actual = builder.explode_from_scoper(&literal).build();
+        let actual = builder.explode(&literal).build();
 
         assert_eq!(actual, expected);
     }

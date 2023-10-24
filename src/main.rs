@@ -9,6 +9,8 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::scoping::literal::LiteralError;
+use srgn::scoping::regex::RegexError;
 use srgn::{
     actions::Action,
     scoping::{
@@ -19,7 +21,7 @@ use srgn::{
         },
         literal::Literal,
         regex::Regex,
-        view::{ScopedViewBuilder, ScoperBuildError},
+        view::ScopedViewBuilder,
         Scoper,
     },
 };
@@ -67,7 +69,7 @@ fn main() -> Result<(), String> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(&buf);
     for scoper in scopers {
-        builder = builder.explode(|s| scoper.scope(s));
+        builder = builder.explode(&scoper);
     }
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
@@ -108,6 +110,25 @@ fn main() -> Result<(), String> {
 
     info!("Done, exiting");
     Ok(())
+}
+
+#[derive(Debug)]
+pub enum ScoperBuildError {
+    EmptyScope,
+    RegexError(RegexError),
+    LiteralError(LiteralError),
+}
+
+impl From<LiteralError> for ScoperBuildError {
+    fn from(e: LiteralError) -> Self {
+        Self::LiteralError(e)
+    }
+}
+
+impl From<RegexError> for ScoperBuildError {
+    fn from(e: RegexError) -> Self {
+        Self::RegexError(e)
+    }
 }
 
 fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>, ScoperBuildError> {
