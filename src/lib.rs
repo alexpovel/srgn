@@ -103,6 +103,7 @@
 //! Another example, using multiple actions and no scoping, is:
 //!
 //! ```rust
+//! # #[cfg(feature = "symbols")] {
 //! use srgn::scoping::view::ScopedViewBuilder;
 //!
 //! let input = "Assume π <= 4 < α -> β, ∀ x ∈ ℝ";
@@ -114,6 +115,7 @@
 //!
 //! // Existing Unicode was uppercased properly, "ASCII symbols" were replaced.
 //! assert_eq!(view.to_string(), "ASSUME Π ≤ 4 < Α → Β, ∀ X ∈ ℝ");
+//! # }
 //! ```
 //!
 //! ## Applying an action (passing)
@@ -123,6 +125,7 @@
 //! the [`Default`].
 //!
 //! ```rust
+//! # #[cfg(feature = "german")] {
 //! use srgn::scoping::view::ScopedViewBuilder;
 //! use srgn::actions::German;
 //!
@@ -133,6 +136,7 @@
 //! view.map(&action);
 //!
 //! assert_eq!(view.to_string(), "Der Überflieger-Käfer! 🛩️");
+//! # }
 //! ```
 
 #![warn(clippy::all)]
