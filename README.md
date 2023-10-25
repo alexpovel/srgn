@@ -757,7 +757,10 @@ An unordered list of similar tools you might be interested in.
 
 - [Semgrep](https://semgrep.dev/)
 - [`sd`](https://github.com/chmln/sd)
-- [ripgrep-structured](https://github.com/orf/ripgrep-structured)
+- [`ripgrep`](https://github.com/BurntSushi/ripgrep)
+- [`ripgrep-structured`](https://github.com/orf/ripgrep-structured)
+- [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
+- [`gron`](https://github.com/tomnomnom/gron)
 
 ## Comparison with `tr`
 
