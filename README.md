@@ -745,7 +745,11 @@ escaped.
 
 ## Rust library
 
-<!-- TODO -->
+[![docs.rs](https://img.shields.io/docsrs/srgn)](https://docs.rs/srgn/)
+
+While this tool is CLI-first, it is library-very-close-second, and library usage is
+treated as a first-class citizen just the same. See the [library
+documentation](https://docs.rs/srgn) for more, library-specific details.
 
 ## Contributing
 
