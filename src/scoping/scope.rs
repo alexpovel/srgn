@@ -1,4 +1,3 @@
-#[cfg(doc)]
 use crate::scoping::scope::Scope::{In, Out};
 use itertools::Itertools;
 use log::debug;
@@ -56,13 +55,13 @@ impl<'viewee> ROScopes<'viewee> {
 
         let mut last_end = 0;
         for Range { start, end } in ranges.into_iter().sorted_by_key(|r| r.start) {
-            scopes.push(ROScope(Scope::Out(&input[last_end..start])));
-            scopes.push(ROScope(Scope::In(&input[start..end])));
+            scopes.push(ROScope(Out(&input[last_end..start])));
+            scopes.push(ROScope(In(&input[start..end])));
             last_end = end;
         }
 
         if last_end < input.len() {
-            scopes.push(ROScope(Scope::Out(&input[last_end..])));
+            scopes.push(ROScope(Out(&input[last_end..])));
         }
 
         scopes.retain(|s| !s.is_empty());
@@ -79,7 +78,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
         match s.0 {
-            Scope::In(s) | Scope::Out(s) => s,
+            In(s) | Out(s) => s,
         }
     }
 }
@@ -87,8 +86,8 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
 impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
     fn from(s: ROScope<'viewee>) -> Self {
         match s.0 {
-            Scope::In(s) => RWScope(Scope::In(Cow::Borrowed(s))),
-            Scope::Out(s) => RWScope(Scope::Out(s)),
+            In(s) => RWScope(In(Cow::Borrowed(s))),
+            Out(s) => RWScope(Out(s)),
         }
     }
 }
@@ -99,8 +98,8 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {
         match &s.0 {
-            Scope::In(s) => s,
-            Scope::Out(s) => s,
+            In(s) => s,
+            Out(s) => s,
         }
     }
 }
