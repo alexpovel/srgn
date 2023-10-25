@@ -1,4 +1,4 @@
-use log::{debug, info, warn, LevelFilter};
+use log::{debug, error, info, LevelFilter};
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -235,7 +235,7 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
 
     if actions.is_empty() {
         // Doesn't hurt, but warn loudly
-        warn!("No actions loaded, will return input unchanged");
+        error!("No actions loaded, will return input unchanged");
     }
 
     Ok(actions)
