@@ -42,9 +42,14 @@ glob = "0.3.1"
 
 [features]
 german = ["cached", "decompound", "fst", "once_cell"]
-default = ["all"]
+default = ["all", "tarpaulin-incompatible"]
 all = ["german", "symbols"]
 symbols = []
+
+# Used to mark and exclude incompatible code from compilation when running tarpaulin.
+# Very ugly. Solves linking issues when `insta` is used:
+# https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
+tarpaulin-incompatible = []
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

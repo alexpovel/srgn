@@ -60,9 +60,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # Currently broken... linking with `cc`/`ld` fails, no idea...
-    if: false
-
     steps:
       - uses: actions/checkout@v4
 
@@ -77,13 +74,17 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
 
       - name: Run tests (with coverage)
-        # `--all-targets` does not include `--doc`
+        # `--all-targets` does not include `--doc`. For why the `features` stuff is
+        # needed, see `tarpaulin-incompatible` feature and
+        # https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
         run: >
           cargo tarpaulin
           --out xml
           --engine llvm
           --all-targets
           --doc
+          --no-default-features
+          --features all
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
