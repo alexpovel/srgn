@@ -58,7 +58,7 @@ fn main() -> Result<()> {
         Some(pattern) => {
             info!("Will use glob pattern: {:?}", pattern);
 
-            glob::glob(pattern.as_str())
+            let paths = glob::glob(pattern.as_str())
                 .expect("Pattern is valid, as it's been compiled")
                 .par_bridge()
                 .map(|glob| {
@@ -93,10 +93,15 @@ fn main() -> Result<()> {
                         .with_context(|| format!("Failed to write to file: {:?}", path))?;
                     debug!("Done processing file: {:?}", path);
 
-                    Ok(())
+                    Ok(path)
                 })
                 .collect::<Result<Vec<_>>>()
                 .context("Failure in processing of a file")?;
+
+            if args.options.fail_empty_glob && paths.is_empty() {
+                return Err(ApplicationError::EmptyGlob(pattern.clone()))
+                    .context("No files processed");
+            }
         }
         None => {
             info!("Will use stdin to stdout");
@@ -183,6 +188,7 @@ fn apply(
 enum ApplicationError {
     SomeInScope,
     NoneInScope,
+    EmptyGlob(glob::Pattern),
 }
 
 impl fmt::Display for ApplicationError {
@@ -193,6 +199,7 @@ impl fmt::Display for ApplicationError {
                 "Some input was in scope, and explicit failure requested."
             ),
             Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
+            Self::EmptyGlob(p) => write!(f, "No files matched glob pattern: {:?}", p),
         }
     }
 }
@@ -434,6 +441,9 @@ mod cli {
         /// https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
         #[arg(long, verbatim_doc_comment)]
         pub files: Option<glob::Pattern>,
+        /// Fail if file globbing is requested but returns no matches.
+        #[arg(long, verbatim_doc_comment, requires = "files")]
+        pub fail_empty_glob: bool,
         /// Undo the effects of passed actions, where applicable
         ///
         /// Requires a 1:1 mapping (bijection) between replacements and original, which
