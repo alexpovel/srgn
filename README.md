@@ -749,7 +749,8 @@ escaped.
 
 ## Contributing
 
-See [guidelines](CONTRIBUTING.md).
+To see how to build, refer to [compiling from source](#cargo-compile-from-source).
+Otherwise, refer to the [guidelines](CONTRIBUTING.md).
 
 ## Similar tools
 
