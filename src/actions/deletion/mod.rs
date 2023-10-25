@@ -8,7 +8,7 @@ pub struct Deletion {}
 
 impl Action for Deletion {
     fn act(&self, input: &str) -> String {
-        info!("Deleting: '{}'", input);
+        info!("Deleting: '{}'", input.escape_debug());
         String::new()
     }
 }

@@ -1,4 +1,8 @@
+use anyhow::Context;
+use anyhow::Result;
+use glob::Pattern;
 use log::{debug, error, info, LevelFilter};
+use rayon::prelude::*;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -25,9 +29,14 @@ use srgn::{
         Scoper,
     },
 };
-use std::io::{self, Read, Write};
+use std::{
+    error::Error,
+    fmt,
+    fs::File,
+    io::{self, Write},
+};
 
-fn main() -> Result<(), String> {
+fn main() -> Result<()> {
     let args = cli::Cli::init();
 
     let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
@@ -39,78 +48,157 @@ fn main() -> Result<(), String> {
     info!("Launching app with args: {:?}", args);
 
     debug!("Assembling scopers.");
-    let scopers = match assemble_scopers(&args) {
-        Ok(s) => s,
-        Err(e) => match e {
-            ScoperBuildError::RegexError(r) => {
-                return Err(format!("Error building regex scope: {r}"))
-            }
-            ScoperBuildError::LiteralError(l) => {
-                return Err(format!("Error building literal scope: {l}"))
-            }
-            ScoperBuildError::EmptyScope => {
-                return Err(String::from("Error building scope: empty."))
-            }
-        },
-    };
+    let scopers = assemble_scopers(&args)?;
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
     let actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
-    debug!("Reading stdin.");
+    match &args.options.files {
+        Some(pattern) => {
+            info!("Will use glob pattern: {:?}", pattern);
+
+            glob::glob(pattern.as_str())
+                .expect("Pattern is valid, as it's been compiled")
+                .par_bridge()
+                .map(|glob| {
+                    let path = glob.context("Failed to glob")?;
+                    debug!("Processing path: {:?}", path);
+
+                    let contents = {
+                        let file = File::open(&path)
+                            .with_context(|| format!("Failed to read file: {:?}", path))?;
+
+                        let mut source = std::io::BufReader::new(file);
+                        let mut destination = std::io::Cursor::new(Vec::new());
+
+                        apply(
+                            &mut source,
+                            &mut destination,
+                            &scopers,
+                            &actions,
+                            args.options.fail_none,
+                            args.options.fail_any,
+                            args.standalone_actions.squeeze,
+                        )
+                        .with_context(|| format!("Failed to process file contents: {:?}", path))?;
+
+                        destination.into_inner()
+                    };
+
+                    debug!("Got new file contents, writing to file: {:?}", path);
+                    let mut file = File::create(&path)
+                        .with_context(|| format!("Failed to truncate file: {:?}", path))?;
+                    file.write_all(&contents)
+                        .with_context(|| format!("Failed to write to file: {:?}", path))?;
+                    debug!("Done processing file: {:?}", path);
+
+                    Ok(())
+                })
+                .collect::<Result<Vec<_>>>()
+                .context("Failure in processing of a file")?;
+        }
+        None => {
+            info!("Will use stdin to stdout");
+            let mut source = std::io::stdin().lock();
+            let mut destination = std::io::stdout().lock();
+
+            apply(
+                &mut source,
+                &mut destination,
+                &scopers,
+                &actions,
+                args.options.fail_none,
+                args.options.fail_any,
+                args.standalone_actions.squeeze,
+            )
+            .context("Failed to process stdin")?;
+        }
+    }
+
+    info!("Done, exiting");
+    Ok(())
+}
+
+fn apply(
+    source: &mut impl io::BufRead,
+    destination: &mut impl io::Write,
+    scopers: &Vec<Box<dyn Scoper>>,
+    actions: &Vec<Box<dyn Action>>,
+    fail_none: bool,
+    fail_any: bool,
+    squeeze: bool,
+) -> Result<()> {
+    // Streaming (e.g., line-based) wouldn't be too bad, and much more memory-efficient,
+    // but language grammar-aware scoping needs entire files for context. Single lines
+    // wouldn't do. There's no smart way of streaming that I can think of (where would
+    // one break?).
+    debug!("Reading entire source to string.");
     let mut buf = String::new();
-    std::io::stdin()
+    source
         .read_to_string(&mut buf)
-        .map_err(|e| format!("Error reading stdin: {e}"))?;
-    debug!("Done reading stdin.");
+        .context("Failed reading in source")?;
+    debug!("Done reading source.");
 
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(&buf);
     for scoper in scopers {
-        builder.explode(&scoper);
+        builder.explode(scoper);
     }
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
 
+    if fail_none && !view.has_any_in_scope() {
+        return Err(ApplicationError::NoneInScope).context("whatever");
+    }
+
+    if fail_any && view.has_any_in_scope() {
+        return Err(ApplicationError::SomeInScope).context("hello");
+    };
+
     debug!("Applying actions to view.");
     let result = {
-        if args.options.fail_none && !view.has_any_in_scope() {
-            return Err(format!(
-                "Nothing in scope and explicit failure requested: {view:?}"
-            ));
-        }
-
-        if args.options.fail_any && view.has_any_in_scope() {
-            return Err(format!(
-                "Some input was in scope, and explicit failure requested: {view:?}"
-            ));
-        };
-
-        if args.standalone_actions.squeeze {
+        if squeeze {
             view.squeeze();
         }
 
         for action in actions {
-            view.map(&action);
+            view.map(action);
         }
 
         view.to_string()
     };
     debug!("Done applying actions to view.");
 
-    let mut destination = io::stdout();
-
-    debug!("Writing to stdout.");
+    debug!("Writing to destination.");
     destination
         .write_all(result.as_bytes())
-        .map_err(|e| format!("Error writing to destination: {e}"))?;
-    debug!("Done writing to stdout.");
+        .context("Failed writing to destination")?;
+    debug!("Done writing to destination.");
 
-    info!("Done, exiting");
     Ok(())
 }
+
+#[derive(Debug)]
+enum ApplicationError {
+    SomeInScope,
+    NoneInScope,
+}
+
+impl fmt::Display for ApplicationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::SomeInScope => write!(
+                f,
+                "Some input was in scope, and explicit failure requested."
+            ),
+            Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
+        }
+    }
+}
+
+impl Error for ApplicationError {}
 
 #[derive(Debug)]
 pub enum ScoperBuildError {
@@ -131,7 +219,19 @@ impl From<RegexError> for ScoperBuildError {
     }
 }
 
-fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>, ScoperBuildError> {
+impl fmt::Display for ScoperBuildError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::EmptyScope => write!(f, "Empty scope"),
+            Self::RegexError(e) => write!(f, "Regex error: {}", e),
+            Self::LiteralError(e) => write!(f, "Literal error: {}", e),
+        }
+    }
+}
+
+impl Error for ScoperBuildError {}
+
+fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
 
     if let Some(python) = args.languages_scopes.python.clone() {
@@ -171,19 +271,25 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>, ScoperBuild
     }
 
     if args.options.literal_string {
-        scopers.push(Box::new(Literal::try_from(args.scope.clone())?));
+        scopers.push(Box::new(
+            Literal::try_from(args.scope.clone()).context("Failed building literal string")?,
+        ));
     } else {
-        scopers.push(Box::new(Regex::try_from(args.scope.clone())?));
+        scopers.push(Box::new(
+            Regex::try_from(args.scope.clone()).context("Failed building regex")?,
+        ));
     }
 
     Ok(scopers)
 }
 
-fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
+fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
     let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
     if let Some(replacement) = args.composable_actions.replace.clone() {
-        actions.push(Box::new(Replacement::try_from(replacement)?));
+        actions.push(Box::new(
+            Replacement::try_from(replacement).context("Failed building replacement string")?,
+        ));
         debug!("Loaded action: Replacement");
     }
 
@@ -233,7 +339,7 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>, String> {
         debug!("Loaded action: Normalization");
     }
 
-    if actions.is_empty() {
+    if actions.is_empty() && !(args.options.fail_any || args.options.fail_none) {
         // Doesn't hurt, but warn loudly
         error!("No actions loaded, will return input unchanged");
     }
@@ -265,7 +371,10 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
+    use std::path::PathBuf;
+
     use clap::{builder::ArgPredicate, ArgAction, Parser};
+    use glob::Pattern;
     use srgn::{
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
@@ -321,6 +430,14 @@ mod cli {
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (global)")]
     pub(super) struct GlobalOptions {
+        /// Glob of files to work on (instead of reading stdin).
+        ///
+        /// If processing occurs, it is done in-place, overwriting originals.
+        ///
+        /// For supported glob syntax, see:
+        /// https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
+        #[arg(long, verbatim_doc_comment)]
+        pub files: Option<glob::Pattern>,
         /// Undo the effects of passed actions, where applicable
         ///
         /// Requires a 1:1 mapping (bijection) between replacements and original, which

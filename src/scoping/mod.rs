@@ -19,7 +19,7 @@ pub mod scope;
 pub mod view;
 
 /// An item capable of scoping down a given input into individual scopes.
-pub trait Scoper {
+pub trait Scoper: Send + Sync {
     /// Scope the given `input`.
     ///
     /// After application, the returned scopes are a collection of either in-scope or
@@ -36,7 +36,7 @@ impl fmt::Debug for dyn Scoper {
 
 impl<T> Scoper for T
 where
-    T: Fn(&str) -> ROScopes,
+    T: Fn(&str) -> ROScopes + Send + Sync,
 {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
         self(input)

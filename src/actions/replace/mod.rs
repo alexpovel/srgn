@@ -1,3 +1,5 @@
+use std::{error::Error, fmt};
+
 use log::info;
 use unescape::unescape;
 
@@ -57,16 +59,38 @@ impl Replacement {
 }
 
 impl TryFrom<String> for Replacement {
-    type Error = String;
+    type Error = ReplacementCreationError;
 
     fn try_from(replacement: String) -> Result<Self, Self::Error> {
-        let unescaped =
-            unescape(&replacement).ok_or("Cannot unescape sequences in replacement".to_string())?;
-        Ok(Self {
-            replacement: unescaped,
-        })
+        match unescape(&replacement) {
+            Some(res) => Ok(Self {
+                replacement: res.to_string(),
+            }),
+            None => Err(ReplacementCreationError::InvalidEscapeSequences(
+                replacement.to_string(),
+            )),
+        }
     }
 }
+
+/// An error that can occur when creating a replacement.
+#[derive(Debug)]
+pub enum ReplacementCreationError {
+    /// The replacement contains invalid escape sequences.
+    InvalidEscapeSequences(String),
+}
+
+impl fmt::Display for ReplacementCreationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidEscapeSequences(replacement) => {
+                write!(f, "Contains invalid escape sequences: '{replacement}'")
+            }
+        }
+    }
+}
+
+impl Error for ReplacementCreationError {}
 
 impl Action for Replacement {
     fn act(&self, input: &str) -> String {

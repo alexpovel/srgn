@@ -25,7 +25,7 @@ pub use upper::Upper;
 /// Actions are the core of the text processing pipeline and can be applied in any
 /// order, [any number of times each](https://en.wikipedia.org/wiki/Idempotence) (more
 /// than once being wasted work, though).
-pub trait Action {
+pub trait Action: Send + Sync {
     /// Apply this action to the given input.
     ///
     /// This is infallible: it cannot fail in the sense of [`Result`]. It can only
@@ -36,7 +36,7 @@ pub trait Action {
 /// Any function that can be used as an [`Action`].
 impl<T> Action for T
 where
-    T: Fn(&str) -> String,
+    T: Fn(&str) -> String + Send + Sync,
 {
     fn act(&self, input: &str) -> String {
         self(input)
