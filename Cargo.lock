@@ -1622,7 +1622,6 @@ dependencies = [
  "rand",
  "rand_regex",
  "rayon",
- "regex",
  "rstest",
  "serde",
  "serial_test",

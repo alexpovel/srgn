@@ -27,7 +27,6 @@ unicode_titlecase = "2.2.1"
 fst = { version = "0.4.7", optional = true }
 once_cell = { version = "1.18.0", optional = true }
 decompound = { version = "0.3.0", optional = true }
-regex = "1.9.5"
 tree-sitter = "0.20.10"
 tree-sitter-python = "0.20.4"
 fancy-regex = "0.11.0"
