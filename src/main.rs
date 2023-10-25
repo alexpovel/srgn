@@ -1,6 +1,5 @@
 use anyhow::Context;
 use anyhow::Result;
-use glob::Pattern;
 use log::{debug, error, info, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
@@ -371,10 +370,7 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use std::path::PathBuf;
-
     use clap::{builder::ArgPredicate, ArgAction, Parser};
-    use glob::Pattern;
     use srgn::{
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},

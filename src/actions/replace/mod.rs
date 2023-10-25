@@ -1,9 +1,7 @@
-use std::{error::Error, fmt};
-
-use log::info;
-use unescape::unescape;
-
 use super::Action;
+use log::info;
+use std::{error::Error, fmt};
+use unescape::unescape;
 
 /// Replaces input with a fixed string.
 ///
