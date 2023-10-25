@@ -512,7 +512,8 @@ for getting started with your own queries:
   what's happening to your input, including a [representation of the parsed
   tree](https://docs.rs/tree-sitter/latest/tree_sitter/struct.Node.html#method.to_sexp)
 
-> ![NOTE]
+> [!NOTE]
+>
 > Language scopes are applied *first*, so whatever regex aka main scope you pass, it
 > operates on each matched language construct individually.
 
