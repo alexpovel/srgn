@@ -2,9 +2,13 @@ name: Main
 
 on:
   push:
+    branches:
+      - main
+      - dev
   pull_request:
     branches:
       - main
+      - dev
 
 env:
   CARGO_TERM_COLOR: always
