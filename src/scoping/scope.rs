@@ -1,6 +1,6 @@
 use crate::scoping::scope::Scope::{In, Out};
 use itertools::Itertools;
-use log::debug;
+use log::{debug, trace};
 use std::{borrow::Cow, ops::Range};
 
 /// Indicates whether a given string part is in scope.
@@ -69,6 +69,23 @@ impl<'viewee> ROScopes<'viewee> {
         debug!("Scopes: {:?}", scopes);
 
         ROScopes(scopes)
+    }
+
+    /// Inverts the scopes: what was previously [`In`] is now [`Out`], and vice versa.
+    #[must_use]
+    pub fn invert(self) -> Self {
+        trace!("Inverting scopes: {:?}", self.0);
+        let scopes = self
+            .0
+            .into_iter()
+            .map(|s| match s {
+                ROScope(In(s)) => ROScope(Out(s)),
+                ROScope(Out(s)) => ROScope(In(s)),
+            })
+            .collect();
+        trace!("Inverted scopes: {:?}", scopes);
+
+        Self(scopes)
     }
 }
 

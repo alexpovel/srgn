@@ -1,10 +1,11 @@
 use crate::actions::{self, Action};
+use crate::scoping::dosfix::DosFix;
 use crate::scoping::scope::{
     ROScope, ROScopes, RWScope, RWScopes,
     Scope::{In, Out},
 };
 use crate::scoping::Scoper;
-use log::{debug, trace};
+use log::{debug, trace, warn};
 use std::borrow::Cow;
 use std::fmt;
 
@@ -199,7 +200,9 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     ///
     /// This makes the view writable.
     #[must_use]
-    pub fn build(self) -> ScopedView<'viewee> {
+    pub fn build(mut self) -> ScopedView<'viewee> {
+        self.apply_dos_line_endings_fix();
+
         ScopedView {
             scopes: RWScopes(
                 self.scopes
@@ -208,6 +211,23 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
                     .map(std::convert::Into::into)
                     .collect(),
             ),
+        }
+    }
+
+    /// See [`DosFix`].
+    fn apply_dos_line_endings_fix(&mut self) {
+        if self.scopes.0.windows(2).any(|window| match window {
+            [ROScope(In(left)), ROScope(Out(right))] => {
+                left.ends_with('\r') && right.starts_with('\n')
+            }
+            _ => false,
+        }) {
+            warn!("Split CRLF detected. Likely scoper bug. Auto-fixing (globally).");
+            // One issue with this: it's fixing *everything*, not just the location
+            // where the split was detected. Implementing it differently is less
+            // performant and more complex, and hitting a case where this distinction
+            // (fixing globally vs. fixing locally) matters is quite unlikely.
+            self.explode(&DosFix);
         }
     }
 

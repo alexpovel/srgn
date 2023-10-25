@@ -5,6 +5,8 @@ use crate::scoping::scope::ROScopes;
 use crate::scoping::{scope::Scope, view::ScopedView};
 use std::fmt;
 
+/// Fixes for DOS-style line endings.
+pub mod dosfix;
 /// Create scoped views using programming language grammar-aware types.
 pub mod langs;
 /// Create scoped views using string literals.

@@ -8,7 +8,8 @@ use super::get_input_output;
 
 #[rstest]
 #[case("docstring.py", PythonQuery::Premade(PremadePythonQuery::DocStrings))]
-#[case("comments.py", PythonQuery::Premade(PremadePythonQuery::Comments))]
+#[case("comments-lf.py", PythonQuery::Premade(PremadePythonQuery::Comments))]
+#[case("comments-crlf.py", PythonQuery::Premade(PremadePythonQuery::Comments))]
 #[case(
     "function-names.py",
     PythonQuery::Premade(PremadePythonQuery::FunctionNames)
