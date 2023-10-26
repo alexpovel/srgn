@@ -6,7 +6,7 @@
 //! README for (much) more information.
 //!
 //! For the library, much like for the binary, there are two main concepts: actions and
-//! scoping. The latter are manifested in [`ScopedView`]s. Over these, on can
+//! scoping. The latter are manifested in [`ScopedView`]s. Over these, one can
 //! [map][`ScopedView::map`] actions. Actions are all types implementing [`Action`].
 //!
 //! # Examples
