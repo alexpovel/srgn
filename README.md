@@ -14,8 +14,8 @@ Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds us
 
 ## Usage
 
-For an "end-to-end" example, consider this Python snippet (more languages are
-supported):
+For an "end-to-end" example, consider this Python snippet ([more languages are
+supported](#showcases)):
 
 ```python gnu.py
 """GNU module."""
