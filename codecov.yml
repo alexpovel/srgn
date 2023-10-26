@@ -1,0 +1,27 @@
+# When modifying this file, please validate using
+# curl -X POST --data-binary @codecov.yml https://codecov.io/validate
+
+# See also https://docs.codecov.com/docs/codecov-yaml#repository-yaml and
+# https://docs.codecov.com/docs/codecovyml-reference
+
+flag_management:
+  # https://docs.codecov.com/docs/flags#recommended-automatic-flag-management
+  default_rules:
+    carryforward: false # We're not a monorepo
+    statuses:
+      - type: "project"
+        target: "auto"
+      - type: "patch"
+        target: "auto"
+coverage:
+  status:
+    # https://docs.codecov.com/docs#tips-and-tricks
+    project:
+      default:
+        informational: false # Fail the pipeline?
+    patch:
+      default:
+        informational: false # Fail the pipeline?
+ignore:
+  # https://docs.codecov.com/docs/codecovyml-reference#ignore
+  - "build.rs"
