@@ -134,6 +134,7 @@ jobs:
           # Token needs: `contents: write`, `pull-requests: write`
           token: ${{ steps.app-token.outputs.token }}
           release-type: rust
+          bump-minor-pre-major: true  # `true` seems more Rust-like
 
       - uses: actions/checkout@v4
       - name: Mark release as draft
