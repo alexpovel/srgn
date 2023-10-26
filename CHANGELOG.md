@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.5.0](https://github.com/alexpovel/srgn/compare/v0.4.5...v0.5.0) (2023-10-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* `explode` takes `&mut self`, add all remaining public docs
+* Simplify `explode` (no more `explode_from_scoper`), improve docs
+* View-related items into view module
+* scopes into new module
+* Simplify crate features, fix existing cfgs
+* Make `R{O,W}Scope{,s}` a newtype so it can take `impl`s
+* Unify `ScopedView::map` through `Action` trait
+
+### Features
+
+* File globbing and processing ([a8d330c](https://github.com/alexpovel/srgn/commit/a8d330c78ba0275909fa471fddc8f58e68181c83))
+* Flag for failing on empty glob ([9d2fd0a](https://github.com/alexpovel/srgn/commit/9d2fd0a71e0b39043895a65e9674c0819b27440b))
+* Make `german`-only dependencies `optional` ([b407b67](https://github.com/alexpovel/srgn/commit/b407b67b03896691123c3ae763b5ed64458cfc59))
+* Provide ass. functions on view for all actions ([ca52905](https://github.com/alexpovel/srgn/commit/ca529057fef2e50db49148b6914eb292ee9ac755))
+* Simplify `explode` (no more `explode_from_scoper`), improve docs ([ab0b914](https://github.com/alexpovel/srgn/commit/ab0b914175e9c0a04ba9c00bc72843abb949e733))
+* Unify `ScopedView::map` through `Action` trait ([f6ff38d](https://github.com/alexpovel/srgn/commit/f6ff38d98cfed7ff4bddde0abbadcee297649220))
+
+
+### Bug Fixes
+
+* **ci:** Code coverage using `tarpaulin`, by conditionally disabling `insta` ([6ace4fa](https://github.com/alexpovel/srgn/commit/6ace4fa476cad447060d76043c731c811b64629f))
+* **clippy:** `ignored_unit_patterns` ([4bc2827](https://github.com/alexpovel/srgn/commit/4bc28274e2578b968258f50f58618070fc0e8f5c)), closes [#35](https://github.com/alexpovel/srgn/issues/35)
+* **docs:** Dead documentation symbol links ([ce3f900](https://github.com/alexpovel/srgn/commit/ce3f90015cdef9d53f67564d1281add3f1756762))
+* **docs:** GitHub Markdown NOTE syntax error ([896129b](https://github.com/alexpovel/srgn/commit/896129b54a4799b12f65b7816e35209aabef5517))
+* **docs:** Implement placeholder for custom query ([0844a99](https://github.com/alexpovel/srgn/commit/0844a99dbcf3bad02d41cdecd348ee915bc895eb))
+* **docs:** In/Out was swapped for DosFix ([9d56346](https://github.com/alexpovel/srgn/commit/9d56346138d1e01b5ad1914078ef11e19dca287a))
+* Feature-gated doc tests working properly ([a46e60d](https://github.com/alexpovel/srgn/commit/a46e60db9ef5bbbcb931bc4ff217b6459ce4c2e7))
+* License for crates.io ([6c13a62](https://github.com/alexpovel/srgn/commit/6c13a62bb6f6ba99573494b9ec6a7bcd23bfff67))
+* Simplify crate features, fix existing cfgs ([af1b39d](https://github.com/alexpovel/srgn/commit/af1b39db705b9795933e3dd0716ecd3c8cbd5cac))
+* Splitting of DOS-style line endings ([496337c](https://github.com/alexpovel/srgn/commit/496337c5d664db3df4a884f0050ee0d1357d8c2b))
+
+
+### Miscellaneous Chores
+
+* `explode` takes `&mut self`, add all remaining public docs ([33097c1](https://github.com/alexpovel/srgn/commit/33097c149f855a4a09ca1aef6535833c0e9a016e)), closes [#6](https://github.com/alexpovel/srgn/issues/6)
+* Make `R{O,W}Scope{,s}` a newtype so it can take `impl`s ([98b04d5](https://github.com/alexpovel/srgn/commit/98b04d5d7a1cb1a88ac8158cdaa0a2673f4e2114))
+* scopes into new module ([e951347](https://github.com/alexpovel/srgn/commit/e9513470d62c5a2fc165c656d8a02c810b5bf2fb))
+* View-related items into view module ([18ef801](https://github.com/alexpovel/srgn/commit/18ef801577b345f24a7bba37909a4387e553bf13))
+
 ## [0.4.5](https://github.com/alexpovel/srgn/compare/v0.4.4...v0.4.5) (2023-10-22)
 
 
