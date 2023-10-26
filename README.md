@@ -68,9 +68,9 @@ expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
 
 > [!NOTE]
 >
-> Without exception, all code snippets in this README are automatically
-> [unit-tested](./tests/readme.rs) using the actual program binary. What is showcased
-> here is guaranteed to work.
+> Without exception, all `bash` and `console` code snippets in this README are
+> automatically [tested](tests/readme.rs) using the actual program binary, facilitated
+> by a tiny bash interpreter. What is showcased here is guaranteed to work.
 
 ## Installation
 
