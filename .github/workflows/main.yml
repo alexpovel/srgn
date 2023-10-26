@@ -184,7 +184,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      ASSET_FILE: "${{ matrix.crate }}-${{ matrix.target }}-${{ needs.release-please.outputs.tag_name }}.tgz"
+      ASSET_FILE: "${{ matrix.crate }}-${{ matrix.target }}.tgz"
 
     permissions:
       contents: write # For `gh` to upload asset to release
