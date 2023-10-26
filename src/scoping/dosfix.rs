@@ -22,9 +22,10 @@ use log::trace;
 /// [x = 3  ](# the value␍)[␊]
 /// ```
 ///
-/// where `[...]` means [`In`] scope, and `(...)` [`Out`]. Combined with an action such
+/// where `(...)` means [`In`] scope, and `[...]` [`Out`]. Combined with an action such
 /// as [`Deletion`], this will rip line endings apart, and worst of all end up in
-/// *mixed* line endings for the resulting document.
+/// *mixed* line endings for the resulting document (e.g., if everything in scope is
+/// deleted).
 ///
 /// This [`Scoper`] ensures `\r` is [`Out`] of scope (note: it cannot, by itself, decide
 /// if that's actually the correct behavior). It is much cheaper done here than fixing
