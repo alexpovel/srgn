@@ -60,8 +60,27 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - cli-option: "--lib"
+            codecov-flag: "unit"
+
+          # https://github.com/rust-lang/cargo/issues/8396#issuecomment-713126649
+          - cli-option: "--test '*'"
+            codecov-flag: "integration"
+
+          - cli-option: "--doc"
+            codecov-flag: "doc"
+
+          # The others might miss benches, examples, ..., so ensure we have a total as
+          # well. `--all-targets` does not include `--doc`, so put that extra.
+          - cli-option: "--all-targets --doc"
+            codecov-flag: "total"
+
     steps:
       - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
 
       - name: Install cargo-tarpaulin (for coverage)
         # As recommened by `cargo-binstall` team:
@@ -74,20 +93,22 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
 
       - name: Run tests (with coverage)
-        # `--all-targets` does not include `--doc`. For why the `features` stuff is
-        # needed, see `tarpaulin-incompatible` feature and
-        # https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
+        # For why the `features` stuff is needed, see `tarpaulin-incompatible` feature
+        # and https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
         run: >
           cargo tarpaulin
           --out xml
           --engine llvm
-          --all-targets
-          --doc
           --no-default-features
           --features all
+          ${{ matrix.cli-option }}
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          flags: ${{ matrix.codecov-flag }}
 
   release-please:
     name: Execute release chores
