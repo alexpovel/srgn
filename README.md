@@ -135,6 +135,14 @@ CI](https://github.com/cargo-bins/cargo-binstall#can-i-use-it-in-ci).
       Select "Desktop development with C++" on installation.
 3. Run `cargo install srgn`
 
+### Cargo (as a Rust library)
+
+```text
+cargo add srgn
+```
+
+See [here](#rust-library) for more.
+
 ## Walkthrough
 
 The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of
@@ -745,11 +753,26 @@ escaped.
 
 ## Rust library
 
-[![docs.rs](https://img.shields.io/docsrs/srgn)](https://docs.rs/srgn/)
-
 While this tool is CLI-first, it is library-very-close-second, and library usage is
 treated as a first-class citizen just the same. See the [library
 documentation](https://docs.rs/srgn) for more, library-specific details.
+
+### Status and stats
+
+[![docs.rs](https://img.shields.io/docsrs/srgn)](https://docs.rs/srgn/)
+[![codecov](https://codecov.io/gh/alexpovel/srgn/graph/badge.svg?token=IPU7L9BWMV)](https://codecov.io/gh/alexpovel/srgn)
+[![crates](https://img.shields.io/crates/v/srgn.svg)](https://crates.io/crates/srgn)
+[![Hits-of-Code](https://hitsofcode.com/github/alexpovel/srgn?branch=main)](https://hitsofcode.com/github/alexpovel/srgn/view?branch=main)
+
+Note: these apply to the entire repository, including the [binary](./src/main.rs).
+
+#### Code coverage icicle graph
+
+The code is currently structured as (color indicates coverage):
+
+[![Code coverage icile graph](https://codecov.io/gh/alexpovel/srgn/graphs/icicle.svg?token=IPU7L9BWMV)](https://codecov.io/gh/alexpovel/srgn/graphs/icicle.svg?token=IPU7L9BWMV)
+
+Hover over the rectangles for file names.
 
 ## Contributing
 
