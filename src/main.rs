@@ -154,11 +154,11 @@ fn apply(
     debug!("Done building view: {view:?}");
 
     if fail_none && !view.has_any_in_scope() {
-        return Err(ApplicationError::NoneInScope).context("whatever");
+        return Err(ApplicationError::NoneInScope.into());
     }
 
     if fail_any && view.has_any_in_scope() {
-        return Err(ApplicationError::SomeInScope).context("hello");
+        return Err(ApplicationError::SomeInScope.into());
     };
 
     debug!("Applying actions to view.");
