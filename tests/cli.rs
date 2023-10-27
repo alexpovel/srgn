@@ -99,7 +99,7 @@ Duebel
         let mut cmd = get_cmd();
 
         let input = b"invalid utf8 \xFF";
-        cmd.arg("german").write_stdin(*input);
+        cmd.write_stdin(*input);
 
         cmd.assert().success();
     }
