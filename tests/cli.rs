@@ -4,9 +4,12 @@
 #[cfg(test)]
 #[cfg(feature = "all")]
 mod tests {
+    use anyhow::Context;
     use assert_cmd::Command;
+    use core::panic;
     use rstest::rstest;
     use serde::Serialize;
+    use std::path::{Path, PathBuf};
 
     // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
     // integration tests only with valid UTF8.
@@ -44,7 +47,7 @@ Duebel
     }
 
     #[rstest]
-    fn test_cli(
+    fn test_cli_stdin(
         // This will generate all permutations of all `values`, which is a lot but
         // neatly manageable through `insta`.
         #[values(1, 2, 3)] n_sample: usize,
@@ -93,6 +96,43 @@ Duebel
         );
     }
 
+    #[rstest]
+    #[case("**/*.py", "tests/files-option/basic-python/in", ["foo", "baz"].as_slice())]
+    fn test_cli_files(#[case] glob: &str, #[case] left: PathBuf, #[case] add_args: &[&str]) {
+        // Arrange
+        let mut cmd = get_cmd();
+
+        // Restore from potential existing dirty state
+        restore(&left).expect("Head restoration to not fail");
+
+        let right = {
+            let mut right = left.clone();
+            right.pop();
+            right.push("out");
+            right
+        };
+
+        cmd.current_dir(&left);
+        cmd.args(["--files", glob]);
+        cmd.args(add_args);
+
+        // Act
+        let output = cmd.output().expect("failed to execute binary under test");
+
+        // Assert
+
+        // Thing itself works
+        assert!(output.status.success(), "Binary execution itself failed");
+
+        // Results are correct
+        if let Err(e) = compare_directories(left.clone(), right) {
+            panic!("{}", format!("Directory comparison failed: {}.", e));
+        }
+
+        // Reset that shit
+        restore(&left).expect("Tail restoration to not fail");
+    }
+
     #[test]
     #[should_panic]
     fn test_cli_on_invalid_utf8() {
@@ -106,5 +146,104 @@ Duebel
 
     fn get_cmd() -> Command {
         Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap()
+    }
+
+    /// Recursively compares file contents of some baseline directory `left` to some
+    /// candidate `right`.
+    ///
+    /// The `right` tree has to be a superset (not strict) of `left`: all files with
+    /// their full paths, i.e. all intermediary directories, need to exist in `right`,
+    /// but extraneous files in `right` are allowed.
+    ///
+    /// **File contents are checked for exactly**. File metadata is not compared.
+    ///
+    /// Any failure fails the entire comparison.
+    ///
+    /// Lots of copying happens, so not efficient.
+    fn compare_directories(left: PathBuf, mut right: PathBuf) -> anyhow::Result<()> {
+        for entry in left
+            .read_dir()
+            .with_context(|| format!("Failure reading left dir: {:?}", left))?
+        {
+            // This shadows on purpose: less risk of misuse
+            let left = entry
+                .with_context(|| format!("Failure reading left dir entry (left: {:?})", left))?;
+
+            right.push(left.file_name());
+
+            let metadata = left.metadata().context("Failure reading file metadata")?;
+
+            if !right.exists() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!(
+                        "Right counterpart does not exist: left: {:?}, right: {:?}, left meta: {:?}",
+                        left.path(),
+                        right,
+                        metadata
+                    ),
+                )
+                .into());
+            }
+
+            if metadata.is_file() {
+                // Recursion end
+                let left_contents = std::fs::read_to_string(left.path())
+                    .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
+                let right_contents = std::fs::read_to_string(&right)
+                    .with_context(|| format!("Failure reading right file: {:?}", right))?;
+
+                if left_contents != right_contents {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!(
+                            "File contents differ: left: {:?}, right: {:?}",
+                            left.path(),
+                            right
+                        ),
+                    )
+                    .into());
+                }
+            } else if metadata.is_dir() {
+                // Recursion step
+                compare_directories(left.path().clone(), right.clone())?;
+            } else {
+                // Do not silently ignore.
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Unsupported,
+                    format!(
+                        "Unsupported file type for testing, found: {:?}",
+                        left.metadata().unwrap()
+                    ),
+                )
+                .into());
+            }
+
+            right.pop();
+        }
+
+        Ok(())
+    }
+
+    fn restore(path: &Path) -> std::io::Result<()> {
+        let mut cmd = std::process::Command::new("git");
+
+        cmd.args(["restore", path.display().to_string().as_str()]);
+        eprintln!("Running: {:?}", cmd);
+        let output = cmd.output()?;
+
+        if !output.status.success() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "File restoration failed for {} (stderr: '{}', stdout: '{}'",
+                    path.display(),
+                    String::from_utf8_lossy(output.stderr.as_slice()),
+                    String::from_utf8_lossy(output.stdout.as_slice()),
+                ),
+            ));
+        };
+
+        Ok(())
     }
 }
