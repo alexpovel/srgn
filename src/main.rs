@@ -32,7 +32,7 @@ use std::{
     error::Error,
     fmt,
     fs::File,
-    io::{self, Write},
+    io::{self, IoSlice, Write},
 };
 
 fn main() -> Result<()> {
@@ -101,10 +101,20 @@ fn main() -> Result<()> {
                         .with_context(|| format!("Failed to write to file: {:?}", path))?;
                     debug!("Done processing file: {:?}", path);
 
+                    {
+                        let path_repr = path.display().to_string();
+                        let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
+
+                        std::io::stdout()
+                            .lock()
+                            .write_vectored(slices)
+                            .context("Failed writing processed file's name to stdout")?;
+                    }
+
                     Ok(path)
                 })
                 .collect::<Result<Vec<_>>>()
-                .context("Failure in processing of a file")?;
+                .context("Failure in processing of files")?;
 
             if args.options.fail_empty_glob && paths.is_empty() {
                 return Err(ApplicationError::EmptyGlob(pattern.clone()))
@@ -447,6 +457,8 @@ mod cli {
         ///
         /// For supported glob syntax, see:
         /// https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
+        ///
+        /// Names of processed files are written to stdout.
         #[arg(long, verbatim_doc_comment)]
         pub files: Option<glob::Pattern>,
         /// Fail if file globbing is requested but returns no matches.
