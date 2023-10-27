@@ -1,6 +1,6 @@
 use anyhow::Context;
 use anyhow::Result;
-use log::{debug, error, info, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
@@ -64,6 +64,14 @@ fn main() -> Result<()> {
                 .map(|glob| {
                     let path = glob.context("Failed to glob")?;
                     debug!("Processing path: {:?}", path);
+
+                    if !path.is_file() {
+                        warn!(
+                            "Path does not look like a file (will still try): '{}' (Metadata: {:?})",
+                            path.display(),
+                            path.metadata()
+                        );
+                    }
 
                     let contents = {
                         let file = File::open(&path)
