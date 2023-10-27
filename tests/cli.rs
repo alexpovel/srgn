@@ -61,7 +61,7 @@ Duebel
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
         // (inside `src/main.rs` etc.).
-        let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
+        let mut cmd = get_cmd();
 
         let sample = SAMPLES[n_sample - 1];
         let stdin = sample.to_owned();
@@ -96,11 +96,15 @@ Duebel
     #[test]
     #[should_panic]
     fn test_cli_on_invalid_utf8() {
-        let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
+        let mut cmd = get_cmd();
 
         let input = b"invalid utf8 \xFF";
         cmd.arg("german").write_stdin(*input);
 
         cmd.assert().success();
+    }
+
+    fn get_cmd() -> Command {
+        Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap()
     }
 }
