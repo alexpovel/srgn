@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/alexpovel/srgn/compare/v0.5.0...v0.6.0) (2023-10-28)
+
+
+### Features
+
+* Warn when file does not look legit ([1593ec7](https://github.com/alexpovel/srgn/commit/1593ec77da670eee78a00981051f828fb611263b))
+* Write names of processed files to stdout ([b42db4e](https://github.com/alexpovel/srgn/commit/b42db4ef29570934aed44f77f1e62242ba4f9b9f))
+
+
+### Bug Fixes
+
+* Leftover error messages from debugging ([e03c110](https://github.com/alexpovel/srgn/commit/e03c1106ef8a0f4d58bf3a201c767523f114efe2))
+
 ## [0.5.0](https://github.com/alexpovel/srgn/compare/v0.4.5...v0.5.0) (2023-10-26)
 
 
