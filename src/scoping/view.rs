@@ -182,6 +182,7 @@ impl fmt::Display for ScopedView<'_> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScopedViewBuilder<'viewee> {
     scopes: ROScopes<'viewee>,
+    viewee: &'viewee str,
 }
 
 /// Core implementations.
@@ -193,6 +194,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     pub fn new(input: &'viewee str) -> Self {
         Self {
             scopes: ROScopes(vec![ROScope(In(input))]),
+            viewee: input,
         }
     }
 
@@ -244,6 +246,12 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// - or partially [`In`] scope, partially [`Out`] of scope
     ///
     /// after application. Anything [`Out`] out of scope can never be brought back.
+    ///
+    /// ## Panics
+    ///
+    /// Panics if the [`Scoper`] scopes such that the view is no longer consistent, i.e.
+    /// gaps were created and the original input can no longer be reconstructed from the
+    /// new view.
     pub fn explode(&mut self, scoper: &impl Scoper) -> &mut Self {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.0.len());
@@ -272,6 +280,20 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
         trace!("Done exploding scopes.");
 
         self.scopes.0 = new;
+
+        assert_eq!(
+            // Tried to do this 'more proper' using the `contracts` crate, but this
+            // method `mut`ably borrows `self` and returns it as such, which is
+            // worst-case and didn't play well with its macros. The crate doesn't do
+            // much more than this manual `assert` anyway.
+            self.scopes,
+            self.viewee,
+            "Post-condition violated: exploding scopes resulted in inconsistent view. \
+            Aborting, as this is an unrecoverable bug in a scoper. \
+            Please report at {}.",
+            env!("CARGO_PKG_REPOSITORY")
+        );
+
         self
     }
 }

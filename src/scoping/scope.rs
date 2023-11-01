@@ -89,6 +89,41 @@ impl<'viewee> ROScopes<'viewee> {
     }
 }
 
+/// Checks for equality, regarding only raw [`str`] parts, i.e. disregards whether an
+/// element is [`In`] or [`Out`] of scope.
+impl PartialEq<&str> for ROScopes<'_> {
+    fn eq(&self, other: &&str) -> bool {
+        let mut start = 0;
+        let mut end = None;
+
+        for scope in &self.0 {
+            let s: &str = scope.into();
+            end = Some(start + s.len());
+
+            let Some(substring) = other.get(start..end.unwrap()) else {
+                return false;
+            };
+
+            if substring != s {
+                return false;
+            }
+
+            start = end.unwrap();
+        }
+
+        match end {
+            Some(e) => other.len() == e,
+            None => other.is_empty(),
+        }
+    }
+}
+
+impl PartialEq<ROScopes<'_>> for &str {
+    fn eq(&self, other: &ROScopes<'_>) -> bool {
+        other == self
+    }
+}
+
 impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// Get the underlying string slice.
     ///
@@ -118,5 +153,53 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
             In(s) => s,
             Out(s) => s,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    // Base cases
+    #[case(ROScopes(vec![ROScope(In("abc"))]), "abc", true)]
+    #[case(ROScopes(vec![ROScope(In("cba"))]), "cba", true)]
+    #[case(ROScopes(vec![ROScope(In("🦀"))]), "🦀", true)]
+    #[case(ROScopes(vec![ROScope(In("🦀"))]), "🤗", false)]
+    //
+    // Substring matching
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "ab", true)]
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b")), ROScope(In("c"))]), "abc", true)]
+    //
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "ac", false)]
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "a", false)]
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "b", false)]
+    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b")), ROScope(In("c"))]), "acc", false)]
+    //
+    // Length mismatch
+    #[case(ROScopes(vec![ROScope(In("abc"))]), "abcd", false)]
+    #[case(ROScopes(vec![ROScope(In("abcd"))]), "abc", false)]
+    //
+    // Partial emptiness
+    #[case(ROScopes(vec![ROScope(In("abc"))]), "", false)]
+    #[case(ROScopes(vec![ROScope(In(""))]), "abc", false)]
+    #[case(ROScopes(vec![ROScope(Out(""))]), "abc", false)]
+    #[case(ROScopes(vec![ROScope(In("")), ROScope(Out(""))]), "abc", false)]
+    //
+    // Full emptiness
+    #[case(ROScopes(vec![ROScope(In(""))]), "", true)]
+    #[case(ROScopes(vec![ROScope(Out(""))]), "", true)]
+    #[case(ROScopes(vec![ROScope(In("")), ROScope(Out(""))]), "", true)]
+    //
+    // Types of scope doesn't matter
+    #[case(ROScopes(vec![ROScope(In("a"))]), "a", true)]
+    #[case(ROScopes(vec![ROScope(Out("a"))]), "a", true)]
+    fn test_scoped_view_str_equality(
+        #[case] scopes: ROScopes<'_>,
+        #[case] string: &str,
+        #[case] equal: bool,
+    ) {
+        assert!((scopes == string) == equal);
     }
 }
