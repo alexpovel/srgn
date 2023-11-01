@@ -298,6 +298,7 @@ jobs:
     needs:
       - release-please
       - release-draft
+      - publish
 
     runs-on: ${{ matrix.os }}
 
