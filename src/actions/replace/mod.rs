@@ -68,7 +68,7 @@ impl TryFrom<String> for Replacement {
 }
 
 /// An error that can occur when creating a replacement.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ReplacementCreationError {
     /// The replacement contains invalid escape sequences.
     InvalidEscapeSequences(String),
@@ -90,5 +90,23 @@ impl Action for Replacement {
     fn act(&self, input: &str) -> String {
         info!("Substituting '{}' with '{}'", input, self.0);
         self.0.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(r"Some Replacement", Ok(Replacement("Some Replacement".to_string())))]
+    #[case(r"Some \t Escape", Ok(Replacement("Some \t Escape".to_string())))]
+    #[case(r"Some Invalid \z Escape", Err(ReplacementCreationError::InvalidEscapeSequences(r"Some Invalid \z Escape".to_string())))]
+    fn test_replacement_creation(
+        #[case] input: &str,
+        #[case] result: Result<Replacement, ReplacementCreationError>,
+    ) {
+        let replacement = Replacement::try_from(input.to_string());
+        assert_eq!(replacement, result);
     }
 }
