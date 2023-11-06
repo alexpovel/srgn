@@ -57,6 +57,40 @@ impl Replacement {
 impl TryFrom<String> for Replacement {
     type Error = ReplacementCreationError;
 
+    /// Creates a new replacement from an owned string.
+    ///
+    /// Escape sequences are accepted and processed, with invalid escape sequences
+    /// returning an [`Err`].
+    ///
+    /// ## Example: Basic usage
+    ///
+    /// ```
+    /// use srgn::actions::Replacement;
+    ///
+    /// // Successful creation of a regular string
+    /// let replacement = Replacement::try_from("Some Replacement".to_owned());
+    /// assert!(replacement.is_ok());
+    ///
+    /// // Successful creation, with escape characters
+    /// let replacement = Replacement::try_from(r"Some \t Escape".to_owned());
+    /// assert!(replacement.is_ok());
+    /// ```
+    ///
+    /// ## Example: Invalid escape sequence
+    ///
+    /// Creation fails due to invalid escape sequences.
+    ///
+    /// ```
+    /// use srgn::actions::{Replacement, ReplacementCreationError};
+    ///
+    /// let replacement = Replacement::try_from(r"Invalid \z Escape".to_owned());
+    /// assert_eq!(
+    ///    replacement,
+    ///    Err(ReplacementCreationError::InvalidEscapeSequences(
+    ///      "Invalid \\z Escape".to_owned()
+    ///    ))
+    /// );
+    /// ```
     fn try_from(replacement: String) -> Result<Self, Self::Error> {
         match unescape(&replacement) {
             Some(res) => Ok(Self(res)),
@@ -90,23 +124,5 @@ impl Action for Replacement {
     fn act(&self, input: &str) -> String {
         info!("Substituting '{}' with '{}'", input, self.0);
         self.0.clone()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rstest::rstest;
-
-    #[rstest]
-    #[case(r"Some Replacement", Ok(Replacement("Some Replacement".to_string())))]
-    #[case(r"Some \t Escape", Ok(Replacement("Some \t Escape".to_string())))]
-    #[case(r"Some Invalid \z Escape", Err(ReplacementCreationError::InvalidEscapeSequences(r"Some Invalid \z Escape".to_string())))]
-    fn test_replacement_creation(
-        #[case] input: &str,
-        #[case] result: Result<Replacement, ReplacementCreationError>,
-    ) {
-        let replacement = Replacement::try_from(input.to_string());
-        assert_eq!(replacement, result);
     }
 }

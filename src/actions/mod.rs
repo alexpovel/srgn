@@ -14,7 +14,7 @@ pub use deletion::Deletion;
 pub use german::German;
 pub use lower::Lower;
 pub use normalization::Normalization;
-pub use replace::Replacement;
+pub use replace::{Replacement, ReplacementCreationError};
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::SymbolsInversion, Symbols};
 pub use titlecase::Titlecase;
