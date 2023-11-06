@@ -1,4 +1,4 @@
-use crate::actions::{self, Action};
+use crate::actions::{self, Action, ReplacementCreationError};
 use crate::scoping::dosfix::DosFix;
 use crate::scoping::scope::{
     ROScope, ROScopes, RWScope, RWScopes,
@@ -126,11 +126,14 @@ impl<'viewee> ScopedView<'viewee> {
 
     /// Apply the [`actions::Replacement`] action to this view (see [`Self::map`]).
     ///
-    /// The `replacement` is used as-is.
-    pub fn replace(&mut self, replacement: String) -> &mut Self {
-        let action = actions::Replacement::new(replacement);
+    /// ## Errors
+    ///
+    /// For why and how this can fail, see the implementation of [`TryFrom<String>`] for
+    /// [`actions::Replacement`].
+    pub fn replace(&mut self, replacement: String) -> Result<&mut Self, ReplacementCreationError> {
+        let action = actions::Replacement::try_from(replacement)?;
 
-        self.map(&action)
+        Ok(self.map(&action))
     }
 
     /// Apply the [`actions::Symbols`] action to this view (see [`Self::map`]).

@@ -46,14 +46,6 @@ use unescape::unescape;
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Replacement(String);
 
-impl Replacement {
-    /// Creates a new replacement.
-    #[must_use]
-    pub fn new(replacement: String) -> Self {
-        Self(replacement)
-    }
-}
-
 impl TryFrom<String> for Replacement {
     type Error = ReplacementCreationError;
 
