@@ -3,7 +3,6 @@
 use crate::scoping::scope::ROScopes;
 #[cfg(doc)]
 use crate::scoping::{scope::Scope, view::ScopedView};
-use std::fmt;
 
 /// Fixes for DOS-style line endings.
 pub mod dosfix;
@@ -26,12 +25,6 @@ pub trait Scoper: Send + Sync {
     /// out-of-scope parts of the input. Assembling them back together should yield the
     /// original input.
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee>;
-}
-
-impl fmt::Debug for dyn Scoper {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Scoper").finish()
-    }
 }
 
 impl<T> Scoper for T
