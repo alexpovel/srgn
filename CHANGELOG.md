@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.0](https://github.com/alexpovel/srgn/compare/v0.6.0...v0.7.0) (2023-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove `Debug` implementation of `dyn Scoper`
+* Remove `Replacement::new`, force going through unescaping via `TryFrom<String>`
+* Make `Replacement` a newtype
+* Panic upon creation of inconsistent view
+
+### Miscellaneous Chores
+
+* Make `Replacement` a newtype ([59d6daf](https://github.com/alexpovel/srgn/commit/59d6daf505325cbe5238a9561fe2cb486cff0b64))
+* Panic upon creation of inconsistent view ([ad6a38a](https://github.com/alexpovel/srgn/commit/ad6a38ae1214622d4baada9c7107e4c21c8aab67)), closes [#51](https://github.com/alexpovel/srgn/issues/51)
+* Remove `Debug` implementation of `dyn Scoper` ([31ef135](https://github.com/alexpovel/srgn/commit/31ef135ce7df5b635653f40a67f9f7a96fd380af))
+* Remove `Replacement::new`, force going through unescaping via `TryFrom&lt;String&gt;` ([2ec98c1](https://github.com/alexpovel/srgn/commit/2ec98c16a47198214a646312a7b7c3de81c6178d))
+
 ## [0.6.0](https://github.com/alexpovel/srgn/compare/v0.5.0...v0.6.0) (2023-10-28)
 
 
