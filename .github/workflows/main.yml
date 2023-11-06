@@ -109,6 +109,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           flags: ${{ matrix.codecov-flag }}
+          token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
 
   release-please:
     name: Execute release chores
