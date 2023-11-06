@@ -44,15 +44,13 @@ use unescape::unescape;
 /// );
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct Replacement {
-    replacement: String,
-}
+pub struct Replacement(String);
 
 impl Replacement {
     /// Creates a new replacement.
     #[must_use]
     pub fn new(replacement: String) -> Self {
-        Self { replacement }
+        Self(replacement)
     }
 }
 
@@ -61,11 +59,9 @@ impl TryFrom<String> for Replacement {
 
     fn try_from(replacement: String) -> Result<Self, Self::Error> {
         match unescape(&replacement) {
-            Some(res) => Ok(Self {
-                replacement: res.to_string(),
-            }),
+            Some(res) => Ok(Self(res)),
             None => Err(ReplacementCreationError::InvalidEscapeSequences(
-                replacement.to_string(),
+                replacement,
             )),
         }
     }
@@ -92,7 +88,7 @@ impl Error for ReplacementCreationError {}
 
 impl Action for Replacement {
     fn act(&self, input: &str) -> String {
-        info!("Substituting '{}' with '{}'", input, self.replacement);
-        self.replacement.clone()
+        info!("Substituting '{}' with '{}'", input, self.0);
+        self.0.clone()
     }
 }
