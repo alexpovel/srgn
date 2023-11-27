@@ -15,7 +15,7 @@ use super::{get_input_output, nuke_target};
     "function-calls.py",
     PythonQuery::Premade(PremadePythonQuery::FunctionCalls)
 )]
-fn test_python(#[case] file: &str, #[case] query: PythonQuery) {
+fn test_python_nuke(#[case] file: &str, #[case] query: PythonQuery) {
     let lang = Python::new(query);
 
     let (input, output) = get_input_output("python", file);

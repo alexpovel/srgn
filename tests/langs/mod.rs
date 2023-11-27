@@ -1,5 +1,6 @@
 mod csharp;
 mod python;
+mod typescript;
 
 use std::{fs::read_to_string, path::Path};
 
