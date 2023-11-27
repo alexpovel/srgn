@@ -786,6 +786,8 @@ Otherwise, refer to the [guidelines](CONTRIBUTING.md).
 An unordered list of similar tools you might be interested in.
 
 - [Semgrep](https://semgrep.dev/)
+- [`fastmod`](https://github.com/facebookincubator/fastmod)
+- [`amber`](https://github.com/dalance/amber)
 - [`sd`](https://github.com/chmln/sd)
 - [`ripgrep`](https://github.com/BurntSushi/ripgrep)
 - [`ripgrep-structured`](https://github.com/orf/ripgrep-structured)
