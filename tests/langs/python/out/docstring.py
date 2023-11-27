@@ -1,11 +1,11 @@
+"""GNU module."""
 
 
-
-def GNU_says_moo():
-    
+def GNU_says___T__moo():
+    """The GNU -> say moo -> ✅"""
 
     GNU = """
-      GNU
-    """  # the GNU...
+      GNU__T__
+    """  # the__T__ GNU...
 
-    print(GNU + " says moo")  # ...says moo
+    GNU_says___T__moo(GNU + " says__T__ moo")  # ...say__T__ moo

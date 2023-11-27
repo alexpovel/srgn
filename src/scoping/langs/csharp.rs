@@ -12,10 +12,13 @@ pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PremadeCSharpQuery>;
 /// Premade tree-sitter queries for C#.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadeCSharpQuery {
-    /// Comments.
-    ///
-    /// Covers all comments, including XML doc comments and inline comments.
+    /// Comments (including XML, inline, doc comments).
     Comments,
+    /// Strings (literal, verbatim, interpolated).
+    ///
+    /// Raw strings are not yet supported
+    /// (https://github.com/tree-sitter/tree-sitter-c-sharp/pull/240 not released yet).
+    Strings,
 }
 
 impl From<PremadeCSharpQuery> for TSQuery {
@@ -24,6 +27,17 @@ impl From<PremadeCSharpQuery> for TSQuery {
             CSharp::lang(),
             match value {
                 PremadeCSharpQuery::Comments => "(comment) @comment",
+                PremadeCSharpQuery::Strings => {
+                    r#"
+                    [
+                        (interpolated_string_text)
+                        (interpolated_verbatim_string_text)
+                        (string_literal)
+                        (verbatim_string_literal)
+                    ]
+                    @string
+                    "#
+                }
             },
         )
         .expect("Premade queries to be valid")

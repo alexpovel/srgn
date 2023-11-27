@@ -1,10 +1,7 @@
 use rstest::rstest;
-use srgn::scoping::{
-    langs::python::{PremadePythonQuery, Python, PythonQuery},
-    view::ScopedViewBuilder,
-};
+use srgn::scoping::langs::python::{PremadePythonQuery, Python, PythonQuery};
 
-use super::get_input_output;
+use super::{get_input_output, nuke_target};
 
 #[rstest]
 #[case("docstring.py", PythonQuery::Premade(PremadePythonQuery::DocStrings))]
@@ -22,11 +19,7 @@ fn test_python(#[case] file: &str, #[case] query: PythonQuery) {
     let lang = Python::new(query);
 
     let (input, output) = get_input_output("python", file);
+    let result = nuke_target(&input, &lang);
 
-    let mut builder = ScopedViewBuilder::new(&input);
-    builder.explode(&lang);
-    let mut view = builder.build();
-    view.delete();
-
-    assert_eq!(view.to_string(), output);
+    assert_eq!(result, output);
 }
