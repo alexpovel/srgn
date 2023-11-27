@@ -14,9 +14,7 @@ pub type PythonQuery = CodeQuery<CustomPythonQuery, PremadePythonQuery>;
 pub enum PremadePythonQuery {
     /// Comments.
     Comments,
-    /// Docstrings.
-    ///
-    /// Does not cover multi-line strings.
+    /// Docstrings (not including multi-line strings).
     DocStrings,
     /// Function names, at the definition site.
     FunctionNames,

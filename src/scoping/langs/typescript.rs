@@ -14,6 +14,8 @@ pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PremadeTypeScriptQue
 pub enum PremadeTypeScriptQuery {
     /// Comments.
     Comments,
+    /// Strings (literal, template; includes quote characters).
+    Strings,
 }
 
 impl From<PremadeTypeScriptQuery> for TSQuery {
@@ -22,6 +24,15 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
             TypeScript::lang(),
             match value {
                 PremadeTypeScriptQuery::Comments => "(comment) @comment",
+                PremadeTypeScriptQuery::Strings => {
+                    r#"
+                    [
+                        (template_string)
+                        (string)
+                    ]
+                    @string
+                    "#
+                }
             },
         )
         .expect("Premade queries to be valid")

@@ -8,10 +8,10 @@ use super::{get_input_output, nuke_target};
     "comments.ts",
     TypeScriptQuery::Premade(PremadeTypeScriptQuery::Comments)
 )]
-// #[case(
-//     "strings.cs",
-//     TypeScriptQuery::Premade(PremadeTypeScriptQuery::Strings)
-// )]
+#[case(
+    "strings.ts",
+    TypeScriptQuery::Premade(PremadeTypeScriptQuery::Strings)
+)]
 fn test_typescript_nuke(#[case] file: &str, #[case] query: TypeScriptQuery) {
     let lang = TypeScript::new(query);
 
