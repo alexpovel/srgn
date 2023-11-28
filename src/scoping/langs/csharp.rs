@@ -68,7 +68,7 @@ impl From<CustomCSharpQuery> for TSQuery {
 
 impl Scoper for CSharp {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        self.scope_via_query(input)
+        ROScopes::from_raw_ranges(input, Self::scope_via_query(&mut self.query(), input))
     }
 }
 

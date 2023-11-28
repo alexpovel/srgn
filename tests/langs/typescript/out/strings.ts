@@ -5,13 +5,11 @@ let singleQuoted: string = 'Hello';
 let doubleQuoted__T__: string = "World";
 
 // Template literal __T__(backticks)
-// CAREFUL: variable name is included and will be modified
-let templateLiteral: string = `Hello ${doubleQuoted}`;
+let templateLiteral: string = `Hello ${doubleQuoted__T__}`;
 
 // Tagged __T__template literal
 function tag(strings: TemplateStringsArray, ...values: any[]) {
     return strings.reduce((result, str, i) => result + str + (values[i] || ''), '');
 }
 
-// CAREFUL: variable name is included and will be modified
-let taggedTemplate: string = tag`This is ${singleQuoted} and ${doubleQuoted}`;
+let taggedTemplate: string = tag`This is ${singleQuoted} and ${doubleQuoted__T__}`;

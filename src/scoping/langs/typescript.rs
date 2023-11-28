@@ -25,9 +25,10 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
             match value {
                 PremadeTypeScriptQuery::Comments => "(comment) @comment",
                 PremadeTypeScriptQuery::Strings => {
+                    // (template_string)
                     r#"
                     [
-                        (template_string)
+                        (template_string (template_substitution) @IGNORE)
                         (string)
                     ]
                     @string
@@ -63,7 +64,9 @@ impl From<CustomTypeScriptQuery> for TSQuery {
 
 impl Scoper for TypeScript {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        self.scope_via_query(input)
+        let ranges = Self::scope_via_query(&mut self.query(), input);
+
+        ROScopes::from_raw_ranges(input, ranges)
     }
 }
 
