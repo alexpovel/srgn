@@ -160,41 +160,68 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
 
 /// Subtract the `right` from the `left`, such that all ranges in `right` are removed
 /// from `left`.
+///
+/// ## Preconditions
+///
+/// Both inputs are...
+///
+/// - sorted by [`Range::start`],
+/// - non-overlapping in each input.
+///
+/// ## Illustration
+///
+/// Using single ranges for simplicity.
+///
+/// ### To the left, no overlap
+///
+/// ```text
+/// L: |-------XXXXX--->
+/// R: |-XXXX---------->
+/// =  |-------XXXXX--->
+/// ```
+///
+/// ### Regular overlap
+///
+/// ```text
+/// L: |---XXXXX------->
+/// R: |-XXXX---------->
+/// =  |-----XXX------->
+/// ```
+///
+/// ### Splits
+///
+/// ```text
+/// L: |--XXXXXXXXXX--->
+/// R: |----XXXXX------>
+/// =  |--XX-----XXX--->
+/// ```
+///
+/// ### Envelops
+///
+/// ```text
+/// L: |----XXXXX------>
+/// R: |--XXXXXXXXXX--->
+/// =  |--------------->
+/// ```
 pub(crate) fn subtract<T>(mut left: Vec<Range<T>>, right: &Vec<Range<T>>) -> Vec<Range<T>>
 where
-    T: Ord + Copy,
+    T: Ord + Copy + std::fmt::Debug,
 {
-    // let mut left = left.into_iter().peekable();
-    // let mut right = right.into_iter().peekable();
-
-    // let mut res = Vec::new();
-
-    // while let (Some(l), Some(r)) = (left.peek(), right.peek()) {
-    //     if l.end <= r.start {
-    //         res.push(l.clone());
-    //         left.next();
-    //     } else if l.start >= r.end {
-    //         right.next();
-    //     } else {
-    //         if l.start < r.start {
-    //             res.push(l.start..r.start);
-    //         }
-
-    //         if l.end > r.end {
-    //             res.push(r.end..l.end);
-    //             right.next();
-    //         } else {
-    //             left.next();
-    //         }
-    //     }
-    // }
-
-    // Tail of `left` that's left, and had no `right` to subtract from it
-    // for l in left {
-    //     res.push(l);
-    // }
-
     let mut res = Vec::with_capacity(left.len());
+
+    #[cfg(debug_assertions)]
+    {
+        let is_sorted =
+            |ranges: &Vec<Range<T>>| ranges.windows(2).all(|w| w[0].start <= w[1].start);
+        let is_not_overlapping =
+            |ranges: &Vec<Range<T>>| ranges.windows(2).all(|w| w[0].end <= w[1].start);
+
+        for ranges in &[&left, right] {
+            trace!("Checking preconditions for ranges: {:?}", &ranges);
+            debug_assert!(is_sorted(ranges));
+            debug_assert!(is_not_overlapping(ranges));
+        }
+    }
 
     'outer: for l in &mut left {
         for r in right {

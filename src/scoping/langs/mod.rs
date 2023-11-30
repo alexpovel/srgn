@@ -112,18 +112,18 @@ pub trait LanguageScoper: Scoper {
             let res = ranges.collect();
             trace!("Querying yielded ranges: {:?}", res);
 
-            res
+            // Merge, because tree-sitter queries with multiple captures will return
+            // them in some mixed order (not ordered, and not merged), but we later rely
+            // on cleanly ordered, non-overlapping ranges (a bit unfortunate we have to
+            // know about that remote part over here).
+            merge(res)
         };
 
         let ranges = run(query);
 
         let has_ignore = query.capture_names().iter().any(|name| name == "IGNORE");
 
-        // Merge, because tree-sitter queries with multiple captures will return them in
-        // some mixed order (not ordered, and not merged), but we later rely on cleanly
-        // ordered, non-overlapping ranges (a bit unfortunate we have to know about that
-        // remote part over here).
-        merge(if has_ignore {
+        if has_ignore {
             let ignored_ranges = {
                 let capture_names = query.capture_names().to_owned();
                 for name in capture_names {
@@ -142,6 +142,6 @@ pub trait LanguageScoper: Scoper {
             res
         } else {
             ranges
-        })
+        }
     }
 }
