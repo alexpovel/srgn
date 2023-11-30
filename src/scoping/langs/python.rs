@@ -85,7 +85,6 @@ impl From<CustomPythonQuery> for TSQuery {
 
 impl Scoper for Python {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        // self.scope_via_query(input)
         ROScopes::from_raw_ranges(input, Self::scope_via_query(&mut self.query(), input))
     }
 }

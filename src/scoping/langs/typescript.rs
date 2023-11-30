@@ -25,7 +25,6 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
             match value {
                 PremadeTypeScriptQuery::Comments => "(comment) @comment",
                 PremadeTypeScriptQuery::Strings => {
-                    // (template_string)
                     r#"
                     [
                         (template_string (template_substitution) @IGNORE)

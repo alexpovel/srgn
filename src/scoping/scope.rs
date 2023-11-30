@@ -57,7 +57,7 @@ impl<'viewee> ROScopes<'viewee> {
 
         let mut last_end = 0;
         for Range { start, end } in ranges.into_iter().sorted_by_key(|r| r.start) {
-            scopes.push(ROScope(Out(&input[last_end..start]))); // TODO: check bounds, panics sometimes
+            scopes.push(ROScope(Out(&input[last_end..start])));
             scopes.push(ROScope(In(&input[start..end])));
             last_end = end;
         }
@@ -89,103 +89,6 @@ impl<'viewee> ROScopes<'viewee> {
 
         Self(scopes)
     }
-
-    // Inverse of [`from_raw_ranges`], returning [`Range`]s that are [`In`] scope.
-    // pub fn to_raw_ranges(&self) -> Vec<Range<usize>> {
-    //     let mut ranges = Vec::with_capacity(self.0.len());
-
-    //     let mut start = 0;
-    //     for scope in &self.0 {
-    //         match scope {
-    //             ROScope(In(s)) => {
-    //                 let end = start + s.len();
-    //                 ranges.push(start..end);
-    //                 start = end;
-    //             }
-    //             ROScope(Out(s)) => {
-    //                 start += s.len();
-    //             }
-    //         }
-    //     }
-
-    //     ranges
-    // }
-
-    // // Intersects two scopes. Only those parts [`In`] scope for *both* are kept as
-    // // such. Parts [`In`] scope for only one of the two become [`Out`]; parts [`Out`]
-    // // of scope for both remain as such as well.
-    // #[must_use]
-    // pub fn intersect(self, other: Self) -> Result<Self, String> {
-    //     let self_ranges = self.to_raw_ranges();
-    //     let other_ranges = other.to_raw_ranges();
-
-    //     let ranges = intersect(self_ranges, other_ranges);
-    //     let input: &str = self.into();
-
-    //     Ok(Self::from_raw_ranges(self.0[0].into(), ranges))
-    // }
-
-    //     let mut result = Vec::new();
-
-    //     for self_scope in self.0.iter() {
-    //         match self_scope.0 {
-    //             In(s) => todo!(),
-    //             o @ Out(_) => result.push(o),
-    //         }
-    //     }
-
-    // for (self_scope, other_scope) in self.0.iter().zip(other.0.iter()) {
-    //     match (self_scope.0, other_scope.0) {
-    //         (In(_), In(_)) => todo!(),
-    //         (In(_), Out(_)) => todo!(),
-    //         (Out(_), In(_)) => todo!(),
-    //         (Out(_), Out(_)) => todo!(),
-    //     }
-    //     if self_scope != other_scope {
-    //         return Err(format!(
-    //             "Cannot join scopes {:?} and {:?} as they are not equal",
-    //             self, other
-    //         ));
-    //     }
-    // }
-
-    // todo!();
-
-    // let mut self_iter = self.0.into_iter();
-    // let mut other_iter = other.0.into_iter();
-
-    // let mut self_scope = self_iter.next();
-    // let mut other_scope = other_iter.next();
-
-    // while let (Some(self_scope), Some(other_scope)) = (self_scope, other_scope) {
-    //     let self_scope: &str = self_scope.into();
-    //     let other_scope: &str = other_scope.into();
-
-    //     if self_scope == other_scope {
-    //         scopes.push(self_scope.into());
-    //         self_scope = self_iter.next();
-    //         other_scope = other_iter.next();
-    //     } else if self_scope < other_scope {
-    //         scopes.push(self_scope.into());
-    //         self_scope = self_iter.next();
-    //     } else {
-    //         scopes.push(other_scope.into());
-    //         other_scope = other_iter.next();
-    //     }
-    // }
-
-    // while let Some(self_scope) = self_scope {
-    //     scopes.push(self_scope.into());
-    //     self_scope = self_iter.next();
-    // }
-
-    // while let Some(other_scope) = other_scope {
-    //     scopes.push(other_scope.into());
-    //     other_scope = other_iter.next();
-    // }
-
-    // Self(scopes)
-    // }
 }
 
 /// Checks for equality, regarding only raw [`str`] parts, i.e. disregards whether an
@@ -254,36 +157,6 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
         }
     }
 }
-
-// fn intersect<T>(left: Vec<Range<T>>, right: Vec<Range<T>>) -> Vec<Range<T>>
-// where
-//     T: Ord + Copy,
-// {
-//     let mut left = left.into_iter().peekable();
-//     let mut right = right.into_iter().peekable();
-
-//     let mut res = Vec::new();
-
-//     while let (Some(l), Some(r)) = (left.peek(), right.peek()) {
-//         if l.end <= r.start {
-//             left.next();
-//         } else if r.end <= l.start {
-//             right.next();
-//         } else {
-//             let start = l.start.max(r.start);
-//             let end = l.end.min(r.end);
-//             res.push(start..end);
-
-//             if l.end < r.end {
-//                 left.next();
-//             } else {
-//                 right.next();
-//             }
-//         }
-//     }
-
-//     res
-// }
 
 /// Subtract the `right` from the `left`, such that all ranges in `right` are removed
 /// from `left`.
@@ -447,71 +320,6 @@ mod tests {
     ) {
         assert!((scopes == string) == equal);
     }
-
-    // #[rstest]
-    // #[case(
-    //     vec![0..1],
-    //     vec![0..1],
-    //     vec![0..1]
-    // )]
-    // #[case(
-    //     vec![0..1, 1..2],
-    //     vec![0..1, 1..2],
-    //     vec![0..1, 1..2]
-    // )]
-    // #[case(
-    //     vec![0..1, 2..3],
-    //     vec![0..1],
-    //     vec![0..1]
-    // )]
-    // #[case(
-    //     vec![0..1, 2..3],
-    //     vec![2..3],
-    //     vec![2..3]
-    // )]
-    // #[case(
-    //     vec![0..1, 2..3],
-    //     vec![0..3],
-    //     vec![0..1, 2..3]
-    // )]
-    // #[case(
-    //     vec![0..3],
-    //     vec![0..1, 2..3],
-    //     vec![0..1, 2..3]
-    // )]
-    // #[case(
-    //     vec![0..1, 2..3],
-    //     vec![1..2],
-    //     vec![]
-    // )]
-    // #[case(
-    //     vec![0..1],
-    //     vec![1..2],
-    //     vec![]
-    // )]
-    // #[case(
-    //     vec![1..2],
-    //     vec![0..1],
-    //     vec![]
-    // )]
-    // #[case(
-    //     vec![0..1, 2..3],
-    //     vec![-1..4],
-    //     vec![0..1, 2..3]
-    // )]
-    // #[case(
-    //     vec![0..1, 1..2, 2..3],
-    //     vec![-1..4],
-    //     vec![0..1, 1..2, 2..3],
-    // )]
-    // fn test_intersect(
-    //     #[case] left: Vec<Range<isize>>,
-    //     #[case] right: Vec<Range<isize>>,
-    //     #[case] expected: Vec<Range<isize>>,
-    // ) {
-    //     let res = intersect(left, right);
-    //     assert_eq!(res, expected);
-    // }
 
     #[rstest]
     // For a fixed-size `left` interval, watch as the `right` interval slides past,
