@@ -39,6 +39,7 @@ tree-sitter-c-sharp = "0.20.0"
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 rayon = "1.7.0"
 glob = "0.3.1"
+const_format = "0.2.32"
 
 [features]
 german = ["cached", "decompound", "fst", "once_cell"]

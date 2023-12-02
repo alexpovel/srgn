@@ -1,6 +1,7 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{ROScopes, Scoper};
+use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
 use clap::ValueEnum;
+use const_format::concatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -8,7 +9,6 @@ use tree_sitter::QueryError;
 pub type TypeScript = Language<TypeScriptQuery>;
 /// A query for TypeScript.
 pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PremadeTypeScriptQuery>;
-
 /// Premade tree-sitter queries for TypeScript.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PremadeTypeScriptQuery {
@@ -25,13 +25,16 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
             match value {
                 PremadeTypeScriptQuery::Comments => "(comment) @comment",
                 PremadeTypeScriptQuery::Strings => {
-                    r#"
+                    concatcp!(
+                        "
                     [
-                        (template_string (template_substitution) @IGNORE)
                         (string)
+                        (template_string (template_substitution) @",
+                        IGNORE,
+                        ")
                     ]
-                    @string
-                    "#
+                    @string"
+                    )
                 }
             },
         )

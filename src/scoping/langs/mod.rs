@@ -59,6 +59,12 @@ where
     }
 }
 
+/// In a query, use this name to mark a capture to be ignored.
+///
+/// Useful for queries where tree-sitter doesn't natively support a fitting node type,
+/// and a result is instead obtained by ignoring unwanted parts of bigger captures.
+pub(super) const IGNORE: &str = "IGNORE";
+
 /// A scoper for a language.
 ///
 /// Functions much the same, but provides specific language-related functionality.
@@ -121,16 +127,11 @@ pub trait LanguageScoper: Scoper {
 
         let ranges = run(query);
 
-        let has_ignore = query.capture_names().iter().any(|name| name == "IGNORE");
+        let has_ignore = query.capture_names().iter().any(|name| name == IGNORE);
 
         if has_ignore {
             let ignored_ranges = {
-                let capture_names = query.capture_names().to_owned();
-                for name in capture_names {
-                    if name != "IGNORE" {
-                        query.disable_capture(&name);
-                    }
-                }
+                disable_all_captures_except(IGNORE, query);
 
                 debug!("Query has captures to ignore: running additional query");
                 run(query)
@@ -142,6 +143,15 @@ pub trait LanguageScoper: Scoper {
             res
         } else {
             ranges
+        }
+    }
+}
+
+fn disable_all_captures_except(capture_name: &str, query: &mut TSQuery) {
+    let capture_names = query.capture_names().to_owned();
+    for name in capture_names {
+        if name != capture_name {
+            query.disable_capture(&name);
         }
     }
 }

@@ -1,6 +1,7 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{ROScopes, Scoper};
+use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
 use clap::ValueEnum;
+use const_format::concatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -33,13 +34,16 @@ impl From<PremadePythonQuery> for TSQuery {
                 PremadePythonQuery::Strings => {
                     // Match either normal `string`s or `string`s with `interpolation`;
                     // using only the latter doesn't include the former.
-                    r#"
+                    concatcp!(
+                        "
                     [
                         (string)
-                        (string (interpolation) @IGNORE)
+                        (string (interpolation) @",
+                        IGNORE,
+                        ")
                     ]
-                    @string
-                    "#
+                    @string"
+                    )
                 }
                 PremadePythonQuery::DocStrings => {
                     // Triple-quotes are also used for multi-line strings. So look only
