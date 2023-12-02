@@ -14,6 +14,8 @@ pub type PythonQuery = CodeQuery<CustomPythonQuery, PremadePythonQuery>;
 pub enum PremadePythonQuery {
     /// Comments.
     Comments,
+    /// Strings (raw, byte, f-strings; interpolation is respected; quotes included).
+    Strings,
     /// Docstrings (not including multi-line strings).
     DocStrings,
     /// Function names, at the definition site.
@@ -28,6 +30,17 @@ impl From<PremadePythonQuery> for TSQuery {
             Python::lang(),
             match value {
                 PremadePythonQuery::Comments => "(comment) @comment",
+                PremadePythonQuery::Strings => {
+                    // Match either normal `string`s or `string`s with `interpolation`;
+                    // using only the latter doesn't include the former.
+                    r#"
+                    [
+                        (string)
+                        (string (interpolation) @IGNORE)
+                    ]
+                    @string
+                    "#
+                }
                 PremadePythonQuery::DocStrings => {
                     // Triple-quotes are also used for multi-line strings. So look only
                     // for stand-alone expressions, which are not part of some variable
