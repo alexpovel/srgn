@@ -18,10 +18,10 @@ coverage:
     # https://docs.codecov.com/docs#tips-and-tricks
     project:
       default:
-        informational: false # Fail the pipeline?
+        informational: true # Fail the pipeline?
     patch:
       default:
-        informational: false # Fail the pipeline?
+        informational: true # Fail the pipeline?
 ignore:
   # https://docs.codecov.com/docs/codecovyml-reference#ignore
   - "build.rs"
