@@ -151,9 +151,9 @@ actions are composable, so more than one of each may be passed. Both are optiona
 taking no action is pointless); specifying no scope implies the entire input is in
 scope.
 
-At the same time, there is considerable overlap with plain [`tr`][tr]: the tool is
-designed to have close correspondence in the most common use cases, and only go beyond
-when needed.
+At the same time, there is [considerable overlap](#comparison-with-tr) with plain
+[`tr`][tr]: the tool is designed to have close correspondence in the most common use
+cases, and only go beyond when needed.
 
 ### Actions
 
@@ -335,8 +335,8 @@ $ echo 'Naïve jalapeño ärgert mgła' | srgn --normalize # Normalize is smarte
 Naive jalapeno argert mgła
 ```
 
-Notice how `mgła` is out of scope for NFD, as it is not decomposable (at least that's
-what ChatGPT whispers in my ear).
+Notice how `mgła` is out of scope for NFD, as it is "atomic" and thus not decomposable
+(at least that's what ChatGPT whispers in my ear).
 
 #### Symbols
 
@@ -384,8 +384,10 @@ This action is based on a word list.
 > - `Poeten` remained as-is, instead of being naively and mistakenly converted to
 >   `Pöten`
 > - as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
->   word list](https://www.duden.de/suchen/dudenonline/Stinkegr%C3%BCtze), but was
+>   word list](https://www.duden.de/suchen/dudenonline/Abenteuergr%C3%BCtze), but was
 >   handled properly nonetheless
+> - while part of a compound word, `Abenteuer` remained as-is as well, instead of being
+>   incorrectly converted to `Abenteüer`
 
 On request, replacements may be forced, as is potentially useful for names:
 
@@ -428,12 +430,15 @@ Busse 🚌 und Fußgänger 🚶‍♀️
 
 ### Combining Actions
 
-Most actions are composable, unless it would be nonsensical to do so (like for
+Most actions are composable, unless doing so were nonsensical (like for
 [deletion](#deletion)). Their order of application is fixed, so the *order* of the flags
 given has no influence (piping multiple runs is an alternative, if needed). Replacements
-always occur first. Generally, the CLI is designed to prevent misuse and surprises: it
-prefers crashing to doing something unexpected. Note that lots of combinations *are*
-technically possible, but might yield nonsensical results.
+always occur first. Generally, the CLI is designed to prevent misuse and
+[surprises](https://en.wikipedia.org/wiki/Principle_of_least_astonishment): it prefers
+crashing to doing something unexpected (which is subjective, of course). Note that lots
+of combinations *are* technically possible, but might yield nonsensical results.
+
+Combining actions might look like:
 
 ```console
 $ echo 'Koeffizienten != Bruecken...' | srgn -Sgu
@@ -457,6 +462,7 @@ $ echo 'Koeffizienten != Bruecken...' | srgn -Sgu '\b\w{1,8}\b' | srgn -s '\.'
 Koeffizienten != BRÜCKEN.
 ```
 
+Note: regex escaping (`\.`) can be circumvent using [literal scoping](#literal-scope).
 The specially treated replacement action is also composable:
 
 ```console
@@ -526,6 +532,8 @@ for getting started with your own queries:
 > operates on each matched language construct individually.
 
 ##### Showcases
+
+This section shows examples for some of the **premade queries**.
 
 ###### Assigning `TODO`s (TypeScript)
 
@@ -749,7 +757,12 @@ cat oldtyping.py | srgn --python 'doc-strings' --fail-any 'param.+type'  # will 
 
 This causes whatever was passed as the regex scope to be interpreted literally. Useful
 for scopes containing lots of special characters that otherwise would need to be
-escaped.
+escaped:
+
+```console
+$ echo 'stuff...' | srgn -d --literal-string '.'
+stuff
+```
 
 ## Rust library
 
