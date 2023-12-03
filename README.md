@@ -705,14 +705,14 @@ package main
 
 type User struct {
     Name     string `json:"name"`
-    Password string `json:"password"`
+    Token string `json:"token"`
 }
 ```
 
 which can be caught as:
 
 ```bash
-cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[pP]assword") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
+cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[tT]oken") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
 ```
 
 These matching expressions are a mouthful. A couple resources exist for getting started
