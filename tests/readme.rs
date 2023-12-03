@@ -394,6 +394,8 @@ mod tests {
                                 tag("go"),
                                 tag("python-query"),
                                 tag("python"),
+                                tag("rust-query"),
+                                tag("rust"),
                                 tag("typescript-query"),
                                 tag("typescript"),
                             )),

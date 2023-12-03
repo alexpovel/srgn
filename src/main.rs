@@ -14,6 +14,8 @@ use srgn::actions::Upper;
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::scoping::langs::go::Go;
 use srgn::scoping::langs::go::GoQuery;
+use srgn::scoping::langs::rust::Rust;
+use srgn::scoping::langs::rust::RustQuery;
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
 use srgn::{
@@ -296,6 +298,18 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
         }
     }
 
+    if let Some(rust) = args.languages_scopes.rust.clone() {
+        if let Some(premade) = rust.rust {
+            let query = RustQuery::Premade(premade);
+
+            scopers.push(Box::new(Rust::new(query)));
+        } else if let Some(custom) = rust.rust_query {
+            let query = RustQuery::Custom(custom);
+
+            scopers.push(Box::new(Rust::new(query)));
+        }
+    }
+
     if let Some(csharp) = args.languages_scopes.csharp.clone() {
         if let Some(premade) = csharp.csharp {
             let query = CSharpQuery::Premade(premade);
@@ -415,6 +429,7 @@ mod cli {
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
             go::{CustomGoQuery, PremadeGoQuery},
             python::{CustomPythonQuery, PremadePythonQuery},
+            rust::{CustomRustQuery, PremadeRustQuery},
             typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
         },
         GLOBAL_SCOPE,
@@ -617,6 +632,8 @@ mod cli {
         #[command(flatten)]
         pub typescript: Option<TypeScriptScope>,
         #[command(flatten)]
+        pub rust: Option<RustScope>,
+        #[command(flatten)]
         pub csharp: Option<CSharpScope>,
     }
 
@@ -642,6 +659,18 @@ mod cli {
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub go_query: Option<CustomGoQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct RustScope {
+        /// Scope Rust code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub rust: Option<PremadeRustQuery>,
+
+        /// Scope Rust code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub rust_query: Option<CustomRustQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]

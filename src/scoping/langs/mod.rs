@@ -14,6 +14,8 @@ pub mod csharp;
 pub mod go;
 /// Python.
 pub mod python;
+/// Rust.
+pub mod rust;
 /// TypeScript.
 pub mod typescript;
 

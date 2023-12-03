@@ -41,6 +41,7 @@ rayon = "1.7.0"
 glob = "0.3.1"
 const_format = "0.2.32"
 tree-sitter-go = "0.20.0"
+tree-sitter-rust = "0.20.4"
 
 [features]
 german = ["cached", "decompound", "fst", "once_cell"]
