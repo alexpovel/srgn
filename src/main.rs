@@ -12,10 +12,6 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::scoping::langs::go::Go;
-use srgn::scoping::langs::go::GoQuery;
-use srgn::scoping::langs::rust::Rust;
-use srgn::scoping::langs::rust::RustQuery;
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
 use srgn::{
@@ -23,7 +19,9 @@ use srgn::{
     scoping::{
         langs::{
             csharp::{CSharp, CSharpQuery},
+            go::{Go, GoQuery},
             python::{Python, PythonQuery},
+            rust::{Rust, RustQuery},
             typescript::{TypeScript, TypeScriptQuery},
         },
         literal::Literal,
@@ -262,27 +260,15 @@ impl Error for ScoperBuildError {}
 fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
 
-    if let Some(python) = args.languages_scopes.python.clone() {
-        if let Some(premade) = python.python {
-            let query = PythonQuery::Premade(premade);
+    if let Some(csharp) = args.languages_scopes.csharp.clone() {
+        if let Some(premade) = csharp.csharp {
+            let query = CSharpQuery::Premade(premade);
 
-            scopers.push(Box::new(Python::new(query)));
-        } else if let Some(custom) = python.python_query {
-            let query = PythonQuery::Custom(custom);
+            scopers.push(Box::new(CSharp::new(query)));
+        } else if let Some(custom) = csharp.csharp_query {
+            let query = CSharpQuery::Custom(custom);
 
-            scopers.push(Box::new(Python::new(query)));
-        }
-    }
-
-    if let Some(typescript) = args.languages_scopes.typescript.clone() {
-        if let Some(premade) = typescript.typescript {
-            let query = TypeScriptQuery::Premade(premade);
-
-            scopers.push(Box::new(TypeScript::new(query)));
-        } else if let Some(custom) = typescript.typescript_query {
-            let query = TypeScriptQuery::Custom(custom);
-
-            scopers.push(Box::new(TypeScript::new(query)));
+            scopers.push(Box::new(CSharp::new(query)));
         }
     }
 
@@ -298,6 +284,18 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
         }
     }
 
+    if let Some(python) = args.languages_scopes.python.clone() {
+        if let Some(premade) = python.python {
+            let query = PythonQuery::Premade(premade);
+
+            scopers.push(Box::new(Python::new(query)));
+        } else if let Some(custom) = python.python_query {
+            let query = PythonQuery::Custom(custom);
+
+            scopers.push(Box::new(Python::new(query)));
+        }
+    }
+
     if let Some(rust) = args.languages_scopes.rust.clone() {
         if let Some(premade) = rust.rust {
             let query = RustQuery::Premade(premade);
@@ -310,15 +308,15 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
         }
     }
 
-    if let Some(csharp) = args.languages_scopes.csharp.clone() {
-        if let Some(premade) = csharp.csharp {
-            let query = CSharpQuery::Premade(premade);
+    if let Some(typescript) = args.languages_scopes.typescript.clone() {
+        if let Some(premade) = typescript.typescript {
+            let query = TypeScriptQuery::Premade(premade);
 
-            scopers.push(Box::new(CSharp::new(query)));
-        } else if let Some(custom) = csharp.csharp_query {
-            let query = CSharpQuery::Custom(custom);
+            scopers.push(Box::new(TypeScript::new(query)));
+        } else if let Some(custom) = typescript.typescript_query {
+            let query = TypeScriptQuery::Custom(custom);
 
-            scopers.push(Box::new(CSharp::new(query)));
+            scopers.push(Box::new(TypeScript::new(query)));
         }
     }
 
@@ -626,27 +624,27 @@ mod cli {
     #[command(next_help_heading = "Language scopes")]
     pub(super) struct LanguageScopes {
         #[command(flatten)]
-        pub python: Option<PythonScope>,
+        pub csharp: Option<CSharpScope>,
         #[command(flatten)]
         pub go: Option<GoScope>,
         #[command(flatten)]
-        pub typescript: Option<TypeScriptScope>,
+        pub python: Option<PythonScope>,
         #[command(flatten)]
         pub rust: Option<RustScope>,
         #[command(flatten)]
-        pub csharp: Option<CSharpScope>,
+        pub typescript: Option<TypeScriptScope>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct PythonScope {
-        /// Scope Python code using a premade query.
+    pub(super) struct CSharpScope {
+        /// Scope CSharp code using a premade query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub python: Option<PremadePythonQuery>,
+        pub csharp: Option<PremadeCSharpQuery>,
 
-        /// Scope Python code using a custom tree-sitter query.
+        /// Scope CSharp code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub python_query: Option<CustomPythonQuery>,
+        pub csharp_query: Option<CustomCSharpQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -659,6 +657,18 @@ mod cli {
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub go_query: Option<CustomGoQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct PythonScope {
+        /// Scope Python code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub python: Option<PremadePythonQuery>,
+
+        /// Scope Python code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub python_query: Option<CustomPythonQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -683,18 +693,6 @@ mod cli {
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub typescript_query: Option<CustomTypeScriptQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    pub(super) struct CSharpScope {
-        /// Scope CSharp code using a premade query.
-        #[arg(long, env, verbatim_doc_comment)]
-        pub csharp: Option<PremadeCSharpQuery>,
-
-        /// Scope CSharp code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
-        pub csharp_query: Option<CustomCSharpQuery>,
     }
 
     #[cfg(feature = "german")]
