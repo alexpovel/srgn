@@ -1,4 +1,5 @@
 mod csharp;
+mod go;
 mod python;
 mod typescript;
 

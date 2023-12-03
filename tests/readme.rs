@@ -388,12 +388,14 @@ mod tests {
                             // expose (`pub`) that.
                             tag("--"),
                             alt((
-                                tag("typescript-query"),
-                                tag("python-query"),
                                 tag("csharp-query"),
-                                tag("typescript"),
                                 tag("csharp"),
+                                tag("go-query"),
+                                tag("go"),
+                                tag("python-query"),
                                 tag("python"),
+                                tag("typescript-query"),
+                                tag("typescript"),
                             )),
                         ),
                         cut(

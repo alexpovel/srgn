@@ -10,6 +10,8 @@ pub use tree_sitter::{
 
 /// C#.
 pub mod csharp;
+/// Go.
+pub mod go;
 /// Python.
 pub mod python;
 /// TypeScript.

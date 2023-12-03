@@ -12,6 +12,8 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::scoping::langs::go::Go;
+use srgn::scoping::langs::go::GoQuery;
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
 use srgn::{
@@ -282,6 +284,18 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
         }
     }
 
+    if let Some(go) = args.languages_scopes.go.clone() {
+        if let Some(premade) = go.go {
+            let query = GoQuery::Premade(premade);
+
+            scopers.push(Box::new(Go::new(query)));
+        } else if let Some(custom) = go.go_query {
+            let query = GoQuery::Custom(custom);
+
+            scopers.push(Box::new(Go::new(query)));
+        }
+    }
+
     if let Some(csharp) = args.languages_scopes.csharp.clone() {
         if let Some(premade) = csharp.csharp {
             let query = CSharpQuery::Premade(premade);
@@ -399,6 +413,7 @@ mod cli {
     use srgn::{
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
+            go::{CustomGoQuery, PremadeGoQuery},
             python::{CustomPythonQuery, PremadePythonQuery},
             typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
         },
@@ -598,6 +613,8 @@ mod cli {
         #[command(flatten)]
         pub python: Option<PythonScope>,
         #[command(flatten)]
+        pub go: Option<GoScope>,
+        #[command(flatten)]
         pub typescript: Option<TypeScriptScope>,
         #[command(flatten)]
         pub csharp: Option<CSharpScope>,
@@ -613,6 +630,18 @@ mod cli {
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub python_query: Option<CustomPythonQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct GoScope {
+        /// Scope Go code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub go: Option<PremadeGoQuery>,
+
+        /// Scope Go code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub go_query: Option<CustomGoQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]

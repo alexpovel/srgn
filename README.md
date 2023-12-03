@@ -15,7 +15,7 @@ Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds us
 ## Usage
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
-supported](#showcases)):
+supported](#premade-queries-sample-showcases)):
 
 ```python gnu.py
 """GNU module."""
@@ -56,7 +56,7 @@ which demonstrates:
 - language grammar-aware operation: only Python docstrings were manipulated; virtually
   impossible to replicate in just regex
 
-  Skip ahead to **[more such showcases](#showcases) below**.
+  Skip ahead to **[more such showcases](#premade-queries-sample-showcases) below**.
 - advanced regex features such as, in this case, negative lookbehind are supported
 - Unicode is natively handled
 - features such as [ASCII symbol replacement](#symbols) are provided
@@ -492,46 +492,14 @@ discoverable API (either [as a library](#rust-library) or via CLI, `srgn --help`
 can learn of the supported languages and available, premade queries. Each supported
 language comes with an escape hatch, allowing you to run your own, custom ad-hoc
 queries. The hatch comes in the form of `--lang-query <S EXPRESSION>`, where `lang` is a
-language such as `python`. It allows you to write small, ad-hoc linters, for example
-to catch code such as
-
-```python cond.py
-if x:
-    return left
-else:
-    return right
-```
-
-with an invocation of
-
-```bash
-cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --fail-any # will fail
-```
-
-(The code can be rewritten as `return left if x else right`)
-
-The expression required for matching this case is a mouthful. A couple resources exist
-for getting started with your own queries:
-
-- the [official docs on
-  querying](https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries)
-- the great [official playground](https://tree-sitter.github.io/tree-sitter/playground)
-  for interactive use
-- [*How to write a linter using tree-sitter in an
-  hour*](https://siraben.dev/2022/03/22/tree-sitter-linter.html), a great introduction
-  to the topic in general
-- the official [`tree-sitter`
-  CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
-- using `srgn` with high verbosity (`-vvvv`) is supposed to grant detailed insights into
-  what's happening to your input, including a [representation of the parsed
-  tree](https://docs.rs/tree-sitter/latest/tree_sitter/struct.Node.html#method.to_sexp)
+language such as `python`. See [below](#custom-queries) for more on this advanced topic.
 
 > [!NOTE]
 >
 > Language scopes are applied *first*, so whatever regex aka main scope you pass, it
 > operates on each matched language construct individually.
 
-##### Showcases
+##### Premade queries (sample showcases)
 
 This section shows examples for some of the **premade queries**.
 
@@ -709,6 +677,63 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 
 > [!NOTE]
 > When deleting (`-d`), for reasons of safety and sanity, a scope is *required*.
+
+##### Custom queries
+
+Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to
+create small, ad-hoc, tailor-made linters, for example to catch code such as:
+
+```python cond.py
+if x:
+    return left
+else:
+    return right
+```
+
+with an invocation of
+
+```bash
+cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --fail-any # will fail
+```
+
+to hint that the code can be more idiomatically rewritten as `return left if x else
+right`. Another example, this one in Go, is ensuring sensitive fields are not
+serialized:
+
+```go sensitive.go
+package main
+
+type User struct {
+    Name     string `json:"name"`
+    Password string `json:"password"`
+}
+```
+
+which can be caught as:
+
+```bash
+cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[pP]assword") (#not-eq? @tag "`json:"-"`"))' --fail-any # will fail
+```
+
+These matching expressions are a mouthful. A couple resources exist for getting started
+with your own queries:
+
+- the [official docs on
+  querying](https://tree-sitter.github.io/tree-sitter/using-parsers#pattern-matching-with-queries)
+- the great [official playground](https://tree-sitter.github.io/tree-sitter/playground)
+  for interactive use, which makes developing queries a breeze. For example, the above
+  Go sample looks like:
+
+  ![tree-sitter playground go
+  example](./docs/images/tree-sitter-playground-go-example.png)
+- [*How to write a linter using tree-sitter in an
+  hour*](https://siraben.dev/2022/03/22/tree-sitter-linter.html), a great introduction
+  to the topic in general
+- the official [`tree-sitter`
+  CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
+- using `srgn` with high verbosity (`-vvvv`) is supposed to grant detailed insights into
+  what's happening to your input, including a [representation of the parsed
+  tree](https://docs.rs/tree-sitter/latest/tree_sitter/struct.Node.html#method.to_sexp)
 
 #### Explicit failure for (mis)matches
 
