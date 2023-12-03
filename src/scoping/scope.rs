@@ -256,6 +256,7 @@ where
         }
     }
 
+    res.shrink_to_fit();
     res
 }
 
@@ -298,6 +299,7 @@ where
     }
 
     debug!("Merged ranges: {:?}", res);
+    res.shrink_to_fit();
     res
 }
 
