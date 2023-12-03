@@ -712,7 +712,7 @@ type User struct {
 which can be caught as:
 
 ```bash
-cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[pP]assword") (#not-eq? @tag "`json:"-"`"))' --fail-any # will fail
+cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[pP]assword") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
 ```
 
 These matching expressions are a mouthful. A couple resources exist for getting started
