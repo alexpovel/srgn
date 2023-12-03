@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/alexpovel/srgn/compare/v0.8.0...v0.9.0) (2023-12-03)
+
+
+### Features
+
+* Rust language (comments, doc comments, strings) ([f8910c8](https://github.com/alexpovel/srgn/commit/f8910c8c71f7aa8a5178154bf6f11d96f1eddc5d))
+
+
+### Bug Fixes
+
+* **docs:** Escape quotes ([e248938](https://github.com/alexpovel/srgn/commit/e248938bb45d3a99b7122e945a8e3c91ab657b0a))
+
 ## [0.8.0](https://github.com/alexpovel/srgn/compare/v0.7.0...v0.8.0) (2023-12-03)
 
 
