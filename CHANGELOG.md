@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.0](https://github.com/alexpovel/srgn/compare/v0.7.0...v0.8.0) (2023-12-03)
+
+
+### Features
+
+* Go language (w/ comments, strings, struct tags) ([fe91428](https://github.com/alexpovel/srgn/commit/fe914281be8d6ad315238ab1fd1a5b9a11722227))
+* Implement string interpolation handling ([2f37b2e](https://github.com/alexpovel/srgn/commit/2f37b2e4f15c7ef7ef417b5fee65c6b20448933f))
+* Python strings ([f452b01](https://github.com/alexpovel/srgn/commit/f452b01fb7e05b0d8e54a2d01c23e75ae998f90f))
+* query for C# strings ([f38136c](https://github.com/alexpovel/srgn/commit/f38136c3bf56909fdc1a9f8520cae46b1c3ea87a))
+* query for TypeScript strings ([37de0d4](https://github.com/alexpovel/srgn/commit/37de0d4989e5751c05419be9ab16c4ff46ac8f0c))
+
 ## [0.7.0](https://github.com/alexpovel/srgn/compare/v0.6.0...v0.7.0) (2023-11-06)
 
 
