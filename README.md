@@ -385,7 +385,7 @@ There is only a limited set of symbols supported as of right now, but more can b
 #### German
 
 This action replaces alternative spellings of German special characters (ae, oe, ue, ss)
-with their native versions (ä, ö, ü, ß).
+with their native versions (ä, ö, ü, ß)[^2].
 
 ```console
 $ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | srgn --german
@@ -1185,3 +1185,7 @@ A straightforward use case. Upper- and lowercase are often used.
 [^1]: Currently, reversibility is not possible for any other action. For example,
     lowercasing is not the inverse of uppercasing. Information is lost, so it cannot be
     undone. Structure (imagine mixed case) was lost. Something something entropy...
+[^2]: Why is such a bizzare, unrelated feature included? As usual, historical reasons.
+    The original, core version of `srgn` was merely a Rust rewrite of [a previous,
+    existing tool](https://github.com/alexpovel/betterletter), which was *only*
+    concerned with the *German* feature. `srgn` then grew from there.
