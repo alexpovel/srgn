@@ -51,6 +51,23 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
+where the changes are limited to:
+
+```diff
+- """GNU module."""
++ """GNU 🐂 is not Unix module."""
+
+  def GNU_says_moo():
+-     """The GNU -> say moo -> ✅"""
++     """The GNU → say moo → ✅"""
+
+      GNU = """
+        GNU
+      """  # the GNU...
+
+      print(GNU + " says moo")  # ...says moo
+```
+
 which demonstrates:
 
 - language grammar-aware operation: only Python docstrings were manipulated; virtually
