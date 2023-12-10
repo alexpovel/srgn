@@ -840,14 +840,18 @@ Otherwise, refer to the [guidelines](CONTRIBUTING.md).
 
 An unordered list of similar tools you might be interested in.
 
+- [`ast-grep`](https://github.com/ast-grep/ast-grep) (very similar)
 - [Semgrep](https://semgrep.dev/)
 - [`fastmod`](https://github.com/facebookincubator/fastmod)
+- [`grep-ast`](https://github.com/paul-gauthier/grep-ast)
 - [`amber`](https://github.com/dalance/amber)
 - [`sd`](https://github.com/chmln/sd)
 - [`ripgrep`](https://github.com/BurntSushi/ripgrep)
 - [`ripgrep-structured`](https://github.com/orf/ripgrep-structured)
 - [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
 - [`gron`](https://github.com/tomnomnom/gron)
+- [Ruleguard](https://go-ruleguard.github.io/) (quite different, but useful for custom
+  linting)
 
 ## Comparison with `tr`
 
