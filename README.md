@@ -520,6 +520,48 @@ language such as `python`. See [below](#custom-queries) for more on this advance
 
 This section shows examples for some of the **premade queries**.
 
+###### Mass import (module) renaming (Python)
+
+As part of a large refactor (say, after an acquisition), imagine all imports of a
+specific package needed renaming:
+
+```python imports.py
+import math
+from pathlib import Path
+
+import good_company.infra
+import good_company.aws.auth as aws_auth
+from good_company.util.iter import dedupe
+from good_company.shopping.cart import *  # Ok but don't do this at home!
+
+good_company = "good_company"  # good_company
+```
+
+At the same time, a move to [`src/`
+layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/)
+is desired. Achieve this move with:
+
+```bash
+cat imports.py | srgn --python 'imports' '^good_company' 'src.better_company'
+```
+
+which will yield
+
+```python output-imports.py
+import math
+from pathlib import Path
+
+import src.better_company.infra
+import src.better_company.aws.auth as aws_auth
+from src.better_company.util.iter import dedupe
+from src.better_company.shopping.cart import *  # Ok but don't do this at home!
+
+good_company = "good_company"  # good_company
+```
+
+Note how the last line remains untouched by this particular operation. To run across
+many files, see [the `files` option](#run-against-multiple-files).
+
 ###### Assigning `TODO`s (TypeScript)
 
 Perhaps you're using a system of `TODO` notes in comments:

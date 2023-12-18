@@ -17,6 +17,8 @@ pub enum PremadePythonQuery {
     Comments,
     /// Strings (raw, byte, f-strings; interpolation is respected; quotes included).
     Strings,
+    /// Module names in imports (incl. periods; excl. `import`/`from`/`as`/`*`).
+    Imports,
     /// Docstrings (not including multi-line strings).
     DocStrings,
     /// Function names, at the definition site.
@@ -44,6 +46,22 @@ impl From<PremadePythonQuery> for TSQuery {
                     ]
                     @string"
                     )
+                }
+                PremadePythonQuery::Imports => {
+                    r"[
+                        (import_statement
+                                name: (dotted_name) @dn)
+                        (import_from_statement
+                                module_name: (dotted_name) @dn)
+                        (import_from_statement
+                                module_name: (dotted_name) @dn
+                                    (wildcard_import))
+                        (import_statement(
+                            aliased_import
+                                name: (dotted_name) @dn))
+                        (import_from_statement
+                            module_name: (relative_import) @ri)
+                    ]"
                 }
                 PremadePythonQuery::DocStrings => {
                     // Triple-quotes are also used for multi-line strings. So look only
