@@ -19,6 +19,8 @@ pub enum PremadeCSharpQuery {
     /// Raw strings are not yet supported
     /// (https://github.com/tree-sitter/tree-sitter-c-sharp/pull/240 not released yet).
     Strings,
+    /// `using` directives (including periods).
+    Usings,
 }
 
 impl From<PremadeCSharpQuery> for TSQuery {
@@ -27,6 +29,9 @@ impl From<PremadeCSharpQuery> for TSQuery {
             CSharp::lang(),
             match value {
                 PremadeCSharpQuery::Comments => "(comment) @comment",
+                PremadeCSharpQuery::Usings => {
+                    r"(using_directive [(identifier) (qualified_name)] @import)"
+                }
                 PremadeCSharpQuery::Strings => {
                     r#"
                     [
