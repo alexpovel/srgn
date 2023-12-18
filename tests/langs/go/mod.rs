@@ -6,6 +6,7 @@ use super::{get_input_output, nuke_target};
 #[rstest]
 #[case("comments.go", GoQuery::Premade(PremadeGoQuery::Comments))]
 #[case("strings.go", GoQuery::Premade(PremadeGoQuery::Strings))]
+#[case("imports.go", GoQuery::Premade(PremadeGoQuery::Imports))]
 #[case("struct-tags.go", GoQuery::Premade(PremadeGoQuery::StructTags))]
 fn test_go_nuke(#[case] file: &str, #[case] query: GoQuery) {
     let lang = Go::new(query);

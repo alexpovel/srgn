@@ -17,6 +17,8 @@ pub enum PremadeGoQuery {
     Comments,
     /// Strings (interpreted and raw; excluding struct tags).
     Strings,
+    /// Imports.
+    Imports,
     /// Struct tags.
     StructTags,
 }
@@ -42,6 +44,9 @@ impl From<PremadeGoQuery> for TSQuery {
                     ]
                     @string"
                     )
+                }
+                PremadeGoQuery::Imports => {
+                    r"(import_spec path: (interpreted_string_literal) @path)"
                 }
                 PremadeGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
