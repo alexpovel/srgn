@@ -520,7 +520,7 @@ language such as `python`. See [below](#custom-queries) for more on this advance
 
 This section shows examples for some of the **premade queries**.
 
-###### Mass import (module) renaming (Python)
+###### Mass import (module) renaming (Python, Rust)
 
 As part of a large refactor (say, after an acquisition), imagine all imports of a
 specific package needed renaming:
@@ -561,6 +561,39 @@ good_company = "good_company"  # good_company
 
 Note how the last line remains untouched by this particular operation. To run across
 many files, see [the `files` option](#run-against-multiple-files).
+
+Similar import-related edits are supported for other languages as well, for example
+Rust:
+
+```rust imports.rs
+use std::collections::HashMap;
+
+use good_company::infra;
+use good_company::aws::auth as aws_auth;
+use good_company::util::iter::dedupe;
+use good_company::shopping::cart::*;
+
+good_company = "good_company";  // good_company
+```
+
+which, using
+
+```bash
+cat imports.rs | srgn --rust 'uses' '^good_company' 'better_company'
+```
+
+becomes
+
+```rust output-imports.rs
+use std::collections::HashMap;
+
+use better_company::infra;
+use better_company::aws::auth as aws_auth;
+use better_company::util::iter::dedupe;
+use better_company::shopping::cart::*;
+
+good_company = "good_company";  // good_company
+```
 
 ###### Assigning `TODO`s (TypeScript)
 

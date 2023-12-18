@@ -16,6 +16,8 @@ pub enum PremadeRustQuery {
     Comments,
     /// Doc comments (comment chars included).
     DocComments,
+    /// Use statements (paths only; excl. `use`/`as`/`*`).
+    Uses,
     /// Strings (regular, raw, byte; includes interpolation parts in format strings!).
     ///
     /// There is currently no support for an 'interpolation' type node in
@@ -44,6 +46,21 @@ impl From<PremadeRustQuery> for TSQuery {
                         (line_comment)+ @line
                         (#match? @line "^///")
                     )
+                    "#
+                }
+                PremadeRustQuery::Uses => {
+                    r#"
+                        (scoped_identifier
+                            path: [
+                                (scoped_identifier)
+                                (identifier)
+                            ] @use)
+                        (scoped_use_list
+                            path: [
+                                (scoped_identifier)
+                                (identifier)
+                            ] @use)
+                        (use_wildcard (scoped_identifier) @use)
                     "#
                 }
                 PremadeRustQuery::Strings => {
