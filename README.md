@@ -752,6 +752,11 @@ with your own queries:
   what's happening to your input, including a [representation of the parsed
   tree](https://docs.rs/tree-sitter/latest/tree_sitter/struct.Node.html#method.to_sexp)
 
+#### Run against multiple files
+
+Use the `--files` option to run against multiple files, in-place. This option accepts a
+glob pattern.
+
 #### Explicit failure for (mis)matches
 
 After all scopes are applied, it might turn out no matches were found. The default
