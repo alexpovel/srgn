@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.10.0](https://github.com/alexpovel/srgn/compare/v0.9.0...v0.10.0) (2023-12-18)
+
+
+### Features
+
+* Scope `using` namespace names (C#) ([200d482](https://github.com/alexpovel/srgn/commit/200d482663128ceed6f6d4153dc083a94b5e68c4))
+* Scope import module names (TypeScript) ([b211204](https://github.com/alexpovel/srgn/commit/b2112048a451bb02119532818d84ca30fb6e0f10))
+* Scope import names (Go) ([9b76ce6](https://github.com/alexpovel/srgn/commit/9b76ce6dc6f7d70c6da4f3bf29d68e858c0b4434))
+* Scope module names in imports (Python) ([b3345c4](https://github.com/alexpovel/srgn/commit/b3345c46350092698b5ad2fce8f63e349544b2a9))
+* Scope names in uses-declarations (Rust) ([cda850d](https://github.com/alexpovel/srgn/commit/cda850d59375a2b0b89c52f88a025a7eea839411))
+
 ## [0.9.0](https://github.com/alexpovel/srgn/compare/v0.8.0...v0.9.0) (2023-12-03)
 
 
