@@ -12,6 +12,10 @@ use super::{get_input_output, nuke_target};
     "strings.ts",
     TypeScriptQuery::Premade(PremadeTypeScriptQuery::Strings)
 )]
+#[case(
+    "imports.ts",
+    TypeScriptQuery::Premade(PremadeTypeScriptQuery::Imports)
+)]
 fn test_typescript_nuke(#[case] file: &str, #[case] query: TypeScriptQuery) {
     let lang = TypeScript::new(query);
 

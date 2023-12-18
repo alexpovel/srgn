@@ -16,6 +16,8 @@ pub enum PremadeTypeScriptQuery {
     Comments,
     /// Strings (literal, template; includes quote characters).
     Strings,
+    /// Imports (module specifiers).
+    Imports,
 }
 
 impl From<PremadeTypeScriptQuery> for TSQuery {
@@ -24,6 +26,9 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
             TypeScript::lang(),
             match value {
                 PremadeTypeScriptQuery::Comments => "(comment) @comment",
+                PremadeTypeScriptQuery::Imports => {
+                    r"(import_statement source: (string (string_fragment) @sf))"
+                }
                 PremadeTypeScriptQuery::Strings => {
                     concatcp!(
                         "
