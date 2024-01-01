@@ -134,22 +134,6 @@ jobs:
         with:
           # Token needs: `contents: write`, `pull-requests: write`
           token: ${{ steps.app-token.outputs.token }}
-          release-type: rust
-          bump-minor-pre-major: true  # `true` seems more Rust-like
-
-      - uses: actions/checkout@v4
-      - name: Mark release as draft
-        # To prevent race conditions where release is created, but no binaries are
-        # attached yet.
-        if: steps.release.outputs.release_created
-        env:
-          # `secrets.GITHUB_TOKEN` would work here (with appropriate `permissions`),
-          # but just reuse what we already have.
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: >
-          gh release edit
-          ${{ steps.release.outputs.tag_name }}
-          --draft=true
 
   build-upload:
     name: Build and upload binaries
