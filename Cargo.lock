@@ -1460,7 +1460,7 @@ checksum = "62bb4feee49fdd9f707ef802e22365a35de4b7b299de4763d44bfea899442ff9"
 
 [[package]]
 name = "srgn"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "anyhow",
  "assert_cmd",
