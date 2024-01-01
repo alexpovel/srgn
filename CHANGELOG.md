@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.1](https://github.com/alexpovel/srgn/compare/srgn-v0.10.0...srgn-v0.10.1) (2024-01-01)
+
+
+### Bug Fixes
+
+* **ci:** (Try) (again) to fix bootstrapping release-please after bump to v4 ([d4ed8d3](https://github.com/alexpovel/srgn/commit/d4ed8d3cf0d29ef7a26d6247da702379349ab582))
+* **ci:** (Try) to fix bootstrapping release-please ([8f82b7c](https://github.com/alexpovel/srgn/commit/8f82b7c4a2eb0f60a374bd4b45c42ef84ce4ff37))
+* **ci:** Provide empty but mandatory manifest ([167f0ac](https://github.com/alexpovel/srgn/commit/167f0acfb73463122e0b70552d9088bb1bafe4cb))
+
 ## [0.10.0](https://github.com/alexpovel/srgn/compare/v0.9.0...v0.10.0) (2023-12-18)
 
 
