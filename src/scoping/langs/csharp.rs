@@ -33,7 +33,7 @@ impl From<PremadeCSharpQuery> for TSQuery {
                     r"(using_directive [(identifier) (qualified_name)] @import)"
                 }
                 PremadeCSharpQuery::Strings => {
-                    r#"
+                    r"
                     [
                         (interpolated_string_text)
                         (interpolated_verbatim_string_text)
@@ -41,7 +41,7 @@ impl From<PremadeCSharpQuery> for TSQuery {
                         (verbatim_string_literal)
                     ]
                     @string
-                    "#
+                    "
                 }
             },
         )

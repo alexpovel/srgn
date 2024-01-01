@@ -49,7 +49,7 @@ impl From<PremadeRustQuery> for TSQuery {
                     "#
                 }
                 PremadeRustQuery::Uses => {
-                    r#"
+                    r"
                         (scoped_identifier
                             path: [
                                 (scoped_identifier)
@@ -61,16 +61,16 @@ impl From<PremadeRustQuery> for TSQuery {
                                 (identifier)
                             ] @use)
                         (use_wildcard (scoped_identifier) @use)
-                    "#
+                    "
                 }
                 PremadeRustQuery::Strings => {
-                    r#"
+                    r"
                     [
                         (string_literal)
                         (raw_string_literal)
                     ]
                     @string
-                    "#
+                    "
                 }
             },
         )
