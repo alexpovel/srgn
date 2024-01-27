@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com/alexpovel/srgn/compare/srgn-v0.10.1...srgn-v0.10.2) (2024-01-27)
+
+
+### Bug Fixes
+
+* **build:** binstall adjusted to release-please v4 ([6c81971](https://github.com/alexpovel/srgn/commit/6c81971bf9bbe3e04b3898034d7fff80b88be8bf))
+
 ## [0.10.1](https://github.com/alexpovel/srgn/compare/srgn-v0.10.0...srgn-v0.10.1) (2024-01-01)
 
 
