@@ -923,6 +923,7 @@ An unordered list of similar tools you might be interested in.
 - [`ast-grep`](https://github.com/ast-grep/ast-grep) (very similar)
 - [Semgrep](https://semgrep.dev/)
 - [`fastmod`](https://github.com/facebookincubator/fastmod)
+- [`prefactor`](https://github.com/banga/prefactor)
 - [`grep-ast`](https://github.com/paul-gauthier/grep-ast)
 - [`amber`](https://github.com/dalance/amber)
 - [`sd`](https://github.com/chmln/sd)
