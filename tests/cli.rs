@@ -10,6 +10,7 @@ mod tests {
     use rstest::rstest;
     use serde::Serialize;
     use std::path::{Path, PathBuf};
+    use tempfile::TempDir;
 
     // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
     // integration tests only with valid UTF8.
@@ -102,15 +103,14 @@ Duebel
         // Arrange
         let mut cmd = get_cmd();
 
-        // Restore from potential existing dirty state
-        restore(&left).expect("Head restoration to not fail");
-
         let right = {
             let mut right = left.clone();
             right.pop();
             right.push("out");
             right
         };
+
+        let left = copy_to_tmp(&left);
 
         cmd.current_dir(&left);
         cmd.args(["--files", glob]);
@@ -125,12 +125,9 @@ Duebel
         assert!(output.status.success(), "Binary execution itself failed");
 
         // Results are correct
-        if let Err(e) = compare_directories(left.clone(), right) {
+        if let Err(e) = compare_directories(left.path().to_owned(), right) {
             panic!("{}", format!("Directory comparison failed: {}.", e));
         }
-
-        // Reset that shit
-        restore(&left).expect("Tail restoration to not fail");
     }
 
     #[test]
@@ -225,25 +222,41 @@ Duebel
         Ok(())
     }
 
-    fn restore(path: &Path) -> std::io::Result<()> {
-        let mut cmd = std::process::Command::new("git");
+    /// Recursively copies a directory tree from `src` to `dst`.
+    fn copy_tree(src: &Path, dst: &Path) -> std::io::Result<()> {
+        std::fs::create_dir_all(dst)?;
 
-        cmd.args(["restore", path.display().to_string().as_str()]);
-        eprintln!("Running: {:?}", cmd);
-        let output = cmd.output()?;
+        for entry in std::fs::read_dir(src)? {
+            let entry = entry?;
 
-        if !output.status.success() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "File restoration failed for {} (stderr: '{}', stdout: '{}'",
-                    path.display(),
-                    String::from_utf8_lossy(output.stderr.as_slice()),
-                    String::from_utf8_lossy(output.stdout.as_slice()),
-                ),
-            ));
-        };
+            if entry.file_type()?.is_dir() {
+                copy_tree(&entry.path(), &dst.join(entry.file_name()))?;
+            } else {
+                std::fs::copy(&entry.path(), &dst.join(entry.file_name()))?;
+            }
+        }
 
         Ok(())
+    }
+
+    /// Creates a temporary directory and copies the contents of `src` into it,
+    /// returning the path to the newly created directory.
+    fn copy_to_tmp(src: &Path) -> TempDir {
+        let pkg = env!("CARGO_PKG_NAME");
+        assert!(
+            !pkg.contains(std::path::MAIN_SEPARATOR),
+            // Not like this will ever happen, but always good to encode assumptions
+            "Package name contains path separator, which is not advisable for path prefix"
+        );
+
+        let tmp_dir = tempfile::Builder::new()
+            .prefix(pkg)
+            .tempdir()
+            .expect("Failed to create temporary directory");
+
+        copy_tree(src, tmp_dir.path()).expect("Failed to copy test files to tempdir");
+
+        // Important: transfer ownership out, else `drop` will delete created dir
+        tmp_dir
     }
 }
