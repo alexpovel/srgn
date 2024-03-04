@@ -93,14 +93,10 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
 
       - name: Run tests (with coverage)
-        # For why the `features` stuff is needed, see `tarpaulin-incompatible` feature
-        # and https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
+        # Will read from `tarpaulin.toml`. Extra flags given here complement the config.
         run: >
           cargo tarpaulin
-          --out xml
-          --engine llvm
-          --no-default-features
-          --features all
+          --verbose
           ${{ matrix.cli-option }}
 
       - name: Upload coverage reports to Codecov

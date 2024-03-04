@@ -1,0 +1,17 @@
+# For example files, see...
+# https://github.com/xd009642/tarpaulin/blob/cacf8d887d66b20091e168e08b1a8b9778d819f4/tarpaulin.toml#L3
+# https://github.com/matrix-org/matrix-rust-sdk/blob/82684d64d4d6ad84add1b627520aa3956cac9fc6/tarpaulin.toml#L4
+
+[default]
+engine = "Llvm"
+skip-clean = true
+
+# For why the `features` stuff is needed, see `tarpaulin-incompatible` feature and
+# https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
+no-default-features = true
+all-features = true
+
+exclude-files = ["build.rs"]
+
+[report]
+out = ["Html", "Xml"]

@@ -2,6 +2,10 @@
 //! inputs/flags/options.
 
 #[cfg(test)]
+// Gives tons of nasty `error: linking with `cc` failed`, `/usr/bin/ld: final link
+// failed: bad value` errors when run under tarpaulin, so exclude. That will sadly
+// exclude these rich end-to-end tests from coverage reports.
+#[cfg(not(tarpaulin))]
 #[cfg(feature = "all")]
 mod tests {
     use anyhow::Context;
