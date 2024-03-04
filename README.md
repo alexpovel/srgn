@@ -933,6 +933,7 @@ An unordered list of similar tools you might be interested in.
 - [`gron`](https://github.com/tomnomnom/gron)
 - [Ruleguard](https://go-ruleguard.github.io/) (quite different, but useful for custom
   linting)
+- [Coccinelle for Rust](https://rust-for-linux.com/coccinelle-for-rust)
 
 ## Comparison with `tr`
 
