@@ -5,10 +5,6 @@
 [default]
 engine = "Llvm"
 skip-clean = true
-
-# For why the `features` stuff is needed, see `tarpaulin-incompatible` feature and
-# https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669.
-no-default-features = true
 all-features = true
 
 exclude-files = ["build.rs"]

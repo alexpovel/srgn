@@ -89,7 +89,10 @@ Duebel
         let snapshot_name =
             (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
 
-        #[cfg(feature = "tarpaulin-incompatible")] // Doesn't influence covered code
+        // Exclusion doesn't influence covered code, but fixes linking issues when
+        // `insta` is used, see also
+        // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
+        #[cfg(not(tarpaulin))]
         insta::assert_yaml_snapshot!(
             snapshot_name,
             CommandResult {
