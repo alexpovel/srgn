@@ -67,7 +67,7 @@ mod natural_languages {
                 "Constructing hashset of words",
                 contents.lines().map(|word| word.trim()).collect()
             );
-            let keepers = Mutex::new(Vec::new());
+            let keepers = Mutex::new(Vec::with_capacity(words.len()));
 
             time_it!(
                 "Filtering words",
@@ -102,17 +102,20 @@ mod natural_languages {
 
             drop(words); // Prevent misuse; these are unfiltered!
 
-            println!(
-                "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
-                dropped_words.len(),
-                keepers.len(),
-                {
-                    let mut path: std::path::PathBuf = env::var_os("OUT_DIR").unwrap().into();
-                    path.pop(); // Remove "out"
-                    path.push("output"); // The log file
-                    path
-                },
-            );
+            let n_dropped = dropped_words.len();
+            if n_dropped > 0 {
+                println!(
+                    "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
+                    n_dropped,
+                    keepers.len(),
+                    {
+                        let mut path: std::path::PathBuf = env::var_os("OUT_DIR").unwrap().into();
+                        path.pop(); // Remove "out"
+                        path.push("output"); // The log file
+                        path
+                    },
+                );
+            }
 
             time_it!("Sorting filtered words", keepers.sort());
 
