@@ -73,6 +73,9 @@ jobs:
           - cli-option: "--doc"
             codecov-flag: "doc"
 
+          - cli-option: "--all-targets"
+            codecov-flag: "all-targets"
+
           # The others might miss benches, examples, ..., so ensure we have a total as
           # well. `--all-targets` does not include `--doc`, so put that extra.
           - cli-option: "--all-targets --doc"
@@ -93,6 +96,10 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
 
       - name: Run tests (with coverage)
+        # Tarpaulin is very flaky, and coverage is just 'nice to have', so do not fail
+        # entire pipeline because of it.
+        continue-on-error: true
+        id: tarpaulin
         # Will read from `tarpaulin.toml`. Extra flags given here complement the config.
         run: >
           cargo tarpaulin
@@ -101,6 +108,10 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
+        # `steps.$STEP.conclusion` is "after" `continue-on-error` was applied,
+        # `steps.$STEP.outcome` is "before".
+        # That's why the `success()` expression doesn't work here.
+        if: ${{ steps.tarpaulin.outcome == 'success' }}
         with:
           fail_ci_if_error: true
           verbose: true
