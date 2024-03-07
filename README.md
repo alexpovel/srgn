@@ -388,23 +388,25 @@ This action replaces alternative spellings of German special characters (ae, oe,
 with their native versions (ä, ö, ü, ß)[^2].
 
 ```console
-$ echo 'Gruess Gott, Poeten und Abenteuergruetze!' | srgn --german
-Grüß Gott, Poeten und Abenteuergrütze!
+$ echo 'Gruess Gott, Neueroeffnungen, Poeten und Abenteuergruetze!' | srgn --german
+Grüß Gott, Neueröffnungen, Poeten und Abenteuergrütze!
 ```
 
-This action is based on a word list.
+This action is based on a [word list](./data/word-lists/de.txt) (compile without
+`german` feature if this bloats your binary too much). Note the following features about
+the above example:
 
-> [!NOTE]
->
-> - empty scope and replacement: the entire input will be processed, and no replacement
->  is performed
-> - `Poeten` remained as-is, instead of being naively and mistakenly converted to
->   `Pöten`
-> - as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
->   word list](https://www.duden.de/suchen/dudenonline/Abenteuergr%C3%BCtze), but was
->   handled properly nonetheless
-> - while part of a compound word, `Abenteuer` remained as-is as well, instead of being
->   incorrectly converted to `Abenteüer`
+- empty scope and replacement: the entire input will be processed, and no replacement is
+ performed
+- `Poeten` remained as-is, instead of being naively and mistakenly converted to `Pöten`
+- as a (compound) word, `Abenteuergrütze` is not going to be found in [any reasonable
+  word list](https://www.duden.de/suchen/dudenonline/Abenteuergr%C3%BCtze), but was
+  handled properly nonetheless
+- while part of a compound word, `Abenteuer` remained as-is as well, instead of being
+  incorrectly converted to `Abenteüer`
+- lastly, `Neueroeffnungen` sneakily forms a `ue` element neither constituent word
+  (`neu`, `Eröffnungen`) possesses, but is still processed correctly (despite the
+  mismatched casings as well)
 
 On request, replacements may be forced, as is potentially useful for names:
 
