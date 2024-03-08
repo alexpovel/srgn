@@ -40,6 +40,21 @@ jobs:
           cargo test
           --verbose
 
+  verify-msrv:
+    # Set in `Cargo.toml` manually by running `cargo msrv` locally. Then verified for
+    # its consistency here.
+    name: Verify MSRV (Minimum Supported Rust Version)
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-msrv
+      - run: cargo msrv verify
+
   build-test-feature-powerset:
     name: Build and test feature powerset
     runs-on: ubuntu-latest
