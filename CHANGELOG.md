@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.11.0](https://github.com/alexpovel/srgn/compare/srgn-v0.10.2...srgn-v0.11.0) (2024-03-08)
+
+
+### Features
+
+* Shell completion scripts ([39bc6eb](https://github.com/alexpovel/srgn/commit/39bc6eb913040ee7748bc75c6252b3db399db694))
+
+
+### Bug Fixes
+
+* `tmp` directory for flaky test, instead of `git restore` ([2458b34](https://github.com/alexpovel/srgn/commit/2458b34fc27400e841b328ee3ee8fed51a4cf95f))
+* **build:** Preprocess German word list ([0590bef](https://github.com/alexpovel/srgn/commit/0590befd804d2c4be988c6e8d883155122d216d6))
+* **tests:** Remove `tarpaulin-incompatible` feature ([119bb13](https://github.com/alexpovel/srgn/commit/119bb136b0b4396629ee28b3daa82085978d29c4))
+* **tests:** Tarpaulin config file ([ef1de6b](https://github.com/alexpovel/srgn/commit/ef1de6b9827cd70cbff4168f7acebb65af8a51de))
+
 ## [0.10.2](https://github.com/alexpovel/srgn/compare/srgn-v0.10.1...srgn-v0.10.2) (2024-01-27)
 
 
