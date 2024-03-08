@@ -112,6 +112,11 @@ jobs:
         # `steps.$STEP.outcome` is "before".
         # That's why the `success()` expression doesn't work here.
         if: ${{ steps.tarpaulin.outcome == 'success' }}
+        # Code coverage has been very flaky, causing the vast majority of pipeline
+        # failures.
+        # https://github.com/codecov/codecov-action/issues/1280 is another intermittent
+        # issue that we are just going to ignore here (coverage is only "nice to have").
+        continue-on-error: true
         with:
           fail_ci_if_error: true
           verbose: true
