@@ -1,5 +1,8 @@
 # https://github.com/github/gitignore/blob/main/Rust.gitignore
 
+# From a custom benchmark script
+benches/srgn
+
 # While working on new README samples, ignore corresponding files
 sample.*
 

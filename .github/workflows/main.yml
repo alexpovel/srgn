@@ -55,6 +55,23 @@ jobs:
           tool: cargo-msrv
       - run: cargo msrv verify
 
+  bench-files:
+    name: Run benchmarks for `--files` option
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: hyperfine
+      - name: Run benchmarks
+        run: >
+          ./benches/bench-files.sh
+
   build-test-feature-powerset:
     name: Build and test feature powerset
     runs-on: ubuntu-latest

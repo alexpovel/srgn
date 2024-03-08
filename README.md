@@ -843,11 +843,12 @@ Use the `--files` option to run against multiple files, in-place. This option ac
 processed *within `srgn`*: it must be quoted to prevent premature shell interpretation.
 
 `srgn` will process results [fully parallel](https://github.com/rayon-rs/rayon), using
-all available threads. For example, `srgn --files '**/*.py' --python comments
-'(?<![A-Z])e{2,}' '💥'` processses **[450k lines of
-Python](https://github.com/django/django/tree/5.0.3) in about a second**, altering about
-1200 lines across 470 files. (Note that the regular expression is pointless, but
-showcases high performance even for advanced patterns.)
+all available threads. For example, **[450k lines of Python](./benches/django/) are
+processed in about a second**, altering over 1000 lines across a couple hundred files:
+
+![hyperfine benchmarks for files option](./docs/images/files-benchmarks.png)
+
+Run the [benchmarks](./benches/bench-files.sh) too see performance for your own system.
 
 #### Explicit failure for (mis)matches
 

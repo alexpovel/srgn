@@ -1,0 +1,9 @@
+[submodule "benches/django"]
+	path = benches/django
+	url = git@github.com:django/django.git
+[submodule "benches/kubernetes"]
+	path = benches/kubernetes
+	url = git@github.com:kubernetes/kubernetes.git
+[submodule "benches/pydantic"]
+	path = benches/pydantic
+	url = git@github.com:pydantic/pydantic.git
