@@ -160,6 +160,13 @@ cargo add srgn
 
 See [here](#rust-library) for more.
 
+### Shell completions
+
+[Various
+shells](https://docs.rs/clap_complete/4.5.1/clap_complete/shells/enum.Shell.html#variants)
+are supported for shell completion scripts. For example, append `eval "$(srgn
+--completions zsh)"` to `~/.zshrc` for completions in ZSH.
+
 ## Walkthrough
 
 The tool is designed around **scopes** and **actions**. Scopes narrow down the parts of

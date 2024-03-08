@@ -46,6 +46,14 @@ fn main() -> Result<()> {
         .format_timestamp_micros() // High precision is nice for benchmarks
         .init();
 
+    if let Some(shell) = args.shell {
+        debug!("Generating completions file for {shell:?}.");
+        cli::print_completions(shell, &mut cli::Cli::command());
+        debug!("Done generating completions file, exiting.");
+
+        return Ok(());
+    }
+
     info!("Launching app with args: {:?}", args);
 
     debug!("Assembling scopers.");
@@ -421,7 +429,8 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use clap::{builder::ArgPredicate, ArgAction, Parser};
+    use clap::{builder::ArgPredicate, ArgAction, Command, CommandFactory, Parser};
+    use clap_complete::{generate, Generator, Shell};
     use srgn::{
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
@@ -458,6 +467,13 @@ mod cli {
         )]
         pub scope: String,
 
+        /// Print shell completions for the given shell
+        // This thing needs to live up here to show up within `Options` next to `--help`
+        // and `--version`. Further down, it'd show up in the wrong section because we
+        // alter `next_help_heading`.
+        #[arg(long = "completions", value_enum, verbatim_doc_comment)]
+        pub shell: Option<Shell>,
+
         #[command(flatten)]
         pub composable_actions: ComposableActions,
 
@@ -473,6 +489,11 @@ mod cli {
         #[cfg(feature = "german")]
         #[command(flatten)]
         pub german_options: GermanOptions,
+    }
+
+    /// https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69
+    pub(super) fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+        generate(gen, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
     }
 
     #[derive(Parser, Debug)]
@@ -721,6 +742,10 @@ mod cli {
     impl Cli {
         pub(super) fn init() -> Self {
             Self::parse()
+        }
+
+        pub(super) fn command() -> clap::Command {
+            <Self as CommandFactory>::command()
         }
     }
 }
