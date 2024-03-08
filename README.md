@@ -832,7 +832,15 @@ with your own queries:
 #### Run against multiple files
 
 Use the `--files` option to run against multiple files, in-place. This option accepts a
-glob pattern.
+[glob pattern](https://docs.rs/glob/0.3.1/glob/struct.Pattern.html). The glob is
+processed *within `srgn`*: it must be quoted to prevent premature shell interpretation.
+
+`srgn` will process results [fully parallel](https://github.com/rayon-rs/rayon), using
+all available threads. For example, `srgn --files '**/*.py' --python comments
+'(?<![A-Z])e{2,}' '💥'` processses **[450k lines of
+Python](https://github.com/django/django/tree/5.0.3) in about a second**, altering about
+1200 lines across 470 files. (Note that the regular expression is pointless, but
+showcases high performance even for advanced patterns.)
 
 #### Explicit failure for (mis)matches
 
