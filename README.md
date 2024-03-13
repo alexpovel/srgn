@@ -410,7 +410,7 @@ the above example:
   word list](https://www.duden.de/suchen/dudenonline/Abenteuergr%C3%BCtze), but was
   handled properly nonetheless
 - while part of a compound word, `Abenteuer` remained as-is as well, instead of being
-  incorrectly converted to `Abenteüer`
+  incorrectly converted to `Abenteür`
 - lastly, `Neueroeffnungen` sneakily forms a `ue` element neither constituent word
   (`neu`, `Eröffnungen`) possesses, but is still processed correctly (despite the
   mismatched casings as well)
