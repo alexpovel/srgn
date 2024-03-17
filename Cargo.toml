@@ -16,7 +16,7 @@ categories = [
     "text-processing",
     "value-formatting",
 ]
-rust-version = "1.72.1"
+rust-version = "1.74.1"
 
 [dependencies]
 cached = { version = "0.44.0", optional = true }
