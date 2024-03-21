@@ -58,7 +58,7 @@ impl Scoper for Regex {
         let ranges = if has_capture_groups {
             trace!(
                 "Pattern '{}' has capture groups, iterating over matches",
-                input.escape_debug()
+                self.pattern
             );
             let mut ranges = Vec::new();
             for cap in self.pattern.captures_iter(input).flatten() {
