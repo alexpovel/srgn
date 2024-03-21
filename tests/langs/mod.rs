@@ -4,9 +4,8 @@ mod python;
 mod rust;
 mod typescript;
 
-use std::{fs::read_to_string, path::Path};
-
 use srgn::scoping::{langs::LanguageScoper, regex::Regex, view::ScopedViewBuilder};
+use std::{fs::read_to_string, path::Path};
 
 fn get_input_output(lang: &str, file: &str) -> (String, String) {
     let path = Path::new("tests/langs");
