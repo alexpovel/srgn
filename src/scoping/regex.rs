@@ -70,7 +70,7 @@ impl Scoper for Regex {
                     .expect("Entered iterator of matches, but zeroth (whole) match missing")
                     .expect("First element guaranteed to be non-None (whole match)");
                 trace!(
-                    "Overall match: {:?} ({}..{})",
+                    "Overall match: '{}' from index {} to {}",
                     overall_match.as_str().escape_debug(),
                     overall_match.start(),
                     overall_match.end()
@@ -79,7 +79,7 @@ impl Scoper for Regex {
                 let mut subranges = Vec::new();
                 for group in it.flatten() {
                     trace!(
-                        "Group match: {:?} ({}..{})",
+                        "Group match: '{}' from index {} to {}",
                         group.as_str().escape_debug(),
                         group.start(),
                         group.end()
