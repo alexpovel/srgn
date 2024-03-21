@@ -131,11 +131,22 @@ pub trait LanguageScoper: Scoper {
 
         let ranges = run(query);
 
-        let has_ignore = query.capture_names().iter().any(|name| name == IGNORE);
+        let is_ignored = |name: &str| name.contains(IGNORE);
+        let has_ignored_captures = query.capture_names().iter().any(|name| is_ignored(name));
 
-        if has_ignore {
+        if has_ignored_captures {
             let ignored_ranges = {
-                disable_all_captures_except(IGNORE, query);
+                let acknowledged_captures = query
+                    .capture_names()
+                    .iter()
+                    .filter(|name| !is_ignored(name))
+                    .cloned()
+                    .collect::<Vec<_>>();
+
+                for name in acknowledged_captures {
+                    trace!("Disabling capture for: {:?}", name);
+                    query.disable_capture(&name);
+                }
 
                 debug!("Query has captures to ignore: running additional query");
                 run(query)
@@ -147,15 +158,6 @@ pub trait LanguageScoper: Scoper {
             res
         } else {
             ranges
-        }
-    }
-}
-
-fn disable_all_captures_except(capture_name: &str, query: &mut TSQuery) {
-    let capture_names = query.capture_names().to_owned();
-    for name in capture_names {
-        if name != capture_name {
-            query.disable_capture(&name);
         }
     }
 }

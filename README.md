@@ -816,6 +816,41 @@ which can be caught as:
 cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[tT]oken") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
 ```
 
+###### Ignoring parts of matches
+
+Occassionally, parts of a match need to be ignored, for example when no suitable
+tree-sitter node type is available. For example, say we'd like to replace the `error`
+with `wrong` inside the string of the macro body:
+
+```rust wrong.rs
+fn wrong() {
+    let wrong = "wrong";
+    error!("This went error");
+}
+```
+
+Let's assume there's a node type for matching *entire* macros (`macro_invocation`) and
+one to match macro *names* (`((macro_invocation macro: (identifier) @name))`), but
+*none* to match macro *contents* (this is wrong, tree-sitter offers this in the form of
+`token_tree`, but let's imagine...). To match just `"This went error"`, the entire macro
+would need to be matched, with the name part ignored. Any capture name containing
+`IGNORE` will provide just that:
+
+```bash
+cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @IGNORE_name) @macro)' 'error' 'wrong'
+```
+
+```rust output-wrong.rs
+fn wrong() {
+    let wrong = "wrong";
+    error!("This went wrong");
+}
+```
+
+If it weren't ignored, the result would read `wrong!("This went wrong");`.
+
+###### Further reading
+
 These matching expressions are a mouthful. A couple resources exist for getting started
 with your own queries:
 
