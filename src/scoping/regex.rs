@@ -1,5 +1,6 @@
 use super::ROScopes;
 use super::Scoper;
+use crate::scoping::scope::subtract;
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
 use log::{debug, trace};
@@ -87,19 +88,16 @@ impl Scoper for Regex {
                     subranges.push(group.range());
                 }
 
-                let mut last_end = overall_match.range().start;
-                for subrange in subranges.into_iter().rev() {
-                    ranges.push(Range {
-                        start: last_end,
-                        end: subrange.start,
-                    });
+                // Parts of the overall match, but not the capture groups: push as-is
+                ranges.extend(subtract(vec![overall_match.range()], &subranges));
 
-                    ranges.extend(shatter(&subrange));
-
-                    last_end = subrange.end;
-                }
+                // Treat the capture groups specially now
+                subranges
+                    .iter()
+                    .for_each(|subrange| ranges.extend(shatter(subrange)));
             }
 
+            ranges.sort_by_key(|r| r.start);
             debug!("Ranges to scope after regex: {:?}", ranges);
             ranges
         } else {
@@ -205,6 +203,44 @@ mod tests {
                 RWScope(In(B(r"r"))),
                 RWScope(In(B(r"l"))),
                 RWScope(In(B(r"d")))
+            ]
+        ))
+    )]
+    #[case(
+        // https://github.com/alexpovel/srgn/issues/71; this used to panic
+        r#""error"; "x" => %x, "y" => %y"#,
+        r"(?P<msg>.+);(?P<structure>.+)",
+        ScopedView::new(RWScopes(
+            vec![
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B("e"))),
+                RWScope(In(B("r"))),
+                RWScope(In(B("r"))),
+                RWScope(In(B("o"))),
+                RWScope(In(B("r"))),
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B(";"))),
+                RWScope(In(B(" "))),
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B("x"))),
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B(" "))),
+                RWScope(In(B("="))),
+                RWScope(In(B(">"))),
+                RWScope(In(B(" "))),
+                RWScope(In(B("%"))),
+                RWScope(In(B("x"))),
+                RWScope(In(B(","))),
+                RWScope(In(B(" "))),
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B("y"))),
+                RWScope(In(B(r#"""#))),
+                RWScope(In(B(" "))),
+                RWScope(In(B("="))),
+                RWScope(In(B(">"))),
+                RWScope(In(B(" "))),
+                RWScope(In(B("%"))),
+                RWScope(In(B("y"))),
             ]
         ))
     )]
