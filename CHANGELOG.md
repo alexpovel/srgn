@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.13.0](https://github.com/alexpovel/srgn/compare/srgn-v0.12.0...srgn-v0.13.0) (2024-03-25)
+
+
+### Features
+
+* `IGNORE` parts of matches ([21b8dde](https://github.com/alexpovel/srgn/commit/21b8dde8744b3450e311b18778ef1321c573c3f6))
+* Shell completion scripts ([39bc6eb](https://github.com/alexpovel/srgn/commit/39bc6eb913040ee7748bc75c6252b3db399db694))
+
+
+### Bug Fixes
+
+* `tmp` directory for flaky test, instead of `git restore` ([2458b34](https://github.com/alexpovel/srgn/commit/2458b34fc27400e841b328ee3ee8fed51a4cf95f))
+* **build:** binstall adjusted to release-please v4 ([6c81971](https://github.com/alexpovel/srgn/commit/6c81971bf9bbe3e04b3898034d7fff80b88be8bf))
+* **build:** Preprocess German word list ([0590bef](https://github.com/alexpovel/srgn/commit/0590befd804d2c4be988c6e8d883155122d216d6))
+* **ci:** (Try) (again) to fix bootstrapping release-please after bump to v4 ([d4ed8d3](https://github.com/alexpovel/srgn/commit/d4ed8d3cf0d29ef7a26d6247da702379349ab582))
+* **ci:** (Try) to fix bootstrapping release-please ([8f82b7c](https://github.com/alexpovel/srgn/commit/8f82b7c4a2eb0f60a374bd4b45c42ef84ce4ff37))
+* **ci:** Provide empty but mandatory manifest ([167f0ac](https://github.com/alexpovel/srgn/commit/167f0acfb73463122e0b70552d9088bb1bafe4cb))
+* Debug representation of `escape_debug` ([dfc2e09](https://github.com/alexpovel/srgn/commit/dfc2e0937bde9283c0ea46b1f6b4703d26b47316))
+* MSRV ([ac6d744](https://github.com/alexpovel/srgn/commit/ac6d744601ff08b2f486335319343339e6440ed9))
+* Panic on capture groups ([ea1aa08](https://github.com/alexpovel/srgn/commit/ea1aa086bcdbca52509bf2df36858c6cdd60cbd1)), closes [#71](https://github.com/alexpovel/srgn/issues/71)
+* **tests:** Remove `tarpaulin-incompatible` feature ([119bb13](https://github.com/alexpovel/srgn/commit/119bb136b0b4396629ee28b3daa82085978d29c4))
+* **tests:** Tarpaulin config file ([ef1de6b](https://github.com/alexpovel/srgn/commit/ef1de6b9827cd70cbff4168f7acebb65af8a51de))
+* Trace message about regex pattern ([6b67dfe](https://github.com/alexpovel/srgn/commit/6b67dfe36ce96316a3b4ddcc1400dcf68a1996d0))
+
 ## [0.12.0](https://github.com/alexpovel/srgn/compare/srgn-v0.11.0...srgn-v0.12.0) (2024-03-25)
 
 
