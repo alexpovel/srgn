@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.0](https://github.com/alexpovel/srgn/compare/srgn-v0.11.0...srgn-v0.12.0) (2024-03-25)
+
+
+### Features
+
+* `IGNORE` parts of matches ([21b8dde](https://github.com/alexpovel/srgn/commit/21b8dde8744b3450e311b18778ef1321c573c3f6))
+
+
+### Bug Fixes
+
+* Debug representation of `escape_debug` ([dfc2e09](https://github.com/alexpovel/srgn/commit/dfc2e0937bde9283c0ea46b1f6b4703d26b47316))
+* MSRV ([ac6d744](https://github.com/alexpovel/srgn/commit/ac6d744601ff08b2f486335319343339e6440ed9))
+* Panic on capture groups ([ea1aa08](https://github.com/alexpovel/srgn/commit/ea1aa086bcdbca52509bf2df36858c6cdd60cbd1)), closes [#71](https://github.com/alexpovel/srgn/issues/71)
+* Trace message about regex pattern ([6b67dfe](https://github.com/alexpovel/srgn/commit/6b67dfe36ce96316a3b4ddcc1400dcf68a1996d0))
+
 ## [0.11.0](https://github.com/alexpovel/srgn/compare/srgn-v0.10.2...srgn-v0.11.0) (2024-03-08)
 
 
