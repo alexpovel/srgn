@@ -1,6 +1,6 @@
 [package]
 name = "srgn"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 authors = ["Alex Povel <rust@alexpovel.de>"]
 description = "A code surgeon for precise text and code transplantation"
