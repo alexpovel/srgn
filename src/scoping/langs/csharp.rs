@@ -16,8 +16,8 @@ pub enum PremadeCSharpQuery {
     Comments,
     /// Strings (incl. verbatim, interpolated; incl. quotes, except for interpolated).
     ///
-    /// Raw strings are not yet supported
-    /// (https://github.com/tree-sitter/tree-sitter-c-sharp/pull/240 not released yet).
+    /// Raw strings are [not yet
+    /// supported](https://github.com/tree-sitter/tree-sitter-c-sharp/pull/240).
     Strings,
     /// `using` directives (including periods).
     Usings,
