@@ -1,9 +1,9 @@
 use super::Scoper;
+use crate::ranges::Ranges;
 #[cfg(doc)]
 use crate::scoping::scope::Scope::{In, Out};
-use crate::scoping::scope::{merge, subtract};
 use log::{debug, trace};
-use std::{ops::Range, str::FromStr};
+use std::str::FromStr;
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
 };
@@ -93,7 +93,7 @@ pub trait LanguageScoper: Scoper {
     /// Scope the given input using the language's query.
     ///
     /// In principle, this is the same as [`Scoper::scope`].
-    fn scope_via_query(query: &mut TSQuery, input: &str) -> Vec<Range<usize>> {
+    fn scope_via_query(query: &mut TSQuery, input: &str) -> Ranges<usize> {
         // tree-sitter is about incremental parsing, which we don't use here
         let old_tree = None;
 
@@ -115,18 +115,19 @@ pub trait LanguageScoper: Scoper {
             let mut qc = TSQueryCursor::new();
             let matches = qc.matches(query, root, input.as_bytes());
 
-            let ranges = matches
+            let mut ranges: Ranges<usize> = matches
                 .flat_map(|query_match| query_match.captures)
-                .map(|capture| capture.node.byte_range());
+                .map(|capture| capture.node.byte_range())
+                .collect();
 
-            let res = ranges.collect();
-            trace!("Querying yielded ranges: {:?}", res);
+            // ⚠️ tree-sitter queries with multiple captures will return them in some
+            // mixed order (not ordered, and not merged), but we later rely on cleanly
+            // ordered, non-overlapping ranges (a bit unfortunate we have to know about
+            // that remote part over here).
+            ranges.merge();
+            trace!("Querying yielded ranges: {:?}", ranges);
 
-            // Merge, because tree-sitter queries with multiple captures will return
-            // them in some mixed order (not ordered, and not merged), but we later rely
-            // on cleanly ordered, non-overlapping ranges (a bit unfortunate we have to
-            // know about that remote part over here).
-            merge(res)
+            ranges
         };
 
         let ranges = run(query);
@@ -152,7 +153,7 @@ pub trait LanguageScoper: Scoper {
                 run(query)
             };
 
-            let res = subtract(ranges, &ignored_ranges);
+            let res = ranges - ignored_ranges;
             debug!("Ranges cleaned up after subtracting ignores: {:?}", res);
 
             res

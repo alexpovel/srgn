@@ -1,6 +1,6 @@
 use super::ROScopes;
 use super::Scoper;
-use crate::scoping::scope::subtract;
+use crate::ranges::Ranges;
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
 use log::{debug, trace};
@@ -77,29 +77,21 @@ impl Scoper for Regex {
                     overall_match.end()
                 );
 
-                let mut subranges = Vec::new();
-                for group in it.flatten() {
-                    trace!(
-                        "Group match: '{}' from index {} to {}",
-                        group.as_str().escape_debug(),
-                        group.start(),
-                        group.end()
-                    );
-                    subranges.push(group.range());
-                }
+                let subranges = it.flatten().map(|m| m.range()).collect::<Ranges<_>>();
+                trace!("Capture groups: {:?}", subranges);
 
-                // Parts of the overall match, but not the capture groups: push as-is
-                ranges.extend(subtract(vec![overall_match.range()], &subranges));
-
-                // Treat the capture groups specially now
+                // Treat the capture groups specially
                 subranges
                     .iter()
                     .for_each(|subrange| ranges.extend(shatter(subrange)));
+
+                // Parts of the overall match, but not the capture groups: push as-is
+                ranges.extend(Ranges::from_iter([overall_match.range()]) - subranges);
             }
 
-            ranges.sort_by_key(|r| r.start);
-            debug!("Ranges to scope after regex: {:?}", ranges);
-            ranges
+            let res = ranges.into_iter().collect();
+            debug!("Ranges to scope after regex: {:?}", res);
+            res
         } else {
             trace!(
                 "No capture groups in pattern '{}', short-circuiting",
@@ -119,7 +111,7 @@ impl Scoper for Regex {
 
 /// For a given [`Range`], shatters it into pieces of length 1, returning a [`Vec`] of
 /// length equal to the length of the original range.
-fn shatter(range: &Range<usize>) -> Vec<Range<usize>> {
+fn shatter(range: &Range<usize>) -> Ranges<usize> {
     let mut ranges = Vec::new();
 
     for i in range.start..range.end {
@@ -129,7 +121,7 @@ fn shatter(range: &Range<usize>) -> Vec<Range<usize>> {
         });
     }
 
-    ranges
+    ranges.into_iter().collect()
 }
 
 #[cfg(test)]

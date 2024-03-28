@@ -161,11 +161,16 @@ use crate::{
         Scoper,
     },
 };
+#[cfg(doc)]
+use std::ops::Range;
 
 /// Main components around [`Action`]s.
 pub mod actions;
 /// Main components around [`ScopedView`].
 pub mod scoping;
+
+/// Components to work with collections of [`Range`]s.
+pub mod ranges;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
