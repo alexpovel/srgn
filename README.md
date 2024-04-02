@@ -945,6 +945,11 @@ While this tool is CLI-first, it is library-very-close-second, and library usage
 treated as a first-class citizen just the same. See the [library
 documentation](https://docs.rs/srgn) for more, library-specific details.
 
+Note that the binary takes precedence though, which with the crate currently being both
+a library *and* binary, [creates
+problems](https://blog.axo.dev/2024/03/its-a-lib-and-a-bin). This might be fixed in the
+future.
+
 ### Status and stats
 
 [![docs.rs](https://img.shields.io/docsrs/srgn)](https://docs.rs/srgn/)
