@@ -359,11 +359,10 @@ mod tests {
     /// https://docs.rs/nom/7.1.3/nom/recipes/index.html#wrapper-combinators-that-eat-whitespace-before-and-after-a-parser
     /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
     /// trailing whitespace, returning the output of `inner`.
-    fn maybe_ws<'a, F: 'a, O, E: ParseError<&'a str>>(
-        inner: F,
-    ) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
+    fn maybe_ws<'a, F, O, E>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
     where
-        F: Fn(&'a str) -> IResult<&'a str, O, E>,
+        F: 'a + Fn(&'a str) -> IResult<&'a str, O, E>,
+        E: ParseError<&'a str>,
     {
         delimited(space0, inner, space0)
     }

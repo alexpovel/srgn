@@ -209,13 +209,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
         self.apply_dos_line_endings_fix();
 
         ScopedView {
-            scopes: RWScopes(
-                self.scopes
-                    .0
-                    .into_iter()
-                    .map(std::convert::Into::into)
-                    .collect(),
-            ),
+            scopes: RWScopes(self.scopes.0.into_iter().map(Into::into).collect()),
         }
     }
 

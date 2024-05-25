@@ -493,9 +493,7 @@ fn find_valid_replacement(
     // iteration. Then, `Busse` will turn out to be valid already and will be returned .
     // Skipping it means `Buße` is tried, which is *also* valid and returned, foregoing
     // `Busse`.
-    debug_assert!(replacement_combinations
-        .first()
-        .map_or(true, std::vec::Vec::is_empty));
+    debug_assert!(replacement_combinations.first().map_or(true, Vec::is_empty));
 
     #[allow(clippy::bool_to_int_with_if)] // Readability is much better.
     let n_skip = if prefer_original { 0 } else { 1 };
