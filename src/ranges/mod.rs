@@ -27,6 +27,8 @@ impl<Idx: Ord + Copy + Debug> Ranges<Idx> {
         self.inner.is_empty()
     }
 
+    /// Merges, such that overlapping or bordering ranges are collapsed, and the number
+    /// of individual elements is minimized.
     pub(crate) fn merge(&mut self) -> &mut Self {
         debug_assert!(self.is_sorted(), "Merging relies on sorted ranges");
 
