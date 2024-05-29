@@ -326,6 +326,7 @@ impl<Idx: Ord + Copy + Debug> Sub for Ranges<Idx> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
     use rstest::rstest;
 
     #[rstest]
@@ -613,5 +614,20 @@ mod tests {
         }
 
         // Moved out
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(512))]
+        #[test]
+        fn test_ranges_merging_twice_is_idempotent(
+            ranges in any::<Vec<Range<usize>>>(),
+        ) {
+            let mut ranges = Ranges::from_iter(ranges);
+            ranges.merge();
+            let first = ranges.clone();
+            ranges.merge();
+
+            prop_assert_eq!(ranges, first);
+        }
     }
 }
