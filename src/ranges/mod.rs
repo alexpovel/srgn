@@ -132,6 +132,39 @@ impl<Idx: Ord + Copy + Debug> FromIterator<Range<Idx>> for Ranges<Idx> {
     }
 }
 
+/// 'Shatter' the input [`Range`] into pieces of length 1. The returned instance will
+/// have a number of elements equal to the length of the input.
+///
+/// As with [`Range`], the result is empty if [`Range::end`] < [`Range::start`].
+///
+/// ## Panics
+///
+/// Panics if the capacity of the resulting [`Ranges`] would exceed [`u16::MAX`].
+impl From<&Range<usize>> for Ranges<usize> {
+    fn from(range: &Range<usize>) -> Self {
+        let Range { start, end } = *range;
+        let capacity = end.saturating_sub(start);
+
+        assert!(
+            // This should not happen in normal usage, but let's be explicit here and
+            // fail with a clear message instead of allocating half the world.
+            capacity <= u16::MAX.into(),
+            "Capacity too large: {capacity}"
+        );
+
+        let mut ranges = Vec::with_capacity(capacity);
+
+        for i in range.start..range.end {
+            ranges.push(Range {
+                start: i,
+                end: i + 1,
+            });
+        }
+
+        Self { inner: ranges }
+    }
+}
+
 impl<Idx: Ord + Copy + Debug> Sub for Ranges<Idx> {
     type Output = Self;
 
@@ -521,6 +554,31 @@ mod tests {
         ranges.merge();
 
         assert_eq!(ranges, expected.into_iter().collect());
+    }
+
+    #[rstest]
+    #[case(
+        0..4,
+        Ranges { inner: vec![0..1, 1..2, 2..3, 3..4] },
+    )]
+    #[allow(clippy::single_range_in_vec_init)]
+    #[case(
+        1..2,
+        Ranges { inner: vec![1..2] },
+    )]
+    #[allow(clippy::reversed_empty_ranges)]
+    #[case(
+        2..1,
+        Ranges { inner: vec![] },
+    )]
+    #[case(
+        0..0,
+        Ranges { inner: vec![] },
+    )]
+    fn test_ranges_from_single_range(#[case] range: Range<usize>, #[case] expected: Ranges<usize>) {
+        let res = Ranges::from(&range);
+
+        assert_eq!(res, expected);
     }
 
     #[rstest]

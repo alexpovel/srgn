@@ -1,4 +1,5 @@
 mod lower;
+mod ranges;
 mod squeeze;
 #[cfg(feature = "symbols")]
 mod symbols;

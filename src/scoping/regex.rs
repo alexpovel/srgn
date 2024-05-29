@@ -6,7 +6,6 @@ use crate::GLOBAL_SCOPE;
 use log::{debug, trace};
 use std::error::Error;
 use std::fmt;
-use std::ops::Range;
 
 /// A regular expression for querying.
 #[derive(Debug)]
@@ -83,7 +82,7 @@ impl Scoper for Regex {
                 // Treat the capture groups specially
                 subranges
                     .iter()
-                    .for_each(|subrange| ranges.extend(shatter(subrange)));
+                    .for_each(|subrange| ranges.extend(Ranges::from(subrange)));
 
                 // Parts of the overall match, but not the capture groups: push as-is
                 ranges.extend(Ranges::from_iter([overall_match.range()]) - subranges);
@@ -107,21 +106,6 @@ impl Scoper for Regex {
 
         ROScopes::from_raw_ranges(input, ranges)
     }
-}
-
-/// For a given [`Range`], shatters it into pieces of length 1, returning a [`Vec`] of
-/// length equal to the length of the original range.
-fn shatter(range: &Range<usize>) -> Ranges<usize> {
-    let mut ranges = Vec::new();
-
-    for i in range.start..range.end {
-        ranges.push(Range {
-            start: i,
-            end: i + 1,
-        });
-    }
-
-    ranges.into_iter().collect()
 }
 
 #[cfg(test)]
