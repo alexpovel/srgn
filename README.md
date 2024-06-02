@@ -112,6 +112,19 @@ CI](./.github/workflows/main.yml). They also work if no prebuilt binaries are av
 for your platform, as the tool will fall back to [compiling from
 source](#cargo-compile-from-source).
 
+### Homebrew
+
+A [formula](https://formulae.brew.sh/formula/srgn) is available via:
+
+```text
+brew install srgn
+```
+
+### Nix
+
+Refer to [this pull request](https://github.com/NixOS/nixpkgs/pull/293076/files) to see
+how to package `srgn` using Nix.
+
 ### CI (GitHub Actions)
 
 All [GitHub Actions runner
