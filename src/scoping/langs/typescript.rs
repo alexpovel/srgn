@@ -71,9 +71,10 @@ impl From<CustomTypeScriptQuery> for TSQuery {
 
 impl Scoper for TypeScript {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        let ranges = Self::scope_via_query(&mut self.query(), input);
-
-        ROScopes::from_raw_ranges(input, ranges)
+        ROScopes::from_raw_ranges(
+            input,
+            Self::scope_via_query(&mut self.query(), input).into(),
+        )
     }
 }
 

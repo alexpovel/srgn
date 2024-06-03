@@ -1,6 +1,5 @@
-use log::info;
-
 use super::Action;
+use log::info;
 
 /// Renders in lowercase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

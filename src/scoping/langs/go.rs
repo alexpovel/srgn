@@ -79,7 +79,10 @@ impl From<CustomGoQuery> for TSQuery {
 
 impl Scoper for Go {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        ROScopes::from_raw_ranges(input, Self::scope_via_query(&mut self.query(), input))
+        ROScopes::from_raw_ranges(
+            input,
+            Self::scope_via_query(&mut self.query(), input).into(),
+        )
     }
 }
 

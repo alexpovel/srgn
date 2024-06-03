@@ -1,15 +1,17 @@
+use super::regex::CaptureGroup;
 use crate::{
     ranges::Ranges,
     scoping::scope::Scope::{In, Out},
 };
+use itertools::Itertools;
 use log::{debug, trace};
-use std::{borrow::Cow, ops::Range};
+use std::{borrow::Cow, collections::HashMap, ops::Range};
 
 /// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Scope<'viewee, T> {
     /// The given part is in scope for processing.
-    In(T),
+    In(T, Option<ScopeContext<'viewee>>),
     /// The given part is out of scope for processing.
     ///
     /// Treated as immutable, view-only.
@@ -41,6 +43,21 @@ impl<'viewee> ROScope<'viewee> {
     }
 }
 
+/// Raw ranges, paired with optional context for content at that range.
+pub type RangesWithContext<'viewee> = HashMap<Range<usize>, Option<ScopeContext<'viewee>>>;
+
+/// Converts, leaving unknown values [`Default`].
+///
+/// A convenience to support [`Ranges`] where there's no meaningful context to be
+/// inserted for [`RangesWithContext`].
+impl<'viewee> From<Ranges<usize>> for RangesWithContext<'viewee> {
+    fn from(val: Ranges<usize>) -> Self {
+        val.into_iter()
+            .map(|range| (range, Option::default()))
+            .collect()
+    }
+}
+
 impl<'viewee> ROScopes<'viewee> {
     /// Construct a new instance from the given raw ranges.
     ///
@@ -52,15 +69,15 @@ impl<'viewee> ROScopes<'viewee> {
     ///
     /// Panics if the given `ranges` contain indices out-of-bounds for `input`.
     #[must_use]
-    pub fn from_raw_ranges(input: &'viewee str, ranges: Ranges<usize>) -> Self {
+    pub fn from_raw_ranges(input: &'viewee str, ranges: RangesWithContext<'viewee>) -> Self {
         trace!("Constructing scopes from raw ranges: {:?}", ranges);
 
         let mut scopes = Vec::with_capacity(ranges.len());
 
         let mut last_end = 0;
-        for Range { start, end } in ranges {
+        for (Range { start, end }, context) in ranges.into_iter().sorted_by_key(|(r, _)| r.start) {
             scopes.push(ROScope(Out(&input[last_end..start])));
-            scopes.push(ROScope(In(&input[start..end])));
+            scopes.push(ROScope(In(&input[start..end], context)));
             last_end = end;
         }
 
@@ -83,8 +100,8 @@ impl<'viewee> ROScopes<'viewee> {
             .0
             .into_iter()
             .map(|s| match s {
-                ROScope(In(s)) => ROScope(Out(s)),
-                ROScope(Out(s)) => ROScope(In(s)),
+                ROScope(In(s, _)) => ROScope(Out(s)),
+                ROScope(Out(s)) => ROScope(In(s, None)),
             })
             .collect();
         trace!("Inverted scopes: {:?}", scopes);
@@ -134,7 +151,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
         match s.0 {
-            In(s) | Out(s) => s,
+            In(s, _) | Out(s) => s,
         }
     }
 }
@@ -142,7 +159,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
 impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
     fn from(s: ROScope<'viewee>) -> Self {
         match s.0 {
-            In(s) => RWScope(In(Cow::Borrowed(s))),
+            In(s, names) => RWScope(In(Cow::Borrowed(s), names)),
             Out(s) => RWScope(Out(s)),
         }
     }
@@ -154,10 +171,20 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {
         match &s.0 {
-            In(s) => s,
+            In(s, _) => s,
             Out(s) => s,
         }
     }
+}
+
+/// Context accompanying a scope.
+///
+/// For example, a scope might have been created by a regular expression, in which case
+/// capture groups might have matched.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ScopeContext<'viewee> {
+    /// Regular expression capture groups mapped to the content they matched.
+    CaptureGroups(HashMap<CaptureGroup, &'viewee str>),
 }
 
 #[cfg(test)]
@@ -167,37 +194,37 @@ mod tests {
 
     #[rstest]
     // Base cases
-    #[case(ROScopes(vec![ROScope(In("abc"))]), "abc", true)]
-    #[case(ROScopes(vec![ROScope(In("cba"))]), "cba", true)]
-    #[case(ROScopes(vec![ROScope(In("🦀"))]), "🦀", true)]
-    #[case(ROScopes(vec![ROScope(In("🦀"))]), "🤗", false)]
+    #[case(ROScopes(vec![ROScope(In("abc", None))]), "abc", true)]
+    #[case(ROScopes(vec![ROScope(In("cba", None))]), "cba", true)]
+    #[case(ROScopes(vec![ROScope(In("🦀", None))]), "🦀", true)]
+    #[case(ROScopes(vec![ROScope(In("🦀", None))]), "🤗", false)]
     //
     // Substring matching
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "ab", true)]
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b")), ROScope(In("c"))]), "abc", true)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None))]), "ab", true)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None)), ROScope(In("c", None))]), "abc", true)]
     //
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "ac", false)]
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "a", false)]
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b"))]), "b", false)]
-    #[case(ROScopes(vec![ROScope(In("a")), ROScope(In("b")), ROScope(In("c"))]), "acc", false)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None))]), "ac", false)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None))]), "a", false)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None))]), "b", false)]
+    #[case(ROScopes(vec![ROScope(In("a", None)), ROScope(In("b", None)), ROScope(In("c", None))]), "acc", false)]
     //
     // Length mismatch
-    #[case(ROScopes(vec![ROScope(In("abc"))]), "abcd", false)]
-    #[case(ROScopes(vec![ROScope(In("abcd"))]), "abc", false)]
+    #[case(ROScopes(vec![ROScope(In("abc", None))]), "abcd", false)]
+    #[case(ROScopes(vec![ROScope(In("abcd", None))]), "abc", false)]
     //
     // Partial emptiness
-    #[case(ROScopes(vec![ROScope(In("abc"))]), "", false)]
-    #[case(ROScopes(vec![ROScope(In(""))]), "abc", false)]
+    #[case(ROScopes(vec![ROScope(In("abc", None))]), "", false)]
+    #[case(ROScopes(vec![ROScope(In("", None))]), "abc", false)]
     #[case(ROScopes(vec![ROScope(Out(""))]), "abc", false)]
-    #[case(ROScopes(vec![ROScope(In("")), ROScope(Out(""))]), "abc", false)]
+    #[case(ROScopes(vec![ROScope(In("", None)), ROScope(Out(""))]), "abc", false)]
     //
     // Full emptiness
-    #[case(ROScopes(vec![ROScope(In(""))]), "", true)]
+    #[case(ROScopes(vec![ROScope(In("", None))]), "", true)]
     #[case(ROScopes(vec![ROScope(Out(""))]), "", true)]
-    #[case(ROScopes(vec![ROScope(In("")), ROScope(Out(""))]), "", true)]
+    #[case(ROScopes(vec![ROScope(In("", None)), ROScope(Out(""))]), "", true)]
     //
     // Types of scope doesn't matter
-    #[case(ROScopes(vec![ROScope(In("a"))]), "a", true)]
+    #[case(ROScopes(vec![ROScope(In("a", None))]), "a", true)]
     #[case(ROScopes(vec![ROScope(Out("a"))]), "a", true)]
     fn test_scoped_view_str_equality(
         #[case] scopes: ROScopes<'_>,

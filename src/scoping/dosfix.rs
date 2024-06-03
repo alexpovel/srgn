@@ -52,8 +52,7 @@ impl Scoper for DosFix {
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
-
+    use super::*;
     use crate::scoping::{
         scope::{
             RWScope, RWScopes,
@@ -61,17 +60,16 @@ mod tests {
         },
         view::ScopedView,
     };
+    use rstest::rstest;
     use std::borrow::Cow::Borrowed;
 
-    use super::*;
-
     #[rstest]
-    #[case("a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a")))])))]
-    #[case("a\n", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a\n")))])))]
+    #[case("a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None))])))]
+    #[case("a\n", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a\n"), None))])))]
     //
     #[case("\r", ScopedView::new(RWScopes(vec![RWScope(Out("\r"))])))]
-    #[case("a\r", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"))), RWScope(Out("\r"))])))]
-    #[case("a\r\n", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"))), RWScope(Out("\r")), RWScope(In(Borrowed("\n")))])))]
+    #[case("a\r", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None)), RWScope(Out("\r"))])))]
+    #[case("a\r\n", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None)), RWScope(Out("\r")), RWScope(In(Borrowed("\n"), None))])))]
     fn test_dos_fix(#[case] input: &str, #[case] expected: ScopedView) {
         let mut builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let dosfix = DosFix;

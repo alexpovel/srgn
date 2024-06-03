@@ -1,5 +1,7 @@
-use crate::actions::{self, Action, ReplacementCreationError};
+use crate::actions::{self, Action, ActionError};
 use crate::scoping::dosfix::DosFix;
+#[cfg(doc)]
+use crate::scoping::scope::ScopeContext;
 use crate::scoping::scope::{
     ROScope, ROScopes, RWScope, RWScopes,
     Scope::{In, Out},
@@ -12,8 +14,8 @@ use std::fmt;
 /// A view of some input, sorted into parts, which are either [`In`] or [`Out`] of scope
 /// for processing.
 ///
-/// The view is **writable**. It can be manipulated by [mapping][`Self::map`]
-/// [`Action`]s over it.
+/// The view is **writable**. It can be manipulated by
+/// [mapping][`Self::map_without_context`] [`Action`]s over it.
 ///
 /// The main avenue for constructing a view is [`Self::builder`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,19 +42,48 @@ impl<'viewee> ScopedView<'viewee> {
     /// Apply an `action` to all [`In`] scope items contained in this view.
     ///
     /// They are **replaced** with whatever the action returns for the particular scope.
+    /// This method is infallible, as it does not access any [`ScopeContext`].
     ///
     /// See implementors of [`Action`] for available types.
-    pub fn map(&mut self, action: &impl Action) -> &mut Self {
+    #[allow(clippy::missing_panics_doc)] // 🤞
+    pub fn map_without_context(&mut self, action: &impl Action) -> &mut Self {
+        self.map_impl(action, false)
+            .expect("not accessing context, so is infallible");
+
+        self
+    }
+
+    /// Same as [`Self::map_without_context`], but will access any [`ScopeContext`],
+    /// which is fallible.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`Err`] variant for when this method errors.
+    pub fn map_with_context(&mut self, action: &impl Action) -> Result<&mut Self, ActionError> {
+        self.map_impl(action, true)?;
+
+        Ok(self)
+    }
+
+    fn map_impl(
+        &mut self,
+        action: &impl Action,
+        use_context: bool,
+    ) -> Result<&mut Self, ActionError> {
         for scope in &mut self.scopes.0 {
             match scope {
-                RWScope(In(s)) => {
-                    let res = action.act(s);
+                RWScope(In(s, context)) => {
+                    debug!("Mapping with context: {:?}", context);
+                    let res = match (&context, use_context) {
+                        (Some(c), true) => action.act_with_context(s, c)?,
+                        _ => action.act(s),
+                    };
                     debug!(
                         "Replacing '{}' with '{}'",
                         s.escape_debug(),
                         res.escape_debug()
                     );
-                    *scope = RWScope(In(Cow::Owned(res)));
+                    *scope = RWScope(In(Cow::Owned(res), context.clone()));
                 }
                 RWScope(Out(s)) => {
                     debug!("Appending '{}'", s.escape_debug());
@@ -60,7 +91,7 @@ impl<'viewee> ScopedView<'viewee> {
             }
         }
 
-        self
+        Ok(self)
     }
 
     /// Squeeze all consecutive [`In`] scopes into a single occurrence (the first one).
@@ -69,8 +100,8 @@ impl<'viewee> ScopedView<'viewee> {
 
         let mut prev_was_in = false;
         self.scopes.0.retain(|scope| {
-            let keep = !(prev_was_in && matches!(scope, RWScope(In(_))));
-            prev_was_in = matches!(scope, RWScope(In(_)));
+            let keep = !(prev_was_in && matches!(scope, RWScope(In(_, _))));
+            prev_was_in = matches!(scope, RWScope(In(_, _)));
             trace!("keep: {}, scope: {:?}", keep, scope);
             keep
         });
@@ -84,7 +115,7 @@ impl<'viewee> ScopedView<'viewee> {
     #[must_use]
     pub fn has_any_in_scope(&self) -> bool {
         self.scopes.0.iter().any(|s| match s {
-            RWScope(In(_)) => true,
+            RWScope(In(_, _)) => true,
             RWScope(Out(_)) => false,
         })
     }
@@ -94,76 +125,84 @@ impl<'viewee> ScopedView<'viewee> {
 ///
 /// Where actions don't take arguments, neither do the methods.
 impl<'viewee> ScopedView<'viewee> {
-    /// Apply the default [`actions::Deletion`] action to this view (see [`Self::map`]).
+    /// Apply the default [`actions::Deletion`] action to this view (see
+    /// [`Self::map_without_context`]).
     pub fn delete(&mut self) -> &mut Self {
         let action = actions::Deletion::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the default [`actions::German`] action to this view (see [`Self::map`]).
+    /// Apply the default [`actions::German`] action to this view (see
+    /// [`Self::map_without_context`]).
     #[cfg(feature = "german")]
     pub fn german(&mut self) -> &mut Self {
         let action = actions::German::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the default [`actions::Lower`] action to this view (see [`Self::map`]).
+    /// Apply the default [`actions::Lower`] action to this view (see
+    /// [`Self::map_without_context`]).
     pub fn lower(&mut self) -> &mut Self {
         let action = actions::Lower::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
     /// Apply the default [`actions::Normalization`] action to this view (see
-    /// [`Self::map`]).
+    /// [`Self::map_without_context`]).
     pub fn normalize(&mut self) -> &mut Self {
         let action = actions::Normalization::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the [`actions::Replacement`] action to this view (see [`Self::map`]).
+    /// Apply the [`actions::Replacement`] action to this view (see
+    /// [`Self::map_with_context`]).
     ///
     /// ## Errors
     ///
     /// For why and how this can fail, see the implementation of [`TryFrom<String>`] for
     /// [`actions::Replacement`].
-    pub fn replace(&mut self, replacement: String) -> Result<&mut Self, ReplacementCreationError> {
+    pub fn replace(&mut self, replacement: String) -> Result<&mut Self, ActionError> {
         let action = actions::Replacement::try_from(replacement)?;
 
-        Ok(self.map(&action))
+        self.map_with_context(&action)
     }
 
-    /// Apply the [`actions::Symbols`] action to this view (see [`Self::map`]).
+    /// Apply the [`actions::Symbols`] action to this view (see
+    /// [`Self::map_without_context`]).
     #[cfg(feature = "symbols")]
     pub fn symbols(&mut self) -> &mut Self {
         let action = actions::Symbols::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the [`actions::SymbolsInversion`] action to this view (see [`Self::map`]).
+    /// Apply the [`actions::SymbolsInversion`] action to this view (see
+    /// [`Self::map_without_context`]).
     #[cfg(feature = "symbols")]
     pub fn invert_symbols(&mut self) -> &mut Self {
         let action = actions::SymbolsInversion::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the default [`actions::Titlecase`] action to this view (see [`Self::map`]).
+    /// Apply the default [`actions::Titlecase`] action to this view (see
+    /// [`Self::map_without_context`]).
     pub fn titlecase(&mut self) -> &mut Self {
         let action = actions::Titlecase::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 
-    /// Apply the default [`actions::Upper`] action to this view (see [`Self::map`]).
+    /// Apply the default [`actions::Upper`] action to this view (see
+    /// [`Self::map_without_context`]).
     pub fn upper(&mut self) -> &mut Self {
         let action = actions::Upper::default();
 
-        self.map(&action)
+        self.map_without_context(&action)
     }
 }
 
@@ -196,7 +235,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     #[must_use]
     pub fn new(input: &'viewee str) -> Self {
         Self {
-            scopes: ROScopes(vec![ROScope(In(input))]),
+            scopes: ROScopes(vec![ROScope(In(input, None))]),
             viewee: input,
         }
     }
@@ -216,7 +255,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// See [`DosFix`].
     fn apply_dos_line_endings_fix(&mut self) {
         if self.scopes.0.windows(2).any(|window| match window {
-            [ROScope(In(left)), ROScope(Out(right))] => {
+            [ROScope(In(left, _)), ROScope(Out(right))] => {
                 left.ends_with('\r') && right.starts_with('\n')
             }
             _ => false,
@@ -261,7 +300,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
             }
 
             match scope {
-                ROScope(In(s)) => {
+                ROScope(In(s, _)) => {
                     let mut new_scopes = scoper.scope(s);
                     new_scopes.0.retain(|s| !s.is_empty());
                     new.extend(new_scopes.0);

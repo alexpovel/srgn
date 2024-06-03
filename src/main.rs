@@ -1,5 +1,4 @@
-use anyhow::Context;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use log::{debug, error, info, warn, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
@@ -196,7 +195,7 @@ fn apply(
         }
 
         for action in actions {
-            view.map(action);
+            view.map_with_context(action)?;
         }
 
         view.to_string()

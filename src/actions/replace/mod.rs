@@ -1,7 +1,11 @@
-use super::Action;
-use log::info;
+use super::{Action, ActionError};
+use crate::scoping::scope::ScopeContext;
+use log::{debug, info};
 use std::{error::Error, fmt};
 use unescape::unescape;
+use variables::{inject_variables, VariableExpressionError};
+
+mod variables;
 
 /// Replaces input with a fixed string.
 ///
@@ -47,7 +51,7 @@ use unescape::unescape;
 pub struct Replacement(String);
 
 impl TryFrom<String> for Replacement {
-    type Error = ReplacementCreationError;
+    type Error = ReplacementError;
 
     /// Creates a new replacement from an owned string.
     ///
@@ -73,48 +77,84 @@ impl TryFrom<String> for Replacement {
     /// Creation fails due to invalid escape sequences.
     ///
     /// ```
-    /// use srgn::actions::{Replacement, ReplacementCreationError};
+    /// use srgn::actions::{Replacement, ReplacementError};
     ///
     /// let replacement = Replacement::try_from(r"Invalid \z Escape".to_owned());
     /// assert_eq!(
     ///    replacement,
-    ///    Err(ReplacementCreationError::InvalidEscapeSequences(
+    ///    Err(ReplacementError::InvalidEscapeSequences(
     ///      "Invalid \\z Escape".to_owned()
     ///    ))
     /// );
     /// ```
     fn try_from(replacement: String) -> Result<Self, Self::Error> {
-        match unescape(&replacement) {
-            Some(res) => Ok(Self(res)),
-            None => Err(ReplacementCreationError::InvalidEscapeSequences(
-                replacement,
-            )),
-        }
+        let unescaped =
+            unescape(&replacement).ok_or(ReplacementError::InvalidEscapeSequences(replacement))?;
+
+        Ok(Self(unescaped))
     }
 }
 
 /// An error that can occur when creating a replacement.
 #[derive(Debug, PartialEq, Eq)]
-pub enum ReplacementCreationError {
+pub enum ReplacementError {
     /// The replacement contains invalid escape sequences.
     InvalidEscapeSequences(String),
+    /// The replacement contains an error in its variable expressions.
+    VariableError(VariableExpressionError),
 }
 
-impl fmt::Display for ReplacementCreationError {
+impl fmt::Display for ReplacementError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidEscapeSequences(replacement) => {
                 write!(f, "Contains invalid escape sequences: '{replacement}'")
             }
+            Self::VariableError(err) => {
+                write!(f, "Error in variable expressions: {err}")
+            }
         }
     }
 }
 
-impl Error for ReplacementCreationError {}
+impl Error for ReplacementError {}
+
+impl From<VariableExpressionError> for ReplacementError {
+    fn from(value: VariableExpressionError) -> Self {
+        Self::VariableError(value)
+    }
+}
 
 impl Action for Replacement {
     fn act(&self, input: &str) -> String {
         info!("Substituting '{}' with '{}'", input, self.0);
+        info!("This substitution is verbatim and does not take into account variables");
         self.0.clone()
+    }
+
+    fn act_with_context(
+        &self,
+        _input: &str,
+        context: &ScopeContext,
+    ) -> Result<String, ActionError> {
+        match context {
+            ScopeContext::CaptureGroups(cgs) => {
+                debug!("Available capture group variables: {cgs:?}");
+
+                Ok(inject_variables(self.0.as_str(), cgs)?)
+            }
+        }
+    }
+}
+
+impl From<VariableExpressionError> for ActionError {
+    fn from(value: VariableExpressionError) -> Self {
+        Self::ReplacementError(value.into())
+    }
+}
+
+impl From<ReplacementError> for ActionError {
+    fn from(value: ReplacementError) -> Self {
+        Self::ReplacementError(value)
     }
 }

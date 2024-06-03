@@ -1,4 +1,5 @@
 use super::{ROScopes, Scoper};
+use crate::ranges::Ranges;
 use log::trace;
 use std::{error::Error, fmt, ops::Range};
 use unescape::unescape;
@@ -42,7 +43,7 @@ impl Scoper for Literal {
         let ranges = {
             let len = self.0.len();
 
-            let ranges = input
+            let ranges: Ranges<usize> = input
                 .match_indices(&self.0)
                 .map(|(i, _)| Range {
                     start: i,
@@ -55,14 +56,13 @@ impl Scoper for Literal {
             ranges
         };
 
-        ROScopes::from_raw_ranges(input, ranges)
+        ROScopes::from_raw_ranges(input, ranges.into())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
-
+    use super::*;
     use crate::scoping::{
         scope::{
             RWScope, RWScopes,
@@ -70,20 +70,82 @@ mod tests {
         },
         view::ScopedView,
     };
+    use rstest::rstest;
     use std::borrow::Cow::Borrowed;
 
-    use super::*;
-
     #[rstest]
-    #[case("a", "a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a")))])))]
-    #[case("aa", "a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"))), RWScope(In(Borrowed("a")))])))]
-    #[case("aba", "a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"))), RWScope(Out("b")), RWScope(In(Borrowed("a")))])))]
+    #[case(
+        "a",
+        "a",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(In(Borrowed("a"), None)),
+            ])
+        )
+    )]
+    #[case(
+        "aa",
+        "a",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(In(Borrowed("a"), None)),
+                RWScope(In(Borrowed("a"), None)),
+            ])
+        )
+    )]
+    #[case(
+        "aba",
+        "a",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(In(Borrowed("a"), None)),
+                RWScope(Out("b")),
+                RWScope(In(Borrowed("a"), None)),
+            ])
+        )
+    )]
     //
-    #[case(".", ".", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed(".")))])))]
-    #[case(r"\.", ".", ScopedView::new(RWScopes(vec![RWScope(Out(r"\")), RWScope(In(Borrowed(".")))])))]
-    #[case(r".", r"\\.", ScopedView::new(RWScopes(vec![RWScope(Out(r"."))])))]
+    #[case(
+        ".",
+        ".",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(In(Borrowed("."), None)),
+            ])
+        )
+    )]
+    #[case(
+        r"\.",
+        ".",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(Out(r"\")),
+                RWScope(In(Borrowed("."), None)),
+            ])
+        )
+    )]
+    #[case(
+        r".",
+        r"\\.",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(Out(r".")),
+            ])
+        )
+    )]
     //
-    #[case("Hello\nWorld\n", "\n", ScopedView::new(RWScopes(vec![RWScope(Out("Hello")), RWScope(In(Borrowed("\n"))), RWScope(Out("World")), RWScope(In(Borrowed("\n")))])))]
+    #[case(
+        "Hello\nWorld\n",
+        "\n",
+        ScopedView::new(
+            RWScopes(vec![
+                RWScope(Out("Hello")),
+                RWScope(In(Borrowed("\n"), None)),
+                RWScope(Out("World")),
+                RWScope(In(Borrowed("\n"), None)),
+            ])
+        )
+    )]
     fn test_literal_scoping(
         #[case] input: &str,
         #[case] literal: &str,

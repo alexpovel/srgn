@@ -9,12 +9,14 @@ mod symbols;
 mod titlecase;
 mod upper;
 
+use crate::scoping::scope::ScopeContext;
 pub use deletion::Deletion;
 #[cfg(feature = "german")]
 pub use german::German;
 pub use lower::Lower;
 pub use normalization::Normalization;
-pub use replace::{Replacement, ReplacementCreationError};
+pub use replace::{Replacement, ReplacementError};
+use std::{error::Error, fmt};
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::SymbolsInversion, Symbols};
 pub use titlecase::Titlecase;
@@ -31,7 +33,40 @@ pub trait Action: Send + Sync {
     /// This is infallible: it cannot fail in the sense of [`Result`]. It can only
     /// return incorrect results, which would be bugs (please report).
     fn act(&self, input: &str) -> String;
+
+    /// Acts taking into account additional context.
+    ///
+    /// By default, the context is ignored and [`Action::act`] is called. Implementors
+    /// which need and know how to handle additional context can overwrite this method.
+    ///
+    /// # Errors
+    ///
+    /// This is fallible, as the context is dynamically created at runtime and
+    /// potentially contains bad data. See docs of the [`Err`] variant type.
+    fn act_with_context(&self, input: &str, context: &ScopeContext) -> Result<String, ActionError> {
+        let _ = context; // Mark variable as used
+        Ok(self.act(input))
+    }
 }
+
+/// An error during application of an action.
+#[derive(Debug, PartialEq, Eq)]
+pub enum ActionError {
+    /// Produced if [`Replacement`] fails.
+    ReplacementError(ReplacementError),
+}
+
+impl fmt::Display for ActionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ReplacementError(re) => {
+                write!(f, "Action failed in replacement: {re}")
+            }
+        }
+    }
+}
+
+impl Error for ActionError {}
 
 /// Any function that can be used as an [`Action`].
 impl<T> Action for T
@@ -48,5 +83,9 @@ where
 impl Action for Box<dyn Action> {
     fn act(&self, input: &str) -> String {
         self.as_ref().act(input)
+    }
+
+    fn act_with_context(&self, input: &str, context: &ScopeContext) -> Result<String, ActionError> {
+        self.as_ref().act_with_context(input, context)
     }
 }

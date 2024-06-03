@@ -229,22 +229,13 @@ $ echo 'ghp_oHn0As3cr3T!!' | srgn 'ghp_[[:alnum:]]+' '*' # A GitHub token
 *!!
 ```
 
-However, in the presence of capture groups, the *individual characters comprising a
-capture group match* are treated *individually* for processing, allowing a replacement
-to be repeated:
-
-```console
-$ echo 'Hide ghp_th15 and ghp_th4t' | srgn '(ghp_[[:alnum:]]+)' '*'
-Hide ******** and ********
-```
-
 Advanced regex features are
 [supported](https://docs.rs/fancy-regex/0.11.0/fancy_regex/index.html#syntax), for
 example lookarounds:
 
 ```console
-$ echo 'ghp_oHn0As3cr3T' | srgn '(?<=ghp_)([[:alnum:]]+)' '*'
-ghp_***********
+$ echo 'ghp_oHn0As3cr3T' | srgn '(?<=ghp_)[[:alnum:]]+' '*'
+ghp_*
 ```
 
 Take care in using these safely, as advanced patterns come without certain [safety and
@@ -269,6 +260,39 @@ $ echo 'Mood: 🙂' | srgn '🙂' '😀'
 Mood: 😀
 $ echo 'Mood: 🤮🤒🤧🦠 :(' | srgn '\p{Emoji_Presentation}' '😷'
 Mood: 😷😷😷😷 :(
+```
+
+##### Variables
+
+Replacements are aware of variables, which are made accessible for use through regex
+capture groups. Capture groups can be numbered, or optionally named. The zeroth capture
+group corresponds to the entire match.
+
+```console
+$ echo 'Swap It' | srgn '(\w+) (\w+)' '$2 $1' # Regular, numbered
+It Swap
+$ echo 'Swap It' | srgn '(\w+) (\w+)' '$2 $1$1$1' # Use as many times as you'd like
+It SwapSwapSwap
+$ echo 'Call +1-206-555-0100!' | srgn 'Call (\+?\d\-\d{3}\-\d{3}\-\d{4}).+' 'The phone number in "$0" is: $1.' # Variable `0` is the entire match
+The phone number in "Call +1-206-555-0100!" is: +1-206-555-0100.
+```
+
+A more advanced use case is, for example, code refactoring using named capture groups
+(perhaps you can come up with a more useful one...):
+
+```console
+$ echo 'let x = 3;' | srgn 'let (?<var>[a-z]+) = (?<expr>.+);' 'const $var$var = $expr + $expr;'
+const xx = 3 + 3;
+```
+
+As in bash, use curly braces to disambiguate variables from immediately adjacent
+content:
+
+```console
+$ echo '12' | srgn '(\d)(\d)' '$2${1}1'
+211
+$ echo '12' | srgn '(\d)(\d)' '$2$11' # will fail (`11` is unknown)
+$ echo '12' | srgn '(\d)(\d)' '$2${11' # will fail (brace was not closed)
 ```
 
 #### Beyond replacement

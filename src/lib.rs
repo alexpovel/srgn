@@ -7,7 +7,8 @@
 //!
 //! For the library, much like for the binary, there are two main concepts: actions and
 //! scoping. The latter are manifested in [`ScopedView`]s. Over these, one can
-//! [map][`ScopedView::map`] actions. Actions are all types implementing [`Action`].
+//! [map][`ScopedView::map_without_context`] actions. Actions are all types implementing
+//! [`Action`].
 //!
 //! # Examples
 //!
@@ -133,7 +134,7 @@
 //!
 //! let mut view = ScopedViewBuilder::new(input).build();
 //! let action = German::new(true, false); // Excuse the bool ugliness.
-//! view.map(&action);
+//! view.map_without_context(&action);
 //!
 //! assert_eq!(view.to_string(), "Der Überflieger-Käfer! 🛩️");
 //! # }
