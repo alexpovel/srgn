@@ -1,11 +1,12 @@
 use anyhow::{Context, Result};
-use log::{debug, error, info, warn, LevelFilter};
+use log::{debug, info, warn, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
 use srgn::actions::Lower;
 use srgn::actions::Normalization;
+use srgn::actions::Print;
 use srgn::actions::Replacement;
 use srgn::actions::Titlecase;
 use srgn::actions::Upper;
@@ -13,6 +14,7 @@ use srgn::actions::Upper;
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
+use srgn::scoping::scope::Scope;
 use srgn::{
     actions::Action,
     scoping::{
@@ -195,11 +197,25 @@ fn apply(
             view.squeeze();
         }
 
-        for action in actions {
-            view.map_with_context(action)?;
-        }
+        if actions.is_empty() {
+            info!("No actions loaded. Loading default action: Print");
 
-        view.to_string()
+            view.scopes()
+                .0
+                .iter()
+                .filter_map(|scope| match &scope.0 {
+                    Scope::In(content, _) => Some(content.to_string()),
+                    _ => None,
+                })
+                .collect::<Vec<String>>()
+                .join("\n")
+        } else {
+            for action in actions {
+                view.map_with_context(action)?;
+            }
+
+            view.to_string()
+        }
     };
     debug!("Done applying actions to view.");
 
@@ -407,11 +423,6 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
     if args.composable_actions.normalize {
         actions.push(Box::<Normalization>::default());
         debug!("Loaded action: Normalization");
-    }
-
-    if actions.is_empty() && !(args.options.fail_any || args.options.fail_none) {
-        // Doesn't hurt, but warn loudly
-        error!("No actions loaded, will return input unchanged");
     }
 
     Ok(actions)

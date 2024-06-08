@@ -31,6 +31,12 @@ impl<'viewee> ScopedView<'viewee> {
         Self { scopes }
     }
 
+    /// Access the scopes contained in this view.
+    #[must_use]
+    pub fn scopes(&self) -> &RWScopes<'viewee> {
+        &self.scopes
+    }
+
     /// Return a builder for a view of the given input.
     ///
     /// For API discoverability.

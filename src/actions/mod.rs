@@ -3,6 +3,7 @@ mod deletion;
 mod german;
 mod lower;
 mod normalization;
+mod print;
 mod replace;
 #[cfg(feature = "symbols")]
 mod symbols;
@@ -15,6 +16,7 @@ pub use deletion::Deletion;
 pub use german::German;
 pub use lower::Lower;
 pub use normalization::Normalization;
+pub use print::Print;
 pub use replace::{Replacement, ReplacementError};
 use std::{error::Error, fmt};
 #[cfg(feature = "symbols")]
