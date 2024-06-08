@@ -67,7 +67,7 @@ where
 ///
 /// Useful for queries where tree-sitter doesn't natively support a fitting node type,
 /// and a result is instead obtained by ignoring unwanted parts of bigger captures.
-pub(super) const IGNORE: &str = "IGNORE";
+pub(super) const IGNORE: &str = "_SRGN_IGNORE";
 
 /// A scoper for a language.
 ///
@@ -132,7 +132,7 @@ pub trait LanguageScoper: Scoper {
 
         let ranges = run(query);
 
-        let is_ignored = |name: &str| name.contains(IGNORE);
+        let is_ignored = |name: &str| name.starts_with(IGNORE);
         let has_ignored_captures = query.capture_names().iter().any(|name| is_ignored(name));
 
         if has_ignored_captures {

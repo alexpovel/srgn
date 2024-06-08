@@ -870,11 +870,11 @@ Let's assume there's a node type for matching *entire* macros (`macro_invocation
 one to match macro *names* (`((macro_invocation macro: (identifier) @name))`), but
 *none* to match macro *contents* (this is wrong, tree-sitter offers this in the form of
 `token_tree`, but let's imagine...). To match just `"This went error"`, the entire macro
-would need to be matched, with the name part ignored. Any capture name containing
-`IGNORE` will provide just that:
+would need to be matched, with the name part ignored. Any capture name starting with
+`_SRGN_IGNORE` will provide just that:
 
 ```bash
-cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @IGNORE_name) @macro)' 'error' 'wrong'
+cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
 ```
 
 ```rust output-wrong.rs
