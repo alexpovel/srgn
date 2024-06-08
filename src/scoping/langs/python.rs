@@ -1,5 +1,5 @@
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
@@ -25,6 +25,8 @@ pub enum PreparedPythonQuery {
     FunctionNames,
     /// Function calls.
     FunctionCalls,
+    /// Class definitions (in their entirety)
+    Class,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -89,6 +91,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                     )
                     "
                 }
+                PreparedPythonQuery::Class => "(class_definition) @class",
             },
         )
         .expect("Prepared queries to be valid")
@@ -118,11 +121,8 @@ impl From<CustomPythonQuery> for TSQuery {
 }
 
 impl Scoper for Python {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        ROScopes::from_raw_ranges(
-            input,
-            Self::scope_via_query(&mut self.query(), input).into(),
-        )
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        Self::scope_via_query(&mut self.query(), input).into()
     }
 }
 
@@ -133,5 +133,15 @@ impl LanguageScoper for Python {
 
     fn query(&self) -> TSQuery {
         self.query.clone().into()
+    }
+}
+
+impl Find for Python {
+    fn extensions(&self) -> &'static [&'static str] {
+        &["py"]
+    }
+
+    fn interpreters(&self) -> Option<&'static [&'static str]> {
+        Some(&["python", "python3"])
     }
 }

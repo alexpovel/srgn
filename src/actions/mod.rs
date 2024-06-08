@@ -4,6 +4,7 @@ mod german;
 mod lower;
 mod normalization;
 mod replace;
+mod style;
 #[cfg(feature = "symbols")]
 mod symbols;
 mod titlecase;
@@ -17,6 +18,7 @@ pub use lower::Lower;
 pub use normalization::Normalization;
 pub use replace::{Replacement, ReplacementError};
 use std::{error::Error, fmt};
+pub use style::Style;
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::SymbolsInversion, Symbols};
 pub use titlecase::Titlecase;

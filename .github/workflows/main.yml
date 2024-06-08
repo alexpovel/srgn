@@ -27,7 +27,15 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Set git to not perform line ending conversions
+        # Tests are very sensitive to line endings, so ensure they are exactly as found
+        # in the repo.
+        run: |
+          git config --global core.autocrlf false
       - uses: actions/checkout@v4
+      - name: Check actual EOL on disk
+        run: |
+          git ls-files --eol
       - uses: swatinem/rust-cache@v2
       - name: Build
         run: >

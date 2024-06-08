@@ -1,5 +1,5 @@
+use super::scope::RangesWithContext;
 use super::scope::ScopeContext;
-use super::ROScopes;
 use super::Scoper;
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
@@ -85,8 +85,8 @@ impl Default for Regex {
 }
 
 impl Scoper for Regex {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        let mut ranges = HashMap::new();
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        let mut ranges = Vec::new();
         for cap in self.pattern.captures_iter(input) {
             match cap {
                 Ok(cap) => {
@@ -102,12 +102,12 @@ impl Scoper for Regex {
                         })
                         .collect();
 
-                    ranges.insert(
+                    ranges.push((
                         cap.get(0)
                             .expect("index 0 guaranteed to contain whole match")
                             .range(),
                         Some(ScopeContext::CaptureGroups(capture_context)),
-                    );
+                    ));
                 }
                 // Let's blow up on purpose instead of silently continuing; any of
                 // these errors a user will likely want to know about, as they
@@ -124,7 +124,7 @@ impl Scoper for Regex {
             }
         }
 
-        return ROScopes::from_raw_ranges(input, ranges);
+        ranges
     }
 }
 
@@ -474,7 +474,6 @@ mod tests {
         use rand;
         use rand::seq::SliceRandom;
         use rand::Rng;
-        use test_log::test;
 
         fn generate_random_regex(mut rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
             let atoms: [&str; 7] = [".", "\\d", "\\D", "\\w", "\\W", "\\s", "\\S"];

@@ -1,5 +1,5 @@
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{ROScopes, Scoper};
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use crate::scoping::{scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
@@ -101,11 +101,8 @@ impl From<CustomRustQuery> for TSQuery {
 }
 
 impl Scoper for Rust {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        ROScopes::from_raw_ranges(
-            input,
-            Self::scope_via_query(&mut self.query(), input).into(),
-        )
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        Self::scope_via_query(&mut self.query(), input).into()
     }
 }
 
@@ -116,5 +113,11 @@ impl LanguageScoper for Rust {
 
     fn query(&self) -> TSQuery {
         self.query.clone().into()
+    }
+}
+
+impl Find for Rust {
+    fn extensions(&self) -> &'static [&'static str] {
+        &["rs"]
     }
 }

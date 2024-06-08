@@ -5,7 +5,9 @@ mod tests {
         nodes::{NodeCodeBlock, NodeValue},
         parse_document, Arena, ComrakOptions,
     };
-    use core::fmt;
+    use core::{fmt, panic};
+    use fancy_regex::Regex;
+    use itertools::Itertools;
     use nom::{
         branch::alt,
         bytes::complete::{escaped, is_not, tag, take_until, take_while1},
@@ -19,14 +21,19 @@ mod tests {
         sequence::{delimited, preceded, tuple},
         Finish, IResult,
     };
+    use pretty_assertions::assert_eq;
     use std::{
         cell::RefCell,
         collections::{HashMap, VecDeque},
+        io::Write,
+        mem::ManuallyDrop,
         rc::Rc,
     };
+    use tempfile::NamedTempFile;
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
+    const DOCUMENT: &str = include_str!("../README.md");
 
     /// A flag, either short or long.
     ///
@@ -147,6 +154,21 @@ mod tests {
                 Self::Self_(inv) => inv.stdout.clone(),
             }
         }
+
+        /// This sets an option to forcibly ignore any provided stdin.
+        ///
+        /// Even though a command might run with `None` for its stdin, the binary under
+        /// test might heuristically check for a readable stdin and somehow detect it.
+        /// This might be a quirk in the command execution from [`Command`]... no idea.
+        /// For that scenario, we need a hacky method to disable stdin for good.
+        fn force_ignore_stdin(&mut self) {
+            match self {
+                Program::Self_(inv) => inv
+                    .opts
+                    .push(Opt::Long("stdin-override-to".into(), "false".into())),
+                _ => panic!("Forcing stdin ignore only applicable to `self` program"),
+            }
+        }
     }
 
     impl TryFrom<Program> for Command {
@@ -162,12 +184,8 @@ mod tests {
                 Program::Self_(inv) => {
                     let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
 
-                    for flag in inv.flags {
+                    for flag in &inv.flags {
                         cmd.arg(flag.to_string());
-                    }
-
-                    for arg in inv.args {
-                        cmd.arg(arg.to_string());
                     }
 
                     for opt in inv.opts {
@@ -176,19 +194,21 @@ mod tests {
                                 // Push these separately, as `arg` will escape the
                                 // value, and something like `--option value` will be
                                 // taken as a single arg, breaking the test.
-                                cmd.arg(format!("-{name}"));
-                                cmd.arg(value);
+                                cmd.args([format!("-{name}"), value]);
                             }
                             Opt::Long(name, value) => {
-                                cmd.arg(format!("--{name}"));
-                                cmd.arg(value);
+                                cmd.args([format!("--{name}"), value]);
                             }
                         }
                     }
 
-                    // Empty string will be overwritten later on anyway. This saves a bunch
-                    // of code later.
-                    cmd.write_stdin(inv.stdin.unwrap_or_default());
+                    for arg in &inv.args {
+                        cmd.arg(arg.to_string());
+                    }
+
+                    if let Some(stdin) = inv.stdin {
+                        cmd.write_stdin(stdin);
+                    }
 
                     Ok(cmd)
                 }
@@ -204,14 +224,46 @@ mod tests {
         /// The expected outcome of the *entire* pipe. Any failure anywhere in the pipe
         /// should cause overall failure (like `pipefail`).
         should_fail: bool,
+        /// Is this not actually a pipe, but a single, standalone program?
+        ///
+        /// Checking for the length of `programs` might not suffice, as programs are
+        /// dropped from it as it's processed.
+        standalone: bool,
     }
 
     impl PipedPrograms {
         /// Assembles a list of programs into a pipe.
         ///
         /// The first program is specially treated, and needs to be able to produce some
-        /// stdin. The passed `stdout` is the expected output of the last program, aka
-        /// the entire pipe.
+        /// stdin to kick things off (unless there is only one `standalone` program in
+        /// the pipe). The passed `stdout` is the expected output of the last program,
+        /// aka the entire pipe. All programs in the middle (after *second*, before
+        /// last), which can be an unbounded number, are later on fed their stdin
+        /// dynamically, from the previous program's output, with their stdout becoming
+        /// the next piped program's stdin, and so on. These stdins and stdouts are not
+        /// set here.
+        ///
+        /// [`Program::Cat`] invocations may need access to [`Snippets`], so those are
+        /// provided as well; pipes may also be *expected* to fail.
+        ///
+        /// For example, a chain might look like:
+        ///
+        /// ```text
+        /// echo 'hello' | butest -a | butest -b | butest --cee | butest -d
+        /// ^^^^^^^^^^^^   ^^^^^^^^^
+        ///  produces      is fed      ^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^
+        ///  initial       stdin to      these are provided       last one
+        ///  stdin         kick          their stdin *later*      in the
+        ///                things        on, and produce their    pipe:
+        ///                off           stdout dynamically too   its
+        ///                                                       stdout is
+        ///                                                       set here,
+        ///                                                       its stdin
+        ///                                                       provided
+        ///                                                       dynamically
+        /// ```
+        ///
+        /// with some binary under test (`butest`).
         fn assemble(
             chain: impl Iterator<Item = Program>,
             stdout: Option<&str>,
@@ -219,84 +271,109 @@ mod tests {
             should_fail: bool,
         ) -> Result<Self, &str> {
             let mut programs = chain.collect::<VecDeque<_>>();
+            eprintln!("Will assemble programs: {:?}", programs);
+
+            // There's a trailing newline inserted which ruins/fails diffs.
+            let stdout = stdout.map(|s| s.strip_suffix('\n').unwrap().to_string());
+
+            let mut standalone = false;
 
             let first = programs
                 .pop_front()
                 .ok_or("Should have at least one program in pipe")?;
 
             let stdin = match &first {
-                Program::Echo(inv) => inv
-                    .args
-                    .first()
-                    .ok_or("Echo should have an argument")?
-                    .to_string(),
+                Program::Echo(inv) => Some(
+                    inv.args
+                        .first()
+                        .ok_or("Echo should have an argument")?
+                        .to_string(),
+                ),
                 Program::Cat(inv) => {
                     let file_name = inv.args.first().ok_or("Cat should have an argument")?;
 
-                    snippets
-                        .get(&file_name.0)
-                        .ok_or("Snippet should be present")?
-                        .original
-                        .clone()
-                        .ok_or("Snippet should have an original")?
+                    Some(
+                        snippets
+                            .get(&file_name.0)
+                            .ok_or("Snippet should be present")?
+                            .original
+                            .clone()
+                            .ok_or("Snippet should have an original")?,
+                    )
                 }
-                _ => return Err("First command should be able to produce stdin."),
+                Program::Self_(..) => {
+                    standalone = true;
+                    None
+                }
             };
 
-            match programs
-                .front_mut()
-                .expect("No second program to assemble with")
-            {
-                Program::Echo(_) | Program::Cat(_) => {
+            // Set the *second*, if any, command's standard input.
+            match programs.front_mut() {
+                Some(Program::Echo(_) | Program::Cat(_)) => {
                     return Err("Stdin-generating program should not be in the middle of a pipe")
                 }
-                Program::Self_(inv) => {
-                    inv.stdin = Some(stdin);
+                Some(Program::Self_(inv)) => {
+                    inv.stdin = stdin;
+                }
+                None => {
+                    // Nothing to do; assert flag was set already.
+                    assert!(standalone)
                 }
             }
 
-            match programs
-                .back_mut()
-                .expect("No last program to assemble with")
-            {
-                Program::Echo(_) | Program::Cat(_) => {
+            // Set the expected standard output of the *entire* pipe, aka the last
+            // program's standard output.
+            let mut first = first;
+            match programs.back_mut() {
+                Some(Program::Echo(_) | Program::Cat(_)) => {
                     return Err("Stdin-generating program should not be at the end of a pipe")
                 }
-                Program::Self_(inv) => {
+                Some(Program::Self_(inv)) => {
                     inv.stdout = if should_fail {
                         // No stdout needed if command fails anyway
                         None
                     } else if let Program::Cat(inv) = first {
-                        assert!(
-                            stdout.is_none(),
-                            "Cat output should be given as extra snippet, not inline"
-                        );
-
                         Some(
                             snippets
                                 .get(&inv.args.first().expect("Cat should have an argument").0)
-                                .ok_or("Snippet should be present")?
+                                .expect("Cat invocation needs a snippet")
                                 .output
                                 .clone()
-                                .expect("Snippet should have an output"),
+                                .unwrap_or_else(|| {
+                                    stdout.expect(
+                                        "Snippet for cat has no output, so stdout is required",
+                                    )
+                                }),
                         )
                     } else {
-                        Some(
-                            stdout
-                                .expect("Stdout should be given for non-`cat`-fed program")
-                                // No patience for hard-to-diff, fiddly, invisible
-                                // whitespace issues, even though it would be "more
-                                // correct"
-                                .trim_end()
-                                .to_string(),
-                        )
+                        Some(stdout.expect("Stdout should be given for non-`cat`-fed program"))
                     }
+                }
+                None => {
+                    match &mut first {
+                        // There is no 'last program': we have a stand-alone one.
+                        Program::Echo(_) | Program::Cat(_) => {
+                            return Err("Illegal standalone program")
+                        }
+                        Program::Self_(inv) => {
+                            inv.stdout = Some(
+                                stdout.expect("Stdout should be given for standalone program"),
+                            );
+                        }
+                    };
+
+                    assert!(standalone, "Should have been set before.");
+
+                    // Put it back!
+                    programs.push_back(first);
                 }
             }
 
+            assert!(!programs.is_empty());
             Ok(Self {
                 programs,
                 should_fail,
+                standalone,
             })
         }
     }
@@ -385,17 +462,33 @@ mod tests {
                             // (just a flag). Alternatively, import `clap::Cli` here and
                             // `try_get_matches` with it, but cannot/don't want to
                             // expose (`pub`) that.
+                            //
+                            // Failure to add values here will result in bizarre and
+                            // wrong order of arguments. For example, if `--some-option
+                            // some_value` is given and `--some-option` is not
+                            // registered here, `--some-option` will be understood as a
+                            // *flag*, and `some_value` as a *positional argument*.
                             tag("--"),
                             alt((
+                                // Careful: all `--lang-query` options need to come
+                                // first; otherwise, the `--lang` options eat them and
+                                // results turn bad (complaining that `-query` is not a
+                                // valid value). Parsing is brittle here :-(
                                 tag("csharp-query"),
-                                tag("csharp"),
                                 tag("go-query"),
-                                tag("go"),
+                                tag("hcl-query"),
                                 tag("python-query"),
-                                tag("python"),
                                 tag("rust-query"),
-                                tag("rust"),
                                 tag("typescript-query"),
+                                //
+                                tag("csharp"),
+                                tag("files"),
+                                tag("go"),
+                                tag("hcl"),
+                                tag("python"),
+                                tag("rust"),
+                                tag("stdin-override-to"),
+                                tag("threads"),
                                 tag("typescript"),
                             )),
                         ),
@@ -499,6 +592,67 @@ mod tests {
         Ok(res)
     }
 
+    /// Supported Operating systems.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum OS {
+        Linux,
+        #[allow(clippy::enum_variant_names)]
+        MacOS,
+        Windows,
+    }
+
+    impl From<String> for OS {
+        /// Convert from a value as returned by [`std::env::consts::OS`].
+        fn from(value: String) -> Self {
+            match value.as_str() {
+                "linux" => Self::Linux,
+                "macos" => Self::MacOS,
+                "windows" => Self::Windows,
+                // Just a double check to ensure parsing of options went right.
+                _ => panic!("Unknown OS: {}", value),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, Default)]
+    struct BlockOptions {
+        /// The file name to associate with this code block, if any.
+        filename: Option<String>,
+        /// Skip when running on any of these operating systems.
+        skip_os: Option<Vec<OS>>,
+    }
+
+    impl<S> From<S> for BlockOptions
+    where
+        S: AsRef<str>,
+    {
+        fn from(value: S) -> Self {
+            let string = value.as_ref();
+            let mut options: HashMap<&str, String> = string
+                .split(';')
+                .map(|pair| {
+                    pair.split_once('=')
+                        .unwrap_or_else(|| panic!("need a value for key-value pair: {}", pair))
+                })
+                .map(|(k, v)| (k, v.to_string()))
+                .collect();
+
+            let get_many = |s: String| s.split(',').map(|s| s.to_owned()).collect_vec();
+
+            let res = Self {
+                filename: options.remove("file"),
+                skip_os: options
+                    .remove("skip-os")
+                    .map(get_many)
+                    .map(|oss| oss.into_iter().map(OS::from).collect_vec()),
+            };
+
+            assert!(options.is_empty(), "unknown keys in options: {:?}", options);
+
+            res
+        }
+    }
+
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     struct Snippet {
         original: Option<String>,
@@ -527,26 +681,33 @@ mod tests {
     fn get_readme_snippets() -> Snippets {
         let mut snippets = HashMap::new();
 
-        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
-            if let Some((_language, mut file_name)) = ncb.info.split_once(' ') {
+        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
+            if let Some((_language, options)) = ncb.info.split_once(' ') {
                 let mut snippet = Snippet::default();
+                let options: BlockOptions = options.into();
 
-                file_name = match file_name.strip_prefix("output-") {
-                    Some(stripped_file_name) => {
-                        snippet.output = Some(ncb.literal);
-                        stripped_file_name
-                    }
-                    None => {
-                        snippet.original = Some(ncb.literal);
-                        file_name
-                    }
-                };
+                if let BlockOptions {
+                    filename: Some(mut file_name),
+                    ..
+                } = options
+                {
+                    file_name = match file_name.strip_prefix("output-") {
+                        Some(stripped_file_name) => {
+                            snippet.output = Some(ncb.literal);
+                            stripped_file_name.to_owned()
+                        }
+                        None => {
+                            snippet.original = Some(ncb.literal);
+                            file_name
+                        }
+                    };
 
-                if let Some((_, other)) = snippets.remove_entry(file_name) {
-                    snippet = snippet.join(other);
+                    if let Some(other) = snippets.remove(&file_name) {
+                        snippet = snippet.join(other);
+                    }
+
+                    snippets.insert(file_name, snippet);
                 }
-
-                snippets.insert(file_name.to_owned(), snippet);
             }
         });
 
@@ -558,8 +719,25 @@ mod tests {
     fn get_readme_program_pipes(snippets: Snippets) -> Vec<PipedPrograms> {
         let mut pipes = Vec::new();
 
-        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
-            if ncb.info == "console" || ncb.info == "bash" {
+        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
+            let (language, options): (&str, Option<BlockOptions>) = ncb
+                .info
+                .split_once(' ')
+                .map(|(l, o)| (l, Some(o.into())))
+                .unwrap_or_else(|| (ncb.info.as_str(), None));
+
+            if let Some(BlockOptions {
+                skip_os: Some(oss), ..
+            }) = options
+            {
+                let curr_os: OS = std::env::consts::OS.to_owned().into();
+                if oss.contains(&curr_os) {
+                    eprintln!("Skipping OS: {:?}", curr_os);
+                    return;
+                }
+            }
+
+            if language == "console" || language == "bash" {
                 let (_, commands) = parse_code_blocks(&ncb.literal, snippets.clone())
                     .finish()
                     .expect("Anything in `console` should be parseable as a command");
@@ -567,6 +745,8 @@ mod tests {
                 pipes.extend(commands);
             }
         });
+
+        eprintln!("Piped programs: {:?}", pipes);
 
         pipes
     }
@@ -593,9 +773,18 @@ mod tests {
         for pipe in pipes {
             let mut previous_stdin = None;
             let should_fail = pipe.should_fail;
-            for program in pipe {
+            let standalone = pipe.standalone;
+            for mut program in pipe {
+                if standalone {
+                    program.force_ignore_stdin();
+                }
+                let program = program; // de-mut
+
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
+
+                // We're testing and need determinism. This hard-codes a flag!
+                cmd.arg("--sorted");
 
                 if let Some(previous_stdin) = previous_stdin {
                     cmd.write_stdin(previous_stdin);
@@ -611,16 +800,80 @@ mod tests {
                     assertion.success()
                 };
 
-                if let Some(stdout) = program.stdout().clone() {
-                    assertion.stdout(stdout);
+                let observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
+                    .expect("Stdout should be given as UTF-8");
+                if let Some(expected_stdout) = program.stdout().clone() {
+                    let observed_stdout = unixfy_file_paths(&observed_stdout);
+                    if observed_stdout != expected_stdout {
+                        // Write to files for easier inspection
+                        let (mut obs_f, mut exp_f) = (
+                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                        );
+
+                        obs_f.write_all(observed_stdout.as_bytes()).unwrap();
+                        exp_f.write_all(expected_stdout.as_bytes()).unwrap();
+
+                        // Now panic as usual, for the usual output
+                        assert_eq!(
+                            // Get some more readable output diff compared to
+                            // `assert::Command`'s `stdout()` function, for which diffing
+                            // whitespace is very hard.
+                            expected_stdout,
+                            observed_stdout,
+                            "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
+                            obs_f.path().display(),
+                            exp_f.path().display()
+                        );
+
+                        // Temporary files remain, they're not dropped.
+
+                        unreachable!();
+                    }
                 }
 
                 // Pipe stdout to stdin of next run...
-                previous_stdin = Some(
-                    String::from_utf8(cmd.assert().get_output().stdout.clone())
-                        .expect("Stdout should be given as UTF-8"),
-                );
+                previous_stdin = Some(observed_stdout);
             }
         }
+    }
+
+    /// The document under test might contain hard-coded Unix file paths. When running
+    /// under Windows, where `\` might be printed as the path separator, tests will
+    /// break. So hack strings which look like paths to spell `/` instead of `\` as
+    /// their path separator.
+    fn unixfy_file_paths(input: &str) -> String {
+        // Pattern for Windows-style file paths:
+        //
+        // ```text
+        // No Match: /usr/bin/local
+        // No Match: bin/local
+        // Matches: test\files
+        // Matches: test\some\more\files
+        // Matches: test
+        // Matches: test\some\file.py
+        //```
+        //
+        // https://regex101.com/r/NURPe2/1
+        let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
+        let mut res = input
+            .lines()
+            .map(|s| {
+                if pattern.is_match(s).unwrap() {
+                    let res = s.replace('\\', "/");
+                    eprintln!("Replaced Windows path-like string: {s} -> {res}");
+                    res
+                } else {
+                    s.to_owned()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        if input.ends_with('\n') {
+            res.push('\n');
+        }
+
+        res
     }
 }

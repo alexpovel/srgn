@@ -1,0 +1,44 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--go"
+  - comments
+  - "[fF]izz"
+stdin:
+  - "package main\n"
+  - "\n"
+  - "import \"fmt\"\n"
+  - "\n"
+  - "// fizzBuzz prints the numbers from 1 to a specified limit.\n"
+  - "// For multiples of 3, it prints \"Fizz\" instead of the number,\n"
+  - "// for multiples of 5, it prints \"Buzz\", and for multiples of both 3 and 5,\n"
+  - "// it prints \"FizzBuzz\".\n"
+  - "func fizzBuzz(limit int) {\n"
+  - "\tfor i := 1; i <= limit; i++ {\n"
+  - "\t\tswitch {\n"
+  - "\t\tcase i%3 == 0 && i%5 == 0:\n"
+  - "\t\t\tfmt.Println(\"FizzBuzz\")\n"
+  - "\t\tcase i%3 == 0:\n"
+  - "\t\t\tfmt.Println(\"Fizz\")\n"
+  - "\t\tcase i%5 == 0:\n"
+  - "\t\t\tfmt.Println(\"Buzz\")\n"
+  - "\t\tdefault:\n"
+  - "\t\t\tfmt.Println(i)\n"
+  - "\t\t}\n"
+  - "\t}\n"
+  - "}\n"
+  - "\n"
+  - "func main() {\n"
+  - "\t// Run the FizzBuzz function for numbers from 1 to 100\n"
+  - "\tfizzBuzz(100)\n"
+  - "}\n"
+stdout:
+  - "5:// fizzBuzz prints the numbers from 1 to a specified limit.\n"
+  - "6:// For multiples of 3, it prints \"Fizz\" instead of the number,\n"
+  - "8:// it prints \"FizzBuzz\".\n"
+  - "25:\t// Run the FizzBuzz function for numbers from 1 to 100\n"
+exit_code: 0

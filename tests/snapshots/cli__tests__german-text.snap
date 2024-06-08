@@ -1,0 +1,31 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--german"
+stdin:
+  - "Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.\n"
+  - "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.\n"
+  - "Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.\n"
+  - "Vogel Quax zwickt Johnys Pferd Bim.\n"
+  - "Sylvia wagt quick den Jux bei Pforzheim.\n"
+  - "Polyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.\n"
+  - "\"Fix, Schwyz!\" quaekt Juergen bloed vom Pass.\n"
+  - "Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.\n"
+  - "Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.\n"
+  - "Heizoelrueckstossabdaempfung.\n"
+stdout:
+  - "Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.\n"
+  - "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.\n"
+  - "Zwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich.\n"
+  - "Vogel Quax zwickt Johnys Pferd Bim.\n"
+  - "Sylvia wagt quick den Jux bei Pforzheim.\n"
+  - "Polyfon zwitschernd aßen Maexchens Vögel Rüben, Joghurt und Quark.\n"
+  - "\"Fix, Schwyz!\" quäkt Jürgen blöd vom Pass.\n"
+  - "Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich.\n"
+  - "Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.\n"
+  - "Heizölrückstoßabdämpfung.\n"
+exit_code: 0

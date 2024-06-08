@@ -1,4 +1,4 @@
-use super::{ROScopes, Scoper};
+use super::{scope::RangesWithContext, Scoper};
 use crate::ranges::Ranges;
 use log::trace;
 use std::{error::Error, fmt, ops::Range};
@@ -39,7 +39,7 @@ impl TryFrom<String> for Literal {
 }
 
 impl Scoper for Literal {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
         let ranges = {
             let len = self.0.len();
 
@@ -56,7 +56,7 @@ impl Scoper for Literal {
             ranges
         };
 
-        ROScopes::from_raw_ranges(input, ranges.into())
+        ranges.into()
     }
 }
 

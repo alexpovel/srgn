@@ -23,16 +23,36 @@ pub enum Scope<'viewee, T> {
 pub struct ROScope<'viewee>(pub Scope<'viewee, &'viewee str>);
 
 /// Multiple read-only scopes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ROScopes<'viewee>(pub Vec<ROScope<'viewee>>);
 
 /// A read-write scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RWScope<'viewee>(pub Scope<'viewee, Cow<'viewee, str>>);
 
+#[cfg(test)] // For convenience; not legal in normal code
+impl<'viewee> From<Scope<'viewee, &'viewee str>> for RWScope<'viewee> {
+    fn from(value: Scope<'viewee, &'viewee str>) -> Self {
+        Self(match value {
+            In(s, ctx) => In(Cow::Borrowed(s), ctx),
+            Out(s) => Out(s),
+        })
+    }
+}
+
 /// Multiple read-write scopes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct RWScopes<'viewee>(pub Vec<RWScope<'viewee>>);
+
+#[cfg(test)] // For convenience; not legal in normal code
+impl<'viewee, I> From<I> for RWScopes<'viewee>
+where
+    I: IntoIterator<Item = Scope<'viewee, &'viewee str>>,
+{
+    fn from(value: I) -> Self {
+        Self(value.into_iter().map(Into::into).collect_vec())
+    }
+}
 
 impl<'viewee> ROScope<'viewee> {
     /// Check whether the scope is empty.
@@ -44,7 +64,7 @@ impl<'viewee> ROScope<'viewee> {
 }
 
 /// Raw ranges, paired with optional context for content at that range.
-pub type RangesWithContext<'viewee> = HashMap<Range<usize>, Option<ScopeContext<'viewee>>>;
+pub type RangesWithContext<'viewee> = Vec<(Range<usize>, Option<ScopeContext<'viewee>>)>;
 
 /// Converts, leaving unknown values [`Default`].
 ///
@@ -76,12 +96,14 @@ impl<'viewee> ROScopes<'viewee> {
 
         let mut last_end = 0;
         for (Range { start, end }, context) in ranges.into_iter().sorted_by_key(|(r, _)| r.start) {
-            let out = &input[last_end..start];
+            let range = last_end..start;
+            let out = &input[range.clone()];
             if !out.is_empty() {
                 scopes.push(ROScope(Out(out)));
             }
 
-            let r#in = &input[start..end];
+            let range = start..end;
+            let r#in = &input[range.clone()];
             if !r#in.is_empty() {
                 scopes.push(ROScope(In(r#in, context)));
             }
@@ -89,7 +111,8 @@ impl<'viewee> ROScopes<'viewee> {
             last_end = end;
         }
 
-        let tail = &input[last_end..];
+        let range = last_end..input.len();
+        let tail = &input[range.clone()];
         if !tail.is_empty() {
             scopes.push(ROScope(Out(tail)));
         }
@@ -107,7 +130,7 @@ impl<'viewee> ROScopes<'viewee> {
             .0
             .into_iter()
             .map(|s| match s {
-                ROScope(In(s, _)) => ROScope(Out(s)),
+                ROScope(In(s, ..)) => ROScope(Out(s)),
                 ROScope(Out(s)) => ROScope(In(s, None)),
             })
             .collect();
@@ -158,7 +181,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
         match s.0 {
-            In(s, _) | Out(s) => s,
+            In(s, ..) | Out(s) => s,
         }
     }
 }
@@ -166,7 +189,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
 impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
     fn from(s: ROScope<'viewee>) -> Self {
         match s.0 {
-            In(s, names) => RWScope(In(Cow::Borrowed(s), names)),
+            In(s, ctx) => RWScope(In(Cow::Borrowed(s), ctx)),
             Out(s) => RWScope(Out(s)),
         }
     }
@@ -178,7 +201,7 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {
         match &s.0 {
-            In(s, _) => s,
+            In(s, ..) => s,
             Out(s) => s,
         }
     }

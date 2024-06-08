@@ -18,8 +18,15 @@ setup() {
 }
 
 bench() {
-    # https://www.kernel.org/doc/Documentation/sysctl/vm.txt:
-    local wipe_caches='sync; echo 3 | sudo tee /proc/sys/vm/drop_caches'
+    local wipe_caches
+    if [[ "$OSTYPE" =~ ^linux-gnu ]]; then
+        wipe_caches="sync; echo 3 | sudo tee /proc/sys/vm/drop_caches"
+    elif [[ "$OSTYPE" =~ ^darwin ]]; then
+        wipe_caches="sync; sudo purge"
+    else
+        echo "OS not supported: $OSTYPE"
+        exit 1
+    fi
 
     (
         cd benches
@@ -44,7 +51,8 @@ bench() {
                 --parameter-list repo "$repos" \
                 --parameter-list find "e+,[Tt]he" \
                 --parameter-list replace "_,🙂" \
-                "./srgn --fail-empty-glob --$lang $query_type --files '{repo}/**/*.$file_suffix' '{find}' '{replace}'"
+                --show-output \
+                "./srgn -vv --gitignored --fail-empty-glob --$lang $query_type --files '{repo}/**/*.$file_suffix' '{find}' '{replace}'"
         done
     )
 }

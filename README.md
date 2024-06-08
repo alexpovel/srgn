@@ -1,23 +1,136 @@
 # srgn - a code surgeon
 
-A code **s**u**rg**eo**n** for precise text and code transplantation.
+A code **s**u**rg**eo**n** for searching and manipulating text and source code with
+**enhanced precision**.
 
-Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds useful
-[*actions*](#actions), acting within precise, optionally language grammar-aware
-[*scopes*](#scopes). It suits use cases where...
+`srgn` is organized around actions to take (if any), acting only within precise,
+optionally language grammar-aware scopes.
 
-- regex [doesn't cut
-  it](https://en.wikipedia.org/wiki/Pumping_lemma_for_regular_languages) anymore,
-- editor tools such as *Rename all* are too specific, and not automatable,
-- precise manipulation, not just matching, is required, and lastly and optionally,
-- Unicode-specific trickery is desired.
+## Quick walkthrough
 
-## Usage
+> [!TIP]
+>
+> All code snippets displayed here are [verified as part of unit tests](tests/readme.rs)
+> using the actual `srgn` binary. What is showcased here is guaranteed to work.
 
-For an "end-to-end" example, consider this Python snippet ([more languages are
-supported](#prepared-queries-sample-showcases)):
+The simplest form works [similar to `tr`](#comparison-with-tr):
 
-```python gnu.py
+```bash
+$ echo 'Hello World!' | srgn '[wW]orld' 'there'
+Hello there!
+```
+
+Matches for the regular expression pattern `'[wW]orld'` (the *scope*) are replaced (the
+*action*) by the second positional argument. Zero or more actions can be specified:
+
+```bash
+$ echo 'Hello World!' | srgn '[wW]orld' # zero actions: input returned unchanged
+Hello World!
+$ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions
+Hello YOU!
+```
+
+### Multiple scopes
+
+Similarly, more than one scope can be specified: in addition to the regex pattern, a
+[**language grammar-aware**]((https://tree-sitter.github.io/tree-sitter/)) scope can be
+given, which scopes to **syntactical elements of source code** (think, for example, "all
+bodies of `class` definitions in Python"). If both are given, the regular expression
+pattern is then **only applied *within* that first scope**. This enables search and
+manipulation at precision not normally possible using plain regular expressions, and
+serving a dimension different from tools such as *Rename all* in IDEs.
+
+For example, consider this (pointless) Python source file:
+
+```python file=birds.py
+"""Module for watching birds and their age."""
+
+from dataclasses import dataclass
+
+
+@dataclass
+class Bird:
+    name: str
+    age: int
+
+    def celebrate_birthday(self):
+        print("🎉")
+        self.age += 1
+
+    @classmethod
+    def from_egg(egg):
+        """Create a bird from an egg."""
+        pass
+
+
+def register_bird(bird: Bird, db: Db) -> None:
+    assert bird.age >= 0
+    with db.tx() as tx:
+        tx.insert(bird)
+```
+
+which can be searched using:
+
+```console
+$ cat birds.py | srgn --python 'class' 'age'
+9:    age: int
+13:        self.age += 1
+
+```
+
+The string `age` was sought and found *only* within Python `class` definitions (and not,
+for example, in function bodies such as `register_bird`). By default, this 'search mode'
+also prints line numbers. **Search mode is entered if no actions are specified**, and a
+language such as `--python` is given[^3]—think of it like
+'[ripgrep](https://github.com/BurntSushi/ripgrep) but with syntactical language
+elements'.
+
+Searching can also be performed [across
+lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for example to
+find methods (aka *`def` within `class`*) lacking docstrings:
+
+```console
+$ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
+11:    def celebrate_birthday(self):
+12:        print("🎉")
+
+```
+
+Note how this does not surface either `from_egg` (has a docstring) or `register_bird`
+(not a method, *`def` outside `class`*).
+
+#### Working recursively
+
+If standard input is not given, `srgn` knows how to find relevant source files
+automatically, for example in this repository:
+
+```console
+$ srgn --python 'class' 'age'
+docs/samples/birds
+11:    age: int
+15:        self.age += 1
+
+docs/samples/birds.py
+9:    age: int
+13:        self.age += 1
+
+
+```
+
+It recursively walks its current directory, finding files based on [file
+extensions](docs/samples/birds.py) and [shebang lines](docs/samples/birds), processing
+at very high speed. For example, `srgn --go strings '\d+'` finds and prints all ~140,000
+runs of digits in literal Go strings inside the [Kubernetes
+codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
+of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more, see
+[below](#run-against-multiple-files).
+
+### Combining actions and scopes
+
+Scopes and actions can be combined almost arbitrarily. For example, consider this Python
+snippet (more languages are [supported](#prepared-queries-sample-showcases)):
+
+```python file=gnu.py
 """GNU module."""
 
 def GNU_says_moo():
@@ -30,19 +143,20 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
-which with an invocation of
+An invocation of
 
 ```bash
-cat gnu.py | srgn --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix' | srgn --symbols
+cat gnu.py | srgn --upper --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix'
 ```
 
-can be manipulated to read
+makes use of multiple scopes (language and regex pattern) and multiple actions
+(replacement and uppercasing). The result then reads
 
-```python output-gnu.py
-"""GNU 🐂 is not Unix module."""
+```python file=output-gnu.py
+"""GNU 🐂 IS NOT UNIX module."""
 
 def GNU_says_moo():
-    """The GNU → say moo → ✅"""
+    """The GNU -> say moo -> ✅"""
 
     GNU = """
       GNU
@@ -55,39 +169,22 @@ where the changes are limited to:
 
 ```diff
 - """GNU module."""
-+ """GNU 🐂 is not Unix module."""
++ """GNU 🐂 IS NOT UNIX module."""
 
-  def GNU_says_moo():
--     """The GNU -> say moo -> ✅"""
-+     """The GNU → say moo → ✅"""
-
-      GNU = """
-        GNU
-      """  # the GNU...
-
-      print(GNU + " says moo")  # ...says moo
+def GNU_says_moo():
+    """The GNU -> say moo -> ✅"""
 ```
 
-which demonstrates:
+which additionally demonstrates fully Unicode-capable operation, and advanced regex
+features ([negative
+lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax)).
 
-- language grammar-aware operation: only Python docstrings were manipulated; virtually
-  impossible to replicate in just regex
-
-  Skip ahead to **[more such showcases](#prepared-queries-sample-showcases) below**.
-- advanced regex features such as, in this case, negative lookbehind are supported
-- Unicode is natively handled
-- features such as [ASCII symbol replacement](#symbols) are provided
-
-Hence the concept of surgical operation: `srgn` allows you to be quite precise about the
-scope of your actions, *combining* the power of both [regular
-expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
-[parsers](https://tree-sitter.github.io/tree-sitter/).
-
-> [!NOTE]
+> [!WARNING]
 >
-> Without exception, all `bash` and `console` code snippets in this README are
-> automatically [tested](tests/readme.rs) using the actual program binary, facilitated
-> by a tiny bash interpreter. What is showcased here is guaranteed to work.
+> While `srgn` is in beta (major version 0), make sure to only (recursively) process
+> files you can safely [restore](https://git-scm.com/docs/git-restore).
+>
+> Search mode does not overwrite files, so is always safe.
 
 ## Installation
 
@@ -586,7 +683,7 @@ This section shows examples for some of the **prepared queries**.
 As part of a large refactor (say, after an acquisition), imagine all imports of a
 specific package needed renaming:
 
-```python imports.py
+```python file=imports.py
 import math
 from pathlib import Path
 
@@ -608,7 +705,7 @@ cat imports.py | srgn --python 'imports' '^good_company' 'src.better_company'
 
 which will yield
 
-```python output-imports.py
+```python file=output-imports.py
 import math
 from pathlib import Path
 
@@ -626,7 +723,7 @@ many files, see [the `files` option](#run-against-multiple-files).
 Similar import-related edits are supported for other languages as well, for example
 Rust:
 
-```rust imports.rs
+```rust file=imports.rs
 use std::collections::HashMap;
 
 use good_company::infra;
@@ -645,7 +742,7 @@ cat imports.rs | srgn --rust 'uses' '^good_company' 'better_company'
 
 becomes
 
-```rust output-imports.rs
+```rust file=output-imports.rs
 use std::collections::HashMap;
 
 use better_company::infra;
@@ -660,7 +757,7 @@ good_company = "good_company";  // good_company
 
 Perhaps you're using a system of `TODO` notes in comments:
 
-```typescript todo.ts
+```typescript file=todo.ts
 class TODOApp {
     // TODO app for writing TODO lists
     addTodo(todo: TODO): void {
@@ -678,7 +775,7 @@ cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
 
 which in this case gives
 
-```typescript output-todo.ts
+```typescript file=output-todo.ts
 class TODOApp {
     // TODO app for writing TODO lists
     addTodo(todo: TODO): void {
@@ -695,7 +792,7 @@ mentioned around the comments would be matched as well.
 
 Say there's code making liberal use of `print`:
 
-```python money.py
+```python file=money.py
 def print_money():
     """Let's print money 💸."""
 
@@ -718,7 +815,7 @@ cat money.py | srgn --python 'function-calls' '^print$' 'logging.info'
 
 yielding
 
-```python output-money.py
+```python file=output-money.py
 def print_money():
     """Let's print money 💸."""
 
@@ -744,7 +841,7 @@ logging.info("Done.")
 Overdone, comments can turn into [smells](https://refactoring.guru/smells/comments). If
 not tended to, they might very well start lying:
 
-```csharp UserService.cs
+```csharp file=UserService.cs
 using System.Linq;
 
 public class UserService
@@ -792,7 +889,7 @@ cat UserService.cs | srgn --csharp 'comments' -d '.*' | srgn -d '[[:blank:]]+\n'
 
 The result is a tidy, yet taciturn:
 
-```csharp output-UserService.cs
+```csharp file=output-UserService.cs
 using System.Linq;
 
 public class UserService
@@ -835,7 +932,7 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 
 Say you'd like to upgrade the instance size you're using:
 
-```hcl ec2.tf
+```hcl file=ec2.tf
 data "aws_ec2_instance_type" "tiny" {
   instance_type = "t2.micro"
 }
@@ -854,7 +951,7 @@ cat ec2.tf | srgn --hcl 'strings' '^"t2\.(\w+)"$' '"t3.$1"' | srgn --hcl 'data-n
 
 will give
 
-```hcl output-ec2.tf
+```hcl file=output-ec2.tf
 data "aws_ec2_instance_type" "small" {
   instance_type = "t3.micro"
 }
@@ -872,7 +969,7 @@ Note the quotes for `"t2...` and `"t3`.
 Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to
 create small, ad-hoc, tailor-made linters, for example to catch code such as:
 
-```python cond.py
+```python file=cond.py
 if x:
     return left
 else:
@@ -889,7 +986,7 @@ to hint that the code can be more idiomatically rewritten as `return left if x e
 right`. Another example, this one in Go, is ensuring sensitive fields are not
 serialized:
 
-```go sensitive.go
+```go file=sensitive.go
 package main
 
 type User struct {
@@ -910,7 +1007,7 @@ Occassionally, parts of a match need to be ignored, for example when no suitable
 tree-sitter node type is available. For example, say we'd like to replace the `error`
 with `wrong` inside the string of the macro body:
 
-```rust wrong.rs
+```rust file=wrong.rs
 fn wrong() {
     let wrong = "wrong";
     error!("This went error");
@@ -928,7 +1025,7 @@ would need to be matched, with the name part ignored. Any capture name starting 
 cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
 ```
 
-```rust output-wrong.rs
+```rust file=output-wrong.rs
 fn wrong() {
     let wrong = "wrong";
     error!("This went wrong");
@@ -964,10 +1061,29 @@ with your own queries:
 Use the `--files` option to run against multiple files, in-place. This option accepts a
 [glob pattern](https://docs.rs/glob/0.3.1/glob/struct.Pattern.html). The glob is
 processed *within `srgn`*: it must be quoted to prevent premature shell interpretation.
+The `--files` option takes precedence over the heuristics of language scoping. For
+example,
 
-`srgn` will process results [fully parallel](https://github.com/rayon-rs/rayon), using
-all available threads. For example, **[450k lines of Python](./benches/django/) are
-processed in about a second**, altering over 1000 lines across a couple hundred files:
+<!-- markdownlint-disable MD010 -->
+```console
+$ srgn --go 'comments' --files 'tests/langs/go/other/*.go' '\w+'
+tests/langs/go/other/fizzbuzz.go
+5:// fizzBuzz prints the numbers from 1 to a specified limit.
+6:// For multiples of 3, it prints "Fizz" instead of the number,
+7:// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,
+8:// it prints "FizzBuzz".
+25:	// Run the FizzBuzz function for numbers from 1 to 100
+
+
+```
+<!-- markdownlint-enable MD010 -->
+
+finds only what's matched by the (narrow) glob, even though `--go` queries by themselves
+would match much more.
+
+`srgn` will process results fully parallel, using all available threads. For example,
+**[450k lines of Python](./benches/django/) are processed in about a second**, altering
+over 1000 lines across a couple hundred files:
 
 ![hyperfine benchmarks for files option](./docs/images/files-benchmarks.png)
 
@@ -1000,7 +1116,7 @@ custom, ad-hoc linter.
 Take for example "old-style" Python code, where type hints are not yet [surfaced to the
 syntax-level](https://docs.python.org/3/library/typing.html):
 
-```python oldtyping.py
+```python file=oldtyping.py
 def square(a):
     """Squares a number.
 
@@ -1422,3 +1538,6 @@ A straightforward use case. Upper- and lowercase are often used.
     The original, core version of `srgn` was merely a Rust rewrite of [a previous,
     existing tool](https://github.com/alexpovel/betterletter), which was *only*
     concerned with the *German* feature. `srgn` then grew from there.
+[^3]: With zero actions and no language scoping provided, `srgn` becomes 'useless', and
+    other tools such as ripgrep are much more suitable. That's why an error is emitted
+    and input is returned unchanged.

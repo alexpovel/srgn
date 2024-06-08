@@ -1,0 +1,49 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.map(|s|\n            s.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec()),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--python"
+  - class
+  - "(?s)@classmethod\\n\\s+def from_ski_jumper"
+stdin:
+  - "def cycle__T__():\n"
+  - "    \"\"\"Test does not find:\n"
+  - "\n"
+  - "    ```python\n"
+  - "    @classmethod\n"
+  - "    def from_ski_jumper():\n"
+  - "        pass\n"
+  - "    ```\n"
+  - "    \"\"\"\n"
+  - "    pass\n"
+  - "\n"
+  - "\n"
+  - "class RoadCyclist:\n"
+  - "    \"\"\"Class to represent a road cyclist with various attributes and methods related to road cycling.\"\"\"\n"
+  - "\n"
+  - "    # Class attribute to keep track of all cyclists\n"
+  - "    total_cyclists: int = 0\n"
+  - "\n"
+  - "    def __init__(self, name: str, nationality: str, wins: int = 0):\n"
+  - "        self.name = name\n"
+  - "        self.nationality = nationality\n"
+  - "        self.wins = wins\n"
+  - "        RoadCyclist.total_cyclists += 1\n"
+  - "\n"
+  - "    def __str__(self) -> str:\n"
+  - "        return f\"{self.name} from {self.nationality}, Wins: {self.wins}\"\n"
+  - "\n"
+  - "    @classmethod\n"
+  - "    def from_ski_jumper():\n"
+  - "        pass\n"
+  - "\n"
+  - "\n"
+  - "if __name__ == \"__T____main__\":\n"
+  - "    pass\n"
+stdout:
+  - "28:    @classmethod\n"
+  - "29:    def from_ski_jumper():\n"
+exit_code: 0

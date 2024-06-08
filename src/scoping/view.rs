@@ -7,6 +7,7 @@ use crate::scoping::scope::{
     Scope::{In, Out},
 };
 use crate::scoping::Scoper;
+use itertools::Itertools;
 use log::{debug, trace, warn};
 use std::borrow::Cow;
 use std::fmt;
@@ -29,6 +30,12 @@ impl<'viewee> ScopedView<'viewee> {
     #[must_use]
     pub fn new(scopes: RWScopes<'viewee>) -> Self {
         Self { scopes }
+    }
+
+    /// Access the scopes contained in this view.
+    #[must_use]
+    pub fn scopes(&self) -> &RWScopes<'viewee> {
+        &self.scopes
     }
 
     /// Return a builder for a view of the given input.
@@ -72,9 +79,9 @@ impl<'viewee> ScopedView<'viewee> {
     ) -> Result<&mut Self, ActionError> {
         for scope in &mut self.scopes.0 {
             match scope {
-                RWScope(In(s, context)) => {
-                    debug!("Mapping with context: {:?}", context);
-                    let res = match (&context, use_context) {
+                RWScope(In(s, ctx)) => {
+                    debug!("Mapping with context: {:?}", ctx);
+                    let res = match (&ctx, use_context) {
                         (Some(c), true) => action.act_with_context(s, c)?,
                         _ => action.act(s),
                     };
@@ -83,7 +90,7 @@ impl<'viewee> ScopedView<'viewee> {
                         s.escape_debug(),
                         res.escape_debug()
                     );
-                    *scope = RWScope(In(Cow::Owned(res), context.clone()));
+                    *scope = RWScope(In(Cow::Owned(res), ctx.clone()));
                 }
                 RWScope(Out(s)) => {
                     debug!("Appending '{}'", s.escape_debug());
@@ -100,8 +107,8 @@ impl<'viewee> ScopedView<'viewee> {
 
         let mut prev_was_in = false;
         self.scopes.0.retain(|scope| {
-            let keep = !(prev_was_in && matches!(scope, RWScope(In(_, _))));
-            prev_was_in = matches!(scope, RWScope(In(_, _)));
+            let keep = !(prev_was_in && matches!(scope, RWScope(In { .. })));
+            prev_was_in = matches!(scope, RWScope(In { .. }));
             trace!("keep: {}, scope: {:?}", keep, scope);
             keep
         });
@@ -115,9 +122,62 @@ impl<'viewee> ScopedView<'viewee> {
     #[must_use]
     pub fn has_any_in_scope(&self) -> bool {
         self.scopes.0.iter().any(|s| match s {
-            RWScope(In(_, _)) => true,
-            RWScope(Out(_)) => false,
+            RWScope(In { .. }) => true,
+            RWScope(Out { .. }) => false,
         })
+    }
+
+    /// Split this item at newlines, into multiple [`ScopedView`]s.
+    ///
+    /// Scopes are retained, and broken across lines as needed.
+    #[must_use]
+    pub fn lines(&self) -> ScopedViewLines {
+        let mut lines = Vec::new();
+        let mut curr = Vec::new();
+
+        for parent_scope in &self.scopes.0 {
+            let s: &str = parent_scope.into();
+
+            for potential_line in s.split_inclusive('\n') {
+                // Is it supposed to be in or out of scope?
+                let child_scope = match &parent_scope.0 {
+                    In(_, ctx) => In(Cow::Borrowed(potential_line), ctx.clone()),
+                    Out(_) => Out(potential_line),
+                };
+
+                // String might not have *any* newlines, so this isn't redundant
+                let seen_newline = potential_line.ends_with('\n');
+
+                curr.push(RWScope(child_scope));
+
+                if seen_newline {
+                    // Flush out
+                    lines.push(RWScopes(curr));
+                    curr = Vec::new();
+                }
+            }
+        }
+
+        if !curr.is_empty() {
+            // Tail that wasn't flushed yet
+            lines.push(RWScopes(curr));
+        }
+
+        ScopedViewLines(lines.into_iter().map(ScopedView::new).collect_vec())
+    }
+}
+
+/// A view over a [`ScopedView`], split by its individual lines. Each line is its own
+/// [`ScopedView`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScopedViewLines<'viewee>(Vec<ScopedView<'viewee>>);
+
+impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
+    type Item = ScopedView<'viewee>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -255,7 +315,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// See [`DosFix`].
     fn apply_dos_line_endings_fix(&mut self) {
         if self.scopes.0.windows(2).any(|window| match window {
-            [ROScope(In(left, _)), ROScope(Out(right))] => {
+            [ROScope(In(left, ..)), ROScope(Out(right))] => {
                 left.ends_with('\r') && right.starts_with('\n')
             }
             _ => false,
@@ -300,7 +360,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
             }
 
             match scope {
-                ROScope(In(s, _)) => {
+                ROScope(In(s, ..)) => {
                     let mut new_scopes = scoper.scope(s);
                     new_scopes.0.retain(|s| !s.is_empty());
                     new.extend(new_scopes.0);
@@ -346,8 +406,12 @@ impl<'viewee> IntoIterator for ScopedViewBuilder<'viewee> {
 
 #[cfg(test)]
 mod tests {
+    use super::ScopedView;
+    use crate::scoping::scope::RWScopes;
+    use crate::scoping::scope::Scope::{self, In, Out};
     use crate::scoping::view::ScopedViewBuilder;
     use crate::RegexPattern;
+    use itertools::Itertools;
     use rstest::rstest;
 
     #[rstest]
@@ -434,10 +498,10 @@ mod tests {
     //
     #[case("Anything whatsoever gets rEkT", r".", "A")]
     #[case(
-    "Anything whatsoever gets rEkT",
-    r".*", // Greediness inverted
-    "Anything whatsoever gets rEkT"
-)]
+        "Anything whatsoever gets rEkT",
+        r".*", // Greediness inverted
+        "Anything whatsoever gets rEkT"
+    )]
     //
     // Deals with Unicode shenanigans
     #[case("😎😎", r"😎", "😎")]
@@ -465,5 +529,162 @@ mod tests {
         let result = view.to_string();
 
         assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    #[case(
+        // New newline at all: still works
+        vec![
+            In("Hello", None),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+            ],
+        ],
+    )]
+    #[case(
+        // Single newline is fine
+        vec![
+            In("Hello\n", None),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+        ],
+    )]
+    #[case(
+        // Single scope is broken up across lines properly (multiple lines in single
+        // scope)
+        vec![
+            In("Hello\nWorld", None),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+            vec![
+                In("World", None),
+            ],
+        ],
+    )]
+    #[case(
+        // Single line across multiple scopes
+        vec![
+            In("Hello", None),
+            Out("World"),
+            In("!!\n", None),
+            Out(" Goodbye"),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+                Out("World"),
+                In("!!\n", None),
+            ],
+            vec![
+                Out(" Goodbye"),
+            ],
+        ],
+    )]
+    #[case(
+        // Mixed scopes & trailing newline works
+        vec![
+            In("Hello\n", None),
+            Out("World"),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+            vec![
+                Out("World"),
+            ],
+        ],
+    )]
+    #[case(
+        // Mixed scopes & leading newline works
+        vec![
+            In("Hello", None),
+            Out("\nWorld"),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+                Out("\n"),
+            ],
+            vec![
+                Out("World"),
+            ],
+        ],
+    )]
+    #[case(
+        // Empty lines & empty scopes works
+        vec![
+            In("\n", None),
+            Out("\n"),
+            Out(""),
+            In("World\n", None),
+            Out(""),
+        ],
+        vec![
+            vec![
+                In("\n", None),
+            ],
+            vec![
+                Out("\n"),
+            ],
+            vec![
+                #[cfg(never)]Out(""), // Dropped!
+                In("World\n", None),
+            ],
+            #[cfg(never)] // Dropped!
+            vec![
+                Out(""),
+            ],
+        ],
+    )]
+    fn test_lines(#[case] input: Vec<Scope<&str>>, #[case] expected: Vec<Vec<Scope<&str>>>) {
+        let view = ScopedView {
+            scopes: input.into(),
+        };
+        let result = view.lines().into_iter().collect_vec();
+        let expected = expected
+            .into_iter()
+            .map(RWScopes::from)
+            .map(ScopedView::new)
+            .collect_vec();
+
+        assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    #[case(
+        "hello",
+        &["hello"] // aka: it loops at least once!
+    )]
+    #[case(
+        "hello\n",
+        &["hello\n"]
+    )]
+    #[case(
+        "hello\nworld",
+        &["hello\n", "world"]
+    )]
+    #[case(
+        "hello\nworld\n",
+        &["hello\n", "world\n"]
+    )]
+    #[case(
+        "",
+        &[] // ⚠️ no iteration happens; empty string is dropped
+    )]
+    fn test_split_inclusive(#[case] input: &str, #[case] expected: &[&str]) {
+        // This is not a useful unit test; it's just encoding and confirming the
+        // behavior of `split_inclusive`, to convince myself.
+        for (si, exp) in input.split_inclusive('\n').zip_eq(expected) {
+            assert_eq!(si, *exp);
+        }
     }
 }

@@ -1,0 +1,16 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--delete"
+  - "\\p{Emoji_Presentation}"
+stdin:
+  - "Some text \u0010 :) :-) and emojis 🤩!\n"
+  - "More: 👽"
+stdout:
+  - "Some text \u0010 :) :-) and emojis !\n"
+  - "More: "
+exit_code: 0

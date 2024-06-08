@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'srgn' using 'German'",
+            "name": "Debug executable 'srgn'",
             "cargo": {
                 "args": [
                     "build",
@@ -20,11 +20,10 @@
                 }
             },
             "args": [
-                "german"
-            ],
-            "stdio": [
-                ".vscode/debug-input.txt",
-                null
+                "--python",
+                "comments",
+                "--files",
+                "**/strings.py"
             ],
             "cwd": "${workspaceFolder}",
         },

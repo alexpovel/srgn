@@ -1,16 +1,26 @@
+use anyhow::anyhow;
 use anyhow::{Context, Result};
-use log::{debug, error, info, warn, LevelFilter};
-use rayon::prelude::*;
+use colored::Color;
+use colored::Colorize;
+use colored::Styles;
+use ignore::WalkBuilder;
+use ignore::WalkState;
+use log::error;
+use log::trace;
+use log::{debug, info, LevelFilter};
+use pathdiff::diff_paths;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
 use srgn::actions::Lower;
 use srgn::actions::Normalization;
 use srgn::actions::Replacement;
+use srgn::actions::Style;
 use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
 use srgn::{
@@ -30,15 +40,19 @@ use srgn::{
         Scoper,
     },
 };
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::{
+    env,
     error::Error,
     fmt,
     fs::File,
-    io::{self, IoSlice, Write},
+    io::{self, stdout, Write},
 };
 
 fn main() -> Result<()> {
-    let args = cli::Cli::init();
+    let mut args = cli::Cli::init();
 
     let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
     env_logger::Builder::new()
@@ -57,111 +71,414 @@ fn main() -> Result<()> {
     info!("Launching app with args: {:?}", args);
 
     debug!("Assembling scopers.");
-    let scopers = assemble_scopers(&args)?;
+    let (language_scoper, language_scoper_as_scoper) = get_language_scoper(&args).unzip();
+    let general_scoper = get_general_scoper(&args)?;
+    let all_scopers = if let Some(ls) = language_scoper_as_scoper {
+        vec![ls, general_scoper]
+    } else {
+        vec![general_scoper]
+    };
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
-    let actions = assemble_actions(&args)?;
+    let mut actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
-    match &args.options.files {
-        Some(pattern) => {
-            info!("Will use glob pattern: {:?}", pattern);
+    // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
+    // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
+    // setting it apart from other utilities.
+    let search_mode = actions.is_empty() && language_scoper.is_some();
 
-            let paths = glob::glob(pattern.as_str())
-                .expect("Pattern is valid, as it's been compiled")
-                .par_bridge()
-                .map(|glob| {
-                    let path = glob.context("Failed to glob")?;
-                    debug!("Processing path: {:?}", path);
+    let is_readable_stdin = grep_cli::is_readable_stdin();
+    info!("Detected stdin as readable: {is_readable_stdin}.");
 
-                    if !path.is_file() {
-                        warn!(
-                            "Path does not look like a file (will still try): '{}' (Metadata: {:?})",
-                            path.display(),
-                            path.metadata()
-                        );
-                    }
-
-                    let contents = {
-                        let file = File::open(&path)
-                            .with_context(|| format!("Failed to read file: {:?}", path))?;
-
-                        let mut source = std::io::BufReader::new(file);
-                        let mut destination = std::io::Cursor::new(Vec::new());
-
-                        apply(
-                            &mut source,
-                            &mut destination,
-                            &scopers,
-                            &actions,
-                            args.options.fail_none,
-                            args.options.fail_any,
-                            args.standalone_actions.squeeze,
-                        )
-                        .with_context(|| format!("Failed to process file contents: {:?}", path))?;
-
-                        destination.into_inner()
-                    };
-
-                    debug!("Got new file contents, writing to file: {:?}", path);
-                    let mut file = File::create(&path)
-                        .with_context(|| format!("Failed to truncate file: {:?}", path))?;
-                    file.write_all(&contents)
-                        .with_context(|| format!("Failed to write to file: {:?}", path))?;
-                    debug!("Done processing file: {:?}", path);
-
-                    {
-                        let path_repr = path.display().to_string();
-                        let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
-
-                        std::io::stdout()
-                            .lock()
-                            .write_vectored(slices)
-                            .context("Failed writing processed file's name to stdout")?;
-                    }
-
-                    Ok(path)
-                })
-                .collect::<Result<Vec<_>>>()
-                .context("Failure in processing of files")?;
-
-            if args.options.fail_empty_glob && paths.is_empty() {
-                return Err(ApplicationError::EmptyGlob(pattern.clone()))
-                    .context("No files processed");
-            }
+    // See where we're reading from
+    let input = match (
+        args.options.stdin_override_to.unwrap_or(is_readable_stdin),
+        args.options.files.clone(),
+        language_scoper,
+    ) {
+        // stdin considered viable: always use it.
+        (true, None, _) => Input::Stdin,
+        (true, Some(..), _) => {
+            // Usage error... warn loudly, the user is likely interested.
+            error!("Detected stdin, and request for files: will use stdin and ignore files.");
+            Input::Stdin
         }
-        None => {
-            info!("Will use stdin to stdout");
-            let mut source = std::io::stdin().lock();
-            let mut destination = std::io::stdout().lock();
 
-            apply(
-                &mut source,
-                &mut destination,
-                &scopers,
-                &actions,
-                args.options.fail_none,
-                args.options.fail_any,
-                args.standalone_actions.squeeze,
-            )
-            .context("Failed to process stdin")?;
-        }
+        // When a pattern is specified, it takes precedence.
+        (false, Some(pattern), _) => Input::WalkOn(Box::new(move |path| {
+            let res = pattern.matches_path(path);
+            trace!("Path '{}' matches: {}.", path.display(), res);
+            res
+        })),
+
+        // If pattern wasn't manually overridden, consult the language scoper itself, if
+        // any.
+        (false, None, Some(language_scoper)) => Input::WalkOn(Box::new(move |path| {
+            let res = language_scoper.is_valid_path(path);
+            trace!(
+                "Language scoper considers path '{}' valid: {}",
+                path.display(),
+                res
+            );
+            res
+        })),
+
+        // Nothing explicitly available: this should open an interactive stdin prompt.
+        (false, None, None) => Input::Stdin,
+    };
+
+    if search_mode {
+        info!("Will use search mode."); // Modelled after ripgrep!
+
+        let style = Style {
+            fg: Some(Color::Red),
+            styles: vec![Styles::Bold],
+            ..Default::default()
+        };
+        actions.push(Box::new(style));
+
+        args.options.only_matching = true;
+        args.options.line_numbers = true;
     }
+
+    if actions.is_empty() && !search_mode {
+        // Also kind of an error users will likely want to know about.
+        error!("No actions specified, and not in search mode. Will return input unchanged, if any.")
+    }
+
+    // Now write out
+    match (input, args.options.sorted) {
+        (Input::Stdin, _ /* no effect */) => {
+            info!("Will read from stdin and write to stdout, applying actions.");
+            handle_actions_on_stdin(&all_scopers, &actions, &args)?;
+        }
+        (Input::WalkOn(validator), false) => {
+            info!("Will walk file tree, applying actions.");
+            handle_actions_on_many_files_threaded(
+                validator,
+                &all_scopers,
+                &actions,
+                &args,
+                search_mode,
+                args.options
+                    .threads
+                    .map(|n| n.get())
+                    .unwrap_or(std::thread::available_parallelism().map_or(1, |n| n.get())),
+            )?
+        }
+        (Input::WalkOn(validator), true) => {
+            info!("Will walk file tree, applying actions.");
+            handle_actions_on_many_files_sorted(
+                validator,
+                &all_scopers,
+                &actions,
+                &args,
+                search_mode,
+            )?
+        }
+    };
 
     info!("Done, exiting");
     Ok(())
 }
 
+/// Indicates whether a filesystem path is valid according to some criteria (glob
+/// pattern, ...).
+type Validator = Box<dyn Fn(&std::path::Path) -> bool + Send + Sync>;
+
+/// The input to read from.
+enum Input {
+    /// Standard input.
+    Stdin,
+    /// Use a recursive directory walker, and apply the contained validator, which
+    /// indicates valid filesystem entries. This is similar to globbing, but more
+    /// flexible.
+    WalkOn(Validator),
+}
+
+/// Main entrypoint for simple `stdin` -> `stdout` processing.
+fn handle_actions_on_stdin(
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+) -> Result<(), anyhow::Error> {
+    info!("Will use stdin to stdout.");
+    let mut source = std::io::stdin().lock();
+    let mut destination = String::new();
+
+    apply(
+        &mut source,
+        &mut destination,
+        scopers,
+        actions,
+        args.options.fail_none,
+        args.options.fail_any,
+        args.standalone_actions.squeeze,
+        args.options.only_matching,
+        args.options.line_numbers,
+    )
+    .context("Failed to process stdin")?;
+
+    std::io::stdout().lock().write_all(destination.as_bytes())?;
+
+    Ok(())
+}
+
+/// Main entrypoint for processing using strictly sequential, *single-threaded*
+/// processing.
+///
+/// If it's good enough for [ripgrep], it's good enough for us :-). Main benefit it full
+/// control of output for testing anyway.
+///
+/// [ripgrep]:
+///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
+fn handle_actions_on_many_files_sorted(
+    validator: Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+    search_mode: bool,
+) -> Result<(), anyhow::Error> {
+    let root = env::current_dir()?;
+    info!(
+        "Will walk file tree sequentially, in sorted order, starting from: {:?}",
+        root.canonicalize()
+    );
+
+    let mut n: usize = 0;
+    for entry in WalkBuilder::new(&root)
+        .hidden(!args.options.hidden)
+        .git_ignore(!args.options.gitignored)
+        .sort_by_file_path(|a, b| a.cmp(b))
+        .build()
+    {
+        match entry {
+            Ok(entry) => {
+                let path = entry.path();
+                match process_path(path, &root, &validator, scopers, actions, args, search_mode) {
+                    Ok(()) => n += 1,
+                    Err(e) => {
+                        if search_mode {
+                            error!("Error walking at {}: {}", path.display(), e);
+                        } else {
+                            error!("Aborting walk at {} due to: {}", path.display(), e);
+                            return Err(anyhow!(
+                                "error processing files at {}, bailing early",
+                                path.display()
+                            )
+                            .context(e));
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                if search_mode {
+                    error!("Error walking: {}", e);
+                } else {
+                    error!("Aborting walk due to: {}", e);
+                    return Err(anyhow!("error processing files, bailing early").context(e));
+                }
+            }
+        }
+    }
+
+    info!("Processed {} files", n);
+
+    if args.options.fail_empty_glob && n == 0 {
+        Err(ApplicationError::NoFilesFound).context("No files processed")
+    } else {
+        Ok(())
+    }
+}
+
+/// Main entrypoint for processing using at least 1 thread.
+fn handle_actions_on_many_files_threaded(
+    validator: Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+    search_mode: bool,
+    n_threads: usize,
+) -> Result<(), anyhow::Error> {
+    let root = env::current_dir()?;
+    info!(
+        "Will walk file tree using {:?} thread(s), processing in arbitrary order, starting from: {:?}",
+        n_threads,
+        root.canonicalize()
+    );
+
+    let n_files = Arc::new(Mutex::new(0usize));
+    let err: Arc<Mutex<Option<anyhow::Error>>> = Arc::new(Mutex::new(None));
+
+    WalkBuilder::new(&root)
+        .threads(
+            // https://github.com/BurntSushi/ripgrep/issues/2854
+            n_threads,
+        )
+        .hidden(!args.options.hidden)
+        .git_ignore(!args.options.gitignored)
+        .build_parallel()
+        .run(|| {
+            Box::new(|entry| match entry {
+                Ok(entry) => {
+                    let path = entry.path();
+                    match process_path(path, &root, &validator, scopers, actions, args, search_mode)
+                    {
+                        Ok(()) => {
+                            *n_files.lock().unwrap() += 1;
+                            WalkState::Continue
+                        }
+                        Err(e) => {
+                            error!("Error walking at {} due to: {}", path.display(), e);
+
+                            if search_mode {
+                                WalkState::Continue
+                            } else {
+                                // Chances are something bad and/or unintended happened;
+                                // bail out to limit any potential damage.
+                                error!("Aborting walk for safety");
+                                *err.lock().unwrap() = Some(e);
+                                WalkState::Quit
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    if search_mode {
+                        error!("Error walking: {}", e);
+                        WalkState::Continue
+                    } else {
+                        error!("Aborting walk due to: {}", e);
+                        WalkState::Quit
+                    }
+                }
+            })
+        });
+
+    if let Some(e) = err.lock().unwrap().take() {
+        return Err(e);
+    }
+
+    let n = *n_files.lock().unwrap();
+    info!("Processed {} files", n);
+
+    if args.options.fail_empty_glob && n == 0 {
+        Err(ApplicationError::NoFilesFound).context("No files processed")
+    } else {
+        Ok(())
+    }
+}
+
+fn process_path(
+    path: &Path,
+    root: &Path,
+    validator: &Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+    search_mode: bool,
+) -> Result<()> {
+    if !path.is_file() {
+        trace!("Skipping path (not a file): {:?}", path);
+        return Ok(());
+    }
+
+    let path = diff_paths(path, root).expect("started walk at root, so relative to root works");
+
+    if !validator(&path) {
+        trace!("Skipping path (invalid): {:?}", path);
+        return Ok(());
+    }
+
+    debug!("Processing path: {:?}", path);
+
+    let (new_contents, filesize, changed) = {
+        let file = File::open(&path)?;
+
+        let filesize = file.metadata().map_or(0, |m| m.len() as usize);
+        let mut destination = String::with_capacity(filesize);
+        let mut source = std::io::BufReader::new(file);
+
+        let changed = apply(
+            &mut source,
+            &mut destination,
+            scopers,
+            actions,
+            args.options.fail_none,
+            args.options.fail_any,
+            args.standalone_actions.squeeze,
+            args.options.only_matching,
+            args.options.line_numbers,
+        )?;
+
+        (destination, filesize, changed)
+    };
+
+    // Hold the lock so results aren't intertwined
+    let mut stdout = stdout().lock();
+
+    if search_mode {
+        if !new_contents.is_empty() {
+            writeln!(
+                stdout,
+                "{}\n{}",
+                path.display().to_string().magenta(),
+                &new_contents
+            )?;
+        }
+    } else {
+        if filesize > 0 && new_contents.is_empty() {
+            error!(
+                    "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
+                    path.display(),
+                    filesize
+                );
+            return Err(anyhow!("attempt to wipe non-empty file (failsafe guard)"));
+        }
+
+        if changed {
+            writeln!(stdout, "{}", path.display())?;
+
+            debug!("Got new file contents, writing to file: {:?}", path);
+            let mut file = tempfile::Builder::new()
+                .prefix(env!("CARGO_PKG_NAME"))
+                .tempfile()?;
+            trace!("Writing to temporary file: {:?}", file.path());
+            file.write_all(new_contents.as_bytes())?;
+
+            // Atomically replace so SIGINT etc. do not leave dangling crap.
+            file.persist(&path)?;
+        } else {
+            debug!(
+                "Skipping writing file anew (nothing changed): {}",
+                path.display()
+            );
+        }
+
+        debug!("Done processing file: {:?}", path);
+    };
+
+    Ok(())
+}
+
+/// Runs the actual core processing, returning whether anything changed in the output
+/// compared to the input.
+#[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 fn apply(
     source: &mut impl io::BufRead,
-    destination: &mut impl io::Write,
-    scopers: &Vec<Box<dyn Scoper>>,
-    actions: &Vec<Box<dyn Action>>,
+    // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
+    // corresponding checks.
+    destination: &mut String,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
     fail_none: bool,
     fail_any: bool,
     squeeze: bool,
-) -> Result<()> {
+    only_matching: bool,
+    line_numbers: bool,
+) -> Result<bool> {
     // Streaming (e.g., line-based) wouldn't be too bad, and much more memory-efficient,
     // but language grammar-aware scoping needs entire files for context. Single lines
     // wouldn't do. There's no smart way of streaming that I can think of (where would
@@ -190,33 +507,43 @@ fn apply(
     };
 
     debug!("Applying actions to view.");
-    let result = {
-        if squeeze {
-            view.squeeze();
-        }
+    if squeeze {
+        view.squeeze();
+    }
 
-        for action in actions {
-            view.map_with_context(action)?;
-        }
-
-        view.to_string()
-    };
-    debug!("Done applying actions to view.");
+    for action in actions {
+        view.map_with_context(action)?;
+    }
 
     debug!("Writing to destination.");
-    destination
-        .write_all(result.as_bytes())
-        .context("Failed writing to destination")?;
+    let line_based = only_matching || line_numbers;
+    if line_based {
+        for (i, line) in view.lines().into_iter().enumerate() {
+            let i = i + 1;
+            if !only_matching || line.has_any_in_scope() {
+                if line_numbers {
+                    // `ColoredString` needs to be 'evaluated' to do anything; make sure
+                    // to not forget even if this is moved outside of `format!`.
+                    #[allow(clippy::to_string_in_format_args)]
+                    destination.push_str(&format!("{}:", i.to_string().green().to_string()));
+                }
+
+                destination.push_str(&line.to_string())
+            }
+        }
+    } else {
+        destination.push_str(&view.to_string());
+    };
     debug!("Done writing to destination.");
 
-    Ok(())
+    Ok(buf != *destination)
 }
 
 #[derive(Debug)]
 enum ApplicationError {
     SomeInScope,
     NoneInScope,
-    EmptyGlob(glob::Pattern),
+    NoFilesFound,
 }
 
 impl fmt::Display for ApplicationError {
@@ -227,7 +554,7 @@ impl fmt::Display for ApplicationError {
                 "Some input was in scope, and explicit failure requested."
             ),
             Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
-            Self::EmptyGlob(p) => write!(f, "No files matched glob pattern: {:?}", p),
+            Self::NoFilesFound => write!(f, "No files found"),
         }
     }
 }
@@ -265,92 +592,57 @@ impl fmt::Display for ScoperBuildError {
 
 impl Error for ScoperBuildError {}
 
-fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
-    let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
+fn get_language_scoper(args: &cli::Cli) -> Option<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> {
+    // We have `LanguageScoper: Scoper`, but we cannot upcast
+    // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
+    // by providing both.
+    let mut scopers: Vec<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> = Vec::new();
 
-    if let Some(csharp) = args.languages_scopes.csharp.clone() {
-        if let Some(prepared) = csharp.csharp {
-            let query = CSharpQuery::Prepared(prepared);
-
-            scopers.push(Box::new(CSharp::new(query)));
-        } else if let Some(custom) = csharp.csharp_query {
-            let query = CSharpQuery::Custom(custom);
-
-            scopers.push(Box::new(CSharp::new(query)));
-        }
+    macro_rules! handle_language_scope {
+        ($lang:ident, $lang_query:ident, $query_type:ident, $lang_type:ident) => {
+            if let Some(lang_scope) = &args.languages_scopes.$lang {
+                if let Some(prepared) = lang_scope.$lang {
+                    let query = $query_type::Prepared(prepared);
+                    scopers.push((
+                        Box::new($lang_type::new(query.clone())),
+                        Box::new($lang_type::new(query)),
+                    ));
+                } else if let Some(custom) = &lang_scope.$lang_query {
+                    let query = $query_type::Custom(custom.clone());
+                    scopers.push((
+                        Box::new($lang_type::new(query.clone())),
+                        Box::new($lang_type::new(query)),
+                    ));
+                } else {
+                    unreachable!("Language specified, but no scope.");
+                };
+            };
+        };
     }
 
-    if let Some(hcl) = args.languages_scopes.hcl.clone() {
-        if let Some(prepared) = hcl.hcl {
-            let query = HclQuery::Prepared(prepared);
+    handle_language_scope!(csharp, csharp_query, CSharpQuery, CSharp);
+    handle_language_scope!(hcl, hcl_query, HclQuery, Hcl);
+    handle_language_scope!(go, go_query, GoQuery, Go);
+    handle_language_scope!(python, python_query, PythonQuery, Python);
+    handle_language_scope!(rust, rust_query, RustQuery, Rust);
+    handle_language_scope!(typescript, typescript_query, TypeScriptQuery, TypeScript);
 
-            scopers.push(Box::new(Hcl::new(query)));
-        } else if let Some(custom) = hcl.hcl_query {
-            let query = HclQuery::Custom(custom);
+    // We could just `return` after the first found, but then we wouldn't know whether
+    // we had a bug. So collect, then assert we only found one max.
+    assert!(
+        scopers.len() <= 1,
+        "clap limits to single value (`multiple = false`)"
+    );
 
-            scopers.push(Box::new(Hcl::new(query)));
-        }
-    }
+    scopers.into_iter().next()
+}
 
-    if let Some(go) = args.languages_scopes.go.clone() {
-        if let Some(prepared) = go.go {
-            let query = GoQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Go::new(query)));
-        } else if let Some(custom) = go.go_query {
-            let query = GoQuery::Custom(custom);
-
-            scopers.push(Box::new(Go::new(query)));
-        }
-    }
-
-    if let Some(python) = args.languages_scopes.python.clone() {
-        if let Some(prepared) = python.python {
-            let query = PythonQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Python::new(query)));
-        } else if let Some(custom) = python.python_query {
-            let query = PythonQuery::Custom(custom);
-
-            scopers.push(Box::new(Python::new(query)));
-        }
-    }
-
-    if let Some(rust) = args.languages_scopes.rust.clone() {
-        if let Some(prepared) = rust.rust {
-            let query = RustQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Rust::new(query)));
-        } else if let Some(custom) = rust.rust_query {
-            let query = RustQuery::Custom(custom);
-
-            scopers.push(Box::new(Rust::new(query)));
-        }
-    }
-
-    if let Some(typescript) = args.languages_scopes.typescript.clone() {
-        if let Some(prepared) = typescript.typescript {
-            let query = TypeScriptQuery::Prepared(prepared);
-
-            scopers.push(Box::new(TypeScript::new(query)));
-        } else if let Some(custom) = typescript.typescript_query {
-            let query = TypeScriptQuery::Custom(custom);
-
-            scopers.push(Box::new(TypeScript::new(query)));
-        }
-    }
-
-    if args.options.literal_string {
-        scopers.push(Box::new(
-            Literal::try_from(args.scope.clone()).context("Failed building literal string")?,
-        ));
+fn get_general_scoper(args: &cli::Cli) -> Result<Box<dyn Scoper>> {
+    Ok(if args.options.literal_string {
+        Box::new(Literal::try_from(args.scope.clone()).context("Failed building literal string")?)
     } else {
-        scopers.push(Box::new(
-            Regex::try_from(args.scope.clone()).context("Failed building regex")?,
-        ));
-    }
-
-    Ok(scopers)
+        Box::new(Regex::try_from(args.scope.clone()).context("Failed building regex")?)
+    })
 }
 
 fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
@@ -409,11 +701,6 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
         debug!("Loaded action: Normalization");
     }
 
-    if actions.is_empty() && !(args.options.fail_any || args.options.fail_none) {
-        // Doesn't hurt, but warn loudly
-        error!("No actions loaded, will return input unchanged");
-    }
-
     Ok(actions)
 }
 
@@ -441,6 +728,8 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
+    use std::num::NonZero;
+
     use clap::{builder::ArgPredicate, ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
     use srgn::{
@@ -559,6 +848,38 @@ mod cli {
         /// The default is to return the input unchanged (without failure).
         #[arg(long, verbatim_doc_comment)]
         pub fail_none: bool,
+        /// Prepend line numbers to output.
+        #[arg(long, verbatim_doc_comment)]
+        pub line_numbers: bool,
+        /// Print only matching lines.
+        #[arg(long, verbatim_doc_comment)]
+        pub only_matching: bool,
+        /// Do not ignore hidden files and directories.
+        #[arg(long, verbatim_doc_comment)]
+        pub hidden: bool,
+        /// Do not ignore `.gitignore`d files and directories.
+        #[arg(long, verbatim_doc_comment)]
+        pub gitignored: bool,
+        /// Process files in lexicographically sorted order, by file path.
+        ///
+        /// In search mode, this emits results in sorted order. Otherwise, it processes
+        /// files in sorted order.
+        ///
+        /// Sorted processing *disables all parallelism*.
+        #[arg(long, verbatim_doc_comment)]
+        pub sorted: bool,
+        /// Override detection heuristics for stdin readability, and force to value.
+        ///
+        /// `true` will always attempt to read from stdin. `false` will never read from
+        /// stdin, even if provided.
+        #[arg(long, verbatim_doc_comment)]
+        pub stdin_override_to: Option<bool>,
+        /// Number of threads to run processing on, when working with files.
+        ///
+        /// If not specified, will default to available parallelism. Set to 1 for
+        /// sequential, deterministic (but not sorted) output.
+        #[arg(long, verbatim_doc_comment)]
+        pub threads: Option<NonZero<usize>>,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
@@ -782,78 +1103,73 @@ mod tests {
     use super::*;
     use env_logger::DEFAULT_FILTER_ENV;
     use log::LevelFilter;
-    use rstest::rstest;
-    use serial_test::serial;
     use std::env;
 
-    #[rstest]
-    #[case(None, 0, LevelFilter::Error)]
-    #[case(None, 1, LevelFilter::Warn)]
-    #[case(None, 2, LevelFilter::Info)]
-    #[case(None, 3, LevelFilter::Debug)]
-    #[case(None, 4, LevelFilter::Trace)]
-    #[case(None, 5, LevelFilter::Trace)]
-    #[case(None, 128, LevelFilter::Trace)]
-    //
-    #[case(Some("off"), 0, LevelFilter::Off)]
-    #[case(Some("off"), 1, LevelFilter::Error)]
-    #[case(Some("off"), 2, LevelFilter::Warn)]
-    #[case(Some("off"), 3, LevelFilter::Info)]
-    #[case(Some("off"), 4, LevelFilter::Debug)]
-    #[case(Some("off"), 5, LevelFilter::Trace)]
-    #[case(Some("off"), 6, LevelFilter::Trace)]
-    #[case(Some("off"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("error"), 0, LevelFilter::Error)]
-    #[case(Some("error"), 1, LevelFilter::Warn)]
-    #[case(Some("error"), 2, LevelFilter::Info)]
-    #[case(Some("error"), 3, LevelFilter::Debug)]
-    #[case(Some("error"), 4, LevelFilter::Trace)]
-    #[case(Some("error"), 5, LevelFilter::Trace)]
-    #[case(Some("error"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("warn"), 0, LevelFilter::Warn)]
-    #[case(Some("warn"), 1, LevelFilter::Info)]
-    #[case(Some("warn"), 2, LevelFilter::Debug)]
-    #[case(Some("warn"), 3, LevelFilter::Trace)]
-    #[case(Some("warn"), 4, LevelFilter::Trace)]
-    #[case(Some("warn"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("info"), 0, LevelFilter::Info)]
-    #[case(Some("info"), 1, LevelFilter::Debug)]
-    #[case(Some("info"), 2, LevelFilter::Trace)]
-    #[case(Some("info"), 3, LevelFilter::Trace)]
-    #[case(Some("info"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("debug"), 0, LevelFilter::Debug)]
-    #[case(Some("debug"), 1, LevelFilter::Trace)]
-    #[case(Some("debug"), 2, LevelFilter::Trace)]
-    #[case(Some("debug"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("trace"), 0, LevelFilter::Trace)]
-    #[case(Some("trace"), 1, LevelFilter::Trace)]
-    #[case(Some("trace"), 128, LevelFilter::Trace)]
-    //
-    #[serial] // This is multi-threaded, but env var access might not be thread-safe
-    fn test_level_filter_from_env_and_verbosity(
-        #[case] env_value: Option<&str>,
-        #[case] additional_verbosity: u8,
-        #[case] expected: LevelFilter,
-    ) {
-        if let Some(env_value) = env_value {
-            env::set_var(DEFAULT_FILTER_ENV, env_value);
-        } else {
-            // Might be set on parent and fork()ed down
-            env::remove_var(DEFAULT_FILTER_ENV);
-        }
+    /// This test has to run **sequentially**, as env variable access and manipulation
+    /// is *not* thread-safe.
+    ///
+    /// Therefore, we cannot use `rstest` table tests. There is `serial_test`, but it
+    /// has tons of async-only dependencies which we don't need here and cannot be
+    /// turned off via features.
+    #[test]
+    fn test_level_filter_from_env_and_verbosity() {
+        for (env_value, additional_verbosity, expected) in [
+            (None, 0, LevelFilter::Error),
+            (None, 1, LevelFilter::Warn),
+            (None, 2, LevelFilter::Info),
+            (None, 3, LevelFilter::Debug),
+            (None, 4, LevelFilter::Trace),
+            (None, 5, LevelFilter::Trace),
+            (None, 128, LevelFilter::Trace),
+            (Some("off"), 0, LevelFilter::Off),
+            (Some("off"), 1, LevelFilter::Error),
+            (Some("off"), 2, LevelFilter::Warn),
+            (Some("off"), 3, LevelFilter::Info),
+            (Some("off"), 4, LevelFilter::Debug),
+            (Some("off"), 5, LevelFilter::Trace),
+            (Some("off"), 6, LevelFilter::Trace),
+            (Some("off"), 128, LevelFilter::Trace),
+            (Some("error"), 0, LevelFilter::Error),
+            (Some("error"), 1, LevelFilter::Warn),
+            (Some("error"), 2, LevelFilter::Info),
+            (Some("error"), 3, LevelFilter::Debug),
+            (Some("error"), 4, LevelFilter::Trace),
+            (Some("error"), 5, LevelFilter::Trace),
+            (Some("error"), 128, LevelFilter::Trace),
+            (Some("warn"), 0, LevelFilter::Warn),
+            (Some("warn"), 1, LevelFilter::Info),
+            (Some("warn"), 2, LevelFilter::Debug),
+            (Some("warn"), 3, LevelFilter::Trace),
+            (Some("warn"), 4, LevelFilter::Trace),
+            (Some("warn"), 128, LevelFilter::Trace),
+            (Some("info"), 0, LevelFilter::Info),
+            (Some("info"), 1, LevelFilter::Debug),
+            (Some("info"), 2, LevelFilter::Trace),
+            (Some("info"), 3, LevelFilter::Trace),
+            (Some("info"), 128, LevelFilter::Trace),
+            (Some("debug"), 0, LevelFilter::Debug),
+            (Some("debug"), 1, LevelFilter::Trace),
+            (Some("debug"), 2, LevelFilter::Trace),
+            (Some("debug"), 128, LevelFilter::Trace),
+            (Some("trace"), 0, LevelFilter::Trace),
+            (Some("trace"), 1, LevelFilter::Trace),
+            (Some("trace"), 128, LevelFilter::Trace),
+        ] {
+            if let Some(env_value) = env_value {
+                env::set_var(DEFAULT_FILTER_ENV, env_value);
+            } else {
+                // Might be set on parent and fork()ed down
+                env::remove_var(DEFAULT_FILTER_ENV);
+            }
 
-        // Sanity check for sequential tests
-        let i_am_not_sure_if_this_test_really_runs_sequentially = false;
-        if i_am_not_sure_if_this_test_really_runs_sequentially {
-            std::thread::sleep(std::time::Duration::from_secs(2));
-        }
+            // Sanity check for sequential tests
+            let i_am_not_sure_if_this_test_really_runs_sequentially = false;
+            if i_am_not_sure_if_this_test_really_runs_sequentially {
+                std::thread::sleep(std::time::Duration::from_secs(2));
+            }
 
-        let result = level_filter_from_env_and_verbosity(additional_verbosity);
-        assert_eq!(result, expected);
+            let result = level_filter_from_env_and_verbosity(additional_verbosity);
+            assert_eq!(result, expected);
+        }
     }
 }

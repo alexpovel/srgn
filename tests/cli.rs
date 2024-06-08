@@ -10,16 +10,56 @@
 mod tests {
     use anyhow::Context;
     use assert_cmd::Command;
-    use core::panic;
+    use insta::with_settings;
+    use itertools::Itertools;
     use rstest::rstest;
     use serde::Serialize;
     use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
-    // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
-    // integration tests only with valid UTF8.
-    static SAMPLES: &[&str] = &[
-        r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
+    #[derive(Debug, Serialize)]
+    struct CommandSnap {
+        args: Vec<String>,
+        stdin: Option<Vec<String>>,
+        stdout: Vec<String>,
+        exit_code: u8,
+    }
+
+    #[derive(Debug, Serialize)]
+    struct CommandInfo {
+        stderr: String,
+    }
+
+    #[rstest]
+    #[case(
+        "baseline-replacement",
+        false,
+        &["A", "B"],
+        Some(r"A;  B 😫"),
+    )]
+    #[case(
+        "baseline-replacement-no-stdin",
+        false,
+        &["A", "B"],
+        None,
+    )]
+    #[case(
+        "baseline-regex-replacement",
+        false,
+        &[r"\W", "B"],
+        Some(r"A;  B 😫"),
+    )]
+    #[case(
+        "german-symbols",
+        false,
+        &["--german", "--symbols"],
+        Some(r"Duebel -> 1.5mm;  Wand != 3m²... UEBELTAETER! 😫"),
+    )]
+    #[case(
+        "german-text",
+        false,
+        &["--german"],
+        Some(r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
 Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
 Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
 Vogel Quax zwickt Johnys Pferd Bim.
@@ -29,51 +69,113 @@ Polyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.
 Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.
 Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.
 Heizoelrueckstossabdaempfung.
-"#,
-        r#"
-
-
-Duebel
-
-😂
-
-
-
-"#,
-        r#"Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫"#,
-    ];
-
-    #[derive(Debug, Serialize)]
-    struct CommandResult {
-        args: &'static [&'static str],
-        stdin: String,
-        stdout: String,
-        exit_code: u8,
-    }
-
-    #[rstest]
-    fn test_cli_stdin(
-        // This will generate all permutations of all `values`, which is a lot but
-        // neatly manageable through `insta`.
-        #[values(1, 2, 3)] n_sample: usize,
-        #[values(
-            &["--german"],
-            &["--symbols"],
-            &["--german", "--symbols"],
-            &["--delete", r"\p{Emoji_Presentation}"],
-            &["--fail-any", r"\d"],
-            &["--fail-none", r"\d"],
-        )]
-        args: &'static [&'static str],
+"#),
+    )]
+    #[case(
+        "deleting-emojis",
+        false,
+        &["--delete", r"\p{Emoji_Presentation}"],
+        Some("Some text  :) :-) and emojis 🤩!\nMore: 👽"),
+    )]
+    #[case(
+        "failing-on-anything-found-trigger",
+        false,
+        &["--fail-any", "X"],
+        Some("XYZ"),
+    )]
+    #[case(
+        "failing-on-anything-found-no-trigger",
+        false,
+        &["--fail-any", "A"],
+        Some("XYZ"),
+    )]
+    #[case(
+        "failing-on-nothing-found-trigger",
+        false,
+        &["--fail-none", "A"],
+        Some("XYZ"),
+    )]
+    #[case(
+        "failing-on-nothing-found-no-trigger",
+        false,
+        &["--fail-none", "X"],
+        Some("XYZ"),
+    )]
+    #[case(
+        "go-search",
+        false,
+        &["--go", "comments", "[fF]izz"],
+        Some(include_str!("langs/go/other/fizzbuzz.go")),
+    )]
+    #[case(
+        "go-replacement",
+        false,
+        &["--go", "comments", "[fF]izz", "🤡"],
+        Some(include_str!("langs/go/other/fizzbuzz.go")),
+    )]
+    #[case(
+        "go-search-files",
+        true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
+        &[/* need determinism */ "--sorted", "--go", "comments", "[fF]izz"],
+        None,
+    )]
+    #[case(
+        "python-search-files", // searches all files, in all Python strings
+        true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
+        &[/* need determinism */ "--sorted", "--python", "strings", "is"],
+        None,
+    )]
+    #[case(
+        "python-search-stdin", // stdin takes precedence
+        false,
+        &["--python", "strings", "is"],
+        Some(include_str!("langs/python/in/strings.py")),
+    )]
+    #[case(
+        "python-search-stdin-and-files", // stdin takes precedence
+        false,
+        &["--python", "strings", "--files", "**/*.py", "is"],
+        Some(include_str!("langs/python/in/strings.py")),
+    )]
+    #[case(
+        "python-search-stdin-across-lines",
+        false,
+        &["--python", "class", r"(?s)@classmethod\n\s+def from_ski_jumper"], // ?s: include newline
+        Some(include_str!("langs/python/out/class.py")),
+    )]
+    fn test_cli(
+        #[case] mut snapshot_name: String,
+        #[case] os_dependent: bool,
+        #[case] args: &[&str],
+        #[case] stdin: Option<&str>,
     ) {
+        if os_dependent {
+            // Thanks to Windows, (some) snapshots are actually OS-dependent if they
+            // involve file system paths :( Careful: `cargo insta test
+            // --unreferenced=delete` will wipe snapshot of foreign OSes, but that'll
+            // break in CI!
+            snapshot_name.push('-');
+            snapshot_name.push_str(std::env::consts::OS);
+        }
+
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
         // (inside `src/main.rs` etc.).
         let mut cmd = get_cmd();
 
-        let sample = SAMPLES[n_sample - 1];
-        let stdin = sample.to_owned();
-        cmd.args(args).write_stdin(stdin.as_str());
+        let args: Vec<String> = args.iter().map(|&s| s.to_owned()).collect();
+
+        cmd.args(args.clone());
+        cmd.args(["--threads", "1"]); // Be deterministic
+        if let Some(stdin) = stdin {
+            cmd.write_stdin(stdin);
+        } else {
+            cmd.args(
+                // Override; `Command` is detected as providing stdin but we're working on
+                // files here.
+                ["--stdin-override-to", "false"],
+            );
+        }
 
         let output = cmd.output().expect("failed to execute process");
 
@@ -83,45 +185,117 @@ Duebel
             .expect("Process unexpectedly terminated via signal, not `exit`.")
             as u8;
         let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
 
-        let padded_sample_number = format!("{:03}", n_sample);
-
-        let snapshot_name =
-            (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
+        // For debugging, include this, but do not rely on it for snapshot
+        // validity/correctness. We do not want changes in error messages etc. break
+        // tests, seems excessive.
+        let info = CommandInfo { stderr };
 
         // Exclusion doesn't influence covered code, but fixes linking issues when
         // `insta` is used, see also
         // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
         #[cfg(not(tarpaulin))]
-        insta::assert_yaml_snapshot!(
-            snapshot_name,
-            CommandResult {
-                args,
-                stdin,
-                stdout,
-                exit_code
-            }
-        );
+        with_settings!({
+            info => &info,
+        }, {
+            insta::assert_yaml_snapshot!(
+                snapshot_name,
+                CommandSnap {
+                    args,
+                    stdin: stdin.map(|s| s.split_inclusive('\n').map(|s| s.to_owned()).collect_vec()),
+                    stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                    exit_code,
+                }
+            );
+        });
     }
 
     #[rstest]
-    #[case("**/*.py", "tests/files-option/basic-python/in", ["foo", "baz"].as_slice())]
-    fn test_cli_files(#[case] glob: &str, #[case] left: PathBuf, #[case] add_args: &[&str]) {
+    #[case(
+        "files-inplace-python",
+        "tests/files/files-python/in",
+        &[
+            "--sorted",
+            "--files",
+            "**/*.py",
+            "foo",
+            "baz"
+        ],
+        false
+    )]
+    #[case(
+        "language-scoping-inplace-python",
+        "tests/files/language-scoping-python/in",
+        &[
+            "--sorted",
+            "--python",
+            "function-names",
+            "foo",
+            "baz"
+        ],
+        false
+    )]
+    #[case(
+        "language-scoping-and-files-inplace-python",
+        "tests/files/language-scoping-and-files-python/in",
+        &[
+            "--sorted",
+            "--python",
+            "function-names",
+            "--files", // Will override language scoper
+            "subdir/**/*.py",
+            "foo",
+            "baz"
+        ],
+        false
+    )]
+    #[case(
+        "language-scoping-and-files-inplace-python",
+        "tests/files/language-scoping-and-files-python/in",
+        &[
+            "--python",
+            "function-names",
+            "--files", // Will override language scoper
+            "subdir/**/*.py",
+            "foo",
+            "baz"
+        ],
+        // NOT `--sorted`, so not deterministic; use to test that directories are
+        // equivalent even if running parallel, unsorted. Output will be random,
+        // breaking snapshot testing.
+        true
+    )]
+    fn test_cli_files(
+        #[case] mut snapshot_name: String,
+        #[case] input: PathBuf,
+        #[case] args: &[&str],
+        #[case] skip_output_check: bool,
+    ) -> anyhow::Result<()> {
+        use std::mem::ManuallyDrop;
+
+        let args = args.iter().map(|s| s.to_string()).collect_vec();
+
         // Arrange
         let mut cmd = get_cmd();
 
-        let right = {
-            let mut right = left.clone();
-            right.pop();
-            right.push("out");
-            right
+        let baseline = {
+            let mut baseline = input.clone();
+            baseline.pop();
+            baseline.push("out");
+            baseline
         };
 
-        let left = copy_to_tmp(&left);
+        let candidate = ManuallyDrop::new(copy_to_tmp(&input));
+        drop(input); // Prevent misuse
 
-        cmd.current_dir(&left);
-        cmd.args(["--files", glob]);
-        cmd.args(add_args);
+        cmd.current_dir(&*candidate);
+        cmd.args(
+            // Override; `Command` is detected as providing stdin but we're working on
+            // files here.
+            ["--stdin-override-to", "false"],
+        );
+        cmd.args(&args);
 
         // Act
         let output = cmd.output().expect("failed to execute binary under test");
@@ -131,10 +305,49 @@ Duebel
         // Thing itself works
         assert!(output.status.success(), "Binary execution itself failed");
 
-        // Results are correct
-        if let Err(e) = compare_directories(left.path().to_owned(), right) {
-            panic!("{}", format!("Directory comparison failed: {}.", e));
+        // Results are correct Do not drop on panic, to keep tmpdir in place for manual
+        // inspection. Can then diff directories.
+        check_directories_equality(baseline, candidate.path().to_owned())?;
+
+        // Test was successful: ok to drop.
+        drop(ManuallyDrop::into_inner(candidate));
+
+        // Let's look at command output now.
+        if !skip_output_check {
+            // These are inherently platform-specific, as they deal with file paths.
+            snapshot_name.push('-');
+            snapshot_name.push_str(std::env::consts::OS);
+
+            let exit_code = output
+                .status
+                .code()
+                .expect("Process unexpectedly terminated via signal, not `exit`.")
+                as u8;
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            let stderr = String::from_utf8(output.stderr).unwrap();
+
+            let info = CommandInfo { stderr };
+
+            // Exclusion doesn't influence covered code, but fixes linking issues when
+            // `insta` is used, see also
+            // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
+            #[cfg(not(tarpaulin))]
+            with_settings!({
+                info => &info,
+            }, {
+                insta::assert_yaml_snapshot!(
+                    snapshot_name,
+                    CommandSnap {
+                        args,
+                        stdin: None,
+                        stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                        exit_code,
+                    }
+                );
+            });
         }
+
+        Ok(())
     }
 
     #[test]
@@ -152,42 +365,100 @@ Duebel
         cmd.assert().failure();
     }
 
+    /// Tests the helper function itself.
+    #[test]
+    fn test_directory_comparison() -> anyhow::Result<()> {
+        for result in ignore::WalkBuilder::new("./src")
+            .add("./tests")
+            .add("./data")
+            .add("./docs")
+            .build()
+        {
+            let entry = result.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                let path = path.to_owned();
+
+                {
+                    // Any directory compares to itself fine.
+                    check_directories_equality(path.clone(), path.clone())?;
+                }
+
+                {
+                    let parent = path
+                        .clone()
+                        .parent()
+                        .expect("(our) directories under test always have parents")
+                        .to_owned();
+
+                    assert!(check_directories_equality(
+                        // Impossible: a directory always compares unequal to a subdirectory
+                        // of itself.
+                        parent, path
+                    )
+                    .is_err());
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     fn get_cmd() -> Command {
         Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap()
     }
 
-    /// Recursively compares file contents of some baseline directory `left` to some
-    /// candidate `right`.
+    /// Same as [`compare_directories`], but checks in both directions.
     ///
-    /// The `right` tree has to be a superset (not strict) of `left`: all files with
-    /// their full paths, i.e. all intermediary directories, need to exist in `right`,
-    /// but extraneous files in `right` are allowed.
+    /// This ensures exact equality, instead of more loose 'superset' shenanigans.
+    fn check_directories_equality<P: Into<PathBuf>>(
+        baseline: P,
+        candidate: P,
+    ) -> anyhow::Result<()> {
+        let baseline = baseline.into();
+        let candidate = candidate.into();
+
+        compare_directories(baseline.clone(), candidate.clone())?;
+        compare_directories(candidate, baseline)
+    }
+
+    /// Recursively compares file contents of some `baseline` directory to some
+    /// `candidate`.
+    ///
+    /// The `candidate` tree has to be a superset (not strict) of `baseline`: all files
+    /// with their full paths, i.e. all intermediary directories, need to exist in
+    /// `candidate` as they do in `baseline`, but extraneous files in `candidate` are
+    /// allowed and ignored.
     ///
     /// **File contents are checked for exactly**. File metadata is not compared.
     ///
     /// Any failure fails the entire comparison.
     ///
     /// Lots of copying happens, so not efficient.
-    fn compare_directories(left: PathBuf, mut right: PathBuf) -> anyhow::Result<()> {
-        for entry in left
+    fn compare_directories<P: Into<PathBuf>>(baseline: P, candidate: P) -> anyhow::Result<()> {
+        let baseline: PathBuf = baseline.into();
+        let mut candidate: PathBuf = candidate.into();
+
+        for entry in baseline
             .read_dir()
-            .with_context(|| format!("Failure reading left dir: {:?}", left))?
+            .with_context(|| format!("Failure reading left dir: {:?}", baseline))?
         {
             // This shadows on purpose: less risk of misuse
-            let left = entry
-                .with_context(|| format!("Failure reading left dir entry (left: {:?})", left))?;
+            let left = entry.with_context(|| {
+                format!("Failure reading left dir entry (left: {:?})", baseline)
+            })?;
 
-            right.push(left.file_name());
+            candidate.push(left.file_name());
 
             let metadata = left.metadata().context("Failure reading file metadata")?;
 
-            if !right.exists() {
+            if !candidate.exists() {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     format!(
                         "Right counterpart does not exist: left: {:?}, right: {:?}, left meta: {:?}",
                         left.path(),
-                        right,
+                        candidate,
                         metadata
                     ),
                 )
@@ -196,25 +467,37 @@ Duebel
 
             if metadata.is_file() {
                 // Recursion end
-                let left_contents = std::fs::read_to_string(left.path())
+                let left_contents = std::fs::read(left.path())
                     .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
-                let right_contents = std::fs::read_to_string(&right)
-                    .with_context(|| format!("Failure reading right file: {:?}", right))?;
+                let right_contents = std::fs::read(&candidate)
+                    .with_context(|| format!("Failure reading right file: {:?}", candidate))?;
 
                 if left_contents != right_contents {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
                         format!(
-                            "File contents differ: left: {:?}, right: {:?}",
+                            r"File contents differ:
+left path: {:?}
+right path: {:?}
+---------
+left contents:
+{}
+---------
+right contents:
+{}
+---------
+",
                             left.path(),
-                            right
+                            candidate,
+                            String::from_utf8_lossy(&left_contents).escape_debug(),
+                            String::from_utf8_lossy(&right_contents).escape_debug()
                         ),
                     )
                     .into());
                 }
             } else if metadata.is_dir() {
                 // Recursion step
-                compare_directories(left.path().clone(), right.clone())?;
+                compare_directories(left.path().clone(), candidate.clone())?;
             } else {
                 // Do not silently ignore.
                 return Err(std::io::Error::new(
@@ -227,7 +510,7 @@ Duebel
                 .into());
             }
 
-            right.pop();
+            candidate.pop();
         }
 
         Ok(())

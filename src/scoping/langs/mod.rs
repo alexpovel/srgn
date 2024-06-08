@@ -1,7 +1,7 @@
 use super::Scoper;
-use crate::ranges::Ranges;
 #[cfg(doc)]
 use crate::scoping::scope::Scope::{In, Out};
+use crate::{find::Find, ranges::Ranges};
 use log::{debug, trace};
 use std::str::FromStr;
 pub use tree_sitter::{
@@ -74,16 +74,23 @@ pub(super) const IGNORE: &str = "_SRGN_IGNORE";
 /// A scoper for a language.
 ///
 /// Functions much the same, but provides specific language-related functionality.
-pub trait LanguageScoper: Scoper {
+pub trait LanguageScoper: Scoper + Find {
     /// The language's tree-sitter language.
-    fn lang() -> TSLanguage;
+    fn lang() -> TSLanguage
+    where
+        Self: Sized; // Exclude from trait object
 
     /// The language's tree-sitter query.
-    fn query(&self) -> TSQuery;
+    fn query(&self) -> TSQuery
+    where
+        Self: Sized; // Exclude from trait object
 
     /// The language's tree-sitter parser.
     #[must_use]
-    fn parser() -> TSParser {
+    fn parser() -> TSParser
+    where
+        Self: Sized, // Exclude from trait object
+    {
         let mut parser = TSParser::new();
         parser
             .set_language(&Self::lang())
@@ -95,7 +102,10 @@ pub trait LanguageScoper: Scoper {
     /// Scope the given input using the language's query.
     ///
     /// In principle, this is the same as [`Scoper::scope`].
-    fn scope_via_query(query: &mut TSQuery, input: &str) -> Ranges<usize> {
+    fn scope_via_query(query: &mut TSQuery, input: &str) -> Ranges<usize>
+    where
+        Self: Sized, // Exclude from trait object
+    {
         // tree-sitter is about incremental parsing, which we don't use here
         let old_tree = None;
 
