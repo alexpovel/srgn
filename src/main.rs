@@ -19,6 +19,7 @@ use srgn::{
         langs::{
             csharp::{CSharp, CSharpQuery},
             go::{Go, GoQuery},
+            hcl::{Hcl, HclQuery},
             python::{Python, PythonQuery},
             rust::{Rust, RustQuery},
             typescript::{TypeScript, TypeScriptQuery},
@@ -279,6 +280,18 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
         }
     }
 
+    if let Some(hcl) = args.languages_scopes.hcl.clone() {
+        if let Some(premade) = hcl.hcl {
+            let query = HclQuery::Premade(premade);
+
+            scopers.push(Box::new(Hcl::new(query)));
+        } else if let Some(custom) = hcl.hcl_query {
+            let query = HclQuery::Custom(custom);
+
+            scopers.push(Box::new(Hcl::new(query)));
+        }
+    }
+
     if let Some(go) = args.languages_scopes.go.clone() {
         if let Some(premade) = go.go {
             let query = GoQuery::Premade(premade);
@@ -434,6 +447,7 @@ mod cli {
         scoping::langs::{
             csharp::{CustomCSharpQuery, PremadeCSharpQuery},
             go::{CustomGoQuery, PremadeGoQuery},
+            hcl::{CustomHclQuery, PremadeHclQuery},
             python::{CustomPythonQuery, PremadePythonQuery},
             rust::{CustomRustQuery, PremadeRustQuery},
             typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
@@ -648,6 +662,8 @@ mod cli {
         #[command(flatten)]
         pub go: Option<GoScope>,
         #[command(flatten)]
+        pub hcl: Option<HclScope>,
+        #[command(flatten)]
         pub python: Option<PythonScope>,
         #[command(flatten)]
         pub rust: Option<RustScope>,
@@ -665,6 +681,18 @@ mod cli {
         /// Scope CSharp code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub csharp_query: Option<CustomCSharpQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub(super) struct HclScope {
+        /// Scope HashiCorp Configuration Language code using a premade query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub hcl: Option<PremadeHclQuery>,
+
+        /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub hcl_query: Option<CustomHclQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]

@@ -816,6 +816,42 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 > [!NOTE]
 > When deleting (`-d`), for reasons of safety and sanity, a scope is *required*.
 
+###### Upgrade VM size (Terraform)
+
+Say you'd like to upgrade the instance size you're using:
+
+```hcl ec2.tf
+data "aws_ec2_instance_type" "tiny" {
+  instance_type = "t2.micro"
+}
+
+resource "aws_instance" "main" {
+  ami           = "ami-022f20bb44daf4c86"
+  instance_type = data.aws_ec2_instance_type.tiny.instance_type
+}
+```
+
+with
+
+```bash
+cat ec2.tf | srgn --hcl 'strings' '^"t2\.(\w+)"$' '"t3.$1"' | srgn --hcl 'data-names' 'tiny' 'small'
+```
+
+will give
+
+```hcl output-ec2.tf
+data "aws_ec2_instance_type" "small" {
+  instance_type = "t3.micro"
+}
+
+resource "aws_instance" "main" {
+  ami           = "ami-022f20bb44daf4c86"
+  instance_type = data.aws_ec2_instance_type.small.instance_type
+}
+```
+
+Note the quotes for `"t2...` and `"t3`.
+
 ##### Custom queries
 
 Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to

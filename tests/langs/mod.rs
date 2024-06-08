@@ -1,5 +1,6 @@
 mod csharp;
 mod go;
+mod hcl;
 mod python;
 mod rust;
 mod typescript;

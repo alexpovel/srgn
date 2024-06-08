@@ -1470,6 +1470,7 @@ dependencies = [
  "tree-sitter",
  "tree-sitter-c-sharp",
  "tree-sitter-go",
+ "tree-sitter-hcl",
  "tree-sitter-python",
  "tree-sitter-rust",
  "tree-sitter-typescript",
@@ -1719,6 +1720,15 @@ name = "tree-sitter-go"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55cb318be5ccf75f44e054acf6898a5c95d59b53443eed578e16be0cd7ec037f"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
+name = "tree-sitter-hcl"
+version = "0.0.1"
+source = "git+https://github.com/alexpovel/tree-sitter-hcl.git#6e750f5cda8eecb45de27410bdb5bc353d23acad"
 dependencies = [
  "cc",
  "tree-sitter",

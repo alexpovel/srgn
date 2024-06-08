@@ -12,6 +12,8 @@ pub use tree_sitter::{
 pub mod csharp;
 /// Go.
 pub mod go;
+/// Hashicorp Configuration Language
+pub mod hcl;
 /// Python.
 pub mod python;
 /// Rust.
