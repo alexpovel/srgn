@@ -1,7 +1,7 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
 use clap::ValueEnum;
-use const_format::concatcp;
+use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -30,15 +30,14 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
                     r"(import_statement source: (string (string_fragment) @sf))"
                 }
                 PremadeTypeScriptQuery::Strings => {
-                    concatcp!(
-                        "
-                    [
-                        (string)
-                        (template_string (template_substitution) @",
-                        IGNORE,
-                        ")
-                    ]
-                    @string"
+                    formatcp!(
+                        r"
+                        [
+                            (string)
+                            (template_string (template_substitution) @{0})
+                        ]
+                        @string",
+                        IGNORE
                     )
                 }
             },

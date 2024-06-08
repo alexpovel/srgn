@@ -1,7 +1,7 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
 use clap::ValueEnum;
-use const_format::concatcp;
+use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -30,19 +30,16 @@ impl From<PremadeGoQuery> for TSQuery {
             match value {
                 PremadeGoQuery::Comments => "(comment) @comment",
                 PremadeGoQuery::Strings => {
-                    concatcp!(
-                        "
-                    [
-                        (raw_string_literal)
-                        (interpreted_string_literal)
-                        (import_spec (interpreted_string_literal) @",
-                        IGNORE,
-                        ")
-                        (field_declaration tag: (raw_string_literal) @",
-                        IGNORE,
-                        ")
-                    ]
-                    @string"
+                    formatcp!(
+                        r"
+                        [
+                            (raw_string_literal)
+                            (interpreted_string_literal)
+                            (import_spec (interpreted_string_literal) @{0})
+                            (field_declaration tag: (raw_string_literal) @{0})
+                        ]
+                        @string",
+                        IGNORE
                     )
                 }
                 PremadeGoQuery::Imports => {
