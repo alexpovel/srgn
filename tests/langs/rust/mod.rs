@@ -1,7 +1,7 @@
+use super::{get_input_output, nuke_target};
+use pretty_assertions::assert_eq;
 use rstest::rstest;
 use srgn::scoping::langs::rust::{PremadeRustQuery, Rust, RustQuery};
-
-use super::{get_input_output, nuke_target};
 
 #[rstest]
 #[case("comments.rs", RustQuery::Premade(PremadeRustQuery::Comments))]

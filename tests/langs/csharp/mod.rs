@@ -1,7 +1,7 @@
+use super::{get_input_output, nuke_target};
+use pretty_assertions::assert_eq;
 use rstest::rstest;
 use srgn::scoping::langs::csharp::{CSharp, CSharpQuery, PremadeCSharpQuery};
-
-use super::{get_input_output, nuke_target};
 
 #[rstest]
 #[case("comments.cs", CSharpQuery::Premade(PremadeCSharpQuery::Comments))]

@@ -1,7 +1,7 @@
+use super::{get_input_output, nuke_target};
+use pretty_assertions::assert_eq;
 use rstest::rstest;
 use srgn::scoping::langs::python::{PremadePythonQuery, Python, PythonQuery};
-
-use super::{get_input_output, nuke_target};
 
 #[rstest]
 #[case("docstring.py", PythonQuery::Premade(PremadePythonQuery::DocStrings))]

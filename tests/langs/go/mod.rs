@@ -1,7 +1,7 @@
+use super::{get_input_output, nuke_target};
+use pretty_assertions::assert_eq;
 use rstest::rstest;
 use srgn::scoping::langs::go::{Go, GoQuery, PremadeGoQuery};
-
-use super::{get_input_output, nuke_target};
 
 #[rstest]
 #[case("comments.go", GoQuery::Premade(PremadeGoQuery::Comments))]
