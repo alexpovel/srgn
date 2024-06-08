@@ -26,7 +26,7 @@ pub enum PremadeGoQuery {
 impl From<PremadeGoQuery> for TSQuery {
     fn from(value: PremadeGoQuery) -> Self {
         TSQuery::new(
-            Go::lang(),
+            &Go::lang(),
             match value {
                 PremadeGoQuery::Comments => "(comment) @comment",
                 PremadeGoQuery::Strings => {
@@ -60,7 +60,7 @@ impl FromStr for CustomGoQuery {
     type Err = QueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(Go::lang(), s) {
+        match TSQuery::new(&Go::lang(), s) {
             Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
@@ -69,7 +69,7 @@ impl FromStr for CustomGoQuery {
 
 impl From<CustomGoQuery> for TSQuery {
     fn from(value: CustomGoQuery) -> Self {
-        TSQuery::new(Go::lang(), &value.0)
+        TSQuery::new(&Go::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

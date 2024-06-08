@@ -1,6 +1,7 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{ROScopes, Scoper};
+use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
 use clap::ValueEnum;
+use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -26,22 +27,25 @@ pub enum PremadeCSharpQuery {
 impl From<PremadeCSharpQuery> for TSQuery {
     fn from(value: PremadeCSharpQuery) -> Self {
         TSQuery::new(
-            CSharp::lang(),
+            &CSharp::lang(),
             match value {
                 PremadeCSharpQuery::Comments => "(comment) @comment",
                 PremadeCSharpQuery::Usings => {
                     r"(using_directive [(identifier) (qualified_name)] @import)"
                 }
                 PremadeCSharpQuery::Strings => {
-                    r"
-                    [
-                        (interpolated_string_text)
-                        (interpolated_verbatim_string_text)
-                        (string_literal)
-                        (verbatim_string_literal)
-                    ]
-                    @string
-                    "
+                    formatcp!(
+                        r"
+                            [
+                                (interpolated_string_expression (interpolation) @{0})
+                                (string_literal)
+                                (raw_string_literal)
+                                (verbatim_string_literal)
+                            ]
+                            @string
+                    ",
+                        IGNORE
+                    )
                 }
             },
         )
@@ -57,7 +61,7 @@ impl FromStr for CustomCSharpQuery {
     type Err = QueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(CSharp::lang(), s) {
+        match TSQuery::new(&CSharp::lang(), s) {
             Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
@@ -66,7 +70,7 @@ impl FromStr for CustomCSharpQuery {
 
 impl From<CustomCSharpQuery> for TSQuery {
     fn from(value: CustomCSharpQuery) -> Self {
-        TSQuery::new(CSharp::lang(), &value.0)
+        TSQuery::new(&CSharp::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

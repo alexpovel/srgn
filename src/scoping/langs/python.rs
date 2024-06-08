@@ -30,7 +30,7 @@ pub enum PremadePythonQuery {
 impl From<PremadePythonQuery> for TSQuery {
     fn from(value: PremadePythonQuery) -> Self {
         TSQuery::new(
-            Python::lang(),
+            &Python::lang(),
             match value {
                 PremadePythonQuery::Comments => "(comment) @comment",
                 PremadePythonQuery::Strings => {
@@ -103,7 +103,7 @@ impl FromStr for CustomPythonQuery {
     type Err = QueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(Python::lang(), s) {
+        match TSQuery::new(&Python::lang(), s) {
             Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
@@ -112,7 +112,7 @@ impl FromStr for CustomPythonQuery {
 
 impl From<CustomPythonQuery> for TSQuery {
     fn from(value: CustomPythonQuery) -> Self {
-        TSQuery::new(Python::lang(), &value.0)
+        TSQuery::new(&Python::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

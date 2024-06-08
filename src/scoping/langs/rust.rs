@@ -28,7 +28,7 @@ pub enum PremadeRustQuery {
 impl From<PremadeRustQuery> for TSQuery {
     fn from(value: PremadeRustQuery) -> Self {
         TSQuery::new(
-            Rust::lang(),
+            &Rust::lang(),
             match value {
                 PremadeRustQuery::Comments => {
                     r#"
@@ -86,7 +86,7 @@ impl FromStr for CustomRustQuery {
     type Err = QueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(Rust::lang(), s) {
+        match TSQuery::new(&Rust::lang(), s) {
             Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
@@ -95,7 +95,7 @@ impl FromStr for CustomRustQuery {
 
 impl From<CustomRustQuery> for TSQuery {
     fn from(value: CustomRustQuery) -> Self {
-        TSQuery::new(Rust::lang(), &value.0)
+        TSQuery::new(&Rust::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

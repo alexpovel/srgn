@@ -84,7 +84,7 @@ pub trait LanguageScoper: Scoper {
     fn parser() -> TSParser {
         let mut parser = TSParser::new();
         parser
-            .set_language(Self::lang())
+            .set_language(&Self::lang())
             .expect("Should be able to load language grammar and parser");
 
         parser
@@ -141,7 +141,7 @@ pub trait LanguageScoper: Scoper {
                     .capture_names()
                     .iter()
                     .filter(|name| !is_ignored(name))
-                    .cloned()
+                    .map(|s| String::from(*s))
                     .collect::<Vec<_>>();
 
                 for name in acknowledged_captures {
