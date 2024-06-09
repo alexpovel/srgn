@@ -76,16 +76,23 @@ impl<'viewee> ROScopes<'viewee> {
 
         let mut last_end = 0;
         for (Range { start, end }, context) in ranges.into_iter().sorted_by_key(|(r, _)| r.start) {
-            scopes.push(ROScope(Out(&input[last_end..start])));
-            scopes.push(ROScope(In(&input[start..end], context)));
+            let out = &input[last_end..start];
+            if !out.is_empty() {
+                scopes.push(ROScope(Out(out)));
+            }
+
+            let r#in = &input[start..end];
+            if !r#in.is_empty() {
+                scopes.push(ROScope(In(r#in, context)));
+            }
+
             last_end = end;
         }
 
-        if last_end < input.len() {
-            scopes.push(ROScope(Out(&input[last_end..])));
+        let tail = &input[last_end..];
+        if !tail.is_empty() {
+            scopes.push(ROScope(Out(tail)));
         }
-
-        scopes.retain(|s| !s.is_empty());
 
         debug!("Scopes: {:?}", scopes);
 
