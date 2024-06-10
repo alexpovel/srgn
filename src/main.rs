@@ -6,7 +6,6 @@ use srgn::actions::Deletion;
 use srgn::actions::German;
 use srgn::actions::Lower;
 use srgn::actions::Normalization;
-use srgn::actions::Print;
 use srgn::actions::Replacement;
 use srgn::actions::Titlecase;
 use srgn::actions::Upper;
@@ -197,25 +196,25 @@ fn apply(
             view.squeeze();
         }
 
-        if actions.is_empty() {
-            info!("No actions loaded. Loading default action: Print");
+        // if actions.is_empty() {
+        //     info!("No actions loaded. Loading default action: Print");
 
-            view.scopes()
-                .0
-                .iter()
-                .filter_map(|scope| match &scope.0 {
-                    Scope::In(content, _) => Some(content.to_string()),
-                    _ => None,
-                })
-                .collect::<Vec<String>>()
-                .join("\n")
-        } else {
-            for action in actions {
-                view.map_with_context(action)?;
-            }
-
-            view.to_string()
+        //     view.scopes()
+        //         .0
+        //         .iter()
+        //         .filter_map(|scope| match &scope.0 {
+        //             Scope::In(content, _) => Some(content.to_string()),
+        //             _ => None,
+        //         })
+        //         .collect::<Vec<String>>()
+        //         .join("\n")
+        // } else {
+        for action in actions {
+            view.map_with_context(action)?;
         }
+
+        view.to_string()
+        // }
     };
     debug!("Done applying actions to view.");
 

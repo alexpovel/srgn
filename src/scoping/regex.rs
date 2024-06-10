@@ -1,5 +1,5 @@
+use super::scope::RangesWithContext;
 use super::scope::ScopeContext;
-use super::ROScopes;
 use super::Scoper;
 use crate::RegexPattern;
 use crate::GLOBAL_SCOPE;
@@ -85,7 +85,7 @@ impl Default for Regex {
 }
 
 impl Scoper for Regex {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
         let mut ranges = HashMap::new();
         for cap in self.pattern.captures_iter(input) {
             match cap {
@@ -124,7 +124,7 @@ impl Scoper for Regex {
             }
         }
 
-        return ROScopes::from_raw_ranges(input, ranges);
+        ranges
     }
 }
 

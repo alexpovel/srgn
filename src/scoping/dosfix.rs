@@ -1,3 +1,4 @@
+use super::scope::RangesWithContext;
 use crate::scoping::{literal::Literal, ROScopes, Scoper};
 #[cfg(doc)]
 use crate::{
@@ -35,12 +36,16 @@ pub struct DosFix;
 
 impl Scoper for DosFix {
     fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+        ROScopes::from_raw_ranges(input, self.scope_raw(input)).invert()
+    }
+
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
         trace!(
             "Applying DOS-style line endings fix on '{}'",
             input.escape_debug()
         );
         let literal = Literal::try_from("\r".to_string()).unwrap();
-        let scopes = literal.scope(input).invert();
+        let scopes = literal.scope_raw(input);
 
         trace!(
             "Scopes after applying DOS-style line endings fix: {:?}",

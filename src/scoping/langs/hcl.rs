@@ -1,5 +1,5 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{langs::IGNORE, ROScopes, Scoper};
+use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
@@ -249,11 +249,8 @@ impl From<CustomHclQuery> for TSQuery {
 }
 
 impl Scoper for Hcl {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        ROScopes::from_raw_ranges(
-            input,
-            Self::scope_via_query(&mut self.query(), input).into(),
-        )
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        Self::scope_via_query(&mut self.query(), input).into()
     }
 }
 

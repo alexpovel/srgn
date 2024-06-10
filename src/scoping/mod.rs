@@ -1,5 +1,7 @@
 //! Items for defining the scope actions are applied within.
 
+use scope::RangesWithContext;
+
 use crate::scoping::scope::ROScopes;
 #[cfg(doc)]
 use crate::scoping::{scope::Scope, view::ScopedView};
@@ -24,21 +26,26 @@ pub trait Scoper: Send + Sync {
     /// After application, the returned scopes are a collection of either in-scope or
     /// out-of-scope parts of the input. Assembling them back together should yield the
     /// original input.
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee>;
+    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
+        ROScopes::from_raw_ranges(input, self.scope_raw(input))
+    }
+
+    /// ...
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee>;
 }
 
-impl<T> Scoper for T
-where
-    T: Fn(&str) -> ROScopes + Send + Sync,
-{
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        self(input)
-    }
-}
+// impl<T> Scoper for T
+// where
+//     T: Fn(&str) -> ROScopes + Send + Sync,
+// {
+//     fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+//         self(input)
+//     }
+// }
 
 // https://www.reddit.com/r/rust/comments/droxdg/why_arent_traits_impld_for_boxdyn_trait/
 impl Scoper for Box<dyn Scoper> {
-    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
-        self.as_ref().scope(input)
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        self.as_ref().scope_raw(input)
     }
 }

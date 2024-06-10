@@ -167,11 +167,11 @@ use std::ops::Range;
 
 /// Main components around [`Action`]s.
 pub mod actions;
-/// Main components around [`ScopedView`].
-pub mod scoping;
-
+mod grep;
 /// Components to work with collections of [`Range`]s.
 pub mod ranges;
+/// Main components around [`ScopedView`].
+pub mod scoping;
 
 /// Pattern signalling global scope, aka matching entire inputs.
 pub const GLOBAL_SCOPE: &str = r".*";
