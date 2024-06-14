@@ -13,7 +13,6 @@ use srgn::actions::Upper;
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
-use srgn::scoping::scope::Scope;
 use srgn::{
     actions::Action,
     scoping::{

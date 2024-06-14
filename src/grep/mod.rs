@@ -1,11 +1,8 @@
-use log::{debug, warn};
-
 use crate::{ranges::Ranges, scoping::Scoper};
-use std::{
-    collections::HashMap,
-    ops::{Range, Sub},
-    path::Path,
-};
+use itertools::Itertools;
+use log::{debug, warn};
+use ranges::{GlobalRange, LocalRange};
+use std::ops::Range;
 
 // #[derive(Debug, Clone, PartialEq, Eq)]
 // enum Source<'f> {
@@ -26,65 +23,29 @@ struct Line<'a> {
     highlights: Option<Ranges<usize>>,
 }
 
-// enum Rangee<T> {
-//     Local(Range<T>),
-//     Global(Range<T>),
-// }
-
-// struct ContextualRange<C: Context, T = usize> {
-//     start: T,
-//     end: T,
-//     _marker: PhantomData<C>,
-// }
-
-// impl<C: Context, T> ContextualRange<C, T> {
-//     fn new(range: Range<T>) -> Self {
-//         Self {
-//             start: range.start,
-//             end: range.end,
-//             _marker: PhantomData,
-//         }
-//     }
-// }
-
-// impl<T> From<ContextualRange<Global, T>> for Range<T> {
-//     fn from(range: ContextualRange<Global, T>) -> Self {
-//         Range {
-//             start: range.start,
-//             end: range.end,
-//         }
-//     }
-// }
-
-// struct Global {}
-// struct Local {}
-
-// trait Context {}
-
-// impl Context for Global {}
-// impl Context for Local {}
-
-fn relative_to<T, B>(base: B, r: Range<T>) -> Range<T>
-where
-    T: Sub<B, Output = T>,
-    B: Copy,
-{
-    Range {
-        start: r.start - base,
-        end: r.end - base,
-    }
-}
-
-fn grep<'viewee>(input: &'viewee str, scopers: &Vec<Box<dyn Scoper>>) -> Vec<Line<'viewee>> {
-    #[allow(clippy::single_range_in_vec_init)]
-    let mut ranges = vec![0..input.len()];
+fn grep<'viewee>(input: &'viewee str, scopers: &[Box<dyn Scoper>]) -> Vec<Line<'viewee>> {
+    let mut ranges = vec![GlobalRange::from(0..input.len())];
+    debug!("Initial ranges: {ranges:?}");
 
     for scoper in scopers {
         ranges = ranges
             .into_iter()
-            .map(|range| scoper.scope_raw(&input[range]))
-            .flat_map(HashMap::into_keys)
+            .flat_map(|global_range| {
+                scoper
+                    .scope_raw(&input[Range::from(global_range.clone())])
+                    .into_keys()
+                    // ⚠️ This shift from types back and forth is mainly cosmetic, but
+                    // communicates intent. It's not fully safe, as `scope_raw` works
+                    // with normal `std::ops::Range`, which we take as identical to
+                    // 'local ranges', hence convert back and forth once.
+                    //
+                    // TODO: implement `LocalRange` across the entire crate?
+                    .map(|r| LocalRange::new(r, global_range.start))
+                    .map(GlobalRange::from)
+                    .collect_vec()
+            })
             .collect();
+        debug!("Ranges after scoping: {ranges:?}");
     }
 
     if scopers.is_empty() {
@@ -101,38 +62,35 @@ fn grep<'viewee>(input: &'viewee str, scopers: &Vec<Box<dyn Scoper>>) -> Vec<Lin
     let mut range = ranges.next();
     let mut lines = Vec::new();
 
-    let mut global = 0..0;
-    for (i, line) in input.split_inclusive(['\n', '\r']).enumerate() {
+    let mut line = GlobalRange::from(0..0);
+    for (i, contents) in input.split_inclusive(['\n', '\r']).enumerate() {
         let i = i + 1;
 
-        global.end = global.start + line.len();
+        line.end = line.start + contents.len();
 
         let mut highlights = Vec::new();
 
-        while let Some(Range { start, end }) = range {
-            assert!(
-                start >= global.start,
-                "Previous iteration sliced incorrectly"
-            );
+        while let Some(GlobalRange { start, end }) = range {
+            assert!(start >= line.start, "Previous iteration sliced incorrectly");
 
-            if start >= global.end {
+            if start >= line.end {
                 // Ranges are sorted and we're beyond this line's range; go next line.
                 break;
             }
 
-            assert!(global.contains(&start));
+            assert!(line.contains(start));
 
-            if end <= global.end {
+            if end <= line.end {
                 // Range is fully contained in current line; push and go next range.
-                highlights.push(relative_to(global.start, start..end));
+                highlights.push(GlobalRange::from(start..end).shift(line.start));
                 range = ranges.next();
                 continue;
             }
 
             // There's a split; split the current `range` up over lines
-            assert!(!global.contains(&end));
-            highlights.push(relative_to(global.start, start..global.end));
-            range = Some(global.end..end);
+            assert!(!line.contains(end));
+            highlights.push(GlobalRange::from(start..line.end).shift(line.start));
+            range = Some(GlobalRange::from(line.end..end));
             break;
         }
 
@@ -142,42 +100,141 @@ fn grep<'viewee>(input: &'viewee str, scopers: &Vec<Box<dyn Scoper>>) -> Vec<Lin
                 None => true,
             },
             "Non-consecutive lines pushed: '{}' after '{:?}'",
-            line.escape_debug(),
+            contents.escape_debug(),
             lines.last(),
         );
 
         lines.push(Line {
             number: i,
-            content: line,
+            content: contents,
             highlights: if highlights.is_empty() {
                 None
             } else {
                 assert!(
-                    highlights.iter().all(|h| line.get(h.clone()).is_some()),
+                    highlights.iter().all(|h| contents.get(h.clone()).is_some()),
                     "Highlights range '{highlights:?}' out of range for line '{}'",
-                    line.escape_debug()
+                    contents.escape_debug()
                 );
 
                 Some(Ranges::from_iter(highlights))
             },
         });
 
-        global.start = global.end;
+        line.start = line.end;
     }
 
     lines
+}
+
+/// Module for (very leaky) abstractions over [`std::ops::Range`] to model global and
+/// local ranges, for increased type safety in handling (instead of raw `usize`s).
+mod ranges {
+    use std::ops::{Add, Range, Sub};
+
+    /// A range modelled after [`Range`], where [`GlobalRange::start`] and
+    /// [`GlobalRange::end`] denote *global* positions, across the entire input.
+    #[derive(Debug, Clone)]
+    pub struct GlobalRange<T = usize> {
+        pub start: T,
+        pub end: T,
+    }
+
+    impl GlobalRange {
+        pub fn is_empty(&self) -> bool {
+            Range::from(self.clone()).is_empty()
+        }
+
+        pub fn contains(&self, item: usize) -> bool {
+            Range::from(self.clone()).contains(&item)
+        }
+
+        /// Create a new [`Range`] by shifting by the given `offset`.
+        ///
+        /// A [`GlobalRange`] of `5..8` with an `offset` of `2` will become `3..6`.
+        pub fn shift<T>(self, by: T) -> Range<T>
+        where
+            T: Copy,
+            usize: Sub<T, Output = T>,
+        {
+            Range {
+                start: self.start - by,
+                end: self.end - by,
+            }
+        }
+    }
+
+    impl<T> From<GlobalRange<T>> for Range<T> {
+        fn from(range: GlobalRange<T>) -> Self {
+            Self {
+                start: range.start,
+                end: range.end,
+            }
+        }
+    }
+
+    impl<T> From<Range<T>> for GlobalRange<T> {
+        fn from(range: Range<T>) -> Self {
+            Self {
+                start: range.start,
+                end: range.end,
+            }
+        }
+    }
+
+    /// A range local to some offset from the global origin.
+    ///
+    /// A [`LocalRange`] of `2..3` with an [`LocalRange::offset`] of `5` corresponds to
+    /// a [`GlobalRange`] of `7..8` (see [`GlobalRange::from`] for [`LocalRange`]).
+    #[derive(Debug, Clone)]
+    pub struct LocalRange<T = usize> {
+        start: T,
+        end: T,
+        offset: T,
+    }
+
+    impl<T> From<LocalRange<T>> for GlobalRange<T>
+    where
+        T: Add<T, Output = T> + Copy,
+    {
+        fn from(range: LocalRange<T>) -> Self {
+            Self {
+                start: range.offset + range.start,
+                end: range.offset + range.end,
+            }
+        }
+    }
+
+    impl LocalRange {
+        /// Create a new instance, with the specified `offset`.
+        pub fn new(range: Range<usize>, offset: usize) -> Self {
+            Self {
+                start: range.start,
+                end: range.end,
+                offset,
+            }
+        }
+    }
 }
 
 #[cfg(test)]
 #[allow(clippy::single_range_in_vec_init)]
 mod tests {
     use super::*;
+    use crate::scoping::langs::python::{PremadePythonQuery, Python};
+    use crate::scoping::langs::CodeQuery;
     use crate::scoping::{regex::Regex, Scoper};
     use crate::RegexPattern;
+    use pretty_assertions::assert_eq;
     use rstest::rstest;
 
     fn make_regex(pattern: &str) -> Box<dyn Scoper> {
         Box::new(Regex::new(RegexPattern::new(pattern).unwrap()))
+    }
+
+    fn make_python_comments() -> Box<dyn Scoper> {
+        Box::new(Python::new(CodeQuery::Premade(
+            PremadePythonQuery::Comments,
+        )))
     }
 
     #[allow(clippy::unnecessary_wraps)]
@@ -441,6 +498,77 @@ mod tests {
                 number: 2,
                 content: "world",
                 highlights: make_highlights([0..2])
+            },
+        ],
+    )]
+    #[allow(clippy::needless_raw_string_hashes)] // Wanna treat things identically for easy multi-cursor editing
+    #[case(
+        // With a language
+        r#""""GNU module."""
+
+def GNU_says_moo():
+    """The GNU -> say moo -> ✅"""
+
+    GNU = """
+      GNU
+    """  # the GNU...
+
+    GNU_says_moo(GNU + " says moo")  # ...say moo
+"#,
+        vec![
+            make_python_comments(),
+            make_regex("GNU"),
+        ],
+        vec![
+            Line {
+                number: 1,
+                content: "\"\"\"GNU module.\"\"\"\n",
+                highlights: None,
+            },
+            Line {
+                number: 2,
+                content: "\n",
+                highlights: None,
+            },
+            Line {
+                number: 3,
+                content: "def GNU_says_moo():\n",
+                highlights: None,
+            },
+            Line {
+                number: 4,
+                content: "    \"\"\"The GNU -> say moo -> ✅\"\"\"\n",
+                highlights: None,
+            },
+            Line {
+                number: 5,
+                content: "\n",
+                highlights: None,
+            },
+            Line {
+                number: 6,
+                content: "    GNU = \"\"\"\n",
+                highlights: None,
+            },
+            Line {
+                number: 7,
+                content: "      GNU\n",
+                highlights: None,
+            },
+            Line {
+                number: 8,
+                content: "    \"\"\"  # the GNU...\n",
+                highlights: make_highlights([15..18]),
+            },
+            Line {
+                number: 9,
+                content: "\n",
+                highlights: None,
+            },
+            Line {
+                number: 10,
+                content: "    GNU_says_moo(GNU + \" says moo\")  # ...say moo\n",
+                highlights: None,
             },
         ],
     )]
