@@ -1051,6 +1051,7 @@ Otherwise, refer to the [guidelines](CONTRIBUTING.md).
 
 An unordered list of similar tools you might be interested in.
 
+- [GritQL](https://github.com/getgrit/gritql) (very similar)
 - [`ast-grep`](https://github.com/ast-grep/ast-grep) (very similar)
 - [Semgrep](https://semgrep.dev/)
 - [`fastmod`](https://github.com/facebookincubator/fastmod)
