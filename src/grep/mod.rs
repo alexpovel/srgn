@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::{ranges::Ranges, scoping::Scoper};
 use itertools::Itertools;
 use log::{debug, warn};
@@ -220,7 +222,7 @@ mod ranges {
 #[allow(clippy::single_range_in_vec_init)]
 mod tests {
     use super::*;
-    use crate::scoping::langs::python::{PremadePythonQuery, Python};
+    use crate::scoping::langs::python::{PreparedPythonQuery, Python};
     use crate::scoping::langs::CodeQuery;
     use crate::scoping::{regex::Regex, Scoper};
     use crate::RegexPattern;
@@ -232,8 +234,8 @@ mod tests {
     }
 
     fn make_python_comments() -> Box<dyn Scoper> {
-        Box::new(Python::new(CodeQuery::Premade(
-            PremadePythonQuery::Comments,
+        Box::new(Python::new(CodeQuery::Prepared(
+            PreparedPythonQuery::Comments,
         )))
     }
 
