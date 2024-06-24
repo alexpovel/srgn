@@ -167,6 +167,7 @@ use std::ops::Range;
 
 /// Main components around [`Action`]s.
 pub mod actions;
+mod find;
 mod grep;
 /// Components to work with collections of [`Range`]s.
 pub mod ranges;

@@ -1478,6 +1478,7 @@ dependencies = [
  "unicode-normalization",
  "unicode_categories",
  "unicode_titlecase",
+ "walkdir",
 ]
 
 [[package]]
