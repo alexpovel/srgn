@@ -59,11 +59,11 @@
 //! ```rust
 //! use srgn::scoping::view::ScopedViewBuilder;
 //! use srgn::scoping::langs::CodeQuery as CQ;
-//! use srgn::scoping::langs::python::{Python, PremadePythonQuery};
+//! use srgn::scoping::langs::python::{Python, PreparedPythonQuery};
 //!
 //! let input = "def foo(bar: int) -> int: return bar + 1  # Do a thing";
 //!
-//! let lang = Python::new(CQ::Premade(PremadePythonQuery::Comments));
+//! let lang = Python::new(CQ::Prepared(PreparedPythonQuery::Comments));
 //!
 //! let mut builder = ScopedViewBuilder::new(input);
 //! builder.explode(&lang);

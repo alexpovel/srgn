@@ -8,11 +8,11 @@ use tree_sitter::QueryError;
 /// The C# language.
 pub type CSharp = Language<CSharpQuery>;
 /// A query for C#.
-pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PremadeCSharpQuery>;
+pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PreparedCSharpQuery>;
 
-/// Premade tree-sitter queries for C#.
+/// Prepared tree-sitter queries for C#.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadeCSharpQuery {
+pub enum PreparedCSharpQuery {
     /// Comments (including XML, inline, doc comments).
     Comments,
     /// Strings (incl. verbatim, interpolated; incl. quotes, except for interpolated).
@@ -24,16 +24,16 @@ pub enum PremadeCSharpQuery {
     Usings,
 }
 
-impl From<PremadeCSharpQuery> for TSQuery {
-    fn from(value: PremadeCSharpQuery) -> Self {
+impl From<PreparedCSharpQuery> for TSQuery {
+    fn from(value: PreparedCSharpQuery) -> Self {
         TSQuery::new(
             &CSharp::lang(),
             match value {
-                PremadeCSharpQuery::Comments => "(comment) @comment",
-                PremadeCSharpQuery::Usings => {
+                PreparedCSharpQuery::Comments => "(comment) @comment",
+                PreparedCSharpQuery::Usings => {
                     r"(using_directive [(identifier) (qualified_name)] @import)"
                 }
-                PremadeCSharpQuery::Strings => {
+                PreparedCSharpQuery::Strings => {
                     formatcp!(
                         r"
                             [
@@ -49,7 +49,7 @@ impl From<PremadeCSharpQuery> for TSQuery {
                 }
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

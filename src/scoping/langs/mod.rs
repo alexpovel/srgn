@@ -45,11 +45,11 @@ where
 {
     /// A custom, user-defined query.
     Custom(C),
-    /// A premade query.
+    /// A prepared query.
     ///
     /// Availability depends on the language, respective languages features, and
     /// implementation in this crate.
-    Premade(P),
+    Prepared(P),
 }
 
 impl<C, P> From<CodeQuery<C, P>> for TSQuery
@@ -60,7 +60,7 @@ where
     fn from(value: CodeQuery<C, P>) -> Self {
         match value {
             CodeQuery::Custom(query) => query.into(),
-            CodeQuery::Premade(query) => query.into(),
+            CodeQuery::Prepared(query) => query.into(),
         }
     }
 }

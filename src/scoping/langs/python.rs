@@ -8,11 +8,11 @@ use tree_sitter::QueryError;
 /// The Python language.
 pub type Python = Language<PythonQuery>;
 /// A query for Python.
-pub type PythonQuery = CodeQuery<CustomPythonQuery, PremadePythonQuery>;
+pub type PythonQuery = CodeQuery<CustomPythonQuery, PreparedPythonQuery>;
 
-/// Premade tree-sitter queries for Python.
+/// Prepared tree-sitter queries for Python.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadePythonQuery {
+pub enum PreparedPythonQuery {
     /// Comments.
     Comments,
     /// Strings (raw, byte, f-strings; interpolation is respected; quotes included).
@@ -27,13 +27,13 @@ pub enum PremadePythonQuery {
     FunctionCalls,
 }
 
-impl From<PremadePythonQuery> for TSQuery {
-    fn from(value: PremadePythonQuery) -> Self {
+impl From<PreparedPythonQuery> for TSQuery {
+    fn from(value: PreparedPythonQuery) -> Self {
         TSQuery::new(
             &Python::lang(),
             match value {
-                PremadePythonQuery::Comments => "(comment) @comment",
-                PremadePythonQuery::Strings => {
+                PreparedPythonQuery::Comments => "(comment) @comment",
+                PreparedPythonQuery::Strings => {
                     // Match either normal `string`s or `string`s with `interpolation`;
                     // using only the latter doesn't include the former.
                     formatcp!(
@@ -46,7 +46,7 @@ impl From<PremadePythonQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadePythonQuery::Imports => {
+                PreparedPythonQuery::Imports => {
                     r"[
                         (import_statement
                                 name: (dotted_name) @dn)
@@ -62,7 +62,7 @@ impl From<PremadePythonQuery> for TSQuery {
                             module_name: (relative_import) @ri)
                     ]"
                 }
-                PremadePythonQuery::DocStrings => {
+                PreparedPythonQuery::DocStrings => {
                     // Triple-quotes are also used for multi-line strings. So look only
                     // for stand-alone expressions, which are not part of some variable
                     // assignment.
@@ -75,14 +75,14 @@ impl From<PremadePythonQuery> for TSQuery {
                     )
                     "#
                 }
-                PremadePythonQuery::FunctionNames => {
+                PreparedPythonQuery::FunctionNames => {
                     r"
                     (function_definition
                         name: (identifier) @function-name
                     )
                     "
                 }
-                PremadePythonQuery::FunctionCalls => {
+                PreparedPythonQuery::FunctionCalls => {
                     r"
                     (call
                         function: (identifier) @function-name
@@ -91,7 +91,7 @@ impl From<PremadePythonQuery> for TSQuery {
                 }
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

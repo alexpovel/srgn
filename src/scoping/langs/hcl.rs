@@ -8,11 +8,11 @@ use tree_sitter::QueryError;
 /// The Hashicorp Configuration Language.
 pub type Hcl = Language<HclQuery>;
 /// A query for HCL.
-pub type HclQuery = CodeQuery<CustomHclQuery, PremadeHclQuery>;
+pub type HclQuery = CodeQuery<CustomHclQuery, PreparedHclQuery>;
 
-/// Premade tree-sitter queries for Hcl.
+/// Prepared tree-sitter queries for Hcl.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadeHclQuery {
+pub enum PreparedHclQuery {
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -39,16 +39,16 @@ pub enum PremadeHclQuery {
     Strings,
 }
 
-impl From<PremadeHclQuery> for TSQuery {
+impl From<PreparedHclQuery> for TSQuery {
     #[allow(clippy::too_many_lines)] // No good way to avoid
-    fn from(value: PremadeHclQuery) -> Self {
+    fn from(value: PreparedHclQuery) -> Self {
         TSQuery::new(
             &Hcl::lang(),
             // Seems to not play nice with the macro. Put up here, else interpolation is
             // affected.
             #[allow(clippy::needless_raw_string_hashes)]
             match value {
-                PremadeHclQuery::Variables => {
+                PreparedHclQuery::Variables => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us
                     // `@a.b` syntax (which seems undocumented).
@@ -75,7 +75,7 @@ impl From<PremadeHclQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeHclQuery::ResourceNames => {
+                PreparedHclQuery::ResourceNames => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us
                     // `@a.b` syntax (which seems undocumented).
@@ -108,7 +108,7 @@ impl From<PremadeHclQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeHclQuery::ResourceTypes => {
+                PreparedHclQuery::ResourceTypes => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us
                     // `@a.b` syntax (which seems undocumented).
@@ -142,7 +142,7 @@ impl From<PremadeHclQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeHclQuery::DataNames => {
+                PreparedHclQuery::DataNames => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us
                     // `@a.b` syntax (which seems undocumented).
@@ -174,7 +174,7 @@ impl From<PremadeHclQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeHclQuery::DataSources => {
+                PreparedHclQuery::DataSources => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us
                     // `@a.b` syntax (which seems undocumented).
@@ -206,8 +206,8 @@ impl From<PremadeHclQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeHclQuery::Comments => "(comment) @comment",
-                PremadeHclQuery::Strings => {
+                PreparedHclQuery::Comments => "(comment) @comment",
+                PreparedHclQuery::Strings => {
                     r"
                     [
                         (literal_value (string_lit) @string.literal)
@@ -222,7 +222,7 @@ impl From<PremadeHclQuery> for TSQuery {
                 }
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

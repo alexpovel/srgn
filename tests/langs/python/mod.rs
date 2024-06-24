@@ -1,21 +1,24 @@
 use super::{get_input_output, nuke_target};
 use pretty_assertions::assert_eq;
 use rstest::rstest;
-use srgn::scoping::langs::python::{PremadePythonQuery, Python, PythonQuery};
+use srgn::scoping::langs::python::{PreparedPythonQuery, Python, PythonQuery};
 
 #[rstest]
-#[case("docstring.py", PythonQuery::Premade(PremadePythonQuery::DocStrings))]
-#[case("strings.py", PythonQuery::Premade(PremadePythonQuery::Strings))]
-#[case("imports.py", PythonQuery::Premade(PremadePythonQuery::Imports))]
-#[case("comments-lf.py", PythonQuery::Premade(PremadePythonQuery::Comments))]
-#[case("comments-crlf.py", PythonQuery::Premade(PremadePythonQuery::Comments))]
+#[case("docstring.py", PythonQuery::Prepared(PreparedPythonQuery::DocStrings))]
+#[case("strings.py", PythonQuery::Prepared(PreparedPythonQuery::Strings))]
+#[case("imports.py", PythonQuery::Prepared(PreparedPythonQuery::Imports))]
+#[case("comments-lf.py", PythonQuery::Prepared(PreparedPythonQuery::Comments))]
+#[case(
+    "comments-crlf.py",
+    PythonQuery::Prepared(PreparedPythonQuery::Comments)
+)]
 #[case(
     "function-names.py",
-    PythonQuery::Premade(PremadePythonQuery::FunctionNames)
+    PythonQuery::Prepared(PreparedPythonQuery::FunctionNames)
 )]
 #[case(
     "function-calls.py",
-    PythonQuery::Premade(PremadePythonQuery::FunctionCalls)
+    PythonQuery::Prepared(PreparedPythonQuery::FunctionCalls)
 )]
 fn test_python_nuke(#[case] file: &str, #[case] query: PythonQuery) {
     let lang = Python::new(query);

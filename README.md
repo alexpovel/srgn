@@ -15,7 +15,7 @@ Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds us
 ## Usage
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
-supported](#premade-queries-sample-showcases)):
+supported](#prepared-queries-sample-showcases)):
 
 ```python gnu.py
 """GNU module."""
@@ -73,7 +73,7 @@ which demonstrates:
 - language grammar-aware operation: only Python docstrings were manipulated; virtually
   impossible to replicate in just regex
 
-  Skip ahead to **[more such showcases](#premade-queries-sample-showcases) below**.
+  Skip ahead to **[more such showcases](#prepared-queries-sample-showcases) below**.
 - advanced regex features such as, in this case, negative lookbehind are supported
 - Unicode is natively handled
 - features such as [ASCII symbol replacement](#symbols) are provided
@@ -543,7 +543,7 @@ detail, so it's not repeated here. It is given as a first positional argument.
 
 #### Language grammar-aware scopes
 
-`srgn` extends this through premade, language grammar-aware scopes, made possible
+`srgn` extends this through prepared, language grammar-aware scopes, made possible
 through the excellent [`tree-sitter`](https://tree-sitter.github.io/tree-sitter/)
 library. It offers a
 [queries](https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax) feature,
@@ -552,7 +552,7 @@ structure](https://en.wikipedia.org/wiki/Parse_tree).
 
 `srgn` comes bundled with a handful of the most useful of these queries. Through its
 discoverable API (either [as a library](#rust-library) or via CLI, `srgn --help`), one
-can learn of the supported languages and available, premade queries. Each supported
+can learn of the supported languages and available, prepared queries. Each supported
 language comes with an escape hatch, allowing you to run your own, custom ad-hoc
 queries. The hatch comes in the form of `--lang-query <S EXPRESSION>`, where `lang` is a
 language such as `python`. See [below](#custom-queries) for more on this advanced topic.
@@ -562,9 +562,9 @@ language such as `python`. See [below](#custom-queries) for more on this advance
 > Language scopes are applied *first*, so whatever regex aka main scope you pass, it
 > operates on each matched language construct individually.
 
-##### Premade queries (sample showcases)
+##### Prepared queries (sample showcases)
 
-This section shows examples for some of the **premade queries**.
+This section shows examples for some of the **prepared queries**.
 
 ###### Mass import (module) renaming (Python, Rust)
 

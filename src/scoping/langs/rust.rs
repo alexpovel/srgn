@@ -7,11 +7,11 @@ use tree_sitter::QueryError;
 /// The Rust language.
 pub type Rust = Language<RustQuery>;
 /// A query for Rust.
-pub type RustQuery = CodeQuery<CustomRustQuery, PremadeRustQuery>;
+pub type RustQuery = CodeQuery<CustomRustQuery, PreparedRustQuery>;
 
-/// Premade tree-sitter queries for Rust.
+/// Prepared tree-sitter queries for Rust.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadeRustQuery {
+pub enum PreparedRustQuery {
     /// Comments (line and block styles; excluding doc comments; comment chars incl.).
     Comments,
     /// Doc comments (comment chars included).
@@ -25,12 +25,12 @@ pub enum PremadeRustQuery {
     Strings,
 }
 
-impl From<PremadeRustQuery> for TSQuery {
-    fn from(value: PremadeRustQuery) -> Self {
+impl From<PreparedRustQuery> for TSQuery {
+    fn from(value: PreparedRustQuery) -> Self {
         TSQuery::new(
             &Rust::lang(),
             match value {
-                PremadeRustQuery::Comments => {
+                PreparedRustQuery::Comments => {
                     r#"
                     [
                         (line_comment)+ @line
@@ -40,7 +40,7 @@ impl From<PremadeRustQuery> for TSQuery {
                     @comment
                     "#
                 }
-                PremadeRustQuery::DocComments => {
+                PreparedRustQuery::DocComments => {
                     r#"
                     (
                         (line_comment)+ @line
@@ -48,7 +48,7 @@ impl From<PremadeRustQuery> for TSQuery {
                     )
                     "#
                 }
-                PremadeRustQuery::Uses => {
+                PreparedRustQuery::Uses => {
                     r"
                         (scoped_identifier
                             path: [
@@ -63,7 +63,7 @@ impl From<PremadeRustQuery> for TSQuery {
                         (use_wildcard (scoped_identifier) @use)
                     "
                 }
-                PremadeRustQuery::Strings => {
+                PreparedRustQuery::Strings => {
                     r"
                     [
                         (string_literal)
@@ -74,7 +74,7 @@ impl From<PremadeRustQuery> for TSQuery {
                 }
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

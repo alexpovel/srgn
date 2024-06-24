@@ -8,10 +8,10 @@ use tree_sitter::QueryError;
 /// The TypeScript language.
 pub type TypeScript = Language<TypeScriptQuery>;
 /// A query for TypeScript.
-pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PremadeTypeScriptQuery>;
-/// Premade tree-sitter queries for TypeScript.
+pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PreparedTypeScriptQuery>;
+/// Prepared tree-sitter queries for TypeScript.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadeTypeScriptQuery {
+pub enum PreparedTypeScriptQuery {
     /// Comments.
     Comments,
     /// Strings (literal, template; includes quote characters).
@@ -20,16 +20,16 @@ pub enum PremadeTypeScriptQuery {
     Imports,
 }
 
-impl From<PremadeTypeScriptQuery> for TSQuery {
-    fn from(value: PremadeTypeScriptQuery) -> Self {
+impl From<PreparedTypeScriptQuery> for TSQuery {
+    fn from(value: PreparedTypeScriptQuery) -> Self {
         TSQuery::new(
             &TypeScript::lang(),
             match value {
-                PremadeTypeScriptQuery::Comments => "(comment) @comment",
-                PremadeTypeScriptQuery::Imports => {
+                PreparedTypeScriptQuery::Comments => "(comment) @comment",
+                PreparedTypeScriptQuery::Imports => {
                     r"(import_statement source: (string (string_fragment) @sf))"
                 }
-                PremadeTypeScriptQuery::Strings => {
+                PreparedTypeScriptQuery::Strings => {
                     formatcp!(
                         r"
                         [
@@ -42,7 +42,7 @@ impl From<PremadeTypeScriptQuery> for TSQuery {
                 }
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

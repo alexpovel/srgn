@@ -1,13 +1,13 @@
 use super::{get_input_output, nuke_target};
 use pretty_assertions::assert_eq;
 use rstest::rstest;
-use srgn::scoping::langs::rust::{PremadeRustQuery, Rust, RustQuery};
+use srgn::scoping::langs::rust::{PreparedRustQuery, Rust, RustQuery};
 
 #[rstest]
-#[case("comments.rs", RustQuery::Premade(PremadeRustQuery::Comments))]
-#[case("doc-comments.rs", RustQuery::Premade(PremadeRustQuery::DocComments))]
-#[case("uses.rs", RustQuery::Premade(PremadeRustQuery::Uses))]
-#[case("strings.rs", RustQuery::Premade(PremadeRustQuery::Strings))]
+#[case("comments.rs", RustQuery::Prepared(PreparedRustQuery::Comments))]
+#[case("doc-comments.rs", RustQuery::Prepared(PreparedRustQuery::DocComments))]
+#[case("uses.rs", RustQuery::Prepared(PreparedRustQuery::Uses))]
+#[case("strings.rs", RustQuery::Prepared(PreparedRustQuery::Strings))]
 fn test_rust_nuke(#[case] file: &str, #[case] query: RustQuery) {
     let lang = Rust::new(query);
 

@@ -8,11 +8,11 @@ use tree_sitter::QueryError;
 /// The Go language.
 pub type Go = Language<GoQuery>;
 /// A query for Go.
-pub type GoQuery = CodeQuery<CustomGoQuery, PremadeGoQuery>;
+pub type GoQuery = CodeQuery<CustomGoQuery, PreparedGoQuery>;
 
-/// Premade tree-sitter queries for Go.
+/// Prepared tree-sitter queries for Go.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PremadeGoQuery {
+pub enum PreparedGoQuery {
     /// Comments (single- and multi-line).
     Comments,
     /// Strings (interpreted and raw; excluding struct tags).
@@ -23,13 +23,13 @@ pub enum PremadeGoQuery {
     StructTags,
 }
 
-impl From<PremadeGoQuery> for TSQuery {
-    fn from(value: PremadeGoQuery) -> Self {
+impl From<PreparedGoQuery> for TSQuery {
+    fn from(value: PreparedGoQuery) -> Self {
         TSQuery::new(
             &Go::lang(),
             match value {
-                PremadeGoQuery::Comments => "(comment) @comment",
-                PremadeGoQuery::Strings => {
+                PreparedGoQuery::Comments => "(comment) @comment",
+                PreparedGoQuery::Strings => {
                     formatcp!(
                         r"
                         [
@@ -42,13 +42,13 @@ impl From<PremadeGoQuery> for TSQuery {
                         IGNORE
                     )
                 }
-                PremadeGoQuery::Imports => {
+                PreparedGoQuery::Imports => {
                     r"(import_spec path: (interpreted_string_literal) @path)"
                 }
-                PremadeGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
+                PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )
-        .expect("Premade queries to be valid")
+        .expect("Prepared queries to be valid")
     }
 }
 

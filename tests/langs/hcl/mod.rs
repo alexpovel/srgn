@@ -1,16 +1,22 @@
 use super::{get_input_output, nuke_target};
 use pretty_assertions::assert_eq;
 use rstest::rstest;
-use srgn::scoping::langs::hcl::{Hcl, HclQuery, PremadeHclQuery};
+use srgn::scoping::langs::hcl::{Hcl, HclQuery, PreparedHclQuery};
 
 #[rstest]
-#[case("variables.tf", HclQuery::Premade(PremadeHclQuery::Variables))]
-#[case("resource-types.tf", HclQuery::Premade(PremadeHclQuery::ResourceTypes))]
-#[case("resource-names.tf", HclQuery::Premade(PremadeHclQuery::ResourceNames))]
-#[case("data-names.tf", HclQuery::Premade(PremadeHclQuery::DataNames))]
-#[case("data-sources.tf", HclQuery::Premade(PremadeHclQuery::DataSources))]
-#[case("comments.tf", HclQuery::Premade(PremadeHclQuery::Comments))]
-#[case("strings.tf", HclQuery::Premade(PremadeHclQuery::Strings))]
+#[case("variables.tf", HclQuery::Prepared(PreparedHclQuery::Variables))]
+#[case(
+    "resource-types.tf",
+    HclQuery::Prepared(PreparedHclQuery::ResourceTypes)
+)]
+#[case(
+    "resource-names.tf",
+    HclQuery::Prepared(PreparedHclQuery::ResourceNames)
+)]
+#[case("data-names.tf", HclQuery::Prepared(PreparedHclQuery::DataNames))]
+#[case("data-sources.tf", HclQuery::Prepared(PreparedHclQuery::DataSources))]
+#[case("comments.tf", HclQuery::Prepared(PreparedHclQuery::Comments))]
+#[case("strings.tf", HclQuery::Prepared(PreparedHclQuery::Strings))]
 fn test_hcl_nuke(#[case] file: &str, #[case] query: HclQuery) {
     let lang = Hcl::new(query);
 

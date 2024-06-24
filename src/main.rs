@@ -269,8 +269,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
 
     if let Some(csharp) = args.languages_scopes.csharp.clone() {
-        if let Some(premade) = csharp.csharp {
-            let query = CSharpQuery::Premade(premade);
+        if let Some(prepared) = csharp.csharp {
+            let query = CSharpQuery::Prepared(prepared);
 
             scopers.push(Box::new(CSharp::new(query)));
         } else if let Some(custom) = csharp.csharp_query {
@@ -281,8 +281,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     }
 
     if let Some(hcl) = args.languages_scopes.hcl.clone() {
-        if let Some(premade) = hcl.hcl {
-            let query = HclQuery::Premade(premade);
+        if let Some(prepared) = hcl.hcl {
+            let query = HclQuery::Prepared(prepared);
 
             scopers.push(Box::new(Hcl::new(query)));
         } else if let Some(custom) = hcl.hcl_query {
@@ -293,8 +293,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     }
 
     if let Some(go) = args.languages_scopes.go.clone() {
-        if let Some(premade) = go.go {
-            let query = GoQuery::Premade(premade);
+        if let Some(prepared) = go.go {
+            let query = GoQuery::Prepared(prepared);
 
             scopers.push(Box::new(Go::new(query)));
         } else if let Some(custom) = go.go_query {
@@ -305,8 +305,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     }
 
     if let Some(python) = args.languages_scopes.python.clone() {
-        if let Some(premade) = python.python {
-            let query = PythonQuery::Premade(premade);
+        if let Some(prepared) = python.python {
+            let query = PythonQuery::Prepared(prepared);
 
             scopers.push(Box::new(Python::new(query)));
         } else if let Some(custom) = python.python_query {
@@ -317,8 +317,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     }
 
     if let Some(rust) = args.languages_scopes.rust.clone() {
-        if let Some(premade) = rust.rust {
-            let query = RustQuery::Premade(premade);
+        if let Some(prepared) = rust.rust {
+            let query = RustQuery::Prepared(prepared);
 
             scopers.push(Box::new(Rust::new(query)));
         } else if let Some(custom) = rust.rust_query {
@@ -329,8 +329,8 @@ fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
     }
 
     if let Some(typescript) = args.languages_scopes.typescript.clone() {
-        if let Some(premade) = typescript.typescript {
-            let query = TypeScriptQuery::Premade(premade);
+        if let Some(prepared) = typescript.typescript {
+            let query = TypeScriptQuery::Prepared(prepared);
 
             scopers.push(Box::new(TypeScript::new(query)));
         } else if let Some(custom) = typescript.typescript_query {
@@ -445,12 +445,12 @@ mod cli {
     use clap_complete::{generate, Generator, Shell};
     use srgn::{
         scoping::langs::{
-            csharp::{CustomCSharpQuery, PremadeCSharpQuery},
-            go::{CustomGoQuery, PremadeGoQuery},
-            hcl::{CustomHclQuery, PremadeHclQuery},
-            python::{CustomPythonQuery, PremadePythonQuery},
-            rust::{CustomRustQuery, PremadeRustQuery},
-            typescript::{CustomTypeScriptQuery, PremadeTypeScriptQuery},
+            csharp::{CustomCSharpQuery, PreparedCSharpQuery},
+            go::{CustomGoQuery, PreparedGoQuery},
+            hcl::{CustomHclQuery, PreparedHclQuery},
+            python::{CustomPythonQuery, PreparedPythonQuery},
+            rust::{CustomRustQuery, PreparedRustQuery},
+            typescript::{CustomTypeScriptQuery, PreparedTypeScriptQuery},
         },
         GLOBAL_SCOPE,
     };
@@ -674,9 +674,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct CSharpScope {
-        /// Scope CSharp code using a premade query.
+        /// Scope CSharp code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub csharp: Option<PremadeCSharpQuery>,
+        pub csharp: Option<PreparedCSharpQuery>,
 
         /// Scope CSharp code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
@@ -686,9 +686,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct HclScope {
-        /// Scope HashiCorp Configuration Language code using a premade query.
+        /// Scope HashiCorp Configuration Language code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub hcl: Option<PremadeHclQuery>,
+        pub hcl: Option<PreparedHclQuery>,
 
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
@@ -698,9 +698,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct GoScope {
-        /// Scope Go code using a premade query.
+        /// Scope Go code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub go: Option<PremadeGoQuery>,
+        pub go: Option<PreparedGoQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
@@ -710,9 +710,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct PythonScope {
-        /// Scope Python code using a premade query.
+        /// Scope Python code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub python: Option<PremadePythonQuery>,
+        pub python: Option<PreparedPythonQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
@@ -722,9 +722,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct RustScope {
-        /// Scope Rust code using a premade query.
+        /// Scope Rust code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub rust: Option<PremadeRustQuery>,
+        pub rust: Option<PreparedRustQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
@@ -734,9 +734,9 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     pub(super) struct TypeScriptScope {
-        /// Scope TypeScript code using a premade query.
+        /// Scope TypeScript code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub typescript: Option<PremadeTypeScriptQuery>,
+        pub typescript: Option<PreparedTypeScriptQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
