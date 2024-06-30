@@ -294,6 +294,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
 
 [[package]]
+name = "colored"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
+dependencies = [
+ "lazy_static",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "comrak"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -711,6 +721,33 @@ name = "glob"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+
+[[package]]
+name = "globset"
+version = "0.4.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57da3b9b5b85bd66f31093f8c408b90a74431672542466497dcbdfdc02034be1"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax 0.8.2",
+]
+
+[[package]]
+name = "grep-cli"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea40788c059ab8b622c4d074732750bfb3bd2912e2dd58eabc11798a4d5ad725"
+dependencies = [
+ "bstr",
+ "globset",
+ "libc",
+ "log",
+ "termcolor",
+ "winapi-util",
+]
 
 [[package]]
 name = "hashbrown"
@@ -1442,6 +1479,7 @@ dependencies = [
  "cached",
  "clap",
  "clap_complete",
+ "colored",
  "comrak",
  "const_format",
  "decompound",
@@ -1450,6 +1488,7 @@ dependencies = [
  "fancy-regex",
  "fst",
  "glob",
+ "grep-cli",
  "insta",
  "itertools",
  "log",

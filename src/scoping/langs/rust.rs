@@ -1,4 +1,4 @@
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
@@ -113,5 +113,11 @@ impl LanguageScoper for Rust {
 
     fn query(&self) -> TSQuery {
         self.query.clone().into()
+    }
+}
+
+impl Find for Rust {
+    fn extensions(&self) -> &'static [&'static str] {
+        &["rs"]
     }
 }

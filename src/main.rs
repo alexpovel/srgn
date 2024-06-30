@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use colored::Colorize;
 use log::{debug, info, warn, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
@@ -11,6 +12,7 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::grep::{grep, NoTty};
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
 use srgn::{
@@ -30,12 +32,15 @@ use srgn::{
         Scoper,
     },
 };
+use srgn::{grep::Tty, scoping::langs::LanguageScoper};
 use std::{
+    env,
     error::Error,
     fmt,
     fs::File,
-    io::{self, IoSlice, Write},
+    io::{self, stdin, stdout, IoSlice, IsTerminal, Read, Write},
 };
+use walkdir::WalkDir;
 
 fn main() -> Result<()> {
     let args = cli::Cli::init();
@@ -57,107 +62,247 @@ fn main() -> Result<()> {
     info!("Launching app with args: {:?}", args);
 
     debug!("Assembling scopers.");
-    let scopers = assemble_scopers(&args)?;
+    let (language_scoper, language_scoper_as_scoper) = get_language_scoper(&args).unzip();
+    let general_scoper = get_general_scoper(&args)?;
+    let all_scopers = if let Some(ls) = language_scoper_as_scoper {
+        vec![ls, general_scoper]
+    } else {
+        vec![general_scoper]
+    };
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
     let actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
-    match &args.options.files {
-        Some(pattern) => {
-            info!("Will use glob pattern: {:?}", pattern);
+    // See where we're reading from
+    let input = match (
+        grep_cli::is_readable_stdin(),
+        args.options.files.clone(),
+        language_scoper,
+    ) {
+        // stdin is viable, and no pattern override
+        (true, None, _) => Input::Stdin,
 
-            let paths = glob::glob(pattern.as_str())
-                .expect("Pattern is valid, as it's been compiled")
+        // When a pattern is specified, it takes precedence over everything.
+        (_, Some(pattern), _) => Input::WalkOn(Box::new(move |path| pattern.matches_path(path))),
+
+        // If pattern wasn't manually overridden, consult the language scoper itself.
+        (_, None, Some(language_scoper)) => {
+            Input::WalkOn(Box::new(move |path| language_scoper.is_valid_path(path)))
+        }
+
+        // No viable stdin given, and nothing else either: walk recursively, considering
+        // all files valid.
+        (false, None, None) => Input::WalkOn(Box::new(|_| true)),
+    };
+
+    // Now write out
+    match (input, actions.is_empty()) {
+        (Input::Stdin, true) => {
+            info!(
+                "Will read from stdin and write to stdout, using `grep` mode (no actions specified)"
+            );
+
+            let mut buf = String::new();
+            stdin().lock().read_to_string(&mut buf)?;
+
+            let mut stdout = stdout().lock();
+            if stdout.is_terminal() {
+                for line in grep::<Tty>(&buf, &all_scopers) {
+                    write!(stdout, "{line}")?;
+                }
+            } else {
+                for line in grep::<NoTty>(&buf, &all_scopers) {
+                    write!(stdout, "{line}")?;
+                }
+            };
+        }
+        (Input::Stdin, false) => {
+            info!("Will read from stdin and write to stdout, applying actions");
+            handle_actions_on_stdin(&all_scopers, &actions, &args)?;
+        }
+        (Input::WalkOn(validator), true) => {
+            // TODO: Refactor this
+            let root = env::current_dir()?;
+            WalkDir::new(&root)
+                .into_iter()
                 .par_bridge()
-                .map(|glob| {
-                    let path = glob.context("Failed to glob")?;
-                    debug!("Processing path: {:?}", path);
+                .flatten()
+                .filter(|entry| validator(entry.path()))
+                .map(|entry| {
+                    let path = entry.path();
 
-                    if !path.is_file() {
-                        warn!(
-                            "Path does not look like a file (will still try): '{}' (Metadata: {:?})",
-                            path.display(),
-                            path.metadata()
-                        );
-                    }
+                    let mut file = File::open(path)
+                        .with_context(|| format!("Failed to read file: {:?}", path))?;
 
-                    let contents = {
-                        let file = File::open(&path)
-                            .with_context(|| format!("Failed to read file: {:?}", path))?;
+                    let mut buf = String::new();
+                    file.read_to_string(&mut buf)?;
 
-                        let mut source = std::io::BufReader::new(file);
-                        let mut destination = std::io::Cursor::new(Vec::new());
+                    let mut stdout = stdout().lock();
+                    if stdout.is_terminal() {
+                        let lines = grep::<Tty>(&buf, &all_scopers);
 
-                        apply(
-                            &mut source,
-                            &mut destination,
-                            &scopers,
-                            &actions,
-                            args.options.fail_none,
-                            args.options.fail_any,
-                            args.standalone_actions.squeeze,
-                        )
-                        .with_context(|| format!("Failed to process file contents: {:?}", path))?;
+                        if lines.iter().any(|l| l.has_highlights()) {
+                            writeln!(
+                                stdout,
+                                "{}",
+                                path.strip_prefix(&root)?
+                                    .display()
+                                    .to_string()
+                                    .as_str()
+                                    .magenta()
+                            )?;
 
-                        destination.into_inner()
+                            for line in lines {
+                                write!(stdout, "{line}")?;
+                            }
+
+                            writeln!(stdout)?;
+                        }
+                    } else {
+                        writeln!(stdout, "{}", path.display())?;
+                        for line in grep::<NoTty>(&buf, &all_scopers) {
+                            write!(stdout, "{line}")?;
+                        }
+                        writeln!(stdout)?;
                     };
 
-                    debug!("Got new file contents, writing to file: {:?}", path);
-                    let mut file = File::create(&path)
-                        .with_context(|| format!("Failed to truncate file: {:?}", path))?;
-                    file.write_all(&contents)
-                        .with_context(|| format!("Failed to write to file: {:?}", path))?;
-                    debug!("Done processing file: {:?}", path);
-
-                    {
-                        let path_repr = path.display().to_string();
-                        let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
-
-                        std::io::stdout()
-                            .lock()
-                            .write_vectored(slices)
-                            .context("Failed writing processed file's name to stdout")?;
-                    }
-
-                    Ok(path)
+                    Ok(())
                 })
-                .collect::<Result<Vec<_>>>()
-                .context("Failure in processing of files")?;
-
-            if args.options.fail_empty_glob && paths.is_empty() {
-                return Err(ApplicationError::EmptyGlob(pattern.clone()))
-                    .context("No files processed");
-            }
+                .collect::<Result<Vec<_>>>()?;
         }
-        None => {
-            info!("Will use stdin to stdout");
-            let mut source = std::io::stdin().lock();
-            let mut destination = std::io::stdout().lock();
-
-            apply(
-                &mut source,
-                &mut destination,
-                &scopers,
-                &actions,
-                args.options.fail_none,
-                args.options.fail_any,
-                args.standalone_actions.squeeze,
-            )
-            .context("Failed to process stdin")?;
+        (Input::WalkOn(validator), false) => {
+            info!("Will walk file tree, applying actions");
+            handle_actions_on_many_files(validator, &all_scopers, &actions, &args)?
         }
-    }
+    };
 
     info!("Done, exiting");
     Ok(())
 }
 
+/// Indicates whether a filesystem path is valid according to some criteria (glob
+/// pattern, ...).
+type Validator = Box<dyn Fn(&std::path::Path) -> bool + Send + Sync>;
+
+/// The input to read from.
+enum Input {
+    /// Standard input.
+    Stdin,
+    /// Use a recursive directory walker, and apply the contained validator, which
+    /// indicates valid filesystem entries. This is similar to globbing, but more
+    /// flexible.
+    WalkOn(Validator),
+}
+
+fn handle_actions_on_stdin(
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+) -> Result<(), anyhow::Error> {
+    assert!(!actions.is_empty());
+
+    info!("Will use stdin to stdout");
+    let mut source = std::io::stdin().lock();
+    let mut destination = std::io::stdout().lock();
+
+    apply(
+        &mut source,
+        &mut destination,
+        scopers,
+        actions,
+        args.options.fail_none,
+        args.options.fail_any,
+        args.standalone_actions.squeeze,
+    )
+    .context("Failed to process stdin")?;
+
+    Ok(())
+}
+
+fn handle_actions_on_many_files(
+    validator: Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+) -> Result<(), anyhow::Error> {
+    assert!(!actions.is_empty());
+
+    let paths = WalkDir::new(env::current_dir()?)
+        .into_iter()
+        .par_bridge()
+        .flatten()
+        .filter(|entry| validator(entry.path()))
+        .map(|entry| {
+            let path = entry.path();
+            debug!("Processing path: {:?}", path);
+
+            if !path.is_file() {
+                warn!(
+                    "Path does not look like a file (will still try): '{}' (Metadata: {:?})",
+                    path.display(),
+                    path.metadata()
+                );
+            }
+
+            let contents = {
+                let file =
+                    File::open(path).with_context(|| format!("Failed to read file: {:?}", path))?;
+
+                let mut source = std::io::BufReader::new(file);
+                let mut destination = std::io::Cursor::new(Vec::new());
+
+                apply(
+                    &mut source,
+                    &mut destination,
+                    scopers,
+                    actions,
+                    args.options.fail_none,
+                    args.options.fail_any,
+                    args.standalone_actions.squeeze,
+                )
+                .with_context(|| format!("Failed to process file contents: {:?}", path))?;
+
+                destination.into_inner()
+            };
+
+            debug!("Got new file contents, writing to file: {:?}", path);
+            let mut file = File::create(path)
+                .with_context(|| format!("Failed to truncate file: {:?}", path))?;
+            file.write_all(&contents)
+                .with_context(|| format!("Failed to write to file: {:?}", path))?;
+            debug!("Done processing file: {:?}", path);
+
+            {
+                let path_repr = path.display().to_string();
+                let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
+
+                std::io::stdout()
+                    // TODO: benchmark whether moving this out of the parallel section
+                    // reduces lock contention and improves performance.
+                    .lock()
+                    .write_vectored(slices)
+                    .context("Failed writing processed file's name to stdout")?;
+            }
+
+            Ok(entry)
+        })
+        .collect::<Result<Vec<_>>>() // TODO: do not collect? Lots of memory for almost no reason.
+        .context("Failure in processing of files")?;
+
+    if args.options.fail_empty_glob && paths.is_empty() {
+        Err(ApplicationError::NoFilesFound).context("No files processed")
+    } else {
+        Ok(())
+    }
+}
+
 fn apply(
     source: &mut impl io::BufRead,
     destination: &mut impl io::Write,
-    scopers: &Vec<Box<dyn Scoper>>,
-    actions: &Vec<Box<dyn Action>>,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
     fail_none: bool,
     fail_any: bool,
     squeeze: bool,
@@ -195,25 +340,11 @@ fn apply(
             view.squeeze();
         }
 
-        // if actions.is_empty() {
-        //     info!("No actions loaded. Loading default action: Print");
-
-        //     view.scopes()
-        //         .0
-        //         .iter()
-        //         .filter_map(|scope| match &scope.0 {
-        //             Scope::In(content, _) => Some(content.to_string()),
-        //             _ => None,
-        //         })
-        //         .collect::<Vec<String>>()
-        //         .join("\n")
-        // } else {
         for action in actions {
             view.map_with_context(action)?;
         }
 
         view.to_string()
-        // }
     };
     debug!("Done applying actions to view.");
 
@@ -230,7 +361,7 @@ fn apply(
 enum ApplicationError {
     SomeInScope,
     NoneInScope,
-    EmptyGlob(glob::Pattern),
+    NoFilesFound,
 }
 
 impl fmt::Display for ApplicationError {
@@ -241,7 +372,7 @@ impl fmt::Display for ApplicationError {
                 "Some input was in scope, and explicit failure requested."
             ),
             Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
-            Self::EmptyGlob(p) => write!(f, "No files matched glob pattern: {:?}", p),
+            Self::NoFilesFound => write!(f, "No files found"),
         }
     }
 }
@@ -279,92 +410,57 @@ impl fmt::Display for ScoperBuildError {
 
 impl Error for ScoperBuildError {}
 
-fn assemble_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn Scoper>>> {
-    let mut scopers: Vec<Box<dyn Scoper>> = Vec::new();
+fn get_language_scoper(args: &cli::Cli) -> Option<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> {
+    // We have `LanguageScoper: Scoper`, but we cannot upcast
+    // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
+    // by providing both.
+    let mut scopers: Vec<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> = Vec::new();
 
-    if let Some(csharp) = args.languages_scopes.csharp.clone() {
-        if let Some(prepared) = csharp.csharp {
-            let query = CSharpQuery::Prepared(prepared);
-
-            scopers.push(Box::new(CSharp::new(query)));
-        } else if let Some(custom) = csharp.csharp_query {
-            let query = CSharpQuery::Custom(custom);
-
-            scopers.push(Box::new(CSharp::new(query)));
-        }
+    macro_rules! handle_language_scope {
+        ($lang:ident, $lang_query:ident, $query_type:ident, $lang_type:ident) => {
+            if let Some(lang_scope) = &args.languages_scopes.$lang {
+                if let Some(prepared) = lang_scope.$lang {
+                    let query = $query_type::Prepared(prepared);
+                    scopers.push((
+                        Box::new($lang_type::new(query.clone())),
+                        Box::new($lang_type::new(query)),
+                    ));
+                } else if let Some(custom) = &lang_scope.$lang_query {
+                    let query = $query_type::Custom(custom.clone());
+                    scopers.push((
+                        Box::new($lang_type::new(query.clone())),
+                        Box::new($lang_type::new(query)),
+                    ));
+                } else {
+                    unreachable!("Language specified, but no scope.");
+                };
+            };
+        };
     }
 
-    if let Some(hcl) = args.languages_scopes.hcl.clone() {
-        if let Some(prepared) = hcl.hcl {
-            let query = HclQuery::Prepared(prepared);
+    handle_language_scope!(csharp, csharp_query, CSharpQuery, CSharp);
+    handle_language_scope!(hcl, hcl_query, HclQuery, Hcl);
+    handle_language_scope!(go, go_query, GoQuery, Go);
+    handle_language_scope!(python, python_query, PythonQuery, Python);
+    handle_language_scope!(rust, rust_query, RustQuery, Rust);
+    handle_language_scope!(typescript, typescript_query, TypeScriptQuery, TypeScript);
 
-            scopers.push(Box::new(Hcl::new(query)));
-        } else if let Some(custom) = hcl.hcl_query {
-            let query = HclQuery::Custom(custom);
+    // We could just `return` after the first found, but then we wouldn't know whether
+    // we had a bug. So collect, then assert we only found one max.
+    assert!(
+        scopers.len() <= 1,
+        "clap limits to single value (`multiple = false`)"
+    );
 
-            scopers.push(Box::new(Hcl::new(query)));
-        }
-    }
+    scopers.into_iter().next()
+}
 
-    if let Some(go) = args.languages_scopes.go.clone() {
-        if let Some(prepared) = go.go {
-            let query = GoQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Go::new(query)));
-        } else if let Some(custom) = go.go_query {
-            let query = GoQuery::Custom(custom);
-
-            scopers.push(Box::new(Go::new(query)));
-        }
-    }
-
-    if let Some(python) = args.languages_scopes.python.clone() {
-        if let Some(prepared) = python.python {
-            let query = PythonQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Python::new(query)));
-        } else if let Some(custom) = python.python_query {
-            let query = PythonQuery::Custom(custom);
-
-            scopers.push(Box::new(Python::new(query)));
-        }
-    }
-
-    if let Some(rust) = args.languages_scopes.rust.clone() {
-        if let Some(prepared) = rust.rust {
-            let query = RustQuery::Prepared(prepared);
-
-            scopers.push(Box::new(Rust::new(query)));
-        } else if let Some(custom) = rust.rust_query {
-            let query = RustQuery::Custom(custom);
-
-            scopers.push(Box::new(Rust::new(query)));
-        }
-    }
-
-    if let Some(typescript) = args.languages_scopes.typescript.clone() {
-        if let Some(prepared) = typescript.typescript {
-            let query = TypeScriptQuery::Prepared(prepared);
-
-            scopers.push(Box::new(TypeScript::new(query)));
-        } else if let Some(custom) = typescript.typescript_query {
-            let query = TypeScriptQuery::Custom(custom);
-
-            scopers.push(Box::new(TypeScript::new(query)));
-        }
-    }
-
-    if args.options.literal_string {
-        scopers.push(Box::new(
-            Literal::try_from(args.scope.clone()).context("Failed building literal string")?,
-        ));
+fn get_general_scoper(args: &cli::Cli) -> Result<Box<dyn Scoper>> {
+    Ok(if args.options.literal_string {
+        Box::new(Literal::try_from(args.scope.clone()).context("Failed building literal string")?)
     } else {
-        scopers.push(Box::new(
-            Regex::try_from(args.scope.clone()).context("Failed building regex")?,
-        ));
-    }
-
-    Ok(scopers)
+        Box::new(Regex::try_from(args.scope.clone()).context("Failed building regex")?)
+    })
 }
 
 fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {

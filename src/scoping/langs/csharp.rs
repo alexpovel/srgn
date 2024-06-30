@@ -1,5 +1,8 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
+use crate::{
+    find::Find,
+    scoping::{langs::IGNORE, scope::RangesWithContext, Scoper},
+};
 use clap::ValueEnum;
 use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
@@ -88,5 +91,11 @@ impl LanguageScoper for CSharp {
 
     fn query(&self) -> TSQuery {
         self.query.clone().into()
+    }
+}
+
+impl Find for CSharp {
+    fn extensions(&self) -> &'static [&'static str] {
+        &["cs"]
     }
 }

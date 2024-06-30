@@ -1,4 +1,4 @@
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use const_format::formatcp;
@@ -130,5 +130,15 @@ impl LanguageScoper for Python {
 
     fn query(&self) -> TSQuery {
         self.query.clone().into()
+    }
+}
+
+impl Find for Python {
+    fn extensions(&self) -> &'static [&'static str] {
+        &["py"]
+    }
+
+    fn interpreters(&self) -> Option<&'static [&'static str]> {
+        Some(&["python", "python3"])
     }
 }

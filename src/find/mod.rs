@@ -6,70 +6,57 @@ use std::{
 };
 use walkdir::WalkDir;
 
-pub enum FileType {
-    CSharp,
-    Go,
-    Hcl,
-    Python,
-    Rust,
-    TypeScript,
-}
+/// A trait to facilitate finding corresponding, in one sense or another, files.
+///
+/// For example, a type responsible for Python source code files may implement this to
+/// indicate how its files can be identified (extension, interpreter, ...).
+pub trait Find {
+    /// The file suffixes aka extensions corresponding files carry.
+    fn extensions(&self) -> &'static [&'static str];
 
-impl FileType {
-    pub fn find(&self, root: &Path) -> Vec<PathBuf> {
-        let mut result = Vec::new();
-        let extensions = self.extensions();
-        let interpreters = self.interpreters();
-
-        for entry in WalkDir::new(root).into_iter().flatten() {
-            match (entry.path().extension(), interpreters) {
-                (Some(ext), _) => {
-                    if let Some(ext) = ext.to_str() {
-                        if extensions.contains(&ext) {
-                            result.push(entry.path().to_owned());
-                        }
-                    }
-                }
-                (None, Some(interpreters)) => {
-                    if let Ok(mut fh) = File::open(entry.path()) {
-                        if let Some(interpreter) = find_interpreter(&mut fh) {
-                            if interpreters.contains(&interpreter.as_str()) {
-                                result.push(entry.path().to_owned());
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        result
-    }
-
-    fn extensions(&self) -> &'static [&'static str] {
-        match self {
-            FileType::CSharp => &["cs", "csx"],
-            FileType::Go => &["go"],
-            FileType::Hcl => &["hcl", "tf"],
-            FileType::Python => &["py"],
-            FileType::Rust => &["rs"],
-            FileType::TypeScript => &["ts", "tsx"],
-        }
-    }
-
+    /// Valid interpreters as found in the shebang line corresponding to the files.
+    ///
+    /// For example, in
+    ///
+    /// ```bash
+    /// #!/usr/bin/env python3
+    ///
+    /// print("Hello World")
+    /// ```
+    ///
+    /// the interpreter is `python3`.
     fn interpreters(&self) -> Option<&'static [&'static str]> {
-        match self {
-            FileType::Go
-            | FileType::Hcl
-            | FileType::Rust
-            | FileType::TypeScript
-            | FileType::CSharp => None,
-            FileType::Python => Some(&["python", "python3"]),
+        None
+    }
+
+    /// According to the hints and metadata provided by this trait, is the provided
+    /// `path` valid?
+    fn is_valid_path(&self, path: &Path) -> bool {
+        match (path.extension(), self.interpreters()) {
+            (Some(ext), _) => {
+                if let Some(ext) = ext.to_str() {
+                    self.extensions().contains(&ext)
+                } else {
+                    false
+                }
+            }
+            (None, Some(interpreters)) => {
+                if let Ok(mut fh) = File::open(path) {
+                    if let Some(interpreter) = find_interpreter(&mut fh) {
+                        interpreters.contains(&interpreter.as_str())
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            _ => false,
         }
     }
 }
 
-fn find_interpreter(source: &mut impl Read) -> Option<String> {
+pub(crate) fn find_interpreter(source: &mut impl Read) -> Option<String> {
     let mut interpreter = String::new();
     let mut seen_space = false;
     let mut buf = [0u8; 32];

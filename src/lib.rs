@@ -167,8 +167,10 @@ use std::ops::Range;
 
 /// Main components around [`Action`]s.
 pub mod actions;
-mod find;
-mod grep;
+/// Utilities around finding files.
+pub mod find;
+/// Items for `grep`-like functionality.
+pub mod grep;
 /// Components to work with collections of [`Range`]s.
 pub mod ranges;
 /// Main components around [`ScopedView`].

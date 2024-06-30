@@ -1,31 +1,83 @@
-#![allow(unused)]
-
 use crate::{ranges::Ranges, scoping::Scoper};
+use colored::Colorize;
 use itertools::Itertools;
 use log::{debug, warn};
 use ranges::{GlobalRange, LocalRange};
-use std::ops::Range;
+use std::{marker::PhantomData, ops::Range};
 
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// enum Source<'f> {
-//     Stdin,
-//     File(&'f Path),
-// }
-
-// #[derive(Debug, Clone, PartialEq, Eq)]
-// struct Hits<'f, 'viewee> {
-//     source: Source<'f>,
-//     lines: Vec<Line<'viewee>>,
-// }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Line<'a> {
+/// A line to be printed to a destination, with relevant metadata.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Line<'a, D: Destination> {
+    /// The line number.
     number: usize,
+    /// The *entire* line contents.
     content: &'a str,
+    /// Potential highlights to apply to this line, as indices into the `content`.
     highlights: Option<Ranges<usize>>,
+    /// <https://cliffle.com/blog/rust-typestate/#variation-state-type-parameter>
+    _marker: PhantomData<D>,
 }
 
-fn grep<'viewee>(input: &'viewee str, scopers: &[Box<dyn Scoper>]) -> Vec<Line<'viewee>> {
+impl<'a, D: Destination> Line<'a, D> {
+    /// Return whether this line contains any highlights.
+    #[must_use]
+    pub fn has_highlights(&self) -> bool {
+        self.highlights.is_some()
+    }
+}
+
+/// A type-state trait for modelling an output destination.
+pub trait Destination: std::fmt::Debug + Default {}
+
+/// A teletype.
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub struct Tty;
+
+/// Not a teletype; opposite of [`Tty`].
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub struct NoTty;
+
+impl Destination for Tty {}
+impl Destination for NoTty {}
+
+impl<'a> std::fmt::Display for Line<'a, Tty> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(highlights) = &self.highlights {
+            write!(f, "{}:", self.number.to_string().green())?;
+
+            let mut last_end = 0;
+            for highlight in highlights {
+                write!(f, "{}", &self.content[last_end..highlight.start])?;
+                write!(f, "{}", &self.content[highlight.clone()].red())?;
+                last_end = highlight.end;
+            }
+
+            write!(f, "{}", &self.content[last_end..])?;
+        };
+
+        Ok(())
+    }
+}
+
+impl<'a> std::fmt::Display for Line<'a, NoTty> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.highlights.is_some() {
+            write!(f, "{}:", self.number.to_string().green())?;
+            write!(f, "{}", self.content)?;
+        }
+
+        Ok(())
+    }
+}
+
+/// Like normal `grep`, takes some input, and scopes it down using the regular
+/// [`Scoper`] mechanisms, allowing this function to do more than regex.
+#[must_use]
+#[allow(clippy::missing_panics_doc)] // Internal asserts, not for public consumption
+pub fn grep<'viewee, D: Destination>(
+    input: &'viewee str,
+    scopers: &[Box<dyn Scoper>],
+) -> Vec<Line<'viewee, D>> {
     let mut ranges = vec![GlobalRange::from(0..input.len())];
     debug!("Initial ranges: {ranges:?}");
 
@@ -120,6 +172,7 @@ fn grep<'viewee>(input: &'viewee str, scopers: &[Box<dyn Scoper>]) -> Vec<Line<'
 
                 Some(Ranges::from_iter(highlights))
             },
+            ..Default::default()
         });
 
         line.start = line.end;
@@ -265,7 +318,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -279,7 +333,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -293,7 +348,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -307,7 +363,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello world",
-                highlights: make_highlights([2..5])
+                highlights: make_highlights([2..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -322,7 +379,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello world",
-                highlights: make_highlights([3..5])
+                highlights: make_highlights([3..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -337,7 +395,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello world",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -352,7 +411,8 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello world",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -365,12 +425,14 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "world",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -384,12 +446,14 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "world",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -403,12 +467,14 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "world",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -422,22 +488,26 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 3,
                 content: "\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 4,
                 content: "world",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -451,17 +521,20 @@ mod tests {
             Line {
                 number: 1,
                 content: "\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 3,
                 content: "\n",
-                highlights: None
+                highlights: None,
+                ..Default::default()
             },
         ],
     )]
@@ -475,12 +548,14 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: make_highlights([0..6]) // ⚠️ newline included in range
+                highlights: make_highlights([0..6]), // ⚠️ newline included in range
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "world",
-                highlights: make_highlights([0..5])
+                highlights: make_highlights([0..5]),
+                ..Default::default()
             },
         ],
     )]
@@ -494,12 +569,14 @@ mod tests {
             Line {
                 number: 1,
                 content: "hello\n",
-                highlights: make_highlights([3..6]) // ⚠️ newline included in range
+                highlights: make_highlights([3..6]), // ⚠️ newline included in range
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "world",
-                highlights: make_highlights([0..2])
+                highlights: make_highlights([0..2]),
+                ..Default::default()
             },
         ],
     )]
@@ -526,58 +603,68 @@ def GNU_says_moo():
                 number: 1,
                 content: "\"\"\"GNU module.\"\"\"\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 2,
                 content: "\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 3,
                 content: "def GNU_says_moo():\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 4,
                 content: "    \"\"\"The GNU -> say moo -> ✅\"\"\"\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 5,
                 content: "\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 6,
                 content: "    GNU = \"\"\"\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 7,
                 content: "      GNU\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 8,
                 content: "    \"\"\"  # the GNU...\n",
                 highlights: make_highlights([15..18]),
+                ..Default::default()
             },
             Line {
                 number: 9,
                 content: "\n",
                 highlights: None,
+                ..Default::default()
             },
             Line {
                 number: 10,
                 content: "    GNU_says_moo(GNU + \" says moo\")  # ...say moo\n",
                 highlights: None,
+                ..Default::default()
             },
         ],
     )]
     fn test_grep(
         #[case] input: &str,
         #[case] scopers: Vec<Box<dyn Scoper>>,
-        #[case] expected: Vec<Line>,
+        #[case] expected: Vec<Line<'_, NoTty>>,
     ) {
         assert_eq!(grep(input, &scopers), expected);
     }
