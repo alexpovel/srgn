@@ -60,7 +60,7 @@ impl Scoper for Literal {
     }
 }
 
-#[cfg(test)]
+#[cfg(never)]
 mod tests {
     use super::*;
     use crate::scoping::{

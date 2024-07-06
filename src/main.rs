@@ -1,5 +1,7 @@
 use anyhow::{Context, Result};
+use colored::Color;
 use colored::Colorize;
+use log::trace;
 use log::{debug, info, warn, LevelFilter};
 use rayon::prelude::*;
 use srgn::actions::Deletion;
@@ -8,6 +10,7 @@ use srgn::actions::German;
 use srgn::actions::Lower;
 use srgn::actions::Normalization;
 use srgn::actions::Replacement;
+use srgn::actions::Style;
 use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
@@ -72,7 +75,7 @@ fn main() -> Result<()> {
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
-    let actions = assemble_actions(&args)?;
+    let mut actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
     // See where we're reading from
@@ -85,7 +88,11 @@ fn main() -> Result<()> {
         (true, None, _) => Input::Stdin,
 
         // When a pattern is specified, it takes precedence over everything.
-        (_, Some(pattern), _) => Input::WalkOn(Box::new(move |path| pattern.matches_path(path))),
+        (_, Some(pattern), _) => Input::WalkOn(Box::new(move |path| {
+            let res = pattern.matches_path(path);
+            trace!("Path '{}' matches: {}", path.display(), res);
+            res
+        })),
 
         // If pattern wasn't manually overridden, consult the language scoper itself.
         (_, None, Some(language_scoper)) => {
@@ -97,84 +104,98 @@ fn main() -> Result<()> {
         (false, None, None) => Input::WalkOn(Box::new(|_| true)),
     };
 
+    let ripgrep_like = actions.is_empty();
+    if ripgrep_like {
+        info!("Will use (rip)grep-like mode");
+
+        let style = Style {
+            fg: Some(Color::Red),
+            ..Default::default()
+        };
+
+        actions.push(Box::new(style))
+    }
+
     // Now write out
     match (input, actions.is_empty()) {
         (Input::Stdin, true) => {
-            info!(
-                "Will read from stdin and write to stdout, using `grep` mode (no actions specified)"
-            );
+            unreachable!()
+            // info!(
+            //     "Will read from stdin and write to stdout, using `grep` mode (no actions specified)"
+            // );
 
-            let mut buf = String::new();
-            stdin().lock().read_to_string(&mut buf)?;
+            // let mut buf = String::new();
+            // stdin().lock().read_to_string(&mut buf)?;
 
-            let mut stdout = stdout().lock();
-            if stdout.is_terminal() {
-                for line in grep::<Tty>(&buf, &all_scopers) {
-                    write!(stdout, "{line}")?;
-                }
-            } else {
-                for line in grep::<NoTty>(&buf, &all_scopers) {
-                    write!(stdout, "{line}")?;
-                }
-            };
+            // let mut stdout = stdout().lock();
+            // if stdout.is_terminal() {
+            //     for line in grep::<Tty>(&buf, &all_scopers) {
+            //         write!(stdout, "{line}")?;
+            //     }
+            // } else {
+            //     for line in grep::<NoTty>(&buf, &all_scopers) {
+            //         write!(stdout, "{line}")?;
+            //     }
+            // };
         }
         (Input::Stdin, false) => {
             info!("Will read from stdin and write to stdout, applying actions");
             handle_actions_on_stdin(&all_scopers, &actions, &args)?;
         }
         (Input::WalkOn(validator), true) => {
+            unreachable!()
             // TODO: Refactor this
-            let root = env::current_dir()?;
-            WalkDir::new(&root)
-                .into_iter()
-                .par_bridge()
-                .flatten()
-                .filter(|entry| validator(entry.path()))
-                .map(|entry| {
-                    let path = entry.path();
+            // let root = env::current_dir()?;
+            // WalkDir::new(&root)
+            //     .into_iter()
+            //     .par_bridge()
+            //     .flatten()
+            //     .filter(|entry| validator(entry.path()))
+            //     .map(|entry| {
+            //         let path = entry.path();
 
-                    let mut file = File::open(path)
-                        .with_context(|| format!("Failed to read file: {:?}", path))?;
+            //         let mut file = File::open(path)
+            //             .with_context(|| format!("Failed to read file: {:?}", path))?;
 
-                    let mut buf = String::new();
-                    file.read_to_string(&mut buf)?;
+            //         let mut buf = String::new();
+            //         file.read_to_string(&mut buf)?;
 
-                    let mut stdout = stdout().lock();
-                    if stdout.is_terminal() {
-                        let lines = grep::<Tty>(&buf, &all_scopers);
+            //         let mut stdout = stdout().lock();
+            //         if stdout.is_terminal() {
+            //             let lines = grep::<Tty>(&buf, &all_scopers);
 
-                        if lines.iter().any(|l| l.has_highlights()) {
-                            writeln!(
-                                stdout,
-                                "{}",
-                                path.strip_prefix(&root)?
-                                    .display()
-                                    .to_string()
-                                    .as_str()
-                                    .magenta()
-                            )?;
+            //             if lines.iter().any(|l| l.has_highlights()) {
+            //                 writeln!(
+            //                     stdout,
+            //                     "{}",
+            //                     path.strip_prefix(&root)?
+            //                         .display()
+            //                         .to_string()
+            //                         .as_str()
+            //                         .magenta()
+            //                 )?;
 
-                            for line in lines {
-                                write!(stdout, "{line}")?;
-                            }
+            //                 for line in lines {
+            //                     write!(stdout, "{line}")?;
+            //                 }
 
-                            writeln!(stdout)?;
-                        }
-                    } else {
-                        writeln!(stdout, "{}", path.display())?;
-                        for line in grep::<NoTty>(&buf, &all_scopers) {
-                            write!(stdout, "{line}")?;
-                        }
-                        writeln!(stdout)?;
-                    };
+            //                 writeln!(stdout)?;
+            //             }
+            //         } else {
+            //             writeln!(stdout, "{}", path.display())?;
+            //             for line in grep::<NoTty>(&buf, &all_scopers) {
+            //                 write!(stdout, "{line}")?;
+            //             }
+            //             writeln!(stdout)?;
+            //         };
 
-                    Ok(())
-                })
-                .collect::<Result<Vec<_>>>()?;
+            //         Ok(())
+            //     })
+            //     .collect::<Result<Vec<_>>>()?;
         }
         (Input::WalkOn(validator), false) => {
             info!("Will walk file tree, applying actions");
-            handle_actions_on_many_files(validator, &all_scopers, &actions, &args)?
+            handle_actions_on_many_files(validator, &all_scopers, &actions, &args, ripgrep_like)?
         }
     };
 
@@ -226,20 +247,33 @@ fn handle_actions_on_many_files(
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
+    ripgrep_like: bool,
 ) -> Result<(), anyhow::Error> {
     assert!(!actions.is_empty());
 
-    let paths = WalkDir::new(env::current_dir()?)
+    let root = env::current_dir()?;
+    let paths = WalkDir::new(&root)
         .into_iter()
         .par_bridge()
         .flatten()
-        .filter(|entry| validator(entry.path()))
         .map(|entry| {
-            let path = entry.path();
+            // Make path relative for glob pattern to work (which is given relative to
+            // pwd)
+            entry
+                .path()
+                .strip_prefix(&root)
+                .expect("started walking from `root`, so any results have a `root` prefix")
+                .to_owned()
+        })
+        .filter(|path| validator(path))
+        .map(|path| {
+            // let path = entry.path();
             debug!("Processing path: {:?}", path);
 
             if !path.is_file() {
                 warn!(
+                    // Don't choke on symlinks, but warn users for troubleshooting in
+                    // case anything goes wrong.
                     "Path does not look like a file (will still try): '{}' (Metadata: {:?})",
                     path.display(),
                     path.metadata()
@@ -247,8 +281,8 @@ fn handle_actions_on_many_files(
             }
 
             let contents = {
-                let file =
-                    File::open(path).with_context(|| format!("Failed to read file: {:?}", path))?;
+                let file = File::open(&path)
+                    .with_context(|| format!("Failed to read file: {:?}", path))?;
 
                 let mut source = std::io::BufReader::new(file);
                 let mut destination = std::io::Cursor::new(Vec::new());
@@ -267,26 +301,40 @@ fn handle_actions_on_many_files(
                 destination.into_inner()
             };
 
-            debug!("Got new file contents, writing to file: {:?}", path);
-            let mut file = File::create(path)
-                .with_context(|| format!("Failed to truncate file: {:?}", path))?;
-            file.write_all(&contents)
-                .with_context(|| format!("Failed to write to file: {:?}", path))?;
-            debug!("Done processing file: {:?}", path);
+            let mut stdout = stdout().lock();
 
             {
-                let path_repr = path.display().to_string();
-                let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
+                let mut path_repr = if ripgrep_like {
+                    path.display().to_string().magenta().to_string()
+                } else {
+                    path.display().to_string()
+                };
+                path_repr.push('\n');
 
-                std::io::stdout()
-                    // TODO: benchmark whether moving this out of the parallel section
-                    // reduces lock contention and improves performance.
-                    .lock()
-                    .write_vectored(slices)
+                stdout
+                    .write_all(path_repr.as_bytes())
                     .context("Failed writing processed file's name to stdout")?;
+                // let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
+
+                // std::io::stdout()
+                //     // TODO: benchmark whether moving this out of the parallel section
+                //     // reduces lock contention and improves performance.
+                //     .lock()
+                //     .write_vectored(slices)
             }
 
-            Ok(entry)
+            if ripgrep_like {
+                stdout.write_all(&contents)?;
+            } else {
+                debug!("Got new file contents, writing to file: {:?}", path);
+                let mut file = File::create(&path)
+                    .with_context(|| format!("Failed to truncate file: {:?}", path))?;
+                file.write_all(&contents)
+                    .with_context(|| format!("Failed to write to file: {:?}", path))?;
+                debug!("Done processing file: {:?}", path);
+            }
+
+            Ok(path)
         })
         .collect::<Result<Vec<_>>>() // TODO: do not collect? Lots of memory for almost no reason.
         .context("Failure in processing of files")?;
@@ -345,6 +393,9 @@ fn apply(
         }
 
         view.to_string()
+        // for line in view.as_lines().0 {
+        //     // destination.write_all(line.0.to);
+        // }
     };
     debug!("Done applying actions to view.");
 
@@ -664,6 +715,12 @@ mod cli {
         /// The default is to return the input unchanged (without failure).
         #[arg(long, verbatim_doc_comment)]
         pub fail_none: bool,
+        /// Prepend line numbers to output.
+        #[arg(long, verbatim_doc_comment)]
+        pub line_numbers: bool,
+        /// Print only matching lines.
+        #[arg(long, verbatim_doc_comment)]
+        pub only_matching: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable

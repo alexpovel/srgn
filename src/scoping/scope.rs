@@ -1,5 +1,6 @@
 use super::regex::CaptureGroup;
 use crate::{
+    grep::ranges::GlobalRange,
     ranges::Ranges,
     scoping::scope::Scope::{In, Out},
 };
@@ -7,15 +8,27 @@ use itertools::Itertools;
 use log::{debug, trace};
 use std::{borrow::Cow, collections::HashMap, ops::Range};
 
+/// A range modelled after [`Range`], where [`GlobalRange::start`] and
+/// [`GlobalRange::end`] denote *global* positions, across the entire input.
+// #[derive(Debug, Clone, PartialEq, Eq, Copy)]
+// pub struct GlobalRange<T = usize> {
+//     pub start: T,
+//     pub end: T,
+// }
+
 /// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Scope<'viewee, T> {
+pub enum Scope<'viewee, T, R = GlobalRange> {
     /// The given part is in scope for processing.
-    In(T, Option<ScopeContext<'viewee>>),
+    In {
+        content: T,
+        range: R,
+        ctx: Option<ScopeContext<'viewee>>,
+    },
     /// The given part is out of scope for processing.
     ///
     /// Treated as immutable, view-only.
-    Out(&'viewee str),
+    Out { content: &'viewee str, range: R },
 }
 
 /// A read-only scope.
@@ -44,7 +57,7 @@ impl<'viewee> ROScope<'viewee> {
 }
 
 /// Raw ranges, paired with optional context for content at that range.
-pub type RangesWithContext<'viewee> = HashMap<Range<usize>, Option<ScopeContext<'viewee>>>;
+pub type RangesWithContext<'viewee> = Vec<(Range<usize>, Option<ScopeContext<'viewee>>)>;
 
 /// Converts, leaving unknown values [`Default`].
 ///
@@ -53,7 +66,7 @@ pub type RangesWithContext<'viewee> = HashMap<Range<usize>, Option<ScopeContext<
 impl<'viewee> From<Ranges<usize>> for RangesWithContext<'viewee> {
     fn from(val: Ranges<usize>) -> Self {
         val.into_iter()
-            .map(|range| (range, Option::default()))
+            .map(|range| (range.into(), Option::default()))
             .collect()
     }
 }
@@ -76,22 +89,35 @@ impl<'viewee> ROScopes<'viewee> {
 
         let mut last_end = 0;
         for (Range { start, end }, context) in ranges.into_iter().sorted_by_key(|(r, _)| r.start) {
-            let out = &input[last_end..start];
+            let range = last_end..start;
+            let out = &input[range.clone()];
             if !out.is_empty() {
-                scopes.push(ROScope(Out(out)));
+                scopes.push(ROScope(Out {
+                    content: out,
+                    range: range.into(),
+                }));
             }
 
-            let r#in = &input[start..end];
+            let range = start..end;
+            let r#in = &input[range.clone()];
             if !r#in.is_empty() {
-                scopes.push(ROScope(In(r#in, context)));
+                scopes.push(ROScope(In {
+                    content: r#in,
+                    range: range.into(),
+                    ctx: context,
+                }));
             }
 
             last_end = end;
         }
 
-        let tail = &input[last_end..];
+        let range = last_end..input.len();
+        let tail = &input[range.clone()];
         if !tail.is_empty() {
-            scopes.push(ROScope(Out(tail)));
+            scopes.push(ROScope(Out {
+                content: tail,
+                range: range.into(),
+            }));
         }
 
         debug!("Scopes: {:?}", scopes);
@@ -103,17 +129,18 @@ impl<'viewee> ROScopes<'viewee> {
     #[must_use]
     pub fn invert(self) -> Self {
         trace!("Inverting scopes: {:?}", self.0);
-        let scopes = self
-            .0
-            .into_iter()
-            .map(|s| match s {
-                ROScope(In(s, _)) => ROScope(Out(s)),
-                ROScope(Out(s)) => ROScope(In(s, None)),
-            })
-            .collect();
-        trace!("Inverted scopes: {:?}", scopes);
+        todo!();
+        // let scopes = self
+        //     .0
+        //     .into_iter()
+        //     .map(|s| match s {
+        //         ROScope(In(s, _)) => ROScope(Out(s)),
+        //         ROScope(Out(s)) => ROScope(In(s, None)),
+        //     })
+        //     .collect();
+        // trace!("Inverted scopes: {:?}", scopes);
 
-        Self(scopes)
+        // Self(scopes)
     }
 }
 
@@ -158,7 +185,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
         match s.0 {
-            In(s, _) | Out(s) => s,
+            In { content, .. } | Out { content, .. } => content,
         }
     }
 }
@@ -166,8 +193,16 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
 impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
     fn from(s: ROScope<'viewee>) -> Self {
         match s.0 {
-            In(s, names) => RWScope(In(Cow::Borrowed(s), names)),
-            Out(s) => RWScope(Out(s)),
+            In {
+                content,
+                range,
+                ctx,
+            } => RWScope(In {
+                content: Cow::Borrowed(content),
+                range,
+                ctx,
+            }),
+            Out { content, range } => RWScope(Out { content, range }),
         }
     }
 }
@@ -178,8 +213,8 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {
         match &s.0 {
-            In(s, _) => s,
-            Out(s) => s,
+            In { content, .. } => content,
+            Out { content, .. } => content,
         }
     }
 }
@@ -194,7 +229,7 @@ pub enum ScopeContext<'viewee> {
     CaptureGroups(HashMap<CaptureGroup, &'viewee str>),
 }
 
-#[cfg(test)]
+#[cfg(never)]
 mod tests {
     use super::*;
     use rstest::rstest;

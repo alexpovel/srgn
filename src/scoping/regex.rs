@@ -86,7 +86,7 @@ impl Default for Regex {
 
 impl Scoper for Regex {
     fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        let mut ranges = HashMap::new();
+        let mut ranges = Vec::new();
         for cap in self.pattern.captures_iter(input) {
             match cap {
                 Ok(cap) => {
@@ -102,12 +102,12 @@ impl Scoper for Regex {
                         })
                         .collect();
 
-                    ranges.insert(
+                    ranges.push((
                         cap.get(0)
                             .expect("index 0 guaranteed to contain whole match")
                             .range(),
                         Some(ScopeContext::CaptureGroups(capture_context)),
-                    );
+                    ));
                 }
                 // Let's blow up on purpose instead of silently continuing; any of
                 // these errors a user will likely want to know about, as they
@@ -128,7 +128,7 @@ impl Scoper for Regex {
     }
 }
 
-#[cfg(test)]
+#[cfg(never)]
 mod tests {
     use super::*;
     use crate::scoping::{

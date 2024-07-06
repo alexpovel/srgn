@@ -86,15 +86,15 @@ pub fn grep<'viewee, D: Destination>(
             .into_iter()
             .flat_map(|global_range| {
                 scoper
-                    .scope_raw(&input[Range::from(global_range.clone())])
-                    .into_keys()
+                    .scope_raw(&input[Range::from(global_range)])
+                    .into_iter()
                     // ⚠️ This shift from types back and forth is mainly cosmetic, but
                     // communicates intent. It's not fully safe, as `scope_raw` works
                     // with normal `std::ops::Range`, which we take as identical to
                     // 'local ranges', hence convert back and forth once.
                     //
                     // TODO: implement `LocalRange` across the entire crate?
-                    .map(|r| LocalRange::new(r, global_range.start))
+                    .map(|(r, _)| LocalRange::new(r, global_range.start))
                     .map(GlobalRange::from)
                     .collect_vec()
             })
@@ -183,12 +183,12 @@ pub fn grep<'viewee, D: Destination>(
 
 /// Module for (very leaky) abstractions over [`std::ops::Range`] to model global and
 /// local ranges, for increased type safety in handling (instead of raw `usize`s).
-mod ranges {
+pub mod ranges {
     use std::ops::{Add, Range, Sub};
 
     /// A range modelled after [`Range`], where [`GlobalRange::start`] and
     /// [`GlobalRange::end`] denote *global* positions, across the entire input.
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy, Hash)]
     pub struct GlobalRange<T = usize> {
         pub start: T,
         pub end: T,

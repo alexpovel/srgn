@@ -1,4 +1,5 @@
 use crate::actions::{self, Action, ActionError};
+use crate::grep::ranges::GlobalRange;
 use crate::scoping::dosfix::DosFix;
 #[cfg(doc)]
 use crate::scoping::scope::ScopeContext;
@@ -7,6 +8,7 @@ use crate::scoping::scope::{
     Scope::{In, Out},
 };
 use crate::scoping::Scoper;
+use itertools::Itertools;
 use log::{debug, trace, warn};
 use std::borrow::Cow;
 use std::fmt;
@@ -22,6 +24,8 @@ use std::fmt;
 pub struct ScopedView<'viewee> {
     scopes: RWScopes<'viewee>,
 }
+
+pub struct ScopedViewLines<'viewee>(pub Vec<RWScopes<'viewee>>);
 
 /// Core implementations.
 impl<'viewee> ScopedView<'viewee> {
@@ -78,21 +82,29 @@ impl<'viewee> ScopedView<'viewee> {
     ) -> Result<&mut Self, ActionError> {
         for scope in &mut self.scopes.0 {
             match scope {
-                RWScope(In(s, context)) => {
-                    debug!("Mapping with context: {:?}", context);
-                    let res = match (&context, use_context) {
-                        (Some(c), true) => action.act_with_context(s, c)?,
-                        _ => action.act(s),
+                RWScope(In {
+                    content,
+                    range,
+                    ctx,
+                }) => {
+                    debug!("Mapping with context: {:?}", ctx);
+                    let res = match (&ctx, use_context) {
+                        (Some(c), true) => action.act_with_context(content, c)?,
+                        _ => action.act(content),
                     };
                     debug!(
                         "Replacing '{}' with '{}'",
-                        s.escape_debug(),
+                        content.escape_debug(),
                         res.escape_debug()
                     );
-                    *scope = RWScope(In(Cow::Owned(res), context.clone()));
+                    *scope = RWScope(In {
+                        content: Cow::Owned(res),
+                        range: *range,
+                        ctx: ctx.clone(),
+                    });
                 }
-                RWScope(Out(s)) => {
-                    debug!("Appending '{}'", s.escape_debug());
+                RWScope(Out { content, .. }) => {
+                    debug!("Appending '{}'", content.escape_debug());
                 }
             }
         }
@@ -106,8 +118,8 @@ impl<'viewee> ScopedView<'viewee> {
 
         let mut prev_was_in = false;
         self.scopes.0.retain(|scope| {
-            let keep = !(prev_was_in && matches!(scope, RWScope(In(_, _))));
-            prev_was_in = matches!(scope, RWScope(In(_, _)));
+            let keep = !(prev_was_in && matches!(scope, RWScope(In { .. })));
+            prev_was_in = matches!(scope, RWScope(In { .. }));
             trace!("keep: {}, scope: {:?}", keep, scope);
             keep
         });
@@ -121,9 +133,66 @@ impl<'viewee> ScopedView<'viewee> {
     #[must_use]
     pub fn has_any_in_scope(&self) -> bool {
         self.scopes.0.iter().any(|s| match s {
-            RWScope(In(_, _)) => true,
-            RWScope(Out(_)) => false,
+            RWScope(In { .. }) => true,
+            RWScope(Out { .. }) => false,
         })
+    }
+
+    pub fn as_lines(&self) -> ScopedViewLines {
+        let mut lines = vec![vec![]];
+        for scope in &self.scopes.0 {
+            match &scope.0 {
+                In {
+                    content,
+                    range,
+                    ctx,
+                } => {
+                    for (i, l) in content.split('\n').enumerate() {
+                        let value = In {
+                            content: l,
+                            range: range.clone(),
+                            ctx: ctx.clone(),
+                        };
+                        if i == 0 {
+                            lines
+                                .last_mut()
+                                .expect("always has one element")
+                                .push(ROScope(value));
+                        } else {
+                            lines.push(vec![ROScope(value)]);
+                        }
+                    }
+                }
+                Out { content, range } => {
+                    for (i, l) in content.split('\n').enumerate() {
+                        let value = Out {
+                            content: l,
+                            range: range.clone(),
+                        };
+                        if i == 0 {
+                            lines
+                                .last_mut()
+                                .expect("always has one element")
+                                .push(ROScope(value));
+                        } else {
+                            lines.push(vec![ROScope(value)]);
+                        }
+                    }
+                }
+            }
+            // }
+        }
+
+        ScopedViewLines(
+            lines
+                .into_iter()
+                .map(|scopes| scopes.into_iter().map(Into::into).collect_vec())
+                .map(RWScopes)
+                .collect_vec(),
+        )
+
+        // todo!()
+        // todo!()
     }
 }
 
@@ -241,7 +310,11 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     #[must_use]
     pub fn new(input: &'viewee str) -> Self {
         Self {
-            scopes: ROScopes(vec![ROScope(In(input, None))]),
+            scopes: ROScopes(vec![ROScope(In {
+                content: input,
+                range: GlobalRange::from(0..input.len()),
+                ctx: None,
+            })]),
             viewee: input,
         }
     }
@@ -261,7 +334,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// See [`DosFix`].
     fn apply_dos_line_endings_fix(&mut self) {
         if self.scopes.0.windows(2).any(|window| match window {
-            [ROScope(In(left, _)), ROScope(Out(right))] => {
+            [ROScope(In { content: left, .. }), ROScope(Out { content: right, .. })] => {
                 left.ends_with('\r') && right.starts_with('\n')
             }
             _ => false,
@@ -306,15 +379,15 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
             }
 
             match scope {
-                ROScope(In(s, _)) => {
-                    let mut new_scopes = scoper.scope(s);
+                ROScope(In { content, range, .. }) => {
+                    let mut new_scopes = scoper.scope(content, range);
                     new_scopes.0.retain(|s| !s.is_empty());
                     new.extend(new_scopes.0);
                 }
                 // Be explicit about the `Out(_)` case, so changing the enum is a
                 // compile error
-                ROScope(Out("")) => {}
-                out @ ROScope(Out(_)) => new.push(out),
+                ROScope(Out { content: "", .. }) => {}
+                out @ ROScope(Out { content: _, .. }) => new.push(out),
             }
 
             trace!("Exploded scope, new scopes are: {:?}", new);
