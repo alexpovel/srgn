@@ -27,6 +27,20 @@ pub struct ScopedView<'viewee> {
 
 pub struct ScopedViewLines<'viewee>(pub Vec<RWScopes<'viewee>>);
 
+impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
+    type Item = ScopedView<'viewee>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        // Modifying the value... doesn't seem like a great idea. But works?
+        self.0
+            .into_iter()
+            .map(ScopedView::new)
+            .collect_vec()
+            .into_iter()
+    }
+}
+
 /// Core implementations.
 impl<'viewee> ScopedView<'viewee> {
     /// Create a new view from the given scopes.
@@ -140,6 +154,14 @@ impl<'viewee> ScopedView<'viewee> {
 
     pub fn as_lines(&self) -> ScopedViewLines {
         let mut lines = vec![vec![]];
+
+        // let mut scopes = self.scopes.0.iter();
+        // 'lines: loop {
+        // match scopes.next() {
+        //     Some(_) => todo!(),
+        //     None => return todo!(),
+        // }
+
         for scope in &self.scopes.0 {
             match &scope.0 {
                 In {
@@ -147,10 +169,10 @@ impl<'viewee> ScopedView<'viewee> {
                     range,
                     ctx,
                 } => {
-                    for (i, l) in content.split('\n').enumerate() {
+                    for (i, l) in content.split_inclusive('\n').enumerate() {
                         let value = In {
                             content: l,
-                            range: range.clone(),
+                            range: *range,
                             ctx: ctx.clone(),
                         };
                         if i == 0 {
@@ -164,10 +186,10 @@ impl<'viewee> ScopedView<'viewee> {
                     }
                 }
                 Out { content, range } => {
-                    for (i, l) in content.split('\n').enumerate() {
+                    for (i, l) in content.split_inclusive('\n').enumerate() {
                         let value = Out {
                             content: l,
-                            range: range.clone(),
+                            range: *range,
                         };
                         if i == 0 {
                             lines
@@ -181,6 +203,7 @@ impl<'viewee> ScopedView<'viewee> {
                 }
             }
             // }
+            // }
         }
 
         ScopedViewLines(
@@ -188,6 +211,7 @@ impl<'viewee> ScopedView<'viewee> {
                 .into_iter()
                 .map(|scopes| scopes.into_iter().map(Into::into).collect_vec())
                 .map(RWScopes)
+                // .map(Self::new)
                 .collect_vec(),
         )
 

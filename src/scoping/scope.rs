@@ -129,18 +129,21 @@ impl<'viewee> ROScopes<'viewee> {
     #[must_use]
     pub fn invert(self) -> Self {
         trace!("Inverting scopes: {:?}", self.0);
-        todo!();
-        // let scopes = self
-        //     .0
-        //     .into_iter()
-        //     .map(|s| match s {
-        //         ROScope(In(s, _)) => ROScope(Out(s)),
-        //         ROScope(Out(s)) => ROScope(In(s, None)),
-        //     })
-        //     .collect();
-        // trace!("Inverted scopes: {:?}", scopes);
+        let scopes = self
+            .0
+            .into_iter()
+            .map(|s| match s {
+                ROScope(In { content, range, .. }) => ROScope(Out { content, range }),
+                ROScope(Out { content, range }) => ROScope(In {
+                    content,
+                    range,
+                    ctx: None,
+                }),
+            })
+            .collect();
+        trace!("Inverted scopes: {:?}", scopes);
 
-        // Self(scopes)
+        Self(scopes)
     }
 }
 

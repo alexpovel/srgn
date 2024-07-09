@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use colored::Color;
 use colored::Colorize;
+use colored::Styles;
 use log::trace;
 use log::{debug, info, warn, LevelFilter};
 use rayon::prelude::*;
@@ -18,6 +19,7 @@ use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::grep::{grep, NoTty};
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
+use srgn::scoping::view::ScopedView;
 use srgn::{
     actions::Action,
     scoping::{
@@ -46,7 +48,7 @@ use std::{
 use walkdir::WalkDir;
 
 fn main() -> Result<()> {
-    let args = cli::Cli::init();
+    let mut args = cli::Cli::init();
 
     let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
     env_logger::Builder::new()
@@ -110,90 +112,22 @@ fn main() -> Result<()> {
 
         let style = Style {
             fg: Some(Color::Red),
+            styles: vec![Styles::Bold],
             ..Default::default()
         };
+        actions.push(Box::new(style));
 
-        actions.push(Box::new(style))
+        args.options.only_matching = true;
+        args.options.line_numbers = true;
     }
 
     // Now write out
-    match (input, actions.is_empty()) {
-        (Input::Stdin, true) => {
-            unreachable!()
-            // info!(
-            //     "Will read from stdin and write to stdout, using `grep` mode (no actions specified)"
-            // );
-
-            // let mut buf = String::new();
-            // stdin().lock().read_to_string(&mut buf)?;
-
-            // let mut stdout = stdout().lock();
-            // if stdout.is_terminal() {
-            //     for line in grep::<Tty>(&buf, &all_scopers) {
-            //         write!(stdout, "{line}")?;
-            //     }
-            // } else {
-            //     for line in grep::<NoTty>(&buf, &all_scopers) {
-            //         write!(stdout, "{line}")?;
-            //     }
-            // };
-        }
-        (Input::Stdin, false) => {
+    match input {
+        Input::Stdin => {
             info!("Will read from stdin and write to stdout, applying actions");
             handle_actions_on_stdin(&all_scopers, &actions, &args)?;
         }
-        (Input::WalkOn(validator), true) => {
-            unreachable!()
-            // TODO: Refactor this
-            // let root = env::current_dir()?;
-            // WalkDir::new(&root)
-            //     .into_iter()
-            //     .par_bridge()
-            //     .flatten()
-            //     .filter(|entry| validator(entry.path()))
-            //     .map(|entry| {
-            //         let path = entry.path();
-
-            //         let mut file = File::open(path)
-            //             .with_context(|| format!("Failed to read file: {:?}", path))?;
-
-            //         let mut buf = String::new();
-            //         file.read_to_string(&mut buf)?;
-
-            //         let mut stdout = stdout().lock();
-            //         if stdout.is_terminal() {
-            //             let lines = grep::<Tty>(&buf, &all_scopers);
-
-            //             if lines.iter().any(|l| l.has_highlights()) {
-            //                 writeln!(
-            //                     stdout,
-            //                     "{}",
-            //                     path.strip_prefix(&root)?
-            //                         .display()
-            //                         .to_string()
-            //                         .as_str()
-            //                         .magenta()
-            //                 )?;
-
-            //                 for line in lines {
-            //                     write!(stdout, "{line}")?;
-            //                 }
-
-            //                 writeln!(stdout)?;
-            //             }
-            //         } else {
-            //             writeln!(stdout, "{}", path.display())?;
-            //             for line in grep::<NoTty>(&buf, &all_scopers) {
-            //                 write!(stdout, "{line}")?;
-            //             }
-            //             writeln!(stdout)?;
-            //         };
-
-            //         Ok(())
-            //     })
-            //     .collect::<Result<Vec<_>>>()?;
-        }
-        (Input::WalkOn(validator), false) => {
+        Input::WalkOn(validator) => {
             info!("Will walk file tree, applying actions");
             handle_actions_on_many_files(validator, &all_scopers, &actions, &args, ripgrep_like)?
         }
@@ -236,6 +170,8 @@ fn handle_actions_on_stdin(
         args.options.fail_none,
         args.options.fail_any,
         args.standalone_actions.squeeze,
+        args.options.only_matching,
+        args.options.line_numbers,
     )
     .context("Failed to process stdin")?;
 
@@ -295,6 +231,8 @@ fn handle_actions_on_many_files(
                     args.options.fail_none,
                     args.options.fail_any,
                     args.standalone_actions.squeeze,
+                    args.options.only_matching,
+                    args.options.line_numbers,
                 )
                 .with_context(|| format!("Failed to process file contents: {:?}", path))?;
 
@@ -303,29 +241,18 @@ fn handle_actions_on_many_files(
 
             let mut stdout = stdout().lock();
 
-            {
-                let mut path_repr = if ripgrep_like {
-                    path.display().to_string().magenta().to_string()
-                } else {
-                    path.display().to_string()
-                };
-                path_repr.push('\n');
-
-                stdout
-                    .write_all(path_repr.as_bytes())
-                    .context("Failed writing processed file's name to stdout")?;
-                // let slices = &[path_repr.as_bytes(), b"\n"].map(IoSlice::new);
-
-                // std::io::stdout()
-                //     // TODO: benchmark whether moving this out of the parallel section
-                //     // reduces lock contention and improves performance.
-                //     .lock()
-                //     .write_vectored(slices)
-            }
-
             if ripgrep_like {
-                stdout.write_all(&contents)?;
+                if !contents.is_empty() {
+                    stdout
+                        .write_all(path.display().to_string().magenta().to_string().as_bytes())?;
+                    stdout.write_all(b"\n")?;
+                    stdout.write_all(&contents)?;
+                    stdout.write_all(b"\n")?;
+                }
             } else {
+                stdout.write_all(path.display().to_string().as_bytes())?;
+                stdout.write_all(b"\n")?;
+
                 debug!("Got new file contents, writing to file: {:?}", path);
                 let mut file = File::create(&path)
                     .with_context(|| format!("Failed to truncate file: {:?}", path))?;
@@ -336,7 +263,7 @@ fn handle_actions_on_many_files(
 
             Ok(path)
         })
-        .collect::<Result<Vec<_>>>() // TODO: do not collect? Lots of memory for almost no reason.
+        .collect::<Result<Vec<_>>>()
         .context("Failure in processing of files")?;
 
     if args.options.fail_empty_glob && paths.is_empty() {
@@ -346,6 +273,7 @@ fn handle_actions_on_many_files(
     }
 }
 
+#[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 fn apply(
     source: &mut impl io::BufRead,
     destination: &mut impl io::Write,
@@ -354,6 +282,8 @@ fn apply(
     fail_none: bool,
     fail_any: bool,
     squeeze: bool,
+    only_matching: bool,
+    line_numbers: bool,
 ) -> Result<()> {
     // Streaming (e.g., line-based) wouldn't be too bad, and much more memory-efficient,
     // but language grammar-aware scoping needs entire files for context. Single lines
@@ -383,27 +313,32 @@ fn apply(
     };
 
     debug!("Applying actions to view.");
-    let result = {
-        if squeeze {
-            view.squeeze();
-        }
+    if squeeze {
+        view.squeeze();
+    }
 
-        for action in actions {
-            view.map_with_context(action)?;
-        }
-
-        view.to_string()
-        // for line in view.as_lines().0 {
-        //     // destination.write_all(line.0.to);
-        // }
-    };
-    debug!("Done applying actions to view.");
+    for action in actions {
+        view.map_with_context(action)?;
+    }
 
     debug!("Writing to destination.");
-    destination
-        .write_all(result.as_bytes())
-        .context("Failed writing to destination")?;
+    if only_matching || line_numbers {
+        for (i, line) in view.as_lines().into_iter().enumerate() {
+            let i = i + 1;
+            if !only_matching || line.has_any_in_scope() {
+                if line_numbers {
+                    destination.write_all(format!("{}:", i.to_string().green()).as_bytes())?;
+                }
+                destination.write_all(line.to_string().as_bytes())?
+            }
+        }
+    } else {
+        destination
+            .write_all(view.to_string().as_bytes())
+            .context("Failed writing to destination")?;
+    };
     debug!("Done writing to destination.");
+    debug!("Done applying actions to view.");
 
     Ok(())
 }
