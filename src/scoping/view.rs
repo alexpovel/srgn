@@ -25,6 +25,9 @@ pub struct ScopedView<'viewee> {
     scopes: RWScopes<'viewee>,
 }
 
+/// A view over a [`ScopedView`], split by its individual lines. Each line is its own
+/// [`ScopedView`].
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScopedViewLines<'viewee>(pub Vec<RWScopes<'viewee>>);
 
 impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
@@ -152,15 +155,10 @@ impl<'viewee> ScopedView<'viewee> {
         })
     }
 
+    /// Split this item at newlines, into multiple [`ScopedView`]s.
+    #[allow(clippy::missing_panics_doc)] // Implementation detail: would be a bug
     pub fn as_lines(&self) -> ScopedViewLines {
         let mut lines = vec![vec![]];
-
-        // let mut scopes = self.scopes.0.iter();
-        // 'lines: loop {
-        // match scopes.next() {
-        //     Some(_) => todo!(),
-        //     None => return todo!(),
-        // }
 
         for scope in &self.scopes.0 {
             match &scope.0 {
@@ -202,8 +200,6 @@ impl<'viewee> ScopedView<'viewee> {
                     }
                 }
             }
-            // }
-            // }
         }
 
         ScopedViewLines(
@@ -211,12 +207,8 @@ impl<'viewee> ScopedView<'viewee> {
                 .into_iter()
                 .map(|scopes| scopes.into_iter().map(Into::into).collect_vec())
                 .map(RWScopes)
-                // .map(Self::new)
                 .collect_vec(),
         )
-
-        // todo!()
-        // todo!()
     }
 }
 

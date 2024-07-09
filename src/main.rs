@@ -16,10 +16,9 @@ use srgn::actions::Titlecase;
 use srgn::actions::Upper;
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::grep::{grep, NoTty};
+use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::LiteralError;
 use srgn::scoping::regex::RegexError;
-use srgn::scoping::view::ScopedView;
 use srgn::{
     actions::Action,
     scoping::{
@@ -37,13 +36,12 @@ use srgn::{
         Scoper,
     },
 };
-use srgn::{grep::Tty, scoping::langs::LanguageScoper};
 use std::{
     env,
     error::Error,
     fmt,
     fs::File,
-    io::{self, stdin, stdout, IoSlice, IsTerminal, Read, Write},
+    io::{self, stdout, Write},
 };
 use walkdir::WalkDir;
 

@@ -21,14 +21,22 @@ use std::{borrow::Cow, collections::HashMap, ops::Range};
 pub enum Scope<'viewee, T, R = GlobalRange> {
     /// The given part is in scope for processing.
     In {
+        /// The contents of this item.
         content: T,
+        /// The *original* range the contents are found at.
         range: R,
+        /// Optional context.
         ctx: Option<ScopeContext<'viewee>>,
     },
     /// The given part is out of scope for processing.
     ///
     /// Treated as immutable, view-only.
-    Out { content: &'viewee str, range: R },
+    Out {
+        /// The contents of this item.
+        content: &'viewee str,
+        /// The *original* range the contents are found at.
+        range: R,
+    },
 }
 
 /// A read-only scope.
@@ -66,7 +74,7 @@ pub type RangesWithContext<'viewee> = Vec<(Range<usize>, Option<ScopeContext<'vi
 impl<'viewee> From<Ranges<usize>> for RangesWithContext<'viewee> {
     fn from(val: Ranges<usize>) -> Self {
         val.into_iter()
-            .map(|range| (range.into(), Option::default()))
+            .map(|range| (range, Option::default()))
             .collect()
     }
 }

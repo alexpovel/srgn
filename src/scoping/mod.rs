@@ -26,18 +26,12 @@ pub trait Scoper: Send + Sync {
     /// After application, the returned scopes are a collection of either in-scope or
     /// out-of-scope parts of the input. Assembling them back together should yield the
     /// original input.
-    fn scope<'viewee>(&self, input: &'viewee str, range: GlobalRange) -> ROScopes<'viewee> {
-        let ranges = self
-            .scope_raw(input)
-            .into_iter()
-            .map(|(mut local_range, ctx)| {
-                // Shift
-                // local_range.start += range.start;
-                // local_range.end += range.start;
-
-                (local_range, ctx)
-            })
-            .collect();
+    fn scope<'viewee>(
+        &self,
+        input: &'viewee str,
+        _range /* TODO: Remove this parameter */: GlobalRange,
+    ) -> ROScopes<'viewee> {
+        let ranges = self.scope_raw(input);
 
         ROScopes::from_raw_ranges(input, ranges)
     }
