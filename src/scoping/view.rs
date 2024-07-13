@@ -24,25 +24,6 @@ pub struct ScopedView<'viewee> {
     scopes: RWScopes<'viewee>,
 }
 
-/// A view over a [`ScopedView`], split by its individual lines. Each line is its own
-/// [`ScopedView`].
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ScopedViewLines<'viewee>(pub Vec<RWScopes<'viewee>>);
-
-impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
-    type Item = ScopedView<'viewee>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        // Modifying the value... doesn't seem like a great idea. But works?
-        self.0
-            .into_iter()
-            .map(ScopedView::new)
-            .collect_vec()
-            .into_iter()
-    }
-}
-
 /// Core implementations.
 impl<'viewee> ScopedView<'viewee> {
     /// Create a new view from the given scopes.
@@ -148,47 +129,48 @@ impl<'viewee> ScopedView<'viewee> {
 
     /// Split this item at newlines, into multiple [`ScopedView`]s.
     #[allow(clippy::missing_panics_doc)] // Implementation detail: would be a bug
-    pub fn as_lines(&self) -> ScopedViewLines {
-        let mut lines = vec![vec![]];
+    #[must_use]
+    pub fn lines(&self) -> ScopedViewLines {
+        let mut rw_scopes = vec![RWScopes::default()];
 
-        for scope in &self.scopes.0 {
-            match &scope.0 {
-                In(s, ctx) => {
-                    for (i, line) in s.split_inclusive('\n').enumerate() {
-                        let value = In(Cow::Borrowed(line), ctx.clone());
-                        if i == 0 {
-                            lines
-                                .last_mut()
-                                .expect("always has one element")
-                                .push(RWScope(value));
-                        } else {
-                            lines.push(vec![RWScope(value)]);
-                        }
-                    }
-                }
-                Out(s) => {
-                    for (i, l) in s.split_inclusive('\n').enumerate() {
-                        let value = Out(l);
-                        if i == 0 {
-                            lines
-                                .last_mut()
-                                .expect("always has one element")
-                                .push(RWScope(value));
-                        } else {
-                            lines.push(vec![RWScope(value)]);
-                        }
-                    }
+        for rw_scope in &self.scopes.0 {
+            let s: &str = rw_scope.into();
+
+            for (i, line) in s.split_inclusive('\n').enumerate() {
+                let base_scope = match &rw_scope.0 {
+                    In(_, ctx) => In(Cow::Borrowed(line), ctx.clone()),
+                    Out(_) => Out(line),
+                };
+
+                let first_line = i == 0;
+                if first_line {
+                    rw_scopes
+                        .last_mut()
+                        .expect("always has one element")
+                        .0
+                        .push(RWScope(base_scope));
+                } else {
+                    // This is a new line, so push a wholly new element.
+                    rw_scopes.push(RWScopes(vec![RWScope(base_scope)]));
                 }
             }
         }
 
-        ScopedViewLines(
-            lines
-                .into_iter()
-                .map(|scopes| scopes.into_iter().map(Into::into).collect_vec())
-                .map(RWScopes)
-                .collect_vec(),
-        )
+        ScopedViewLines(rw_scopes.into_iter().map(ScopedView::new).collect_vec())
+    }
+}
+
+/// A view over a [`ScopedView`], split by its individual lines. Each line is its own
+/// [`ScopedView`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScopedViewLines<'viewee>(Vec<ScopedView<'viewee>>);
+
+impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
+    type Item = ScopedView<'viewee>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 

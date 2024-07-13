@@ -321,7 +321,7 @@ fn apply(
 
     debug!("Writing to destination.");
     if only_matching || line_numbers {
-        for (i, line) in view.as_lines().into_iter().enumerate() {
+        for (i, line) in view.lines().into_iter().enumerate() {
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {

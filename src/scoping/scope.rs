@@ -23,7 +23,7 @@ pub enum Scope<'viewee, T> {
 pub struct ROScope<'viewee>(pub Scope<'viewee, &'viewee str>);
 
 /// Multiple read-only scopes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ROScopes<'viewee>(pub Vec<ROScope<'viewee>>);
 
 /// A read-write scope.
@@ -31,7 +31,7 @@ pub struct ROScopes<'viewee>(pub Vec<ROScope<'viewee>>);
 pub struct RWScope<'viewee>(pub Scope<'viewee, Cow<'viewee, str>>);
 
 /// Multiple read-write scopes.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct RWScopes<'viewee>(pub Vec<RWScope<'viewee>>);
 
 impl<'viewee> ROScope<'viewee> {
