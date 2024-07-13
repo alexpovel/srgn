@@ -1,6 +1,5 @@
 use super::regex::CaptureGroup;
 use crate::{
-    grep::ranges::GlobalRange,
     ranges::Ranges,
     scoping::scope::Scope::{In, Out},
 };
@@ -8,35 +7,15 @@ use itertools::Itertools;
 use log::{debug, trace};
 use std::{borrow::Cow, collections::HashMap, ops::Range};
 
-/// A range modelled after [`Range`], where [`GlobalRange::start`] and
-/// [`GlobalRange::end`] denote *global* positions, across the entire input.
-// #[derive(Debug, Clone, PartialEq, Eq, Copy)]
-// pub struct GlobalRange<T = usize> {
-//     pub start: T,
-//     pub end: T,
-// }
-
 /// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Scope<'viewee, T, R = GlobalRange> {
+pub enum Scope<'viewee, T> {
     /// The given part is in scope for processing.
-    In {
-        /// The contents of this item.
-        content: T,
-        /// The *original* range the contents are found at.
-        range: R,
-        /// Optional context.
-        ctx: Option<ScopeContext<'viewee>>,
-    },
+    In(T, Option<ScopeContext<'viewee>>),
     /// The given part is out of scope for processing.
     ///
     /// Treated as immutable, view-only.
-    Out {
-        /// The contents of this item.
-        content: &'viewee str,
-        /// The *original* range the contents are found at.
-        range: R,
-    },
+    Out(&'viewee str),
 }
 
 /// A read-only scope.
@@ -100,20 +79,13 @@ impl<'viewee> ROScopes<'viewee> {
             let range = last_end..start;
             let out = &input[range.clone()];
             if !out.is_empty() {
-                scopes.push(ROScope(Out {
-                    content: out,
-                    range: range.into(),
-                }));
+                scopes.push(ROScope(Out(out)));
             }
 
             let range = start..end;
             let r#in = &input[range.clone()];
             if !r#in.is_empty() {
-                scopes.push(ROScope(In {
-                    content: r#in,
-                    range: range.into(),
-                    ctx: context,
-                }));
+                scopes.push(ROScope(In(r#in, context)));
             }
 
             last_end = end;
@@ -122,10 +94,7 @@ impl<'viewee> ROScopes<'viewee> {
         let range = last_end..input.len();
         let tail = &input[range.clone()];
         if !tail.is_empty() {
-            scopes.push(ROScope(Out {
-                content: tail,
-                range: range.into(),
-            }));
+            scopes.push(ROScope(Out(tail)));
         }
 
         debug!("Scopes: {:?}", scopes);
@@ -141,12 +110,8 @@ impl<'viewee> ROScopes<'viewee> {
             .0
             .into_iter()
             .map(|s| match s {
-                ROScope(In { content, range, .. }) => ROScope(Out { content, range }),
-                ROScope(Out { content, range }) => ROScope(In {
-                    content,
-                    range,
-                    ctx: None,
-                }),
+                ROScope(In(s, ..)) => ROScope(Out(s)),
+                ROScope(Out(s)) => ROScope(In(s, None)),
             })
             .collect();
         trace!("Inverted scopes: {:?}", scopes);
@@ -196,7 +161,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee ROScope) -> Self {
         match s.0 {
-            In { content, .. } | Out { content, .. } => content,
+            In(s, ..) | Out(s) => s,
         }
     }
 }
@@ -204,16 +169,8 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
 impl<'viewee> From<ROScope<'viewee>> for RWScope<'viewee> {
     fn from(s: ROScope<'viewee>) -> Self {
         match s.0 {
-            In {
-                content,
-                range,
-                ctx,
-            } => RWScope(In {
-                content: Cow::Borrowed(content),
-                range,
-                ctx,
-            }),
-            Out { content, range } => RWScope(Out { content, range }),
+            In(s, ctx) => RWScope(In(Cow::Borrowed(s), ctx)),
+            Out(s) => RWScope(Out(s)),
         }
     }
 }
@@ -224,8 +181,8 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// All variants contain such a slice, so this is a convenient method.
     fn from(s: &'viewee RWScope) -> Self {
         match &s.0 {
-            In { content, .. } => content,
-            Out { content, .. } => content,
+            In(s, ..) => s,
+            Out(s) => s,
         }
     }
 }
