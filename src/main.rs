@@ -320,13 +320,15 @@ fn apply(
     }
 
     debug!("Writing to destination.");
-    if only_matching || line_numbers {
+    let line_based = only_matching || line_numbers; // This isn't free
+    if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {
                     destination.write_all(format!("{}:", i.to_string().green()).as_bytes())?;
                 }
+
                 destination.write_all(line.to_string().as_bytes())?
             }
         }
@@ -336,7 +338,6 @@ fn apply(
             .context("Failed writing to destination")?;
     };
     debug!("Done writing to destination.");
-    debug!("Done applying actions to view.");
 
     Ok(())
 }
