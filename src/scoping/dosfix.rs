@@ -1,12 +1,9 @@
 use super::scope::RangesWithContext;
+use crate::scoping::{literal::Literal, ROScopes, Scoper};
 #[cfg(doc)]
 use crate::{
     actions::Deletion,
     scoping::scope::Scope::{In, Out},
-};
-use crate::{
-    grep::ranges::GlobalRange,
-    scoping::{literal::Literal, ROScopes, Scoper},
 };
 use log::trace;
 
@@ -38,8 +35,7 @@ use log::trace;
 pub struct DosFix;
 
 impl Scoper for DosFix {
-    fn scope<'viewee>(&self, input: &'viewee str, _: GlobalRange) -> ROScopes<'viewee> {
-        // TODO: shift, or define this away entirely (`invert` in `scope_raw` instead)
+    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
         ROScopes::from_raw_ranges(input, self.scope_raw(input)).invert()
     }
 

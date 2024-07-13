@@ -395,8 +395,8 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
             }
 
             match scope {
-                ROScope(In { content, range, .. }) => {
-                    let mut new_scopes = scoper.scope(content, range);
+                ROScope(In { content, .. }) => {
+                    let mut new_scopes = scoper.scope(content);
                     new_scopes.0.retain(|s| !s.is_empty());
                     new.extend(new_scopes.0);
                 }

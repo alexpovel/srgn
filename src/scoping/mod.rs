@@ -2,9 +2,9 @@
 
 use scope::RangesWithContext;
 
+use crate::scoping::scope::ROScopes;
 #[cfg(doc)]
 use crate::scoping::{scope::Scope, view::ScopedView};
-use crate::{grep::ranges::GlobalRange, scoping::scope::ROScopes};
 
 /// Fixes for DOS-style line endings.
 pub mod dosfix;
@@ -26,11 +26,7 @@ pub trait Scoper: Send + Sync {
     /// After application, the returned scopes are a collection of either in-scope or
     /// out-of-scope parts of the input. Assembling them back together should yield the
     /// original input.
-    fn scope<'viewee>(
-        &self,
-        input: &'viewee str,
-        _range /* TODO: Remove this parameter */: GlobalRange,
-    ) -> ROScopes<'viewee> {
+    fn scope<'viewee>(&self, input: &'viewee str) -> ROScopes<'viewee> {
         let ranges = self.scope_raw(input);
 
         ROScopes::from_raw_ranges(input, ranges)
