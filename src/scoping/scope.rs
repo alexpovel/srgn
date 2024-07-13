@@ -197,7 +197,7 @@ pub enum ScopeContext<'viewee> {
     CaptureGroups(HashMap<CaptureGroup, &'viewee str>),
 }
 
-#[cfg(never)]
+#[cfg(test)]
 mod tests {
     use super::*;
     use rstest::rstest;

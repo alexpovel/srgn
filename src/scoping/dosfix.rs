@@ -55,7 +55,7 @@ impl Scoper for DosFix {
     }
 }
 
-#[cfg(never)]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::scoping::{
