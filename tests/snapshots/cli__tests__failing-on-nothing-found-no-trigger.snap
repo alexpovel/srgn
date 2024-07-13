@@ -1,0 +1,10 @@
+---
+source: tests/cli.rs
+expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
+---
+args:
+  - "--fail-none"
+  - X
+stdin: XYZ
+stdout: XYZ
+exit_code: 0

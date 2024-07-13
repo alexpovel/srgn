@@ -1,10 +1,9 @@
 ---
 source: tests/cli.rs
-expression: "CommandResult { args, stdin, stdout, exit_code }"
+expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
 ---
 args:
   - "--german"
 stdin: "Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.\nFranz jagt im komplett verwahrlosten Taxi quer durch Bayern.\nZwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.\nVogel Quax zwickt Johnys Pferd Bim.\nSylvia wagt quick den Jux bei Pforzheim.\nPolyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.\n\"Fix, Schwyz!\" quaekt Juergen bloed vom Pass.\nVictor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.\nFalsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.\nHeizoelrueckstossabdaempfung.\n"
 stdout: "Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.\nFranz jagt im komplett verwahrlosten Taxi quer durch Bayern.\nZwölf Boxkämpfer jagen Viktor quer über den großen Sylter Deich.\nVogel Quax zwickt Johnys Pferd Bim.\nSylvia wagt quick den Jux bei Pforzheim.\nPolyfon zwitschernd aßen Maexchens Vögel Rüben, Joghurt und Quark.\n\"Fix, Schwyz!\" quäkt Jürgen blöd vom Pass.\nVictor jagt zwölf Boxkämpfer quer über den großen Sylter Deich.\nFalsches Üben von Xylophonmusik quält jeden größeren Zwerg.\nHeizölrückstoßabdämpfung.\n"
 exit_code: 0
-

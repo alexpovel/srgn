@@ -78,6 +78,11 @@ fn main() -> Result<()> {
     let mut actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
+    // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
+    // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
+    // setting it apart from other utilities.
+    let ripgrep_like = actions.is_empty() && language_scoper.is_some();
+
     // See where we're reading from
     let input = match (
         grep_cli::is_readable_stdin(),
@@ -104,7 +109,6 @@ fn main() -> Result<()> {
         (false, None, None) => Input::WalkOn(Box::new(|_| true)),
     };
 
-    let ripgrep_like = actions.is_empty();
     if ripgrep_like {
         info!("Will use (rip)grep-like mode");
 
@@ -117,6 +121,10 @@ fn main() -> Result<()> {
 
         args.options.only_matching = true;
         args.options.line_numbers = true;
+    }
+
+    if actions.is_empty() {
+        warn!("No actions specified. Will return input unchanged, if any.")
     }
 
     // Now write out
@@ -154,8 +162,6 @@ fn handle_actions_on_stdin(
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
 ) -> Result<(), anyhow::Error> {
-    assert!(!actions.is_empty());
-
     info!("Will use stdin to stdout");
     let mut source = std::io::stdin().lock();
     let mut destination = std::io::stdout().lock();
@@ -183,9 +189,11 @@ fn handle_actions_on_many_files(
     args: &cli::Cli,
     ripgrep_like: bool,
 ) -> Result<(), anyhow::Error> {
-    assert!(!actions.is_empty());
-
     let root = env::current_dir()?;
+    info!(
+        "Will walk file tree starting from: {:?}",
+        root.canonicalize()
+    );
     let paths = WalkDir::new(&root)
         .into_iter()
         .par_bridge()

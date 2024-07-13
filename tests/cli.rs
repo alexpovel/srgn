@@ -16,9 +16,23 @@ mod tests {
     use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
-    // There's a test for asserting panic on non-UTF8 input, so it's okay we're doing
-    // integration tests only with valid UTF8.
-    static SAMPLES: &[&str] = &[
+    #[derive(Debug, Serialize)]
+    struct CommandResult {
+        args: &'static [&'static str],
+        stdin: String,
+        stdout: String,
+        exit_code: u8,
+    }
+
+    #[rstest]
+    #[case(
+        "german-symbols",
+        &["--german", "--symbols"],
+        r"Duebel -> 1.5mm;  Wand != 3m²... UEBELTAETER! 😫",
+    )]
+    #[case(
+        "german-text",
+        &["--german"],
         r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
 Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
 Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
@@ -30,50 +44,43 @@ Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.
 Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.
 Heizoelrueckstossabdaempfung.
 "#,
-        r#"
-
-
-Duebel
-
-😂
-
-
-
-"#,
-        r#"Duebel -> 1.5mm; Wand != 3m²... UEBELTAETER! 😫"#,
-    ];
-
-    #[derive(Debug, Serialize)]
-    struct CommandResult {
-        args: &'static [&'static str],
-        stdin: String,
-        stdout: String,
-        exit_code: u8,
-    }
-
-    #[rstest]
+    )]
+    #[case(
+        "deleting-emojis",
+        &["--delete", r"\p{Emoji_Presentation}"],
+        "Some text  :) :-) and emojis 🤩!\nMore: 👽",
+    )]
+    #[case(
+        "failing-on-anything-found-trigger",
+        &["--fail-any", "X"],
+        "XYZ",
+    )]
+    #[case(
+        "failing-on-anything-found-no-trigger",
+        &["--fail-any", "A"],
+        "XYZ",
+    )]
+    #[case(
+        "failing-on-nothing-found-trigger",
+        &["--fail-none", "A"],
+        "XYZ",
+    )]
+    #[case(
+        "failing-on-nothing-found-no-trigger",
+        &["--fail-none", "X"],
+        "XYZ",
+    )]
     fn test_cli_stdin(
-        // This will generate all permutations of all `values`, which is a lot but
-        // neatly manageable through `insta`.
-        #[values(1, 2, 3)] n_sample: usize,
-        #[values(
-            &["--german"],
-            &["--symbols"],
-            &["--german", "--symbols"],
-            &["--delete", r"\p{Emoji_Presentation}"],
-            &["--fail-any", r"\d"],
-            &["--fail-none", r"\d"],
-        )]
-        args: &'static [&'static str],
+        #[case] snapshot_name: &'static str,
+        #[case] args: &'static [&'static str],
+        #[case] stdin: &'static str,
     ) {
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
         // (inside `src/main.rs` etc.).
         let mut cmd = get_cmd();
 
-        let sample = SAMPLES[n_sample - 1];
-        let stdin = sample.to_owned();
-        cmd.args(args).write_stdin(stdin.as_str());
+        cmd.args(args).write_stdin(stdin);
 
         let output = cmd.output().expect("failed to execute process");
 
@@ -84,11 +91,6 @@ Duebel
             as u8;
         let stdout = String::from_utf8(output.stdout).unwrap();
 
-        let padded_sample_number = format!("{:03}", n_sample);
-
-        let snapshot_name =
-            (padded_sample_number.clone() + "+" + &args.join("_")).replace(' ', "_");
-
         // Exclusion doesn't influence covered code, but fixes linking issues when
         // `insta` is used, see also
         // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
@@ -97,7 +99,7 @@ Duebel
             snapshot_name,
             CommandResult {
                 args,
-                stdin,
+                stdin: stdin.into(),
                 stdout,
                 exit_code
             }

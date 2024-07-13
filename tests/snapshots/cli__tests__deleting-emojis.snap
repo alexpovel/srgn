@@ -1,0 +1,10 @@
+---
+source: tests/cli.rs
+expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
+---
+args:
+  - "--delete"
+  - "\\p{Emoji_Presentation}"
+stdin: "Some text \u0010 :) :-) and emojis 🤩!\nMore: 👽"
+stdout: "Some text \u0010 :) :-) and emojis !\nMore: "
+exit_code: 0
