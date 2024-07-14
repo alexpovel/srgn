@@ -36,6 +36,8 @@ use srgn::{
         Scoper,
     },
 };
+use std::os::unix::ffi::OsStrExt;
+use std::path::Path;
 use std::{
     env,
     error::Error,
@@ -81,7 +83,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let ripgrep_like = actions.is_empty() && language_scoper.is_some();
+    let search_mode = actions.is_empty() && language_scoper.is_some();
 
     // See where we're reading from
     let input = match (
@@ -109,8 +111,8 @@ fn main() -> Result<()> {
         (false, None, None) => Input::WalkOn(Box::new(|_| true)),
     };
 
-    if ripgrep_like {
-        info!("Will use (rip)grep-like mode");
+    if search_mode {
+        info!("Will use search mode"); // Modelled after ripgrep!
 
         let style = Style {
             fg: Some(Color::Red),
@@ -135,7 +137,14 @@ fn main() -> Result<()> {
         }
         Input::WalkOn(validator) => {
             info!("Will walk file tree, applying actions");
-            handle_actions_on_many_files(validator, &all_scopers, &actions, &args, ripgrep_like)?
+            handle_actions_on_many_files(
+                validator,
+                &all_scopers,
+                &actions,
+                &args,
+                search_mode,
+                args.options.hidden,
+            )?
         }
     };
 
@@ -182,12 +191,25 @@ fn handle_actions_on_stdin(
     Ok(())
 }
 
+fn is_hidden(item: &Path) -> bool {
+    let is_hidden = item
+        .file_name()
+        .and_then(|name| name.as_bytes().first())
+        .map_or(false, |&c| c == b'.');
+    if is_hidden {
+        trace!("Ignoring hidden path item: {}", item.display())
+    }
+
+    is_hidden
+}
+
 fn handle_actions_on_many_files(
     validator: Validator,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
-    ripgrep_like: bool,
+    search_mode: bool,
+    include_hidden: bool,
 ) -> Result<(), anyhow::Error> {
     let root = env::current_dir()?;
     info!(
@@ -198,6 +220,7 @@ fn handle_actions_on_many_files(
         .into_iter()
         .par_bridge()
         .flatten()
+        .filter(|entry| include_hidden || !is_hidden(entry.path()))
         .map(|entry| {
             // Make path relative for glob pattern to work (which is given relative to
             // pwd)
@@ -209,7 +232,6 @@ fn handle_actions_on_many_files(
         })
         .filter(|path| validator(path))
         .map(|path| {
-            // let path = entry.path();
             debug!("Processing path: {:?}", path);
 
             if !path.is_file() {
@@ -247,7 +269,7 @@ fn handle_actions_on_many_files(
 
             let mut stdout = stdout().lock();
 
-            if ripgrep_like {
+            if search_mode {
                 if !contents.is_empty() {
                     stdout
                         .write_all(path.display().to_string().magenta().to_string().as_bytes())?;
@@ -331,7 +353,6 @@ fn apply(
     let line_based = only_matching || line_numbers; // This isn't free
     if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
-            println!("Line {i}: {}", line.to_string().escape_debug());
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {
@@ -664,6 +685,9 @@ mod cli {
         /// Print only matching lines.
         #[arg(long, verbatim_doc_comment)]
         pub only_matching: bool,
+        /// Do not ignore hidden files and directories (the default is to ignore).
+        #[arg(long, verbatim_doc_comment)]
+        pub hidden: bool,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable

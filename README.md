@@ -1,32 +1,35 @@
 # srgn - a code surgeon
 
-A code **s**u**rg**eo**n** for precise text and code search and transplantation. It is
-organized around [*actions*](#actions) to take, acting only within precise, optionally
-language grammar-aware [*scopes*](#scopes).
+A code **s**u**rg**eo**n** for searching and manipulating text and source code with
+**enhanced precision**.
 
-## Usage
+`srgn` is organized around [*actions*](#actions) to take, acting only within precise,
+optionally language grammar-aware [*scopes*](#scopes).
 
-The simplest form works [much like `tr`](#comparison-with-tr):
+## Quick walkthrough
+
+The simplest form works [similar to `tr`](#comparison-with-tr):
 
 ```bash
 $ echo 'Hello World!' | srgn '[wW]orld' 'there'
 Hello there!
 ```
 
-Matches for the pattern (the *scope*) are replaced by (the *action*) the second
+Matches for the pattern (the *scope*) are replaced (the *action*) by the second
 positional argument. Zero or more actions can be specified:
 
 ```bash
-$ echo 'Hello World!' | srgn '[wW]orld' # zero actions to take
+$ echo 'Hello World!' | srgn '[wW]orld' # zero actions: input returned unchanged
 Hello World!
 $ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions
 Hello YOU!
 ```
 
-Additionally, one (as above) *or two* scopes can be specified. If two are given, the one
-applied first is **language grammar-aware**, and can scope syntactical elements of
-source code (like "all bodies of `class` definitions in Python"). The second scope, the
-regular expression pattern, is then applied only *within* that first scope.
+Similarly, multiple scopes can be specified. If two are given, the one applied first is
+**language grammar-aware**, and can scope syntactical elements of source code (think
+"all bodies of `class` definitions in Python"). The second scope, the regular expression
+pattern, is then applied only *within* that first scope. This enables searching and
+manipulating with precision not normally possible using plain regular expressions.
 
 Consider this Python source file:
 
@@ -47,7 +50,7 @@ class Bird:
 
 
 def register_bird(bird: Bird, db) -> None:
-    assert bird.age >= 0, "Programming error"
+    assert bird.age >= 0
     with db.tx() as tx:
         tx.insert(bird)
 ```
@@ -56,11 +59,15 @@ which will give:
 
 ```bash
 $ cat birds.py | srgn --python 'class' 'age'
-8:    age: int
-12:        self.age += 1
+9:    age: int
+13:        self.age += 1
 ```
 
+The string `age` was sought and found *only* within Python `class` definitions (and not,
+for example, in function bodies such as `register_bird`). By default, this 'search mode'
+also prints line numbers.
 
+If standard input is not given, `srgn` knows how to find corresponding source files:
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):

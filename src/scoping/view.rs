@@ -128,38 +128,42 @@ impl<'viewee> ScopedView<'viewee> {
     }
 
     /// Split this item at newlines, into multiple [`ScopedView`]s.
-    #[allow(clippy::missing_panics_doc)] // Implementation detail: would be a bug
+    ///
+    /// Scopes are retained, and broken across lines as needed.
     #[must_use]
     pub fn lines(&self) -> ScopedViewLines {
-        let mut rw_scopes = vec![RWScopes::default()];
+        let mut lines = vec![];
+        let mut curr = Vec::new();
 
-        println!("{self:?}");
+        for parent_scope in &self.scopes.0 {
+            let s: &str = parent_scope.into();
 
-        for rw_scope in &self.scopes.0 {
-            let s: &str = rw_scope.into();
-
-            for (i, line) in s.split_inclusive('\n').enumerate() {
-                println!("Split {i}: {}", line.escape_debug());
-                let base_scope = match &rw_scope.0 {
-                    In(_, ctx) => In(Cow::Borrowed(line), ctx.clone()),
-                    Out(_) => Out(line),
+            for potential_line in s.split_inclusive('\n') {
+                // Is it supposed to be in or out of scope?
+                let child_scope = match &parent_scope.0 {
+                    In(_, ctx) => In(Cow::Borrowed(potential_line), ctx.clone()), // ⚠️ TODO: Adjust `ctx`
+                    Out(_) => Out(potential_line),
                 };
 
-                let first_line = i == 0;
-                if first_line {
-                    rw_scopes
-                        .last_mut()
-                        .expect("always has one element")
-                        .0
-                        .push(RWScope(base_scope));
-                } else {
-                    // This is a new line, so push a wholly new element.
-                    rw_scopes.push(RWScopes(vec![RWScope(base_scope)]));
+                // String might not have *any* newlines, so this isn't redundant
+                let seen_newline = potential_line.ends_with('\n');
+
+                curr.push(RWScope(child_scope));
+
+                if seen_newline {
+                    // Flush out
+                    lines.push(RWScopes(curr));
+                    curr = Vec::new();
                 }
             }
         }
 
-        ScopedViewLines(rw_scopes.into_iter().map(ScopedView::new).collect_vec())
+        if !curr.is_empty() {
+            // Tail that wasn't flushed yet
+            lines.push(RWScopes(curr));
+        }
+
+        ScopedViewLines(lines.into_iter().map(ScopedView::new).collect_vec())
     }
 }
 
@@ -529,6 +533,7 @@ mod tests {
 
     #[rstest]
     #[case(
+        // New newline at all: still works
         vec![
             In("Hello", None),
         ],
@@ -539,6 +544,7 @@ mod tests {
         ],
     )]
     #[case(
+        // Single newline is fine
         vec![
             In("Hello\n", None),
         ],
@@ -549,6 +555,8 @@ mod tests {
         ],
     )]
     #[case(
+        // Single scope is broken up across lines properly (multiple lines in single
+        // scope)
         vec![
             In("Hello\nWorld", None),
         ],
@@ -562,6 +570,26 @@ mod tests {
         ],
     )]
     #[case(
+        // Single line across multiple scopes
+        vec![
+            In("Hello", None),
+            Out("World"),
+            In("!!\n", None),
+            Out(" Goodbye"),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+                Out("World"),
+                In("!!\n", None),
+            ],
+            vec![
+                Out(" Goodbye"),
+            ],
+        ],
+    )]
+    #[case(
+        // Mixed scopes & trailing newline works
         vec![
             In("Hello\n", None),
             Out("World"),
@@ -572,6 +600,48 @@ mod tests {
             ],
             vec![
                 Out("World"),
+            ],
+        ],
+    )]
+    #[case(
+        // Mixed scopes & leading newline works
+        vec![
+            In("Hello", None),
+            Out("\nWorld"),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+                Out("\n"),
+            ],
+            vec![
+                Out("World"),
+            ],
+        ],
+    )]
+    #[case(
+        // Empty lines & empty scopes works
+        vec![
+            In("\n", None),
+            Out("\n"),
+            Out(""),
+            In("World\n", None),
+            Out(""),
+        ],
+        vec![
+            vec![
+                In("\n", None),
+            ],
+            vec![
+                Out("\n"),
+            ],
+            vec![
+                #[cfg(never)]Out(""), // Dropped!
+                In("World\n", None),
+            ],
+            #[cfg(never)] // Dropped!
+            vec![
+                Out(""),
             ],
         ],
     )]
@@ -587,5 +657,34 @@ mod tests {
             .collect_vec();
 
         assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    #[case(
+        "hello",
+        &["hello"] // aka: it loops at least once!
+    )]
+    #[case(
+        "hello\n",
+        &["hello\n"]
+    )]
+    #[case(
+        "hello\nworld",
+        &["hello\n", "world"]
+    )]
+    #[case(
+        "hello\nworld\n",
+        &["hello\n", "world\n"]
+    )]
+    #[case(
+        "",
+        &[] // ⚠️ no iteration happens; empty string is dropped
+    )]
+    fn test_split_inclusive(#[case] input: &str, #[case] expected: &[&str]) {
+        // This is not a useful unit test; it's just encoding and confirming the
+        // behavior of `split_inclusive`, to convince myself.
+        for (si, exp) in input.split_inclusive('\n').zip_eq(expected) {
+            assert_eq!(si, *exp);
+        }
     }
 }
