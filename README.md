@@ -1,18 +1,66 @@
 # srgn - a code surgeon
 
-A code **s**u**rg**eo**n** for precise text and code transplantation.
-
-Born a Unicode-capable [descendant of `tr`](#comparison-with-tr), `srgn` adds useful
-[*actions*](#actions), acting within precise, optionally language grammar-aware
-[*scopes*](#scopes). It suits use cases where...
-
-- regex [doesn't cut
-  it](https://en.wikipedia.org/wiki/Pumping_lemma_for_regular_languages) anymore,
-- editor tools such as *Rename all* are too specific, and not automatable,
-- precise manipulation, not just matching, is required, and lastly and optionally,
-- Unicode-specific trickery is desired.
+A code **s**u**rg**eo**n** for precise text and code search and transplantation. It is
+organized around [*actions*](#actions) to take, acting only within precise, optionally
+language grammar-aware [*scopes*](#scopes).
 
 ## Usage
+
+The simplest form works [much like `tr`](#comparison-with-tr):
+
+```bash
+$ echo 'Hello World!' | srgn '[wW]orld' 'there'
+Hello there!
+```
+
+Matches for the pattern (the *scope*) are replaced by (the *action*) the second
+positional argument. Zero or more actions can be specified:
+
+```bash
+$ echo 'Hello World!' | srgn '[wW]orld' # zero actions to take
+Hello World!
+$ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions
+Hello YOU!
+```
+
+Additionally, one (as above) *or two* scopes can be specified. If two are given, the one
+applied first is **language grammar-aware**, and can scope syntactical elements of
+source code (like "all bodies of `class` definitions in Python"). The second scope, the
+regular expression pattern, is then applied only *within* that first scope.
+
+Consider this Python source file:
+
+```python birds.py
+"""Module for watching birds and their age."""
+
+from dataclasses import dataclass
+
+
+@dataclass
+class Bird:
+    name: str
+    age: int
+
+    def celebrate_birthday(self):
+        print("🎉")
+        self.age += 1
+
+
+def register_bird(bird: Bird, db) -> None:
+    assert bird.age >= 0, "Programming error"
+    with db.tx() as tx:
+        tx.insert(bird)
+```
+
+which will give:
+
+```bash
+$ cat birds.py | srgn --python 'class' 'age'
+8:    age: int
+12:        self.age += 1
+```
+
+
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):

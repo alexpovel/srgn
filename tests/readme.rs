@@ -267,18 +267,19 @@ mod tests {
                         // No stdout needed if command fails anyway
                         None
                     } else if let Program::Cat(inv) = first {
-                        assert!(
-                            stdout.is_none(),
-                            "Cat output should be given as extra snippet, not inline"
-                        );
-
                         Some(
                             snippets
                                 .get(&inv.args.first().expect("Cat should have an argument").0)
-                                .ok_or("Snippet should be present")?
+                                .expect("Cat invocation needs a snippet")
                                 .output
                                 .clone()
-                                .expect("Snippet should have an output"),
+                                .unwrap_or_else(|| {
+                                    stdout
+                                        .expect(
+                                            "Snippet for cat has no output, so stdout is required",
+                                        )
+                                        .to_owned()
+                                }),
                         )
                     } else {
                         Some(

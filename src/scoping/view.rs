@@ -133,10 +133,13 @@ impl<'viewee> ScopedView<'viewee> {
     pub fn lines(&self) -> ScopedViewLines {
         let mut rw_scopes = vec![RWScopes::default()];
 
+        println!("{self:?}");
+
         for rw_scope in &self.scopes.0 {
             let s: &str = rw_scope.into();
 
             for (i, line) in s.split_inclusive('\n').enumerate() {
+                println!("Split {i}: {}", line.escape_debug());
                 let base_scope = match &rw_scope.0 {
                     In(_, ctx) => In(Cow::Borrowed(line), ctx.clone()),
                     Out(_) => Out(line),
@@ -399,8 +402,12 @@ impl<'viewee> IntoIterator for ScopedViewBuilder<'viewee> {
 
 #[cfg(test)]
 mod tests {
+    use super::ScopedView;
+    use crate::scoping::scope::RWScopes;
+    use crate::scoping::scope::Scope::{self, In, Out};
     use crate::scoping::view::ScopedViewBuilder;
     use crate::RegexPattern;
+    use itertools::Itertools;
     use rstest::rstest;
 
     #[rstest]
@@ -487,10 +494,10 @@ mod tests {
     //
     #[case("Anything whatsoever gets rEkT", r".", "A")]
     #[case(
-    "Anything whatsoever gets rEkT",
-    r".*", // Greediness inverted
-    "Anything whatsoever gets rEkT"
-)]
+        "Anything whatsoever gets rEkT",
+        r".*", // Greediness inverted
+        "Anything whatsoever gets rEkT"
+    )]
     //
     // Deals with Unicode shenanigans
     #[case("😎😎", r"😎", "😎")]
@@ -516,6 +523,68 @@ mod tests {
 
         view.squeeze();
         let result = view.to_string();
+
+        assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    #[case(
+        vec![
+            In("Hello", None),
+        ],
+        vec![
+            vec![
+                In("Hello", None),
+            ],
+        ],
+    )]
+    #[case(
+        vec![
+            In("Hello\n", None),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+        ],
+    )]
+    #[case(
+        vec![
+            In("Hello\nWorld", None),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+            vec![
+                In("World", None),
+            ],
+        ],
+    )]
+    #[case(
+        vec![
+            In("Hello\n", None),
+            Out("World"),
+        ],
+        vec![
+            vec![
+                In("Hello\n", None),
+            ],
+            vec![
+                Out("World"),
+            ],
+        ],
+    )]
+    fn test_lines(#[case] input: Vec<Scope<&str>>, #[case] expected: Vec<Vec<Scope<&str>>>) {
+        let view = ScopedView {
+            scopes: input.into(),
+        };
+        let result = view.lines().into_iter().collect_vec();
+        let expected = expected
+            .into_iter()
+            .map(RWScopes::from)
+            .map(ScopedView::new)
+            .collect_vec();
 
         assert_eq!(result, expected);
     }

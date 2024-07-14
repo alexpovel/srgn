@@ -30,9 +30,29 @@ pub struct ROScopes<'viewee>(pub Vec<ROScope<'viewee>>);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RWScope<'viewee>(pub Scope<'viewee, Cow<'viewee, str>>);
 
+#[cfg(test)] // For convenience; not legal in normal code
+impl<'viewee> From<Scope<'viewee, &'viewee str>> for RWScope<'viewee> {
+    fn from(value: Scope<'viewee, &'viewee str>) -> Self {
+        Self(match value {
+            In(s, ctx) => In(Cow::Borrowed(s), ctx),
+            Out(s) => Out(s),
+        })
+    }
+}
+
 /// Multiple read-write scopes.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct RWScopes<'viewee>(pub Vec<RWScope<'viewee>>);
+
+#[cfg(test)] // For convenience; not legal in normal code
+impl<'viewee, I> From<I> for RWScopes<'viewee>
+where
+    I: IntoIterator<Item = Scope<'viewee, &'viewee str>>,
+{
+    fn from(value: I) -> Self {
+        Self(value.into_iter().map(Into::into).collect_vec())
+    }
+}
 
 impl<'viewee> ROScope<'viewee> {
     /// Check whether the scope is empty.

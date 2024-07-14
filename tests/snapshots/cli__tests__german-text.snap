@@ -1,6 +1,8 @@
 ---
 source: tests/cli.rs
-expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
+expression: "CommandResult { args, stdin, stdout, exit_code }"
+info:
+  stderr: ""
 ---
 args:
   - "--german"

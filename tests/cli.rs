@@ -11,17 +11,23 @@ mod tests {
     use anyhow::Context;
     use assert_cmd::Command;
     use core::panic;
+    use insta::with_settings;
     use rstest::rstest;
     use serde::Serialize;
     use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
     #[derive(Debug, Serialize)]
-    struct CommandResult {
-        args: &'static [&'static str],
+    struct CommandSnap {
+        args: Vec<String>,
         stdin: String,
         stdout: String,
         exit_code: u8,
+    }
+
+    #[derive(Debug, Serialize)]
+    struct CommandInfo {
+        stderr: String,
     }
 
     #[rstest]
@@ -70,17 +76,47 @@ Heizoelrueckstossabdaempfung.
         &["--fail-none", "X"],
         "XYZ",
     )]
-    fn test_cli_stdin(
-        #[case] snapshot_name: &'static str,
-        #[case] args: &'static [&'static str],
-        #[case] stdin: &'static str,
-    ) {
+    #[case(
+        "go-replacement",
+        &["--go", "comments", "[fF]izz", "🤡"],
+        r#"package main
+
+import "fmt"
+
+// fizzBuzz prints the numbers from 1 to a specified limit.
+// For multiples of 3, it prints "Fizz" instead of the number,
+// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,
+// it prints "FizzBuzz".
+func fizzBuzz(limit int) {
+	for i := 1; i <= limit; i++ {
+		switch {
+		case i%3 == 0 && i%5 == 0:
+			fmt.Println("FizzBuzz")
+		case i%3 == 0:
+			fmt.Println("Fizz")
+		case i%5 == 0:
+			fmt.Println("Buzz")
+		default:
+			fmt.Println(i)
+		}
+	}
+}
+
+func main() {
+	// Run the FizzBuzz function for numbers from 1 to 100
+	fizzBuzz(100)
+}
+"#,
+    )]
+    fn test_cli_stdin(#[case] snapshot_name: String, #[case] args: &[&str], #[case] stdin: String) {
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
         // (inside `src/main.rs` etc.).
         let mut cmd = get_cmd();
 
-        cmd.args(args).write_stdin(stdin);
+        let args: Vec<String> = args.iter().map(|&s| s.to_owned()).collect();
+
+        cmd.args(args.clone()).write_stdin(stdin.clone());
 
         let output = cmd.output().expect("failed to execute process");
 
@@ -90,20 +126,25 @@ Heizoelrueckstossabdaempfung.
             .expect("Process unexpectedly terminated via signal, not `exit`.")
             as u8;
         let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+
+        // For debugging, include this, but do not rely on it for snapshot
+        // validity/correctness. We do not want changes in error messages etc. break
+        // tests, seems excessive.
+        let info = CommandInfo { stderr };
 
         // Exclusion doesn't influence covered code, but fixes linking issues when
         // `insta` is used, see also
         // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
         #[cfg(not(tarpaulin))]
-        insta::assert_yaml_snapshot!(
-            snapshot_name,
-            CommandResult {
-                args,
-                stdin: stdin.into(),
-                stdout,
-                exit_code
-            }
-        );
+        with_settings!({
+            info => &info,
+        }, {
+            insta::assert_yaml_snapshot!(
+                snapshot_name,
+                CommandSnap { args, stdin, stdout, exit_code }
+            );
+        });
     }
 
     #[rstest]

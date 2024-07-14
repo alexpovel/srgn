@@ -331,6 +331,7 @@ fn apply(
     let line_based = only_matching || line_numbers; // This isn't free
     if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
+            println!("Line {i}: {}", line.to_string().escape_debug());
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {
