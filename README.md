@@ -57,10 +57,11 @@ def register_bird(bird: Bird, db) -> None:
 
 which will give:
 
-```bash
+```console
 $ cat birds.py | srgn --python 'class' 'age'
 9:    age: int
 13:        self.age += 1
+
 ```
 
 The string `age` was sought and found *only* within Python `class` definitions (and not,
@@ -68,6 +69,11 @@ for example, in function bodies such as `register_bird`). By default, this 'sear
 also prints line numbers.
 
 If standard input is not given, `srgn` knows how to find corresponding source files:
+
+```console
+$ srgn --python 'comments' 'GNU'
+hello
+```
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):

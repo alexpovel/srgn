@@ -27,6 +27,7 @@ mod tests {
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
+    const DOCUMENT: &str = include_str!("../README.md");
 
     /// A flag, either short or long.
     ///
@@ -186,9 +187,9 @@ mod tests {
                         }
                     }
 
-                    // Empty string will be overwritten later on anyway. This saves a bunch
-                    // of code later.
-                    cmd.write_stdin(inv.stdin.unwrap_or_default());
+                    if let Some(stdin) = inv.stdin {
+                        cmd.write_stdin(stdin);
+                    }
 
                     Ok(cmd)
                 }
@@ -219,50 +220,57 @@ mod tests {
             should_fail: bool,
         ) -> Result<Self, &str> {
             let mut programs = chain.collect::<VecDeque<_>>();
+            eprintln!("Will assemble programs: {:?}", programs);
+
+            // There's a trailing newline inserted which ruins/fails diffs.
+            let stdout = stdout.map(|s| s.strip_suffix('\n').unwrap().to_string());
 
             let first = programs
                 .pop_front()
                 .ok_or("Should have at least one program in pipe")?;
 
             let stdin = match &first {
-                Program::Echo(inv) => inv
-                    .args
-                    .first()
-                    .ok_or("Echo should have an argument")?
-                    .to_string(),
+                Program::Echo(inv) => Some(
+                    inv.args
+                        .first()
+                        .ok_or("Echo should have an argument")?
+                        .to_string(),
+                ),
                 Program::Cat(inv) => {
                     let file_name = inv.args.first().ok_or("Cat should have an argument")?;
 
-                    snippets
-                        .get(&file_name.0)
-                        .ok_or("Snippet should be present")?
-                        .original
-                        .clone()
-                        .ok_or("Snippet should have an original")?
+                    Some(
+                        snippets
+                            .get(&file_name.0)
+                            .ok_or("Snippet should be present")?
+                            .original
+                            .clone()
+                            .ok_or("Snippet should have an original")?,
+                    )
                 }
-                _ => return Err("First command should be able to produce stdin."),
+                Program::Self_(..) => None,
             };
 
-            match programs
-                .front_mut()
-                .expect("No second program to assemble with")
-            {
-                Program::Echo(_) | Program::Cat(_) => {
+            // Set the *second*, if any, command's standard input.
+            match programs.front_mut() {
+                Some(Program::Echo(_) | Program::Cat(_)) => {
                     return Err("Stdin-generating program should not be in the middle of a pipe")
                 }
-                Program::Self_(inv) => {
-                    inv.stdin = Some(stdin);
+                Some(Program::Self_(inv)) => {
+                    inv.stdin = stdin;
                 }
+                None => { /* Single program! Nothing to do. */ }
             }
 
-            match programs
-                .back_mut()
-                .expect("No last program to assemble with")
-            {
-                Program::Echo(_) | Program::Cat(_) => {
+            // Set the expected standard output of the *entire* pipe, aka the last
+            // program's standard output.
+            let mut first = first;
+            match programs.back_mut() {
+                //.unwrap_or(&mut first1) {
+                Some(Program::Echo(_) | Program::Cat(_)) => {
                     return Err("Stdin-generating program should not be at the end of a pipe")
                 }
-                Program::Self_(inv) => {
+                Some(Program::Self_(inv)) => {
                     inv.stdout = if should_fail {
                         // No stdout needed if command fails anyway
                         None
@@ -274,27 +282,34 @@ mod tests {
                                 .output
                                 .clone()
                                 .unwrap_or_else(|| {
-                                    stdout
-                                        .expect(
-                                            "Snippet for cat has no output, so stdout is required",
-                                        )
-                                        .to_owned()
+                                    stdout.expect(
+                                        "Snippet for cat has no output, so stdout is required",
+                                    )
                                 }),
                         )
                     } else {
-                        Some(
-                            stdout
-                                .expect("Stdout should be given for non-`cat`-fed program")
-                                // No patience for hard-to-diff, fiddly, invisible
-                                // whitespace issues, even though it would be "more
-                                // correct"
-                                .trim_end()
-                                .to_string(),
-                        )
+                        Some(stdout.expect("Stdout should be given for non-`cat`-fed program"))
                     }
+                }
+                None => {
+                    match &mut first {
+                        // There is no 'last program': we have a stand-alone one.
+                        Program::Echo(_) | Program::Cat(_) => {
+                            return Err("Illegal standalone program")
+                        }
+                        Program::Self_(inv) => {
+                            inv.stdout = Some(
+                                stdout.expect("Stdout should be given for standalone program"),
+                            );
+                        }
+                    };
+
+                    // Put it back!
+                    programs.push_back(first);
                 }
             }
 
+            assert!(!programs.is_empty());
             Ok(Self {
                 programs,
                 should_fail,
@@ -528,7 +543,7 @@ mod tests {
     fn get_readme_snippets() -> Snippets {
         let mut snippets = HashMap::new();
 
-        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
+        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
             if let Some((_language, mut file_name)) = ncb.info.split_once(' ') {
                 let mut snippet = Snippet::default();
 
@@ -559,7 +574,7 @@ mod tests {
     fn get_readme_program_pipes(snippets: Snippets) -> Vec<PipedPrograms> {
         let mut pipes = Vec::new();
 
-        map_on_markdown_codeblocks(include_str!("../README.md"), |ncb| {
+        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
             if ncb.info == "console" || ncb.info == "bash" {
                 let (_, commands) = parse_code_blocks(&ncb.literal, snippets.clone())
                     .finish()
@@ -568,6 +583,8 @@ mod tests {
                 pipes.extend(commands);
             }
         });
+
+        eprintln!("Piped programs: {:?}", pipes);
 
         pipes
     }

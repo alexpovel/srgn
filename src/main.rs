@@ -125,7 +125,7 @@ fn main() -> Result<()> {
         args.options.line_numbers = true;
     }
 
-    if actions.is_empty() {
+    if actions.is_empty() && !search_mode {
         warn!("No actions specified. Will return input unchanged, if any.")
     }
 
@@ -194,10 +194,10 @@ fn handle_actions_on_stdin(
 fn is_hidden(item: &Path) -> bool {
     let is_hidden = item
         .file_name()
-        .and_then(|name| name.as_bytes().first())
+        .and_then(|name| /* No UTF8: cheaper */ name.as_bytes().first())
         .map_or(false, |&c| c == b'.');
     if is_hidden {
-        trace!("Ignoring hidden path item: {}", item.display())
+        trace!("Path item detected as hidden: {}", item.display())
     }
 
     is_hidden
@@ -218,9 +218,9 @@ fn handle_actions_on_many_files(
     );
     let paths = WalkDir::new(&root)
         .into_iter()
+        .filter_entry(|entry| include_hidden || !is_hidden(entry.path())) // https://docs.rs/walkdir/2.5.0/walkdir/index.html#example-skip-hidden-files-and-directories-on-unix
         .par_bridge()
         .flatten()
-        .filter(|entry| include_hidden || !is_hidden(entry.path()))
         .map(|entry| {
             // Make path relative for glob pattern to work (which is given relative to
             // pwd)
