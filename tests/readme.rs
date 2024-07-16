@@ -148,6 +148,21 @@ mod tests {
                 Self::Self_(inv) => inv.stdout.clone(),
             }
         }
+
+        /// This sets an option to forcibly ignore any provided stdin.
+        ///
+        /// Even though a command might run with `None` for its stdin, the binary under
+        /// test might heuristically check for a readable stdin and somehow detect it.
+        /// This might be a quirk in the command execution from [`Command`]... no idea.
+        /// For that scenario, we need a hacky method to disable stdin for good.
+        fn force_ignore_stdin(&mut self) {
+            match self {
+                Program::Self_(inv) => inv
+                    .opts
+                    .push(Opt::Long("stdin-override-to".into(), "false".into())),
+                _ => panic!("Forcing stdin ignore only applicable to `self` program"),
+            }
+        }
     }
 
     impl TryFrom<Program> for Command {
@@ -205,6 +220,11 @@ mod tests {
         /// The expected outcome of the *entire* pipe. Any failure anywhere in the pipe
         /// should cause overall failure (like `pipefail`).
         should_fail: bool,
+        /// Is this not actually a pipe, but a single, standalone program?
+        ///
+        /// Checking for the length of `programs` might not suffice, as programs are
+        /// dropped from it as it's processed.
+        standalone: bool,
     }
 
     impl PipedPrograms {
@@ -224,6 +244,8 @@ mod tests {
 
             // There's a trailing newline inserted which ruins/fails diffs.
             let stdout = stdout.map(|s| s.strip_suffix('\n').unwrap().to_string());
+
+            let mut standalone = false;
 
             let first = programs
                 .pop_front()
@@ -248,7 +270,10 @@ mod tests {
                             .ok_or("Snippet should have an original")?,
                     )
                 }
-                Program::Self_(..) => None,
+                Program::Self_(..) => {
+                    standalone = true;
+                    None
+                }
             };
 
             // Set the *second*, if any, command's standard input.
@@ -259,7 +284,10 @@ mod tests {
                 Some(Program::Self_(inv)) => {
                     inv.stdin = stdin;
                 }
-                None => { /* Single program! Nothing to do. */ }
+                None => {
+                    // Nothing to do; assert flag was set already.
+                    assert!(standalone)
+                }
             }
 
             // Set the expected standard output of the *entire* pipe, aka the last
@@ -304,6 +332,8 @@ mod tests {
                         }
                     };
 
+                    assert!(standalone, "Should have been set before.");
+
                     // Put it back!
                     programs.push_back(first);
                 }
@@ -313,6 +343,7 @@ mod tests {
             Ok(Self {
                 programs,
                 should_fail,
+                standalone,
             })
         }
     }
@@ -611,7 +642,13 @@ mod tests {
         for pipe in pipes {
             let mut previous_stdin = None;
             let should_fail = pipe.should_fail;
-            for program in pipe {
+            let standalone = pipe.standalone;
+            for mut program in pipe {
+                if standalone {
+                    program.force_ignore_stdin()
+                }
+                let program = program; // de-mut
+
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
 

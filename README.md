@@ -68,12 +68,24 @@ The string `age` was sought and found *only* within Python `class` definitions (
 for example, in function bodies such as `register_bird`). By default, this 'search mode'
 also prints line numbers.
 
-If standard input is not given, `srgn` knows how to find corresponding source files:
+If standard input is not given, `srgn` knows how to find corresponding source files
+automatically:
 
 ```console
-$ srgn --python 'comments' 'GNU'
-hello
+$ srgn --python 'class' 'age'
+docs/samples/birds.py
+9:    age: int
+13:        self.age += 1
+
+docs/samples/birds
+11:    age: int
+15:        self.age += 1
+
+
 ```
+
+It recursively walks its current directory for relevant files (based on file extensions
+and shebang lines).
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):
