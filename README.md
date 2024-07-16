@@ -73,13 +73,13 @@ automatically:
 
 ```console
 $ srgn --python 'class' 'age'
-docs/samples/birds.py
-9:    age: int
-13:        self.age += 1
-
 docs/samples/birds
 11:    age: int
 15:        self.age += 1
+
+docs/samples/birds.py
+9:    age: int
+13:        self.age += 1
 
 
 ```

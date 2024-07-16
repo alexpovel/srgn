@@ -8,7 +8,6 @@ use log::error;
 use log::trace;
 use log::{debug, info, warn, LevelFilter};
 use pathdiff::diff_paths;
-use rayon::prelude::*;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -41,8 +40,6 @@ use srgn::{
     },
 };
 use std::io::IoSlice;
-use std::os::unix::ffi::OsStrExt;
-use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{
@@ -52,7 +49,6 @@ use std::{
     fs::File,
     io::{self, stdout, Write},
 };
-use walkdir::WalkDir;
 
 fn main() -> Result<()> {
     let mut args = cli::Cli::init();
@@ -118,9 +114,15 @@ fn main() -> Result<()> {
 
         // If pattern wasn't manually overridden, consult the language scoper itself, if
         // any.
-        (false, None, Some(language_scoper)) => {
-            Input::WalkOn(Box::new(move |path| language_scoper.is_valid_path(path)))
-        }
+        (false, None, Some(language_scoper)) => Input::WalkOn(Box::new(move |path| {
+            let res = language_scoper.is_valid_path(path);
+            trace!(
+                "Language scoper considers path '{}' valid: {}",
+                path.display(),
+                res
+            );
+            res
+        })),
 
         // Nothing explicitly available: this should open an interactive stdin prompt.
         (false, None, None) => Input::Stdin,
@@ -159,6 +161,7 @@ fn main() -> Result<()> {
                 &args,
                 search_mode,
                 args.options.hidden,
+                args.options.threads,
             )?
         }
     };
@@ -206,18 +209,6 @@ fn handle_actions_on_stdin(
     Ok(())
 }
 
-fn is_hidden(item: &Path) -> bool {
-    let is_hidden = item
-        .file_name()
-        .and_then(|name| /* No UTF8: cheaper */ name.as_bytes().first())
-        .map_or(false, |&c| c == b'.');
-    if is_hidden {
-        trace!("Path item detected as hidden: {}", item.display())
-    }
-
-    is_hidden
-}
-
 fn handle_actions_on_many_files(
     validator: Validator,
     scopers: &[Box<dyn Scoper>],
@@ -225,6 +216,7 @@ fn handle_actions_on_many_files(
     args: &cli::Cli,
     search_mode: bool,
     include_hidden: bool,
+    threads: usize,
 ) -> Result<(), anyhow::Error> {
     let root = env::current_dir()?;
     info!(
@@ -232,176 +224,126 @@ fn handle_actions_on_many_files(
         root.canonicalize()
     );
 
-    // let mut walker = WalkDir::new(&root);
-
-    // if
-    // // For testing, need stable output
-    // cfg!(test) || args.options.sort_files {
-    //     walker = walker.sort_by_key(|entry| entry.path().to_owned());
-    // }
-    let total = Arc::new(Mutex::new(0u64));
-
+    let n_files = Arc::new(Mutex::new(0u64));
     let err: Arc<Mutex<Option<anyhow::Error>>> = Arc::new(Mutex::new(None));
-    WalkBuilder::new(&root).build_parallel().run(|| {
-        Box::new(|entry| {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                debug!("Processing path: {:?}", path);
 
-                let contents = {
-                    let file = match File::open(path) {
-                        Ok(handle) => handle,
-                        Err(e) => {
-                            *err.lock().unwrap() = Some(e.into());
+    WalkBuilder::new(&root)
+        .threads(if cfg!(test) {
+            // For testing, want *determinism* (not necessarily sorting).
+            1
+        } else {
+            // https://github.com/BurntSushi/ripgrep/issues/2854
+            threads
+        })
+        .hidden(!include_hidden)
+        // .ignore(false)
+        // .follow_links(true)
+        // .parents(false)
+        // .git_ignore(false)
+        // .git_exclude(false)
+        // .require_git(true)
+        // .same_file_system(false)
+        .build_parallel()
+        .run(|| {
+            // TODO: clean this up. Error handling is very verbose.
+            // Modelled after https://github.com/rust-lang/cargo/blob/a2b58c3dad4d554ba01ed6c45c41ff85390560f2/crates/cargo-util/src/du.rs#L54-L84
+            Box::new(|entry| {
+                if let Ok(entry) = entry {
+                    let path = diff_paths(entry.path(), &root)
+                        .expect("started at root, so relative to root works");
+                    if !path.is_file() || !validator(&path) {
+                        return WalkState::Continue;
+                    }
+                    debug!("Processing path: {:?}", path);
+
+                    let contents = {
+                        let file = match File::open(&path) {
+                            Ok(handle) => handle,
+                            Err(e) => {
+                                *err.lock().unwrap() = Some(e.into());
+                                return WalkState::Quit;
+                            }
+                        };
+
+                        let mut source = std::io::BufReader::new(file);
+                        let mut destination = std::io::Cursor::new(Vec::new());
+
+                        if let Err(e) = apply(
+                            &mut source,
+                            &mut destination,
+                            scopers,
+                            actions,
+                            args.options.fail_none,
+                            args.options.fail_any,
+                            args.standalone_actions.squeeze,
+                            args.options.only_matching,
+                            args.options.line_numbers,
+                        ) {
+                            *err.lock().unwrap() = Some(e);
                             return WalkState::Quit;
                         }
+
+                        destination.into_inner()
                     };
 
-                    let mut source = std::io::BufReader::new(file);
-                    let mut destination = std::io::Cursor::new(Vec::new());
+                    let mut stdout = stdout().lock();
 
-                    if let Err(e) = apply(
-                        &mut source,
-                        &mut destination,
-                        scopers,
-                        actions,
-                        args.options.fail_none,
-                        args.options.fail_any,
-                        args.standalone_actions.squeeze,
-                        args.options.only_matching,
-                        args.options.line_numbers,
-                    ) {
-                        *err.lock().unwrap() = Some(e);
-                        return WalkState::Quit;
-                    }
+                    if search_mode {
+                        if !contents.is_empty() {
+                            let path_repr = path.display().to_string().magenta().to_string();
+                            let content = &[
+                                IoSlice::new(path_repr.as_bytes()),
+                                IoSlice::new(b"\n"),
+                                IoSlice::new(&contents),
+                                IoSlice::new(b"\n"),
+                            ];
 
-                    destination.into_inner()
-                };
+                            if let Err(e) = stdout.write_vectored(content) {
+                                *err.lock().unwrap() = Some(e.into());
+                                return WalkState::Quit;
+                            }
 
-                let mut stdout = stdout().lock();
-
-                if search_mode {
-                    if !contents.is_empty() {
-                        let path_repr = path.display().to_string().magenta().to_string();
-                        let content = &[
-                            IoSlice::new(path_repr.as_bytes()),
-                            IoSlice::new(b"\n"),
-                            IoSlice::new(&contents),
-                        ];
+                            *n_files.lock().unwrap() += 1;
+                        }
+                    } else {
+                        let path_repr = path.display().to_string();
+                        let content = &[IoSlice::new(path_repr.as_bytes()), IoSlice::new(b"\n")];
 
                         if let Err(e) = stdout.write_vectored(content) {
                             *err.lock().unwrap() = Some(e.into());
                             return WalkState::Quit;
                         }
-                    }
-                } else {
-                    if let Err(e) = stdout.write_all(path.display().to_string().as_bytes()) {
-                        *err.lock().unwrap() = Some(e.into());
-                        return WalkState::Quit;
-                    }
 
-                    debug!("Got new file contents, writing to file: {:?}", path);
-                    match File::create(path) {
-                        Ok(mut handle) => match handle.write_all(&contents) {
-                            Ok(_) => {}
+                        debug!("Got new file contents, writing to file: {:?}", path);
+                        match File::create(&path) {
+                            Ok(mut handle) => match handle.write_all(&contents) {
+                                Ok(_) => {}
+                                Err(e) => {
+                                    *err.lock().unwrap() = Some(e.into());
+                                    return WalkState::Quit;
+                                }
+                            },
                             Err(e) => {
                                 *err.lock().unwrap() = Some(e.into());
                                 return WalkState::Quit;
                             }
-                        },
-                        Err(e) => {
-                            *err.lock().unwrap() = Some(e.into());
-                            return WalkState::Quit;
                         }
+                        *n_files.lock().unwrap() += 1;
+                        debug!("Done processing file: {:?}", path);
                     }
-                    debug!("Done processing file: {:?}", path);
+
+                    WalkState::Continue
+                } else {
+                    WalkState::Quit
                 }
-
-                if let Err(e) = stdout.write_all(b"\n") {
-                    *err.lock().unwrap() = Some(e.into());
-                    return WalkState::Quit;
-                }
-
-                *total.lock().unwrap() += 1;
-
-                WalkState::Continue
-            } else {
-                WalkState::Quit
-            }
-        })
-    });
+            })
+        });
 
     if let Some(e) = err.lock().unwrap().take() {
         return Err(e);
     }
 
-    // let paths = walker
-    //     .into_iter()
-    //     .filter_entry(|entry| include_hidden || !is_hidden(entry.path())) // https://docs.rs/walkdir/2.5.0/walkdir/index.html#example-skip-hidden-files-and-directories-on-unix
-    //     .par_bridge()
-    //     .flatten()
-    //     .map(|entry| {
-    //         // Make path relative for any glob patterns to work (which are given
-    //         // relative to pwd)
-    //         diff_paths(entry.path(), &root)
-    //             .expect("started from `root`, so relative to `root` works")
-    //     })
-    //     .filter(|path| validator(path))
-    //     .filter(|path| path.is_file())
-    //     .map(|path| {
-    //         debug!("Processing path: {:?}", path);
-
-    //         let contents = {
-    //             let file = File::open(&path)
-    //                 .with_context(|| format!("Failed to read file: {:?}", path))?;
-
-    //             let mut source = std::io::BufReader::new(file);
-    //             let mut destination = std::io::Cursor::new(Vec::new());
-
-    //             apply(
-    //                 &mut source,
-    //                 &mut destination,
-    //                 scopers,
-    //                 actions,
-    //                 args.options.fail_none,
-    //                 args.options.fail_any,
-    //                 args.standalone_actions.squeeze,
-    //                 args.options.only_matching,
-    //                 args.options.line_numbers,
-    //             )
-    //             .with_context(|| format!("Failed to process file contents: {:?}", path))?;
-
-    //             destination.into_inner()
-    //         };
-
-    //         let mut stdout = stdout().lock();
-
-    //         if search_mode {
-    //             if !contents.is_empty() {
-    //                 stdout
-    //                     .write_all(path.display().to_string().magenta().to_string().as_bytes())?;
-    //                 stdout.write_all(b"\n")?;
-    //                 stdout.write_all(&contents)?;
-    //                 stdout.write_all(b"\n")?;
-    //             }
-    //         } else {
-    //             stdout.write_all(path.display().to_string().as_bytes())?;
-    //             stdout.write_all(b"\n")?;
-
-    //             debug!("Got new file contents, writing to file: {:?}", path);
-    //             let mut file = File::create(&path)
-    //                 .with_context(|| format!("Failed to truncate file: {:?}", path))?;
-    //             file.write_all(&contents)
-    //                 .with_context(|| format!("Failed to write to file: {:?}", path))?;
-    //             debug!("Done processing file: {:?}", path);
-    //         }
-
-    //         Ok(path)
-    //     })
-    //     .collect::<Result<Vec<_>>>()
-    //     .context("Failure in processing of files")?;
-
-    if args.options.fail_empty_glob && *total.lock().unwrap() == 0 {
+    if args.options.fail_empty_glob && *n_files.lock().unwrap() == 0 {
         Err(ApplicationError::NoFilesFound).context("No files processed")
     } else {
         Ok(())
@@ -806,9 +748,16 @@ mod cli {
         /// Override detection heuristics for stdin readability, and force to value.
         #[arg(long, verbatim_doc_comment, hide(true))]
         pub stdin_override_to: Option<bool>,
-        /// When working on files, disabled parallel processing and force sorted output.
-        #[arg(long, verbatim_doc_comment)]
-        pub sort_files: bool,
+        /// Number of threads to run processing on, when working with files.
+        ///
+        /// If not specified, will default to the number of CPUs. Set to 1 for
+        /// sequential, deterministic (but not sorted) output.
+        #[arg(
+            long,
+            verbatim_doc_comment,
+            default_value_t = num_cpus::get()
+        )]
+        pub threads: usize,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable

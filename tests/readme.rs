@@ -175,7 +175,7 @@ mod tests {
                 Program::Echo(_) | Program::Cat(_) => {
                     Err("Cannot be run, only used to generate stdin")
                 }
-                Program::Self_(inv) => {
+                Program::Self_(mut inv) => {
                     let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
 
                     for flag in inv.flags {
@@ -185,6 +185,9 @@ mod tests {
                     for arg in inv.args {
                         cmd.arg(arg.to_string());
                     }
+
+                    // We're testing and need determinism. This hard-codes a flag!
+                    inv.opts.push(Opt::Long("threads".into(), "1".into()));
 
                     for opt in inv.opts {
                         match opt {
