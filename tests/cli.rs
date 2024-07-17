@@ -334,9 +334,21 @@ func main() {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::Other,
                         format!(
-                            "File contents differ: left: {:?}, right: {:?}",
+                            r"File contents differ:
+left path: {:?}
+right path: {:?}
+---------
+left contents:
+{}
+---------
+right contents:
+{}
+---------
+",
                             left.path(),
-                            candidate
+                            candidate,
+                            left_contents.escape_debug(),
+                            right_contents.escape_debug()
                         ),
                     )
                     .into());
