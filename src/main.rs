@@ -98,8 +98,8 @@ fn main() -> Result<()> {
         language_scoper,
     ) {
         // stdin considered viable: always use it.
-        (true, None, _) => Input::Stdin,
-        (true, Some(..), _) => {
+        (true, None, None) => Input::Stdin,
+        (true, _, _) => {
             // Usage error... warn loudly, the user is likely interested.
             error!("Detected stdin, and request for files: will use stdin and ignore files.");
             Input::Stdin
@@ -746,7 +746,10 @@ mod cli {
         #[arg(long, verbatim_doc_comment)]
         pub hidden: bool,
         /// Override detection heuristics for stdin readability, and force to value.
-        #[arg(long, verbatim_doc_comment, hide(true))]
+        ///
+        /// `true` will always attempt to read from stdin.
+        /// `false` will never read from stdin, even if provided.
+        #[arg(long, verbatim_doc_comment)]
         pub stdin_override_to: Option<bool>,
         /// Number of threads to run processing on, when working with files.
         ///

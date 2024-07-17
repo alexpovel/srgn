@@ -150,6 +150,8 @@ func main() {
     #[rstest]
     #[case("**/*.py", "tests/files-option/basic-python/in", ["foo", "baz"].as_slice())]
     fn test_cli_files(#[case] glob: &str, #[case] left: PathBuf, #[case] add_args: &[&str]) {
+        use std::mem::ManuallyDrop;
+
         // Arrange
         let mut cmd = get_cmd();
 
@@ -160,9 +162,14 @@ func main() {
             right
         };
 
-        let left = copy_to_tmp(&left);
+        let left = ManuallyDrop::new(copy_to_tmp(&left));
 
-        cmd.current_dir(&left);
+        cmd.current_dir(&*left);
+        cmd.args(
+            // Override; `Command` is detected as providing stdin but we're working on
+            // files here.
+            ["--stdin-override-to", "false"],
+        );
         cmd.args(["--files", glob]);
         cmd.args(add_args);
 
@@ -176,8 +183,13 @@ func main() {
 
         // Results are correct
         if let Err(e) = compare_directories(left.path().to_owned(), right) {
+            // Do not drop on panic, to keep tmpdir in place for manual inspection. Can
+            // then diff directories.
             panic!("{}", format!("Directory comparison failed: {}.", e));
         }
+
+        // Test was successful: ok to drop.
+        drop(ManuallyDrop::into_inner(left));
     }
 
     #[test]
