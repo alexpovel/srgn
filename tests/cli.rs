@@ -166,22 +166,23 @@ func main() {
             "baz"
         ]
     )]
-    fn test_cli_files(#[case] left: PathBuf, #[case] args: &[&str]) {
+    fn test_cli_files(#[case] input: PathBuf, #[case] args: &[&str]) {
         use std::mem::ManuallyDrop;
 
         // Arrange
         let mut cmd = get_cmd();
 
-        let right = {
-            let mut right = left.clone();
-            right.pop();
-            right.push("out");
-            right
+        let baseline = {
+            let mut baseline = input.clone();
+            baseline.pop();
+            baseline.push("out");
+            baseline
         };
 
-        let left = ManuallyDrop::new(copy_to_tmp(&left));
+        let candidate = ManuallyDrop::new(copy_to_tmp(&input));
+        drop(input); // Prevent misuse
 
-        cmd.current_dir(&*left);
+        cmd.current_dir(&*candidate);
         cmd.args(
             // Override; `Command` is detected as providing stdin but we're working on
             // files here.
@@ -198,14 +199,14 @@ func main() {
         assert!(output.status.success(), "Binary execution itself failed");
 
         // Results are correct
-        if let Err(e) = compare_directories(left.path().to_owned(), right) {
+        if let Err(e) = check_directories_equality(baseline, candidate.path().to_owned()) {
             // Do not drop on panic, to keep tmpdir in place for manual inspection. Can
             // then diff directories.
             panic!("{}", format!("Directory comparison failed: {}.", e));
         }
 
         // Test was successful: ok to drop.
-        drop(ManuallyDrop::into_inner(left));
+        drop(ManuallyDrop::into_inner(candidate));
     }
 
     #[test]
@@ -223,42 +224,99 @@ func main() {
         cmd.assert().failure();
     }
 
+    /// Tests the helper function itself.
+    #[test]
+    fn test_directory_comparison() {
+        for result in ignore::WalkBuilder::new("./src")
+            .add("./tests")
+            .add("./benches")
+            .add("./data")
+            .add("./docs")
+            .build()
+        {
+            let entry = result.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                let path = path.to_owned();
+
+                {
+                    // Any directory compares to itself fine.
+                    assert!(check_directories_equality(path.clone(), path.clone()).is_ok());
+                }
+
+                {
+                    let parent = path
+                        .clone()
+                        .parent()
+                        .expect("(our) directories under test always have parents")
+                        .to_owned();
+
+                    assert!(check_directories_equality(
+                        // Impossible: a directory always compares unequal to a subdirectory
+                        // of itself.
+                        parent, path
+                    )
+                    .is_err());
+                }
+            }
+        }
+    }
+
     fn get_cmd() -> Command {
         Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap()
     }
 
-    /// Recursively compares file contents of some baseline directory `left` to some
-    /// candidate `right`.
+    /// Same as [`compare_directories`], but checks in both directions.
     ///
-    /// The `right` tree has to be a superset (not strict) of `left`: all files with
-    /// their full paths, i.e. all intermediary directories, need to exist in `right`,
-    /// but extraneous files in `right` are allowed.
+    /// This ensures exact equality, instead of more loose 'superset' shenanigans.
+    fn check_directories_equality<P: Into<PathBuf>>(
+        baseline: P,
+        candidate: P,
+    ) -> anyhow::Result<()> {
+        let baseline = baseline.into();
+        let candidate = candidate.into();
+
+        compare_directories(baseline.clone(), candidate.clone())?;
+        compare_directories(candidate, baseline)
+    }
+
+    /// Recursively compares file contents of some `baseline` directory to some
+    /// `candidate`.
+    ///
+    /// The `candidate` tree has to be a superset (not strict) of `baseline`: all files
+    /// with their full paths, i.e. all intermediary directories, need to exist in
+    /// `candidate` as they do in `baseline`, but extraneous files in `candidate` are
+    /// allowed and ignored.
     ///
     /// **File contents are checked for exactly**. File metadata is not compared.
     ///
     /// Any failure fails the entire comparison.
     ///
     /// Lots of copying happens, so not efficient.
-    fn compare_directories(left: PathBuf, mut right: PathBuf) -> anyhow::Result<()> {
-        for entry in left
+    fn compare_directories<P: Into<PathBuf>>(baseline: P, candidate: P) -> anyhow::Result<()> {
+        let baseline: PathBuf = baseline.into();
+        let mut candidate: PathBuf = candidate.into();
+
+        for entry in baseline
             .read_dir()
-            .with_context(|| format!("Failure reading left dir: {:?}", left))?
+            .with_context(|| format!("Failure reading left dir: {:?}", baseline))?
         {
             // This shadows on purpose: less risk of misuse
-            let left = entry
-                .with_context(|| format!("Failure reading left dir entry (left: {:?})", left))?;
+            let left = entry.with_context(|| {
+                format!("Failure reading left dir entry (left: {:?})", baseline)
+            })?;
 
-            right.push(left.file_name());
+            candidate.push(left.file_name());
 
             let metadata = left.metadata().context("Failure reading file metadata")?;
 
-            if !right.exists() {
+            if !candidate.exists() {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
                     format!(
                         "Right counterpart does not exist: left: {:?}, right: {:?}, left meta: {:?}",
                         left.path(),
-                        right,
+                        candidate,
                         metadata
                     ),
                 )
@@ -269,8 +327,8 @@ func main() {
                 // Recursion end
                 let left_contents = std::fs::read_to_string(left.path())
                     .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
-                let right_contents = std::fs::read_to_string(&right)
-                    .with_context(|| format!("Failure reading right file: {:?}", right))?;
+                let right_contents = std::fs::read_to_string(&candidate)
+                    .with_context(|| format!("Failure reading right file: {:?}", candidate))?;
 
                 if left_contents != right_contents {
                     return Err(std::io::Error::new(
@@ -278,14 +336,14 @@ func main() {
                         format!(
                             "File contents differ: left: {:?}, right: {:?}",
                             left.path(),
-                            right
+                            candidate
                         ),
                     )
                     .into());
                 }
             } else if metadata.is_dir() {
                 // Recursion step
-                compare_directories(left.path().clone(), right.clone())?;
+                compare_directories(left.path().clone(), candidate.clone())?;
             } else {
                 // Do not silently ignore.
                 return Err(std::io::Error::new(
@@ -298,7 +356,7 @@ func main() {
                 .into());
             }
 
-            right.pop();
+            candidate.pop();
         }
 
         Ok(())
