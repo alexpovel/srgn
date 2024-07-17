@@ -148,8 +148,25 @@ func main() {
     }
 
     #[rstest]
-    #[case("**/*.py", "tests/files-option/basic-python/in", ["foo", "baz"].as_slice())]
-    fn test_cli_files(#[case] glob: &str, #[case] left: PathBuf, #[case] add_args: &[&str]) {
+    #[case(
+        "tests/files/files-python/in",
+        &[
+            "--files",
+            "**/*.py",
+            "foo",
+            "baz"
+        ]
+    )]
+    #[case(
+        "tests/files/language-scoping-python/in",
+        &[
+            "--python",
+            "function-names",
+            "foo",
+            "baz"
+        ]
+    )]
+    fn test_cli_files(#[case] left: PathBuf, #[case] args: &[&str]) {
         use std::mem::ManuallyDrop;
 
         // Arrange
@@ -170,8 +187,7 @@ func main() {
             // files here.
             ["--stdin-override-to", "false"],
         );
-        cmd.args(["--files", glob]);
-        cmd.args(add_args);
+        cmd.args(args);
 
         // Act
         let output = cmd.output().expect("failed to execute binary under test");
