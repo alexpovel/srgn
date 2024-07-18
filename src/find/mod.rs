@@ -60,29 +60,29 @@ pub(crate) fn find_interpreter(source: &mut impl Read) -> Option<String> {
     let mut interpreter = String::new();
     let mut seen_space = false;
     let mut buf = [0u8; 32];
-    let mut total = 0;
+    let mut n_char = 0;
 
-    while let Ok(n) = source.read(&mut buf) {
+    'read: while let Ok(n) = source.read(&mut buf) {
         let done = n == 0;
-        let maximum_exceeded = total >= 128;
+        let maximum_exceeded = n_char >= 128;
         if done || maximum_exceeded {
             break;
         }
 
-        for (i, c) in buf.into_iter().take(n).enumerate() {
-            total += 1;
+        for c in buf.into_iter().take(n) {
+            n_char += 1;
 
-            match (i, c as char) {
+            match (n_char - 1, c as char) {
                 // Correct shebang start
                 (0, '#') | (1, '!') => continue,
 
-                (0 | 1, _) | (_, '\n') => break,
+                (0 | 1, _) | (_, '\n' | '\r') => break 'read,
 
                 // At each path element, reset
                 (_, '/') => interpreter.clear(),
 
                 // Take whatever comes first after a space, if any, as the interpreter.
-                (_, ' ') if seen_space => break,
+                (_, ' ') if seen_space => break 'read,
                 (_, ' ') => {
                     seen_space = true;
                     interpreter.clear();
@@ -113,11 +113,31 @@ mod test {
     #[case("#!/", None)]
     #[case("#!/b", Some(String::from("b")))]
     #[case("#!/bin/bash", Some(String::from("bash")))]
+    //
     #[case("#!/bin/bash\n", Some(String::from("bash")))]
+    #[case("#!/bin/bash\r\n", Some(String::from("bash")))]
+    //
     #[case("#!/bin/bash\nwhatever", Some(String::from("bash")))]
+    #[case("#!/bin/bash\r\nwhatever", Some(String::from("bash")))]
+    //
     #[case("#!/usr/bin/env python\n", Some(String::from("python")))]
+    #[case("#!/usr/bin/env python\r\n", Some(String::from("python")))]
+    //
     #[case("#!/usr/bin/env python3\n", Some(String::from("python3")))]
+    #[case("#!/usr/bin/env python3\r\n", Some(String::from("python3")))]
+    //
+    #[case("#!/usr/bin/env a b c d e", Some(String::from("a")))]
+    #[case("#!/usr/bin/env a b c d e\n", Some(String::from("a")))]
+    #[case("#!/usr/bin/env a b c d e\nf", Some(String::from("a")))]
+    #[case("#!/usr/bin/env a b c d e\r\n", Some(String::from("a")))]
+    #[case("#!/usr/bin/env a b c d e\r\nf", Some(String::from("a")))]
+    //
     #[case("#!/usr/bin/env perl -w\n", Some(String::from("perl")))]
+    #[case("#!/usr/bin/env perl -w\r\n", Some(String::from("perl")))]
+    //
+    #[case("#!/some/very/long/path/which/is/not/expected/in/real/life/but/should/still/work/because/why/not/bin/bash", Some(String::from("bash")))]
+    //
+    #[case("#!/some/very/long/path/which/is/not/expected/in/real/life/and/will/not/work/because/there/is/a/certain/limit/to/the/nonsense/we/accept/in/this/function/bin/nope", None)]
     fn test_find_interpreter(#[case] input: &str, #[case] expected: Option<String>) {
         assert_eq!(
             find_interpreter(&mut Cursor::new(input.as_bytes())),
