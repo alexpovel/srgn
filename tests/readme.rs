@@ -676,8 +676,10 @@ mod tests {
                         // Get some more readable output diff compared to
                         // `assert::Command`'s `stdout()` function, for which diffing
                         // whitespace is very hard.
-                        expected_stdout.escape_debug().to_string(),
-                        observed_stdout.escape_debug().to_string()
+                        observed_stdout.escape_debug().to_string(),
+                        unixfy_file_paths(&expected_stdout)
+                            .escape_debug()
+                            .to_string()
                     )
                 }
 
@@ -685,5 +687,33 @@ mod tests {
                 previous_stdin = Some(observed_stdout);
             }
         }
+    }
+
+    /// The document under test might contain hard-coded Unix file paths. When running
+    /// under Windows, where `\` might be printed as the path separator, tests will
+    /// break. So hack strings which look like paths to spell `/` instead of `\` as
+    /// their path separator.
+    fn unixfy_file_paths(input: &str) -> String {
+        input.replace("\u{200B}/", std::path::MAIN_SEPARATOR_STR)
+        // let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
+        // let mut res = input
+        //     .lines()
+        //     .map(|s| {
+        //         if pattern.is_match(s).unwrap() {
+        //             let res = s.replace('\\', "/");
+        //             eprintln!("Replaced Windows path-like string: {s} -> {res}");
+        //             res
+        //         } else {
+        //             s.to_owned()
+        //         }
+        //     })
+        //     .collect::<Vec<String>>()
+        //     .join("\n");
+
+        // if input.ends_with('\n') {
+        //     res.push('\n');
+        // }
+
+        // res
     }
 }

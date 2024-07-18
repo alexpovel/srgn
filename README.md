@@ -71,13 +71,18 @@ also prints line numbers.
 If standard input is not given, `srgn` knows how to find corresponding source files
 automatically:
 
+<!--
+CAREFUL: the below contains *manually* inserted U+200B
+(Zero Width Space (ZWSP)) to help with testing across different
+OS path separators
+-->
 ```console
 $ srgn --python 'class' 'age'
-docs/samples/birds
+docs​/samples​/birds
 11:    age: int
 15:        self.age += 1
 
-docs/samples/birds.py
+docs​/samples​/birds.py
 9:    age: int
 13:        self.age += 1
 
