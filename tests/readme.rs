@@ -669,15 +669,20 @@ mod tests {
                     assertion.success()
                 };
 
-                if let Some(stdout) = program.stdout().clone() {
-                    assertion.stdout(stdout);
+                let observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
+                    .expect("Stdout should be given as UTF-8");
+                if let Some(expected_stdout) = program.stdout().clone() {
+                    assert_eq!(
+                        // Get some more readable output diff compared to
+                        // `assert::Command`'s `stdout()` function, for which diffing
+                        // whitespace is very hard.
+                        expected_stdout.escape_debug().to_string(),
+                        observed_stdout.escape_debug().to_string()
+                    )
                 }
 
                 // Pipe stdout to stdin of next run...
-                previous_stdin = Some(
-                    String::from_utf8(cmd.assert().get_output().stdout.clone())
-                        .expect("Stdout should be given as UTF-8"),
-                );
+                previous_stdin = Some(observed_stdout);
             }
         }
     }

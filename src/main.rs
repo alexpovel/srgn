@@ -154,15 +154,7 @@ fn main() -> Result<()> {
         }
         Input::WalkOn(validator) => {
             info!("Will walk file tree, applying actions.");
-            handle_actions_on_many_files(
-                validator,
-                &all_scopers,
-                &actions,
-                &args,
-                search_mode,
-                args.options.hidden,
-                args.options.threads,
-            )?
+            handle_actions_on_many_files(validator, &all_scopers, &actions, &args, search_mode)?
         }
     };
 
@@ -215,8 +207,6 @@ fn handle_actions_on_many_files(
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
-    include_hidden: bool,
-    threads: usize,
 ) -> Result<(), anyhow::Error> {
     let root = env::current_dir()?;
     info!(
@@ -233,16 +223,10 @@ fn handle_actions_on_many_files(
             1
         } else {
             // https://github.com/BurntSushi/ripgrep/issues/2854
-            threads
+            args.options.threads
         })
-        .hidden(!include_hidden)
-        // .ignore(false)
-        // .follow_links(true)
-        // .parents(false)
-        // .git_ignore(false)
-        // .git_exclude(false)
-        // .require_git(true)
-        // .same_file_system(false)
+        .hidden(!args.options.hidden)
+        .git_ignore(!args.options.gitignored)
         .build_parallel()
         .run(|| {
             // TODO: clean this up. Error handling is very verbose.
@@ -424,8 +408,6 @@ enum ApplicationError {
     SomeInScope,
     NoneInScope,
     NoFilesFound,
-    // IoError(std::io::Error),
-    // ActionError(ActionError),
 }
 
 impl fmt::Display for ApplicationError {
@@ -437,19 +419,11 @@ impl fmt::Display for ApplicationError {
             ),
             Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
             Self::NoFilesFound => write!(f, "No files found"),
-            // Self::IoError(err) => write!(f, "IO error: {err}"),
-            // Self::ActionError(err) => write!(f, "Error applying an a: {err}"),
         }
     }
 }
 
 impl Error for ApplicationError {}
-
-// impl From<std::io::Error> for ApplicationError {
-//     fn from(err: std::io::Error) -> Self {
-//         Self::IoError(err)
-//     }
-// }
 
 #[derive(Debug)]
 pub enum ScoperBuildError {
@@ -742,9 +716,12 @@ mod cli {
         /// Print only matching lines.
         #[arg(long, verbatim_doc_comment)]
         pub only_matching: bool,
-        /// Do not ignore hidden files and directories (the default is to ignore).
+        /// Do not ignore hidden files and directories.
         #[arg(long, verbatim_doc_comment)]
         pub hidden: bool,
+        /// Do not ignore `.gitignore`d files and directories.
+        #[arg(long, verbatim_doc_comment)]
+        pub gitignored: bool,
         /// Override detection heuristics for stdin readability, and force to value.
         ///
         /// `true` will always attempt to read from stdin.

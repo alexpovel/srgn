@@ -52,7 +52,7 @@ bench() {
                 --parameter-list find "e+,[Tt]he" \
                 --parameter-list replace "_,🙂" \
                 --show-output \
-                "./srgn -vv --fail-empty-glob --$lang $query_type --files '{repo}/**/*.$file_suffix' '{find}' '{replace}'"
+                "./srgn -vv --gitignored --fail-empty-glob --$lang $query_type --files '{repo}/**/*.$file_suffix' '{find}' '{replace}'"
         done
     )
 }

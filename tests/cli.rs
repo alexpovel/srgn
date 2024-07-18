@@ -229,7 +229,6 @@ func main() {
     fn test_directory_comparison() {
         for result in ignore::WalkBuilder::new("./src")
             .add("./tests")
-            .add("./benches")
             .add("./data")
             .add("./docs")
             .build()
