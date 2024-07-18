@@ -98,8 +98,8 @@ fn main() -> Result<()> {
         language_scoper,
     ) {
         // stdin considered viable: always use it.
-        (true, None, None) => Input::Stdin,
-        (true, _, _) => {
+        (true, None, _) => Input::Stdin,
+        (true, Some(..), _) => {
             // Usage error... warn loudly, the user is likely interested.
             error!("Detected stdin, and request for files: will use stdin and ignore files.");
             Input::Stdin
@@ -183,7 +183,7 @@ fn handle_actions_on_stdin(
 ) -> Result<(), anyhow::Error> {
     info!("Will use stdin to stdout.");
     let mut source = std::io::stdin().lock();
-    let mut destination = std::io::stdout().lock();
+    let mut destination = String::new();
 
     apply(
         &mut source,
@@ -197,6 +197,8 @@ fn handle_actions_on_stdin(
         args.options.line_numbers,
     )
     .context("Failed to process stdin")?;
+
+    std::io::stdout().lock().write_all(destination.as_bytes())?;
 
     Ok(())
 }
@@ -249,8 +251,9 @@ fn handle_actions_on_many_files(
                             }
                         };
 
+                        let mut destination =
+                            String::with_capacity(file.metadata().map_or(0, |m| m.len() as usize));
                         let mut source = std::io::BufReader::new(file);
-                        let mut destination = std::io::Cursor::new(Vec::new());
 
                         if let Err(e) = apply(
                             &mut source,
@@ -267,22 +270,16 @@ fn handle_actions_on_many_files(
                             return WalkState::Quit;
                         }
 
-                        destination.into_inner()
+                        destination
                     };
 
+                    // Hold the lock so results aren't intertwined
                     let mut stdout = stdout().lock();
 
                     if search_mode {
                         if !contents.is_empty() {
                             let path_repr = path.display().to_string().magenta().to_string();
-                            let content = &[
-                                IoSlice::new(path_repr.as_bytes()),
-                                IoSlice::new(b"\n"),
-                                IoSlice::new(&contents),
-                                IoSlice::new(b"\n"),
-                            ];
-
-                            if let Err(e) = stdout.write_vectored(content) {
+                            if let Err(e) = writeln!(stdout, "{}\n{}", path_repr, &contents) {
                                 *err.lock().unwrap() = Some(e.into());
                                 return WalkState::Quit;
                             }
@@ -299,14 +296,23 @@ fn handle_actions_on_many_files(
                         }
 
                         debug!("Got new file contents, writing to file: {:?}", path);
-                        match File::create(&path) {
-                            Ok(mut handle) => match handle.write_all(&contents) {
-                                Ok(_) => {}
-                                Err(e) => {
+                        match tempfile::Builder::new()
+                            .prefix(env!("CARGO_PKG_NAME"))
+                            .tempfile()
+                        {
+                            Ok(mut file) => {
+                                trace!("Writing to temporary file: {:?}", file.path());
+                                if let Err(e) = file.write_all(contents.as_bytes()) {
                                     *err.lock().unwrap() = Some(e.into());
                                     return WalkState::Quit;
                                 }
-                            },
+                                // Atomically replace so SIGINT etc. do not leave
+                                // dangling crap.
+                                if let Err(e) = file.persist(&path) {
+                                    *err.lock().unwrap() = Some(e.into());
+                                    return WalkState::Quit;
+                                }
+                            }
                             Err(e) => {
                                 *err.lock().unwrap() = Some(e.into());
                                 return WalkState::Quit;
@@ -337,7 +343,7 @@ fn handle_actions_on_many_files(
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 fn apply(
     source: &mut impl io::BufRead,
-    destination: &mut impl io::Write,
+    destination: &mut String,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     fail_none: bool,
@@ -389,14 +395,14 @@ fn apply(
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {
-                    destination.write_all(format!("{}:", i.to_string().green()).as_bytes())?;
+                    destination.push_str(&format!("{}:", i.to_string().green()));
                 }
 
-                destination.write_all(line.to_string().as_bytes())?
+                destination.push_str(&line.to_string())
             }
         }
     } else {
-        destination.write_all(view.to_string().as_bytes())?;
+        destination.push_str(&view.to_string());
     };
     debug!("Done writing to destination.");
 

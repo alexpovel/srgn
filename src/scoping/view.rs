@@ -132,7 +132,7 @@ impl<'viewee> ScopedView<'viewee> {
     /// Scopes are retained, and broken across lines as needed.
     #[must_use]
     pub fn lines(&self) -> ScopedViewLines {
-        let mut lines = vec![];
+        let mut lines = Vec::new();
         let mut curr = Vec::new();
 
         for parent_scope in &self.scopes.0 {
