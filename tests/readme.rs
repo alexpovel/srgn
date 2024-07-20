@@ -5,7 +5,8 @@ mod tests {
         nodes::{NodeCodeBlock, NodeValue},
         parse_document, Arena, ComrakOptions,
     };
-    use core::fmt;
+    use core::{fmt, panic};
+    use itertools::Itertools;
     use nom::{
         branch::alt,
         bytes::complete::{escaped, is_not, tag, take_until, take_while1},
@@ -549,6 +550,69 @@ mod tests {
         Ok(res)
     }
 
+    /// Supported Operating systems.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum OS {
+        Linux,
+        #[allow(clippy::enum_variant_names)]
+        MacOS,
+        Windows,
+    }
+
+    impl From<String> for OS {
+        /// Convert from a value as returned by [`std::env::consts::OS`].
+        fn from(value: String) -> Self {
+            match value.as_str() {
+                "linux" => Self::Linux,
+                "macos" => Self::MacOS,
+                "windows" => Self::Windows,
+                // Just a double check to ensure parsing of options went right.
+                _ => panic!("Unknown OS: {}", value),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, Default)]
+    struct BlockOptions {
+        /// The file name to associate with this code block, if any.
+        filename: Option<String>,
+        /// Skip when running on any of these operating systems.
+        skip_os: Option<Vec<OS>>,
+    }
+
+    impl<S> From<S> for BlockOptions
+    where
+        S: AsRef<str>,
+    {
+        fn from(value: S) -> Self {
+            let string = value.as_ref();
+            let mut options: HashMap<&str, String> = string
+                .split(';')
+                .map(|pair| {
+                    pair.split_once('=')
+                        .unwrap_or_else(|| panic!("need a value for key-value pair: {}", pair))
+                })
+                .map(|(k, v)| (k, v.to_string()))
+                .collect();
+
+            let get_many = |s: String| s.split(',').map(|s| s.to_owned()).collect_vec();
+
+            let res = Self {
+                filename: options.remove("file"),
+                skip_os: options
+                    .remove("skip-os")
+                    .map(get_many)
+                    .map(|oss| oss.into_iter().map(OS::from).collect_vec()),
+            };
+
+            if !options.is_empty() {
+                panic!("unknown keys in options: {:?}", options);
+            }
+
+            res
+        }
+    }
+
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     struct Snippet {
         original: Option<String>,
@@ -578,25 +642,32 @@ mod tests {
         let mut snippets = HashMap::new();
 
         map_on_markdown_codeblocks(DOCUMENT, |ncb| {
-            if let Some((_language, mut file_name)) = ncb.info.split_once(' ') {
+            if let Some((_language, options)) = ncb.info.split_once(' ') {
                 let mut snippet = Snippet::default();
+                let options: BlockOptions = options.into();
 
-                file_name = match file_name.strip_prefix("output-") {
-                    Some(stripped_file_name) => {
-                        snippet.output = Some(ncb.literal);
-                        stripped_file_name
-                    }
-                    None => {
-                        snippet.original = Some(ncb.literal);
-                        file_name
-                    }
-                };
+                if let BlockOptions {
+                    filename: Some(mut file_name),
+                    ..
+                } = options
+                {
+                    file_name = match file_name.strip_prefix("output-") {
+                        Some(stripped_file_name) => {
+                            snippet.output = Some(ncb.literal);
+                            stripped_file_name.to_owned()
+                        }
+                        None => {
+                            snippet.original = Some(ncb.literal);
+                            file_name
+                        }
+                    };
 
-                if let Some((_, other)) = snippets.remove_entry(file_name) {
-                    snippet = snippet.join(other);
+                    if let Some(other) = snippets.remove(&file_name) {
+                        snippet = snippet.join(other);
+                    }
+
+                    snippets.insert(file_name, snippet);
                 }
-
-                snippets.insert(file_name.to_owned(), snippet);
             }
         });
 
@@ -609,7 +680,24 @@ mod tests {
         let mut pipes = Vec::new();
 
         map_on_markdown_codeblocks(DOCUMENT, |ncb| {
-            if ncb.info == "console" || ncb.info == "bash" {
+            let (language, options): (&str, Option<BlockOptions>) = ncb
+                .info
+                .split_once(' ')
+                .map(|(l, o)| (l, Some(o.into())))
+                .unwrap_or_else(|| (ncb.info.as_str(), None));
+
+            if let Some(BlockOptions {
+                skip_os: Some(oss), ..
+            }) = options
+            {
+                let curr_os: OS = std::env::consts::OS.to_owned().into();
+                if oss.contains(&curr_os) {
+                    eprintln!("Skipping OS: {:?}", curr_os);
+                    return;
+                }
+            }
+
+            if language == "console" || language == "bash" {
                 let (_, commands) = parse_code_blocks(&ncb.literal, snippets.clone())
                     .finish()
                     .expect("Anything in `console` should be parseable as a command");
@@ -677,9 +765,7 @@ mod tests {
                         // `assert::Command`'s `stdout()` function, for which diffing
                         // whitespace is very hard.
                         observed_stdout.escape_debug().to_string(),
-                        unixfy_file_paths(&expected_stdout)
-                            .escape_debug()
-                            .to_string()
+                        expected_stdout.escape_debug().to_string()
                     )
                 }
 
@@ -687,33 +773,5 @@ mod tests {
                 previous_stdin = Some(observed_stdout);
             }
         }
-    }
-
-    /// The document under test might contain hard-coded Unix file paths. When running
-    /// under Windows, where `\` might be printed as the path separator, tests will
-    /// break. So hack strings which look like paths to spell `/` instead of `\` as
-    /// their path separator.
-    fn unixfy_file_paths(input: &str) -> String {
-        input.replace("\u{200B}/", std::path::MAIN_SEPARATOR_STR)
-        // let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
-        // let mut res = input
-        //     .lines()
-        //     .map(|s| {
-        //         if pattern.is_match(s).unwrap() {
-        //             let res = s.replace('\\', "/");
-        //             eprintln!("Replaced Windows path-like string: {s} -> {res}");
-        //             res
-        //         } else {
-        //             s.to_owned()
-        //         }
-        //     })
-        //     .collect::<Vec<String>>()
-        //     .join("\n");
-
-        // if input.ends_with('\n') {
-        //     res.push('\n');
-        // }
-
-        // res
     }
 }

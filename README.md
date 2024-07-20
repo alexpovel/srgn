@@ -33,7 +33,7 @@ manipulating with precision not normally possible using plain regular expression
 
 Consider this Python source file:
 
-```python birds.py
+```python file=birds.py
 """Module for watching birds and their age."""
 
 from dataclasses import dataclass
@@ -71,18 +71,14 @@ also prints line numbers.
 If standard input is not given, `srgn` knows how to find corresponding source files
 automatically:
 
-<!--
-CAREFUL: the below contains *manually* inserted U+200B
-(Zero Width Space (ZWSP)) to help with testing across different
-OS path separators
--->
-```console
+<!-- Skip this on Windows: it has different path seps *and* different ordering (even for threads=1) -->
+```console skip-os=windows
 $ srgn --python 'class' 'age'
-docs​/samples​/birds
+docs/samples/birds
 11:    age: int
 15:        self.age += 1
 
-docs​/samples​/birds.py
+docs/samples/birds.py
 9:    age: int
 13:        self.age += 1
 
@@ -95,7 +91,7 @@ and shebang lines).
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):
 
-```python gnu.py
+```python file=gnu.py
 """GNU module."""
 
 def GNU_says_moo():
@@ -116,7 +112,7 @@ cat gnu.py | srgn --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix' |
 
 can be manipulated to read
 
-```python output-gnu.py
+```python file=output-gnu.py
 """GNU 🐂 is not Unix module."""
 
 def GNU_says_moo():
@@ -649,7 +645,7 @@ This section shows examples for some of the **prepared queries**.
 As part of a large refactor (say, after an acquisition), imagine all imports of a
 specific package needed renaming:
 
-```python imports.py
+```python file=imports.py
 import math
 from pathlib import Path
 
@@ -671,7 +667,7 @@ cat imports.py | srgn --python 'imports' '^good_company' 'src.better_company'
 
 which will yield
 
-```python output-imports.py
+```python file=output-imports.py
 import math
 from pathlib import Path
 
@@ -689,7 +685,7 @@ many files, see [the `files` option](#run-against-multiple-files).
 Similar import-related edits are supported for other languages as well, for example
 Rust:
 
-```rust imports.rs
+```rust file=imports.rs
 use std::collections::HashMap;
 
 use good_company::infra;
@@ -708,7 +704,7 @@ cat imports.rs | srgn --rust 'uses' '^good_company' 'better_company'
 
 becomes
 
-```rust output-imports.rs
+```rust file=output-imports.rs
 use std::collections::HashMap;
 
 use better_company::infra;
@@ -723,7 +719,7 @@ good_company = "good_company";  // good_company
 
 Perhaps you're using a system of `TODO` notes in comments:
 
-```typescript todo.ts
+```typescript file=todo.ts
 class TODOApp {
     // TODO app for writing TODO lists
     addTodo(todo: TODO): void {
@@ -741,7 +737,7 @@ cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
 
 which in this case gives
 
-```typescript output-todo.ts
+```typescript file=output-todo.ts
 class TODOApp {
     // TODO app for writing TODO lists
     addTodo(todo: TODO): void {
@@ -758,7 +754,7 @@ mentioned around the comments would be matched as well.
 
 Say there's code making liberal use of `print`:
 
-```python money.py
+```python file=money.py
 def print_money():
     """Let's print money 💸."""
 
@@ -781,7 +777,7 @@ cat money.py | srgn --python 'function-calls' '^print$' 'logging.info'
 
 yielding
 
-```python output-money.py
+```python file=output-money.py
 def print_money():
     """Let's print money 💸."""
 
@@ -807,7 +803,7 @@ logging.info("Done.")
 Overdone, comments can turn into [smells](https://refactoring.guru/smells/comments). If
 not tended to, they might very well start lying:
 
-```csharp UserService.cs
+```csharp file=UserService.cs
 using System.Linq;
 
 public class UserService
@@ -855,7 +851,7 @@ cat UserService.cs | srgn --csharp 'comments' -d '.*' | srgn -d '[[:blank:]]+\n'
 
 The result is a tidy, yet taciturn:
 
-```csharp output-UserService.cs
+```csharp file=output-UserService.cs
 using System.Linq;
 
 public class UserService
@@ -898,7 +894,7 @@ spaces](https://docs.rs/regex/latest/regex/#ascii-character-classes)).
 
 Say you'd like to upgrade the instance size you're using:
 
-```hcl ec2.tf
+```hcl file=ec2.tf
 data "aws_ec2_instance_type" "tiny" {
   instance_type = "t2.micro"
 }
@@ -917,7 +913,7 @@ cat ec2.tf | srgn --hcl 'strings' '^"t2\.(\w+)"$' '"t3.$1"' | srgn --hcl 'data-n
 
 will give
 
-```hcl output-ec2.tf
+```hcl file=output-ec2.tf
 data "aws_ec2_instance_type" "small" {
   instance_type = "t3.micro"
 }
@@ -935,7 +931,7 @@ Note the quotes for `"t2...` and `"t3`.
 Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to
 create small, ad-hoc, tailor-made linters, for example to catch code such as:
 
-```python cond.py
+```python file=cond.py
 if x:
     return left
 else:
@@ -952,7 +948,7 @@ to hint that the code can be more idiomatically rewritten as `return left if x e
 right`. Another example, this one in Go, is ensuring sensitive fields are not
 serialized:
 
-```go sensitive.go
+```go file=sensitive.go
 package main
 
 type User struct {
@@ -973,7 +969,7 @@ Occassionally, parts of a match need to be ignored, for example when no suitable
 tree-sitter node type is available. For example, say we'd like to replace the `error`
 with `wrong` inside the string of the macro body:
 
-```rust wrong.rs
+```rust file=wrong.rs
 fn wrong() {
     let wrong = "wrong";
     error!("This went error");
@@ -991,7 +987,7 @@ would need to be matched, with the name part ignored. Any capture name starting 
 cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
 ```
 
-```rust output-wrong.rs
+```rust file=output-wrong.rs
 fn wrong() {
     let wrong = "wrong";
     error!("This went wrong");
@@ -1063,7 +1059,7 @@ custom, ad-hoc linter.
 Take for example "old-style" Python code, where type hints are not yet [surfaced to the
 syntax-level](https://docs.python.org/3/library/typing.html):
 
-```python oldtyping.py
+```python file=oldtyping.py
 def square(a):
     """Squares a number.
 
