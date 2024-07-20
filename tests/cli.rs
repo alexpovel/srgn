@@ -116,13 +116,13 @@ Heizoelrueckstossabdaempfung.
     )]
     #[case(
         "go-search-files",
-        true,
+        true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
         &[/* need determinism */ "--sorted", "--go", "comments", "[fF]izz"],
         None,
     )]
     #[case(
-        "python-search", // searches all files, in all Python strings
-        true,
+        "python-search-files", // searches all files, in all Python strings
+        true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
         &[/* need determinism */ "--sorted", "--python", "strings", "is"],
         None,
     )]
