@@ -165,7 +165,7 @@ Heizoelrueckstossabdaempfung.
             info => &info,
             filters => vec![
                 // Stabilize snapshots for Windows...
-                (r"\\r\\n", "\n"),
+                (/* this is a regex, so double slash */ r"\\r\\n", r"\n"),
             ],
         }, {
             insta::assert_yaml_snapshot!(
