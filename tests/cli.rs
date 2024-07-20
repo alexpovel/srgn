@@ -208,24 +208,45 @@ Heizoelrueckstossabdaempfung.
 
     #[rstest]
     #[case(
+        "files-inplace-python",
         "tests/files/files-python/in",
         &[
+            "--sorted",
             "--files",
             "**/*.py",
             "foo",
             "baz"
-        ]
+        ],
+        false
     )]
     #[case(
+        "language-scoping-inplace-python",
         "tests/files/language-scoping-python/in",
         &[
+            "--sorted",
             "--python",
             "function-names",
             "foo",
             "baz"
-        ]
+        ],
+        false
     )]
     #[case(
+        "language-scoping-and-files-inplace-python",
+        "tests/files/language-scoping-and-files-python/in",
+        &[
+            "--sorted",
+            "--python",
+            "function-names",
+            "--files", // Will override language scoper
+            "subdir/**/*.py",
+            "foo",
+            "baz"
+        ],
+        false
+    )]
+    #[case(
+        "language-scoping-and-files-inplace-python",
         "tests/files/language-scoping-and-files-python/in",
         &[
             "--python",
@@ -234,10 +255,21 @@ Heizoelrueckstossabdaempfung.
             "subdir/**/*.py",
             "foo",
             "baz"
-        ]
+        ],
+        // NOT `--sorted`, so not deterministic; use to test that directories are
+        // equivalent even if running parallel, unsorted. Output will be random,
+        // breaking snapshot testing.
+        true
     )]
-    fn test_cli_files(#[case] input: PathBuf, #[case] args: &[&str]) {
+    fn test_cli_files(
+        #[case] mut snapshot_name: String,
+        #[case] input: PathBuf,
+        #[case] args: &[&str],
+        #[case] skip_output_check: bool,
+    ) {
         use std::mem::ManuallyDrop;
+
+        let args = args.iter().map(|s| s.to_string()).collect_vec();
 
         // Arrange
         let mut cmd = get_cmd();
@@ -258,7 +290,7 @@ Heizoelrueckstossabdaempfung.
             // files here.
             ["--stdin-override-to", "false"],
         );
-        cmd.args(args);
+        cmd.args(&args);
 
         // Act
         let output = cmd.output().expect("failed to execute binary under test");
@@ -277,6 +309,41 @@ Heizoelrueckstossabdaempfung.
 
         // Test was successful: ok to drop.
         drop(ManuallyDrop::into_inner(candidate));
+
+        // Let's look at command output now.
+        if !skip_output_check {
+            // These are inherently platform-specific, as they deal with file paths.
+            snapshot_name.push('-');
+            snapshot_name.push_str(std::env::consts::OS);
+
+            let exit_code = output
+                .status
+                .code()
+                .expect("Process unexpectedly terminated via signal, not `exit`.")
+                as u8;
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            let stderr = String::from_utf8(output.stderr).unwrap();
+
+            let info = CommandInfo { stderr };
+
+            // Exclusion doesn't influence covered code, but fixes linking issues when
+            // `insta` is used, see also
+            // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
+            #[cfg(not(tarpaulin))]
+            with_settings!({
+                info => &info,
+            }, {
+                insta::assert_yaml_snapshot!(
+                    snapshot_name,
+                    CommandSnap {
+                        args,
+                        stdin: None,
+                        stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                        exit_code,
+                    }
+                );
+            });
+        }
     }
 
     #[test]

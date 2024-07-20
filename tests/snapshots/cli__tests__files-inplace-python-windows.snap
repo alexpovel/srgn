@@ -1,0 +1,18 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: None,\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--sorted"
+  - "--files"
+  - "**/*.py"
+  - foo
+  - baz
+stdin: ~
+stdout:
+  - "1.py\n"
+  - "subdir\\2.py\n"
+  - "subdir\\subdir\\3.py\n"
+exit_code: 0
