@@ -104,12 +104,12 @@ Heizoelrueckstossabdaempfung.
     )]
     #[case(
         "go-search-files",
-        &["--go", "comments", "[fF]izz"],
+        &[/* need determinism */ "--sorted", "--go", "comments", "[fF]izz"],
         None,
     )]
     #[case(
         "python-search", // searches all files, in all Python strings
-        &["--python", "strings", "is"],
+        &[/* need determinism */ "--sorted", "--python", "strings", "is"],
         None,
     )]
     #[case(

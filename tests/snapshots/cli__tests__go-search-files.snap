@@ -5,6 +5,7 @@ info:
   stderr: ""
 ---
 args:
+  - "--sorted"
   - "--go"
   - comments
   - "[fF]izz"

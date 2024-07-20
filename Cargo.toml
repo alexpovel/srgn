@@ -16,7 +16,7 @@ categories = [
     "text-processing",
     "value-formatting",
 ]
-rust-version = "1.74.1"
+rust-version = "1.79.0"
 
 [dependencies]
 anyhow = { version = "1.0.75", features = ["backtrace"] }
