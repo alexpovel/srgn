@@ -1,10 +1,14 @@
 ---
 source: tests/cli.rs
-expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
 ---
 args:
   - "--fail-any"
   - A
-stdin: XYZ
-stdout: XYZ
+stdin:
+  - XYZ
+stdout:
+  - XYZ
 exit_code: 0

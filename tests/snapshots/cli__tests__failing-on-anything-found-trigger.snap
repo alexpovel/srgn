@@ -1,10 +1,13 @@
 ---
 source: tests/cli.rs
-expression: "CommandResult { args, stdin: stdin.into(), stdout, exit_code }"
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: "Error: Failed to process stdin\n\nCaused by:\n    Some input was in scope, and explicit failure requested.\n"
 ---
 args:
   - "--fail-any"
   - X
-stdin: XYZ
-stdout: ""
+stdin:
+  - XYZ
+stdout: []
 exit_code: 1

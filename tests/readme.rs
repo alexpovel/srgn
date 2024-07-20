@@ -23,8 +23,11 @@ mod tests {
     use std::{
         cell::RefCell,
         collections::{HashMap, VecDeque},
+        io::Write,
+        mem::ManuallyDrop,
         rc::Rc,
     };
+    use tempfile::NamedTempFile;
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
@@ -760,13 +763,32 @@ mod tests {
                 let observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
                     .expect("Stdout should be given as UTF-8");
                 if let Some(expected_stdout) = program.stdout().clone() {
-                    assert_eq!(
-                        // Get some more readable output diff compared to
-                        // `assert::Command`'s `stdout()` function, for which diffing
-                        // whitespace is very hard.
-                        observed_stdout.escape_debug().to_string(),
-                        expected_stdout.escape_debug().to_string()
-                    )
+                    if observed_stdout != expected_stdout {
+                        // Write to files for easier inspection
+                        let (mut obs_f, mut exp_f) = (
+                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                        );
+
+                        obs_f.write_all(observed_stdout.as_bytes()).unwrap();
+                        exp_f.write_all(expected_stdout.as_bytes()).unwrap();
+
+                        // Now panic as usual, for the usual output
+                        assert_eq!(
+                            // Get some more readable output diff compared to
+                            // `assert::Command`'s `stdout()` function, for which diffing
+                            // whitespace is very hard.
+                            observed_stdout.escape_debug().to_string(),
+                            expected_stdout.escape_debug().to_string(),
+                            "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
+                            obs_f.path().display(),
+                            exp_f.path().display()
+                        );
+
+                        // Temporary files remain, they're not dropped.
+
+                        unreachable!();
+                    }
                 }
 
                 // Pipe stdout to stdin of next run...

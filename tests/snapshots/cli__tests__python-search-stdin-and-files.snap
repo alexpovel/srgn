@@ -1,0 +1,30 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.map(|s|\n            s.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec()),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: "[2024-07-20T12:54:17.446190Z ERROR srgn] Detected stdin, and request for files: will use stdin and ignore files.\n"
+---
+args:
+  - "--python"
+  - strings
+  - "--files"
+  - "**/*.py"
+  - is
+stdin:
+  - "name = \"Ali__T__ce\"\n"
+  - "ag__T__e = 30\n"
+  - "f_string = f\"name:__T__ {name}, age: {ag__T__e}__T__\"\n"
+  - "\n"
+  - "multiline_f_string = f\"\"\"This is a__T__\n"
+  - "multiline{f_string} string\n"
+  - "spanning several lines__T__\"\"\"\n"
+  - "\n"
+  - "raw_string = r\"This is a raw string__T__ with no special treatment for \\n\"\n"
+  - "bytes_string = b\"This is a bytes__T__ string\"\n"
+  - "bytes_string = rf\"This is a __T__raw f-string with {raw_string}\"\n"
+stdout:
+  - "5:multiline_f_string = f\"\"\"This is a__T__\n"
+  - "9:raw_string = r\"This is a raw string__T__ with no special treatment for \\n\"\n"
+  - "10:bytes_string = b\"This is a bytes__T__ string\"\n"
+  - "11:bytes_string = rf\"This is a __T__raw f-string with {raw_string}\"\n"
+exit_code: 0

@@ -12,6 +12,7 @@ mod tests {
     use assert_cmd::Command;
     use core::panic;
     use insta::with_settings;
+    use itertools::Itertools;
     use rstest::rstest;
     use serde::Serialize;
     use std::path::{Path, PathBuf};
@@ -20,8 +21,8 @@ mod tests {
     #[derive(Debug, Serialize)]
     struct CommandSnap {
         args: Vec<String>,
-        stdin: String,
-        stdout: String,
+        stdin: Option<Vec<String>>,
+        stdout: Vec<String>,
         exit_code: u8,
     }
 
@@ -32,14 +33,29 @@ mod tests {
 
     #[rstest]
     #[case(
+        "baseline-replacement",
+        &["A", "B"],
+        Some(r"A;  B 😫"),
+    )]
+    #[case(
+        "baseline-replacement-no-stdin",
+        &["A", "B"],
+        None,
+    )]
+    #[case(
+        "baseline-regex-replacement",
+        &[r"\W", "B"],
+        Some(r"A;  B 😫"),
+    )]
+    #[case(
         "german-symbols",
         &["--german", "--symbols"],
-        r"Duebel -> 1.5mm;  Wand != 3m²... UEBELTAETER! 😫",
+        Some(r"Duebel -> 1.5mm;  Wand != 3m²... UEBELTAETER! 😫"),
     )]
     #[case(
         "german-text",
         &["--german"],
-        r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
+        Some(r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
 Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
 Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
 Vogel Quax zwickt Johnys Pferd Bim.
@@ -49,66 +65,64 @@ Polyfon zwitschernd assen Maexchens Voegel Rueben, Joghurt und Quark.
 Victor jagt zwoelf Boxkaempfer quer ueber den grossen Sylter Deich.
 Falsches Ueben von Xylophonmusik quaelt jeden groesseren Zwerg.
 Heizoelrueckstossabdaempfung.
-"#,
+"#),
     )]
     #[case(
         "deleting-emojis",
         &["--delete", r"\p{Emoji_Presentation}"],
-        "Some text  :) :-) and emojis 🤩!\nMore: 👽",
+        Some("Some text  :) :-) and emojis 🤩!\nMore: 👽"),
     )]
     #[case(
         "failing-on-anything-found-trigger",
         &["--fail-any", "X"],
-        "XYZ",
+        Some("XYZ"),
     )]
     #[case(
         "failing-on-anything-found-no-trigger",
         &["--fail-any", "A"],
-        "XYZ",
+        Some("XYZ"),
     )]
     #[case(
         "failing-on-nothing-found-trigger",
         &["--fail-none", "A"],
-        "XYZ",
+        Some("XYZ"),
     )]
     #[case(
         "failing-on-nothing-found-no-trigger",
         &["--fail-none", "X"],
-        "XYZ",
+        Some("XYZ"),
+    )]
+    #[case(
+        "go-search",
+        &["--go", "comments", "[fF]izz"],
+        Some(include_str!("langs/go/other/fizzbuzz.go")),
     )]
     #[case(
         "go-replacement",
         &["--go", "comments", "[fF]izz", "🤡"],
-        r#"package main
-
-import "fmt"
-
-// fizzBuzz prints the numbers from 1 to a specified limit.
-// For multiples of 3, it prints "Fizz" instead of the number,
-// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,
-// it prints "FizzBuzz".
-func fizzBuzz(limit int) {
-	for i := 1; i <= limit; i++ {
-		switch {
-		case i%3 == 0 && i%5 == 0:
-			fmt.Println("FizzBuzz")
-		case i%3 == 0:
-			fmt.Println("Fizz")
-		case i%5 == 0:
-			fmt.Println("Buzz")
-		default:
-			fmt.Println(i)
-		}
-	}
-}
-
-func main() {
-	// Run the FizzBuzz function for numbers from 1 to 100
-	fizzBuzz(100)
-}
-"#,
+        Some(include_str!("langs/go/other/fizzbuzz.go")),
     )]
-    fn test_cli_stdin(#[case] snapshot_name: String, #[case] args: &[&str], #[case] stdin: String) {
+    #[case(
+        "go-search-files",
+        &["--go", "comments", "[fF]izz"],
+        None,
+    )]
+    #[case(
+        "python-search", // searches all files, in all Python strings
+        &["--python", "strings", "is"],
+        None,
+    )]
+    #[case(
+        "python-search-stdin", // stdin takes precedence
+        &["--python", "strings", "is"],
+        Some(include_str!("langs/python/in/strings.py")),
+    )]
+    #[case(
+        "python-search-stdin-and-files", // stdin takes precedence
+        &["--python", "strings", "--files", "**/*.py", "is"],
+        Some(include_str!("langs/python/in/strings.py")),
+    )]
+    fn test_cli(#[case] snapshot_name: String, #[case] args: &[&str], #[case] stdin: Option<&str>) {
         // Should rebuild the binary to `target/debug/<name>`. This works if running as
         // an integration test (insides `tests/`), but not if running as a unit test
         // (inside `src/main.rs` etc.).
@@ -116,7 +130,17 @@ func main() {
 
         let args: Vec<String> = args.iter().map(|&s| s.to_owned()).collect();
 
-        cmd.args(args.clone()).write_stdin(stdin.clone());
+        cmd.args(args.clone());
+        cmd.args(["--threads", "1"]); // Be deterministic
+        if let Some(stdin) = stdin {
+            cmd.write_stdin(stdin);
+        } else {
+            cmd.args(
+                // Override; `Command` is detected as providing stdin but we're working on
+                // files here.
+                ["--stdin-override-to", "false"],
+            );
+        }
 
         let output = cmd.output().expect("failed to execute process");
 
@@ -142,7 +166,12 @@ func main() {
         }, {
             insta::assert_yaml_snapshot!(
                 snapshot_name,
-                CommandSnap { args, stdin, stdout, exit_code }
+                CommandSnap {
+                    args,
+                    stdin: stdin.map(|s| s.split_inclusive('\n').map(|s| s.to_owned()).collect_vec()),
+                    stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                    exit_code,
+                }
             );
         });
     }
@@ -162,6 +191,17 @@ func main() {
         &[
             "--python",
             "function-names",
+            "foo",
+            "baz"
+        ]
+    )]
+    #[case(
+        "tests/files/language-scoping-and-files-python/in",
+        &[
+            "--python",
+            "function-names",
+            "--files", // Will override language scoper
+            "subdir/**/*.py",
             "foo",
             "baz"
         ]

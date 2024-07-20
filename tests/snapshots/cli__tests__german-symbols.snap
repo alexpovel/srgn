@@ -1,12 +1,14 @@
 ---
 source: tests/cli.rs
-expression: "CommandResult { args, stdin, stdout, exit_code }"
+expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
 info:
   stderr: ""
 ---
 args:
   - "--german"
   - "--symbols"
-stdin: "Duebel -> 1.5mm; \u0010 Wand != 3m²... UEBELTAETER! 😫"
-stdout: "Dübel → 1.5mm; \u0010 Wand ≠ 3m²... ÜBELTÄTER! 😫"
+stdin:
+  - "Duebel -> 1.5mm; \u0010 Wand != 3m²... UEBELTAETER! 😫"
+stdout:
+  - "Dübel → 1.5mm; \u0010 Wand ≠ 3m²... ÜBELTÄTER! 😫"
 exit_code: 0
