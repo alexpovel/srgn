@@ -146,7 +146,9 @@ Heizoelrueckstossabdaempfung.
     ) {
         if os_dependent {
             // Thanks to Windows, (some) snapshots are actually OS-dependent if they
-            // involve file system paths :(
+            // involve file system paths :( Careful: `cargo insta test
+            // --unreferenced=delete` will wipe snapshot of foreign OSes, but that'll
+            // break in CI!
             snapshot_name.push('-');
             snapshot_name.push_str(std::env::consts::OS);
         }
