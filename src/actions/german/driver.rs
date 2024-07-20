@@ -536,8 +536,8 @@ fn contained_in_global_word_list(word: &str) -> bool {
 
 // https://github.com/jaemk/cached/issues/135#issuecomment-1315911572
 #[cached(
-    type = "SizedCache<String, bool>",
-    create = "{ SizedCache::with_size(1024) }",
+    ty = "SizedCache<String, bool>",
+    create = "{ SizedCache::with_size(256) }",
     convert = r#"{ String::from(word) }"#
 )]
 fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {

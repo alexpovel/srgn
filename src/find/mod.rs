@@ -1,10 +1,4 @@
-#![allow(unused)]
-use std::{
-    fs::File,
-    io::Read,
-    path::{Path, PathBuf},
-};
-use walkdir::WalkDir;
+use std::{fs::File, io::Read, path::Path};
 
 /// A trait to facilitate finding corresponding, in one sense or another, files.
 ///

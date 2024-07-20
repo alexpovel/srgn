@@ -474,7 +474,6 @@ mod tests {
         use rand;
         use rand::seq::SliceRandom;
         use rand::Rng;
-        use test_log::test;
 
         fn generate_random_regex(mut rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
             let atoms: [&str; 7] = [".", "\\d", "\\D", "\\w", "\\W", "\\s", "\\S"];

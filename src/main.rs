@@ -162,6 +162,10 @@ fn main() -> Result<()> {
                 &actions,
                 &args,
                 search_mode,
+                args.options
+                    .threads
+                    .map(|n| n.get())
+                    .unwrap_or(std::thread::available_parallelism().map_or(1, |n| n.get())),
             )?
         }
         (Input::WalkOn(validator), true) => {
@@ -296,11 +300,12 @@ fn handle_actions_on_many_files_threaded(
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
+    n_threads: usize,
 ) -> Result<(), anyhow::Error> {
     let root = env::current_dir()?;
     info!(
-        "Will walk file tree using {} threads, processing in arbitrary order, starting from: {:?}",
-        args.options.threads,
+        "Will walk file tree using {:?} thread(s), processing in arbitrary order, starting from: {:?}",
+        n_threads,
         root.canonicalize()
     );
 
@@ -310,7 +315,7 @@ fn handle_actions_on_many_files_threaded(
     WalkBuilder::new(&root)
         .threads(
             // https://github.com/BurntSushi/ripgrep/issues/2854
-            args.options.threads,
+            n_threads,
         )
         .hidden(!args.options.hidden)
         .git_ignore(!args.options.gitignored)
@@ -722,6 +727,8 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
+    use std::num::NonZero;
+
     use clap::{builder::ArgPredicate, ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
     use srgn::{
@@ -868,14 +875,10 @@ mod cli {
         pub stdin_override_to: Option<bool>,
         /// Number of threads to run processing on, when working with files.
         ///
-        /// If not specified, will default to the number of CPUs. Set to 1 for
+        /// If not specified, will default to available parallelism. Set to 1 for
         /// sequential, deterministic (but not sorted) output.
-        #[arg(
-            long,
-            verbatim_doc_comment,
-            default_value_t = num_cpus::get()
-        )]
-        pub threads: usize,
+        #[arg(long, verbatim_doc_comment)]
+        pub threads: Option<NonZero<usize>>,
         /// Increase log verbosity level
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
@@ -1099,78 +1102,73 @@ mod tests {
     use super::*;
     use env_logger::DEFAULT_FILTER_ENV;
     use log::LevelFilter;
-    use rstest::rstest;
-    use serial_test::serial;
     use std::env;
 
-    #[rstest]
-    #[case(None, 0, LevelFilter::Error)]
-    #[case(None, 1, LevelFilter::Warn)]
-    #[case(None, 2, LevelFilter::Info)]
-    #[case(None, 3, LevelFilter::Debug)]
-    #[case(None, 4, LevelFilter::Trace)]
-    #[case(None, 5, LevelFilter::Trace)]
-    #[case(None, 128, LevelFilter::Trace)]
-    //
-    #[case(Some("off"), 0, LevelFilter::Off)]
-    #[case(Some("off"), 1, LevelFilter::Error)]
-    #[case(Some("off"), 2, LevelFilter::Warn)]
-    #[case(Some("off"), 3, LevelFilter::Info)]
-    #[case(Some("off"), 4, LevelFilter::Debug)]
-    #[case(Some("off"), 5, LevelFilter::Trace)]
-    #[case(Some("off"), 6, LevelFilter::Trace)]
-    #[case(Some("off"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("error"), 0, LevelFilter::Error)]
-    #[case(Some("error"), 1, LevelFilter::Warn)]
-    #[case(Some("error"), 2, LevelFilter::Info)]
-    #[case(Some("error"), 3, LevelFilter::Debug)]
-    #[case(Some("error"), 4, LevelFilter::Trace)]
-    #[case(Some("error"), 5, LevelFilter::Trace)]
-    #[case(Some("error"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("warn"), 0, LevelFilter::Warn)]
-    #[case(Some("warn"), 1, LevelFilter::Info)]
-    #[case(Some("warn"), 2, LevelFilter::Debug)]
-    #[case(Some("warn"), 3, LevelFilter::Trace)]
-    #[case(Some("warn"), 4, LevelFilter::Trace)]
-    #[case(Some("warn"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("info"), 0, LevelFilter::Info)]
-    #[case(Some("info"), 1, LevelFilter::Debug)]
-    #[case(Some("info"), 2, LevelFilter::Trace)]
-    #[case(Some("info"), 3, LevelFilter::Trace)]
-    #[case(Some("info"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("debug"), 0, LevelFilter::Debug)]
-    #[case(Some("debug"), 1, LevelFilter::Trace)]
-    #[case(Some("debug"), 2, LevelFilter::Trace)]
-    #[case(Some("debug"), 128, LevelFilter::Trace)]
-    //
-    #[case(Some("trace"), 0, LevelFilter::Trace)]
-    #[case(Some("trace"), 1, LevelFilter::Trace)]
-    #[case(Some("trace"), 128, LevelFilter::Trace)]
-    //
-    #[serial] // This is multi-threaded, but env var access might not be thread-safe
-    fn test_level_filter_from_env_and_verbosity(
-        #[case] env_value: Option<&str>,
-        #[case] additional_verbosity: u8,
-        #[case] expected: LevelFilter,
-    ) {
-        if let Some(env_value) = env_value {
-            env::set_var(DEFAULT_FILTER_ENV, env_value);
-        } else {
-            // Might be set on parent and fork()ed down
-            env::remove_var(DEFAULT_FILTER_ENV);
-        }
+    /// This test has to run **sequentially**, as env variable access and manipulation
+    /// is *not* thread-safe.
+    ///
+    /// Therefore, we cannot use `rstest` table tests. There is `serial_test`, but it
+    /// has tons of async-only dependencies which we don't need here and cannot be
+    /// turned off via features.
+    #[test]
+    fn test_level_filter_from_env_and_verbosity() {
+        for (env_value, additional_verbosity, expected) in [
+            (None, 0, LevelFilter::Error),
+            (None, 1, LevelFilter::Warn),
+            (None, 2, LevelFilter::Info),
+            (None, 3, LevelFilter::Debug),
+            (None, 4, LevelFilter::Trace),
+            (None, 5, LevelFilter::Trace),
+            (None, 128, LevelFilter::Trace),
+            (Some("off"), 0, LevelFilter::Off),
+            (Some("off"), 1, LevelFilter::Error),
+            (Some("off"), 2, LevelFilter::Warn),
+            (Some("off"), 3, LevelFilter::Info),
+            (Some("off"), 4, LevelFilter::Debug),
+            (Some("off"), 5, LevelFilter::Trace),
+            (Some("off"), 6, LevelFilter::Trace),
+            (Some("off"), 128, LevelFilter::Trace),
+            (Some("error"), 0, LevelFilter::Error),
+            (Some("error"), 1, LevelFilter::Warn),
+            (Some("error"), 2, LevelFilter::Info),
+            (Some("error"), 3, LevelFilter::Debug),
+            (Some("error"), 4, LevelFilter::Trace),
+            (Some("error"), 5, LevelFilter::Trace),
+            (Some("error"), 128, LevelFilter::Trace),
+            (Some("warn"), 0, LevelFilter::Warn),
+            (Some("warn"), 1, LevelFilter::Info),
+            (Some("warn"), 2, LevelFilter::Debug),
+            (Some("warn"), 3, LevelFilter::Trace),
+            (Some("warn"), 4, LevelFilter::Trace),
+            (Some("warn"), 128, LevelFilter::Trace),
+            (Some("info"), 0, LevelFilter::Info),
+            (Some("info"), 1, LevelFilter::Debug),
+            (Some("info"), 2, LevelFilter::Trace),
+            (Some("info"), 3, LevelFilter::Trace),
+            (Some("info"), 128, LevelFilter::Trace),
+            (Some("debug"), 0, LevelFilter::Debug),
+            (Some("debug"), 1, LevelFilter::Trace),
+            (Some("debug"), 2, LevelFilter::Trace),
+            (Some("debug"), 128, LevelFilter::Trace),
+            (Some("trace"), 0, LevelFilter::Trace),
+            (Some("trace"), 1, LevelFilter::Trace),
+            (Some("trace"), 128, LevelFilter::Trace),
+        ] {
+            if let Some(env_value) = env_value {
+                env::set_var(DEFAULT_FILTER_ENV, env_value);
+            } else {
+                // Might be set on parent and fork()ed down
+                env::remove_var(DEFAULT_FILTER_ENV);
+            }
 
-        // Sanity check for sequential tests
-        let i_am_not_sure_if_this_test_really_runs_sequentially = false;
-        if i_am_not_sure_if_this_test_really_runs_sequentially {
-            std::thread::sleep(std::time::Duration::from_secs(2));
-        }
+            // Sanity check for sequential tests
+            let i_am_not_sure_if_this_test_really_runs_sequentially = false;
+            if i_am_not_sure_if_this_test_really_runs_sequentially {
+                std::thread::sleep(std::time::Duration::from_secs(2));
+            }
 
-        let result = level_filter_from_env_and_verbosity(additional_verbosity);
-        assert_eq!(result, expected);
+            let result = level_filter_from_env_and_verbosity(additional_verbosity);
+            assert_eq!(result, expected);
+        }
     }
 }
