@@ -74,8 +74,7 @@ of the mode like 'ripgrep but knows syntactical language elements'.
 If standard input is not given, `srgn` knows how to find corresponding source files
 automatically, for example in this repository:
 
-<!-- Skip this on Windows: it has different path seps *and* different ordering (even for threads=1) -->
-```console skip-os=windows
+```console
 $ srgn --python 'class' 'age'
 docs/samples/birds
 11:    age: int

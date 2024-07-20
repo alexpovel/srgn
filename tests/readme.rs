@@ -6,6 +6,7 @@ mod tests {
         parse_document, Arena, ComrakOptions,
     };
     use core::{fmt, panic};
+    use fancy_regex::Regex;
     use itertools::Itertools;
     use nom::{
         branch::alt,
@@ -179,19 +180,12 @@ mod tests {
                 Program::Echo(_) | Program::Cat(_) => {
                     Err("Cannot be run, only used to generate stdin")
                 }
-                Program::Self_(mut inv) => {
+                Program::Self_(inv) => {
                     let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
 
-                    for flag in inv.flags {
+                    for flag in &inv.flags {
                         cmd.arg(flag.to_string());
                     }
-
-                    for arg in inv.args {
-                        cmd.arg(arg.to_string());
-                    }
-
-                    // We're testing and need determinism. This hard-codes a flag!
-                    inv.opts.push(Opt::Long("threads".into(), "1".into()));
 
                     for opt in inv.opts {
                         match opt {
@@ -199,14 +193,16 @@ mod tests {
                                 // Push these separately, as `arg` will escape the
                                 // value, and something like `--option value` will be
                                 // taken as a single arg, breaking the test.
-                                cmd.arg(format!("-{name}"));
-                                cmd.arg(value);
+                                cmd.args([format!("-{name}"), value]);
                             }
                             Opt::Long(name, value) => {
-                                cmd.arg(format!("--{name}"));
-                                cmd.arg(value);
+                                cmd.args([format!("--{name}"), value]);
                             }
                         }
+                    }
+
+                    for arg in &inv.args {
+                        cmd.arg(arg.to_string());
                     }
 
                     if let Some(stdin) = inv.stdin {
@@ -739,12 +735,15 @@ mod tests {
             let standalone = pipe.standalone;
             for mut program in pipe {
                 if standalone {
-                    program.force_ignore_stdin()
+                    program.force_ignore_stdin();
                 }
                 let program = program; // de-mut
 
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
+
+                // We're testing and need determinism. This hard-codes a flag!
+                cmd.arg("--sorted");
 
                 if let Some(previous_stdin) = previous_stdin {
                     cmd.write_stdin(previous_stdin);
@@ -763,6 +762,7 @@ mod tests {
                 let observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
                     .expect("Stdout should be given as UTF-8");
                 if let Some(expected_stdout) = program.stdout().clone() {
+                    let observed_stdout = unixfy_file_paths(&observed_stdout);
                     if observed_stdout != expected_stdout {
                         // Write to files for easier inspection
                         let (mut obs_f, mut exp_f) = (
@@ -795,5 +795,33 @@ mod tests {
                 previous_stdin = Some(observed_stdout);
             }
         }
+    }
+
+    /// The document under test might contain hard-coded Unix file paths. When running
+    /// under Windows, where `\` might be printed as the path separator, tests will
+    /// break. So hack strings which look like paths to spell `/` instead of `\` as
+    /// their path separator.
+    fn unixfy_file_paths(input: &str) -> String {
+        let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
+        // pattern.replace_all(input, rep)
+        let mut res = input
+            .lines()
+            .map(|s| {
+                if pattern.is_match(s).unwrap() {
+                    let res = s.replace('\\', "/");
+                    eprintln!("Replaced Windows path-like string: {s} -> {res}");
+                    res
+                } else {
+                    s.to_owned()
+                }
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        if input.ends_with('\n') {
+            res.push('\n');
+        }
+
+        res
     }
 }

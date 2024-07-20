@@ -149,14 +149,24 @@ fn main() -> Result<()> {
     }
 
     // Now write out
-    match input {
-        Input::Stdin => {
+    match (input, args.options.sorted) {
+        (Input::Stdin, _ /* no effect */) => {
             info!("Will read from stdin and write to stdout, applying actions.");
             handle_actions_on_stdin(&all_scopers, &actions, &args)?;
         }
-        Input::WalkOn(validator) => {
+        (Input::WalkOn(validator), false) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_threaded(
+                validator,
+                &all_scopers,
+                &actions,
+                &args,
+                search_mode,
+            )?
+        }
+        (Input::WalkOn(validator), true) => {
+            info!("Will walk file tree, applying actions.");
+            handle_actions_on_many_files_sorted(
                 validator,
                 &all_scopers,
                 &actions,
@@ -212,6 +222,73 @@ fn handle_actions_on_stdin(
     Ok(())
 }
 
+/// Main entrypoint for processing using strictly sequential, *single-threaded*
+/// processing.
+///
+/// If it's good enough for [ripgrep], it's good enough for us :-). Main benefit it full
+/// control of output for testing anyway.
+///
+/// [ripgrep]:
+///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
+fn handle_actions_on_many_files_sorted(
+    validator: Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+    search_mode: bool,
+) -> Result<(), anyhow::Error> {
+    let root = env::current_dir()?;
+    info!(
+        "Will walk file tree sequentially, in sorted order, starting from: {:?}",
+        root.canonicalize()
+    );
+
+    let mut n: usize = 0;
+    for entry in WalkBuilder::new(&root)
+        .hidden(!args.options.hidden)
+        .git_ignore(!args.options.gitignored)
+        .sort_by_file_path(|a, b| a.cmp(b))
+        .build()
+    {
+        match entry {
+            Ok(entry) => {
+                let path = entry.path();
+                match process_path(path, &root, &validator, scopers, actions, args, search_mode) {
+                    Ok(()) => n += 1,
+                    Err(e) => {
+                        if search_mode {
+                            error!("Error walking at {}: {}", path.display(), e);
+                        } else {
+                            error!("Aborting walk at {} due to: {}", path.display(), e);
+                            return Err(anyhow!(
+                                "error processing files at {}, bailing early",
+                                path.display()
+                            )
+                            .context(e));
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                if search_mode {
+                    error!("Error walking: {}", e);
+                } else {
+                    error!("Aborting walk due to: {}", e);
+                    return Err(anyhow!("error processing files, bailing early").context(e));
+                }
+            }
+        }
+    }
+
+    info!("Processed {} files", n);
+
+    if args.options.fail_empty_glob && n == 0 {
+        Err(ApplicationError::NoFilesFound).context("No files processed")
+    } else {
+        Ok(())
+    }
+}
+
 /// Main entrypoint for processing using at least 1 thread.
 fn handle_actions_on_many_files_threaded(
     validator: Validator,
@@ -222,7 +299,8 @@ fn handle_actions_on_many_files_threaded(
 ) -> Result<(), anyhow::Error> {
     let root = env::current_dir()?;
     info!(
-        "Will walk file tree starting from: {:?}",
+        "Will walk file tree using {} threads, processing in arbitrary order, starting from: {:?}",
+        args.options.threads,
         root.canonicalize()
     );
 
@@ -242,29 +320,36 @@ fn handle_actions_on_many_files_threaded(
             // Modelled after https://github.com/rust-lang/cargo/blob/a2b58c3dad4d554ba01ed6c45c41ff85390560f2/crates/cargo-util/src/du.rs#L54-L84
             Box::new(|entry| match entry {
                 Ok(entry) => {
-                    match process_path(
-                        entry.path(),
-                        &root,
-                        &validator,
-                        scopers,
-                        actions,
-                        args,
-                        search_mode,
-                    ) {
+                    let path = entry.path();
+                    match process_path(path, &root, &validator, scopers, actions, args, search_mode)
+                    {
                         Ok(()) => {
                             *n_files.lock().unwrap() += 1;
                             WalkState::Continue
                         }
                         Err(e) => {
-                            error!("Aborting walk due to: {}", e);
+                            error!("Error walking at {} due to: {}", path.display(), e);
                             *err.lock().unwrap() = Some(e);
-                            WalkState::Quit
+
+                            if search_mode {
+                                WalkState::Continue
+                            } else {
+                                // Chances are something bad and/or unintended happened;
+                                // bail out to limit any potential damage.
+                                error!("Aborting walk for safety");
+                                WalkState::Quit
+                            }
                         }
                     }
                 }
                 Err(e) => {
-                    error!("Aborting walk due to: {}", e);
-                    WalkState::Quit
+                    if search_mode {
+                        error!("Error walking: {}", e);
+                        WalkState::Continue
+                    } else {
+                        error!("Aborting walk due to: {}", e);
+                        WalkState::Quit
+                    }
                 }
             })
         });
@@ -306,14 +391,14 @@ fn process_path(
 
     debug!("Processing path: {:?}", path);
 
-    let (new_contents, filesize) = {
+    let (new_contents, filesize, changed) = {
         let file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len() as usize);
         let mut destination = String::with_capacity(filesize);
         let mut source = std::io::BufReader::new(file);
 
-        apply(
+        let changed = apply(
             &mut source,
             &mut destination,
             scopers,
@@ -325,7 +410,7 @@ fn process_path(
             args.options.line_numbers,
         )?;
 
-        (destination, filesize)
+        (destination, filesize, changed)
     };
 
     // Hold the lock so results aren't intertwined
@@ -333,8 +418,12 @@ fn process_path(
 
     if search_mode {
         if !new_contents.is_empty() {
-            let path_repr = path.display().to_string().magenta().to_string();
-            writeln!(stdout, "{}\n{}", path_repr, &new_contents)?;
+            writeln!(
+                stdout,
+                "{}\n{}",
+                path.display().to_string().magenta(),
+                &new_contents
+            )?;
         }
     } else {
         if filesize > 0 && new_contents.is_empty() {
@@ -346,18 +435,24 @@ fn process_path(
             return Err(anyhow!("attempt to wipe non-empty file (failsafe guard)"));
         }
 
-        let path_repr = path.display().to_string();
-        writeln!(stdout, "{}\n", path_repr)?;
+        if changed {
+            writeln!(stdout, "{}", path.display())?;
 
-        debug!("Got new file contents, writing to file: {:?}", path);
-        let mut file = tempfile::Builder::new()
-            .prefix(env!("CARGO_PKG_NAME"))
-            .tempfile()?;
-        trace!("Writing to temporary file: {:?}", file.path());
-        file.write_all(new_contents.as_bytes())?;
+            debug!("Got new file contents, writing to file: {:?}", path);
+            let mut file = tempfile::Builder::new()
+                .prefix(env!("CARGO_PKG_NAME"))
+                .tempfile()?;
+            trace!("Writing to temporary file: {:?}", file.path());
+            file.write_all(new_contents.as_bytes())?;
 
-        // Atomically replace so SIGINT etc. do not leave dangling crap.
-        file.persist(&path)?;
+            // Atomically replace so SIGINT etc. do not leave dangling crap.
+            file.persist(&path)?;
+        } else {
+            debug!(
+                "Skipping writing file anew (nothing changed): {}",
+                path.display()
+            );
+        }
 
         debug!("Done processing file: {:?}", path);
     };
@@ -365,6 +460,8 @@ fn process_path(
     Ok(())
 }
 
+/// Runs the actual core processing, returning whether anything changed in the output
+/// compared to the input.
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 fn apply(
     source: &mut impl io::BufRead,
@@ -378,7 +475,7 @@ fn apply(
     squeeze: bool,
     only_matching: bool,
     line_numbers: bool,
-) -> Result<()> {
+) -> Result<bool> {
     // Streaming (e.g., line-based) wouldn't be too bad, and much more memory-efficient,
     // but language grammar-aware scoping needs entire files for context. Single lines
     // wouldn't do. There's no smart way of streaming that I can think of (where would
@@ -433,7 +530,7 @@ fn apply(
     };
     debug!("Done writing to destination.");
 
-    Ok(())
+    Ok(buf != *destination)
 }
 
 #[derive(Debug)]
@@ -755,10 +852,18 @@ mod cli {
         /// Do not ignore `.gitignore`d files and directories.
         #[arg(long, verbatim_doc_comment)]
         pub gitignored: bool,
+        /// Process files in lexicographically sorted order, by file path.
+        ///
+        /// In search mode, this emits results in sorted order. Otherwise, it processes
+        /// files in sorted order.
+        ///
+        /// Sorted processing *disables all parallelism*.
+        #[arg(long, verbatim_doc_comment)]
+        pub sorted: bool,
         /// Override detection heuristics for stdin readability, and force to value.
         ///
-        /// `true` will always attempt to read from stdin.
-        /// `false` will never read from stdin, even if provided.
+        /// `true` will always attempt to read from stdin. `false` will never read from
+        /// stdin, even if provided.
         #[arg(long, verbatim_doc_comment)]
         pub stdin_override_to: Option<bool>,
         /// Number of threads to run processing on, when working with files.
