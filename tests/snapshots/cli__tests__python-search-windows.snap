@@ -1,0 +1,26 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.map(|s|\n            s.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec()),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: ""
+---
+args:
+  - "--sorted"
+  - "--python"
+  - strings
+  - is
+stdin: ~
+stdout:
+  - "tests\\langs\\python\\in\\strings.py\r\n"
+  - "5:multiline_f_string = f\"\"\"This is a__T__\r\n"
+  - "9:raw_string = r\"This is a raw string__T__ with no special treatment for \\n\"\r\n"
+  - "10:bytes_string = b\"This is a bytes__T__ string\"\r\n"
+  - "11:bytes_string = rf\"This is a __T__raw f-string with {raw_string}\"\r\n"
+  - "\r\n"
+  - "tests\\langs\\python\\out\\strings.py\r\n"
+  - "5:multiline_f_string = f\"\"\"This is a\r\n"
+  - "9:raw_string = r\"This is a raw string with no special treatment for \\n\"\r\n"
+  - "10:bytes_string = b\"This is a bytes string\"\r\n"
+  - "11:bytes_string = rf\"This is a raw f-string with {raw_string}\"\r\n"
+  - "\r\n"
+exit_code: 0
