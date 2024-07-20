@@ -163,6 +163,10 @@ Heizoelrueckstossabdaempfung.
         #[cfg(not(tarpaulin))]
         with_settings!({
             info => &info,
+            filters => vec![
+                // Stabilize snapshots for Windows...
+                (r"\\r\\n", "\n"),
+            ],
         }, {
             insta::assert_yaml_snapshot!(
                 snapshot_name,
