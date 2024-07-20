@@ -3,7 +3,7 @@
 A code **s**u**rg**eo**n** for searching and manipulating text and source code with
 **enhanced precision**.
 
-`srgn` is organized around [*actions*](#actions) to take, acting only within precise,
+`srgn` is organized around [*actions*](#actions) to take (if any), acting only within precise,
 optionally language grammar-aware [*scopes*](#scopes).
 
 ## Quick walkthrough
@@ -15,7 +15,7 @@ $ echo 'Hello World!' | srgn '[wW]orld' 'there'
 Hello there!
 ```
 
-Matches for the pattern (the *scope*) are replaced (the *action*) by the second
+Matches for the pattern `'[wW]orld'` (the *scope*) are replaced (the *action*) by the second
 positional argument. Zero or more actions can be specified:
 
 ```bash
@@ -28,10 +28,10 @@ Hello YOU!
 Similarly, multiple scopes can be specified. If two are given, the one applied first is
 **language grammar-aware**, and can scope syntactical elements of source code (think
 "all bodies of `class` definitions in Python"). The second scope, the regular expression
-pattern, is then applied only *within* that first scope. This enables searching and
-manipulating with precision not normally possible using plain regular expressions.
+pattern, is then **applied only *within* that first scope**. This enables search and
+manipulation at precision not normally possible using plain regular expressions.
 
-Consider this Python source file:
+For example, consider this Python source file:
 
 ```python file=birds.py
 """Module for watching birds and their age."""
@@ -55,7 +55,7 @@ def register_bird(bird: Bird, db) -> None:
         tx.insert(bird)
 ```
 
-which will give:
+which can be searched using:
 
 ```console
 $ cat birds.py | srgn --python 'class' 'age'
@@ -66,10 +66,13 @@ $ cat birds.py | srgn --python 'class' 'age'
 
 The string `age` was sought and found *only* within Python `class` definitions (and not,
 for example, in function bodies such as `register_bird`). By default, this 'search mode'
-also prints line numbers.
+also prints line numbers. **Search mode is entered if no actions are specified**, and a
+language such as `--python` is given (otherwise, if no language is requested, there is no
+point in using `srgn` and existing tools such as ripgrep are much better suited). Think
+of the mode like 'ripgrep but knows syntactical language elements'.
 
 If standard input is not given, `srgn` knows how to find corresponding source files
-automatically:
+automatically, for example in this repository:
 
 <!-- Skip this on Windows: it has different path seps *and* different ordering (even for threads=1) -->
 ```console skip-os=windows
@@ -85,8 +88,14 @@ docs/samples/birds.py
 
 ```
 
-It recursively walks its current directory for relevant files (based on file extensions
-and shebang lines).
+It recursively walks its current directory for relevant files, which it finds based on
+file extensions and shebang lines.
+
+`srgn` provides high performance. For example, `srgn --go strings '\d+'` finds and
+prints all ~150,000 runs of digits in literal Go strings inside the Kubernetes codebase
+of ~3,000,000 lines of Go code within 3 seconds.
+
+Lastly,
 
 For an "end-to-end" example, consider this Python snippet ([more languages are
 supported](#prepared-queries-sample-showcases)):

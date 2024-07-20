@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use anyhow::{Context, Result};
 use colored::Color;
 use colored::Colorize;
@@ -6,7 +7,7 @@ use ignore::WalkBuilder;
 use ignore::WalkState;
 use log::error;
 use log::trace;
-use log::{debug, info, warn, LevelFilter};
+use log::{debug, info, LevelFilter};
 use pathdiff::diff_paths;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
@@ -39,7 +40,7 @@ use srgn::{
         Scoper,
     },
 };
-use std::io::IoSlice;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{
@@ -143,7 +144,8 @@ fn main() -> Result<()> {
     }
 
     if actions.is_empty() && !search_mode {
-        warn!("No actions specified. Will return input unchanged, if any.")
+        // Also kind of an error users will likely want to know about.
+        error!("No actions specified. Will return input unchanged, if any.")
     }
 
     // Now write out
@@ -154,7 +156,13 @@ fn main() -> Result<()> {
         }
         Input::WalkOn(validator) => {
             info!("Will walk file tree, applying actions.");
-            handle_actions_on_many_files(validator, &all_scopers, &actions, &args, search_mode)?
+            handle_actions_on_many_files_threaded(
+                validator,
+                &all_scopers,
+                &actions,
+                &args,
+                search_mode,
+            )?
         }
     };
 
@@ -176,6 +184,7 @@ enum Input {
     WalkOn(Validator),
 }
 
+/// Main entrypoint for simple `stdin` -> `stdout` processing.
 fn handle_actions_on_stdin(
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
@@ -203,7 +212,8 @@ fn handle_actions_on_stdin(
     Ok(())
 }
 
-fn handle_actions_on_many_files(
+/// Main entrypoint for processing using at least 1 thread.
+fn handle_actions_on_many_files_threaded(
     validator: Validator,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
@@ -216,114 +226,44 @@ fn handle_actions_on_many_files(
         root.canonicalize()
     );
 
-    let n_files = Arc::new(Mutex::new(0u64));
+    let n_files = Arc::new(Mutex::new(0usize));
     let err: Arc<Mutex<Option<anyhow::Error>>> = Arc::new(Mutex::new(None));
 
     WalkBuilder::new(&root)
-        .threads(if cfg!(test) {
-            // For testing, want *determinism* (not necessarily sorting).
-            1
-        } else {
+        .threads(
             // https://github.com/BurntSushi/ripgrep/issues/2854
-            args.options.threads
-        })
+            args.options.threads,
+        )
         .hidden(!args.options.hidden)
         .git_ignore(!args.options.gitignored)
         .build_parallel()
         .run(|| {
             // TODO: clean this up. Error handling is very verbose.
             // Modelled after https://github.com/rust-lang/cargo/blob/a2b58c3dad4d554ba01ed6c45c41ff85390560f2/crates/cargo-util/src/du.rs#L54-L84
-            Box::new(|entry| {
-                if let Ok(entry) = entry {
-                    let path = diff_paths(entry.path(), &root)
-                        .expect("started at root, so relative to root works");
-                    if !path.is_file() || !validator(&path) {
-                        return WalkState::Continue;
-                    }
-                    debug!("Processing path: {:?}", path);
-
-                    let contents = {
-                        let file = match File::open(&path) {
-                            Ok(handle) => handle,
-                            Err(e) => {
-                                *err.lock().unwrap() = Some(e.into());
-                                return WalkState::Quit;
-                            }
-                        };
-
-                        let mut destination =
-                            String::with_capacity(file.metadata().map_or(0, |m| m.len() as usize));
-                        let mut source = std::io::BufReader::new(file);
-
-                        if let Err(e) = apply(
-                            &mut source,
-                            &mut destination,
-                            scopers,
-                            actions,
-                            args.options.fail_none,
-                            args.options.fail_any,
-                            args.standalone_actions.squeeze,
-                            args.options.only_matching,
-                            args.options.line_numbers,
-                        ) {
-                            *err.lock().unwrap() = Some(e);
-                            return WalkState::Quit;
-                        }
-
-                        destination
-                    };
-
-                    // Hold the lock so results aren't intertwined
-                    let mut stdout = stdout().lock();
-
-                    if search_mode {
-                        if !contents.is_empty() {
-                            let path_repr = path.display().to_string().magenta().to_string();
-                            if let Err(e) = writeln!(stdout, "{}\n{}", path_repr, &contents) {
-                                *err.lock().unwrap() = Some(e.into());
-                                return WalkState::Quit;
-                            }
-
+            Box::new(|entry| match entry {
+                Ok(entry) => {
+                    match process_path(
+                        entry.path(),
+                        &root,
+                        &validator,
+                        scopers,
+                        actions,
+                        args,
+                        search_mode,
+                    ) {
+                        Ok(()) => {
                             *n_files.lock().unwrap() += 1;
+                            WalkState::Continue
                         }
-                    } else {
-                        let path_repr = path.display().to_string();
-                        let content = &[IoSlice::new(path_repr.as_bytes()), IoSlice::new(b"\n")];
-
-                        if let Err(e) = stdout.write_vectored(content) {
-                            *err.lock().unwrap() = Some(e.into());
-                            return WalkState::Quit;
+                        Err(e) => {
+                            error!("Aborting walk due to: {}", e);
+                            *err.lock().unwrap() = Some(e);
+                            WalkState::Quit
                         }
-
-                        debug!("Got new file contents, writing to file: {:?}", path);
-                        match tempfile::Builder::new()
-                            .prefix(env!("CARGO_PKG_NAME"))
-                            .tempfile()
-                        {
-                            Ok(mut file) => {
-                                trace!("Writing to temporary file: {:?}", file.path());
-                                if let Err(e) = file.write_all(contents.as_bytes()) {
-                                    *err.lock().unwrap() = Some(e.into());
-                                    return WalkState::Quit;
-                                }
-                                // Atomically replace so SIGINT etc. do not leave
-                                // dangling crap.
-                                if let Err(e) = file.persist(&path) {
-                                    *err.lock().unwrap() = Some(e.into());
-                                    return WalkState::Quit;
-                                }
-                            }
-                            Err(e) => {
-                                *err.lock().unwrap() = Some(e.into());
-                                return WalkState::Quit;
-                            }
-                        }
-                        *n_files.lock().unwrap() += 1;
-                        debug!("Done processing file: {:?}", path);
                     }
-
-                    WalkState::Continue
-                } else {
+                }
+                Err(e) => {
+                    error!("Aborting walk due to: {}", e);
                     WalkState::Quit
                 }
             })
@@ -333,16 +273,103 @@ fn handle_actions_on_many_files(
         return Err(e);
     }
 
-    if args.options.fail_empty_glob && *n_files.lock().unwrap() == 0 {
+    let n = *n_files.lock().unwrap();
+    info!("Processed {} files", n);
+
+    if args.options.fail_empty_glob && n == 0 {
         Err(ApplicationError::NoFilesFound).context("No files processed")
     } else {
         Ok(())
     }
 }
 
+fn process_path(
+    path: &Path,
+    root: &Path,
+    validator: &Validator,
+    scopers: &[Box<dyn Scoper>],
+    actions: &[Box<dyn Action>],
+    args: &cli::Cli,
+    search_mode: bool,
+) -> Result<()> {
+    if !path.is_file() {
+        trace!("Skipping path (not a file): {:?}", path);
+        return Ok(());
+    }
+
+    let path = diff_paths(path, root).expect("started walk at root, so relative to root works");
+
+    if !validator(&path) {
+        trace!("Skipping path (invalid): {:?}", path);
+        return Ok(());
+    }
+
+    debug!("Processing path: {:?}", path);
+
+    let (new_contents, filesize) = {
+        let file = File::open(&path)?;
+
+        let filesize = file.metadata().map_or(0, |m| m.len() as usize);
+        let mut destination = String::with_capacity(filesize);
+        let mut source = std::io::BufReader::new(file);
+
+        apply(
+            &mut source,
+            &mut destination,
+            scopers,
+            actions,
+            args.options.fail_none,
+            args.options.fail_any,
+            args.standalone_actions.squeeze,
+            args.options.only_matching,
+            args.options.line_numbers,
+        )?;
+
+        (destination, filesize)
+    };
+
+    // Hold the lock so results aren't intertwined
+    let mut stdout = stdout().lock();
+
+    if search_mode {
+        if !new_contents.is_empty() {
+            let path_repr = path.display().to_string().magenta().to_string();
+            writeln!(stdout, "{}\n{}", path_repr, &new_contents)?;
+        }
+    } else {
+        if filesize > 0 && new_contents.is_empty() {
+            error!(
+                    "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
+                    path.display(),
+                    filesize
+                );
+            return Err(anyhow!("attempt to wipe non-empty file (failsafe guard)"));
+        }
+
+        let path_repr = path.display().to_string();
+        writeln!(stdout, "{}\n", path_repr)?;
+
+        debug!("Got new file contents, writing to file: {:?}", path);
+        let mut file = tempfile::Builder::new()
+            .prefix(env!("CARGO_PKG_NAME"))
+            .tempfile()?;
+        trace!("Writing to temporary file: {:?}", file.path());
+        file.write_all(new_contents.as_bytes())?;
+
+        // Atomically replace so SIGINT etc. do not leave dangling crap.
+        file.persist(&path)?;
+
+        debug!("Done processing file: {:?}", path);
+    };
+
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 fn apply(
     source: &mut impl io::BufRead,
+    // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
+    // corresponding checks.
     destination: &mut String,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
@@ -389,7 +416,7 @@ fn apply(
     }
 
     debug!("Writing to destination.");
-    let line_based = only_matching || line_numbers; // This isn't free
+    let line_based = only_matching || line_numbers;
     if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
             let i = i + 1;
