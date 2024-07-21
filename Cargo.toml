@@ -90,7 +90,7 @@ opt-level = 3
 [build-dependencies]
 decompound = "0.3.0"
 fst = "0.4.7"
-rayon = "1.7.0"
+rayon = "1.10.0"
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/{ name }-v{ version }/{ name }-{ target }{ archive-suffix }"
