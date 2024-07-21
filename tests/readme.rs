@@ -800,10 +800,13 @@ mod tests {
                     assertion.success()
                 };
 
-                let observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
+                let mut observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
                     .expect("Stdout should be given as UTF-8");
                 if let Some(expected_stdout) = program.stdout().clone() {
-                    let observed_stdout = unixfy_file_paths(&observed_stdout);
+                    if cfg!(target_os = "windows") {
+                        observed_stdout = fix_windows_output(observed_stdout);
+                    }
+
                     if observed_stdout != expected_stdout {
                         // Write to files for easier inspection
                         let (mut obs_f, mut exp_f) = (
@@ -838,11 +841,25 @@ mod tests {
         }
     }
 
+    fn fix_windows_output(mut input: String) -> String {
+        input = unixfy_file_paths(input);
+        input = remove_exe_suffix(input);
+
+        input
+    }
+
+    fn remove_exe_suffix(input: String) -> String {
+        input.replace(
+            concat!(env!("CARGO_PKG_NAME"), ".exe"),
+            env!("CARGO_PKG_NAME"),
+        )
+    }
+
     /// The document under test might contain hard-coded Unix file paths. When running
     /// under Windows, where `\` might be printed as the path separator, tests will
     /// break. So hack strings which look like paths to spell `/` instead of `\` as
     /// their path separator.
-    fn unixfy_file_paths(input: &str) -> String {
+    fn unixfy_file_paths(input: String) -> String {
         // Pattern for Windows-style file paths:
         //
         // ```text
