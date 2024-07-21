@@ -118,7 +118,7 @@ impl Scoper for Regex {
                 Err(fancy_regex::Error::ParseError(_, _) | fancy_regex::Error::CompileError(_)) => {
                     unreachable!("pattern was compiled successfully before")
                 }
-                Err(fancy_regex::Error::__Nonexhaustive) => {
+                Err(_) => {
                     unreachable!("implementation detail of fancy-regex")
                 }
             }
