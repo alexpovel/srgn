@@ -10,7 +10,6 @@
 mod tests {
     use anyhow::Context;
     use assert_cmd::Command;
-    use core::panic;
     use insta::with_settings;
     use itertools::Itertools;
     use rstest::rstest;
@@ -266,7 +265,7 @@ Heizoelrueckstossabdaempfung.
         #[case] input: PathBuf,
         #[case] args: &[&str],
         #[case] skip_output_check: bool,
-    ) {
+    ) -> anyhow::Result<()> {
         use std::mem::ManuallyDrop;
 
         let args = args.iter().map(|s| s.to_string()).collect_vec();
@@ -300,12 +299,9 @@ Heizoelrueckstossabdaempfung.
         // Thing itself works
         assert!(output.status.success(), "Binary execution itself failed");
 
-        // Results are correct
-        if let Err(e) = check_directories_equality(baseline, candidate.path().to_owned()) {
-            // Do not drop on panic, to keep tmpdir in place for manual inspection. Can
-            // then diff directories.
-            panic!("{}", format!("Directory comparison failed: {}.", e));
-        }
+        // Results are correct Do not drop on panic, to keep tmpdir in place for manual
+        // inspection. Can then diff directories.
+        check_directories_equality(baseline, candidate.path().to_owned())?;
 
         // Test was successful: ok to drop.
         drop(ManuallyDrop::into_inner(candidate));
@@ -344,6 +340,8 @@ Heizoelrueckstossabdaempfung.
                 );
             });
         }
+
+        Ok(())
     }
 
     #[test]
