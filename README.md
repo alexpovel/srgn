@@ -179,6 +179,13 @@ which additionally demonstrates fully Unicode-capable operation, and advanced re
 features ([negative
 lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax)).
 
+> [!WARNING]
+>
+> While `srgn` is in beta (major version 0), make sure to only (recursively) process
+> files you can safely [restore](https://git-scm.com/docs/git-restore).
+>
+> Search mode does not overwrite files, so is always safe.
+
 ## Installation
 
 ### Prebuilt binaries
