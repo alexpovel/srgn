@@ -124,7 +124,7 @@ brew install srgn
 
 Available via [unstable](https://search.nixos.org/packages?channel=unstable&show=srgn&from=0&size=50&sort=relevance&type=packages&query=srgn):
 
-```bash
+```text
 nix-shell -p srgn
 ```
 
@@ -136,7 +136,7 @@ Available via the [AUR](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=s
 
 A [port](https://ports.macports.org/port/srgn/) is available:
 
-```bash
+```text
 sudo port install srgn
 ```
 
