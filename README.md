@@ -3,10 +3,16 @@
 A code **s**u**rg**eo**n** for searching and manipulating text and source code with
 **enhanced precision**.
 
-`srgn` is organized around [*actions*](#actions) to take (if any), acting only within precise,
-optionally language grammar-aware [*scopes*](#scopes).
+`srgn` is organized around [*actions*](#actions) to take (if any), acting only within
+precise, optionally [language grammar-aware](https://tree-sitter.github.io/tree-sitter/)
+[*scopes*](#scopes).
 
 ## Quick walkthrough
+
+> [!TIP]
+>
+> All code snippets displayed here are [verified as part of unit tests](tests/readme.rs)
+> using the actual `srgn` binary. What is showcased here is guaranteed to work.
 
 The simplest form works [similar to `tr`](#comparison-with-tr):
 
@@ -15,8 +21,8 @@ $ echo 'Hello World!' | srgn '[wW]orld' 'there'
 Hello there!
 ```
 
-Matches for the pattern `'[wW]orld'` (the *scope*) are replaced (the *action*) by the second
-positional argument. Zero or more actions can be specified:
+Matches for the regular expression pattern `'[wW]orld'` (the *scope*) are replaced (the
+*action*) by the second positional argument. Zero or more actions can be specified:
 
 ```bash
 $ echo 'Hello World!' | srgn '[wW]orld' # zero actions: input returned unchanged
@@ -25,8 +31,10 @@ $ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions
 Hello YOU!
 ```
 
-Similarly, multiple scopes can be specified. If two are given, the one applied first is
-**language grammar-aware**, and can scope syntactical elements of source code (think,
+### Multiple scopes
+
+Similarly, up to two scopes can be specified. If both are given, the one applied first
+is **language grammar-aware**, and can scope syntactical elements of source code (think,
 for example, "all bodies of `class` definitions in Python"). The second scope, the
 regular expression pattern, is then **applied only *within* that first scope**. This
 enables search and manipulation at precision not normally possible using plain regular
@@ -73,12 +81,12 @@ $ cat birds.py | srgn --python 'class' 'age'
 The string `age` was sought and found *only* within Python `class` definitions (and not,
 for example, in function bodies such as `register_bird`). By default, this 'search mode'
 also prints line numbers. **Search mode is entered if no actions are specified**, and a
-language such as `--python` is given—it's like 'ripgrep but with syntactical language
-elements'.
+language such as `--python` is given[^3]—it's like 'ripgrep but with syntactical
+language elements'.
 
 Searching can also be performed [across
 lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for example to
-find methods (aka *`def` within `class`*) without docstrings:
+find methods (aka *`def` within `class`*) lacking docstrings:
 
 ```console
 $ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
@@ -90,7 +98,9 @@ $ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this
 Note how this does not surface either `from_egg` (has a docstring) or `register_bird`
 (not a method, *`def` outside `class`*).
 
-If standard input is not given, `srgn` knows how to find corresponding source files
+#### Working recursively
+
+If standard input is not given, `srgn` knows how to find relevant source files
 automatically, for example in this repository:
 
 ```console
@@ -106,17 +116,17 @@ docs/samples/birds.py
 
 ```
 
-It recursively walks its current directory for relevant files, which it finds based on
-file extensions and shebang lines.
+It recursively walks its current directory, finding files based on file extensions and
+shebang lines, doing so at high speed. For example, `srgn --go strings '\d+'` finds and
+prints all ~140,000 runs of digits in literal Go strings inside the [Kubernetes
+codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
+of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3.
 
-`srgn` provides high performance. For example, `srgn --go strings '\d+'` finds and
-prints all ~150,000 runs of digits in literal Go strings inside the Kubernetes codebase
-of ~3,000,000 lines of Go code within 3 seconds.
+### Combining actions and scopes
 
-Lastly,
-
-For an "end-to-end" example, consider this Python snippet ([more languages are
-supported](#prepared-queries-sample-showcases)):
+Lastly, scopes and actions can be combined almost arbitrarily. For example, consider
+this Python snippet (more languages are
+[supported](#prepared-queries-sample-showcases)):
 
 ```python file=gnu.py
 """GNU module."""
@@ -131,19 +141,20 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
-which with an invocation of
+An invocation of
 
 ```bash
-cat gnu.py | srgn --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix' | srgn --symbols
+cat gnu.py | srgn --upper --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix'
 ```
 
-can be manipulated to read
+makes use of multiple scopes (language and regex pattern) and multiple actions
+(replacement and uppercasing). The result then reads
 
 ```python file=output-gnu.py
-"""GNU 🐂 is not Unix module."""
+"""GNU 🐂 IS NOT UNIX module."""
 
 def GNU_says_moo():
-    """The GNU → say moo → ✅"""
+    """The GNU -> say moo -> ✅"""
 
     GNU = """
       GNU
@@ -156,39 +167,12 @@ where the changes are limited to:
 
 ```diff
 - """GNU module."""
-+ """GNU 🐂 is not Unix module."""
-
-  def GNU_says_moo():
--     """The GNU -> say moo -> ✅"""
-+     """The GNU → say moo → ✅"""
-
-      GNU = """
-        GNU
-      """  # the GNU...
-
-      print(GNU + " says moo")  # ...says moo
++ """GNU 🐂 IS NOT UNIX module."""
 ```
 
-which demonstrates:
-
-- language grammar-aware operation: only Python docstrings were manipulated; virtually
-  impossible to replicate in just regex
-
-  Skip ahead to **[more such showcases](#prepared-queries-sample-showcases) below**.
-- advanced regex features such as, in this case, negative lookbehind are supported
-- Unicode is natively handled
-- features such as [ASCII symbol replacement](#symbols) are provided
-
-Hence the concept of surgical operation: `srgn` allows you to be quite precise about the
-scope of your actions, *combining* the power of both [regular
-expressions](https://docs.rs/fancy-regex/latest/fancy_regex/index.html) and
-[parsers](https://tree-sitter.github.io/tree-sitter/).
-
-> [!NOTE]
->
-> Without exception, all `bash` and `console` code snippets in this README are
-> automatically [tested](tests/readme.rs) using the actual program binary, facilitated
-> by a tiny bash interpreter. What is showcased here is guaranteed to work.
+which additionally demonstrates fully Unicode-capable operation, and advanced regex
+features ([negative
+lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax)).
 
 ## Installation
 
@@ -1508,3 +1492,6 @@ A straightforward use case. Upper- and lowercase are often used.
     The original, core version of `srgn` was merely a Rust rewrite of [a previous,
     existing tool](https://github.com/alexpovel/betterletter), which was *only*
     concerned with the *German* feature. `srgn` then grew from there.
+[^3]: With zero actions and no language scoping provided, `srgn` becomes 'useless', and
+    other tools such as ripgrep are much more suitable. That's why an error is emitted
+    and input is returned unchanged.
