@@ -48,6 +48,23 @@ jobs:
           cargo test
           --verbose
 
+  check-cargo-tree-changes:
+    name: Check for changes in `Cargo.toml` and `Cargo.lock`
+
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+      - name: Check for changes in dependencies
+        run: |
+          git switch ${{ github.base_ref }}
+          cargo tree > base-tree
+          git switch ${{ github.head_ref }}
+          cargo tree > head-tree
+          diff base-tree head-tree || true
+
   verify-msrv:
     # Set in `Cargo.toml` manually by running `cargo msrv` locally. Then verified for
     # its consistency here.
