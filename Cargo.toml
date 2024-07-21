@@ -75,7 +75,7 @@ nom = "7.1.3"
 pretty_assertions = "1.4.0"
 proptest = "1.5.0"
 rand = "0.8.5"
-rand_regex = "0.16.0"
+rand_regex = "0.17.0"
 rstest = { version = "0.21.0", default-features = false }
 serde = { version = "1.0.204", features = ["derive"], default-features = false }
 
