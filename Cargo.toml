@@ -43,7 +43,7 @@ glob = "0.3.1"
 grep-cli = "0.1.10"
 ignore = "0.4.22"
 itertools = "0.13.0"
-log = "0.4.20"
+log = "0.4.22"
 once_cell = { version = "1.18.0", optional = true }
 pathdiff = "0.2.1"
 tempfile = "3.10.1"
