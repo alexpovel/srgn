@@ -14,6 +14,7 @@ class Bird:
 
     @classmethod
     def from_egg(egg):
+        """Create a bird from an egg."""
         pass
 
 

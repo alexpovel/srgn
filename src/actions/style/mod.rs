@@ -14,6 +14,8 @@ pub struct Style {
 
 impl Action for Style {
     fn act(&self, input: &str) -> String {
+        const NEWLINE: char = '\n';
+
         input
             // Split on lines: only that way, terminal coloring has a chance to *reset*
             // after each line and relaunch correctly on the next. Otherwise, escape
@@ -21,8 +23,20 @@ impl Action for Style {
             //
             // This sadly encodes knowledge `Style` isn't supposed to have (the fact
             // that sometimes, we're operating line-based.)
-            .split_inclusive('\n')
+            .split_inclusive(NEWLINE)
             .map(|s| {
+                // *Only style the part without newline*, if any. Including the newline
+                // gives bad results for... reasons. Put the suffix, if any, back later
+                // manually. We might not get a suffix at all if there's none at all in
+                // `input`.
+                let (s, suffix) = match s.strip_suffix(NEWLINE) {
+                    Some(without_suffix) => (without_suffix, Some(NEWLINE)),
+                    None => (s, None),
+                };
+
+                // Debug-only: not mission-critical if this fires
+                debug_assert!(!s.ends_with(NEWLINE));
+
                 let mut s = ColoredString::from(s);
 
                 if let Some(c) = self.fg {
@@ -47,7 +61,14 @@ impl Action for Style {
                     }
                 }
 
-                s.to_string()
+                let mut res = s.to_string();
+                if let Some(suffix) = suffix {
+                    // Put it back... it'll not contain styling. This properly resets if
+                    // styling across lines.
+                    res.push(suffix);
+                }
+
+                res
             })
             .collect()
     }

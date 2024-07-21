@@ -26,10 +26,11 @@ Hello YOU!
 ```
 
 Similarly, multiple scopes can be specified. If two are given, the one applied first is
-**language grammar-aware**, and can scope syntactical elements of source code (think
-"all bodies of `class` definitions in Python"). The second scope, the regular expression
-pattern, is then **applied only *within* that first scope**. This enables search and
-manipulation at precision not normally possible using plain regular expressions.
+**language grammar-aware**, and can scope syntactical elements of source code (think,
+for example, "all bodies of `class` definitions in Python"). The second scope, the
+regular expression pattern, is then **applied only *within* that first scope**. This
+enables search and manipulation at precision not normally possible using plain regular
+expressions.
 
 For example, consider this Python source file:
 
@@ -50,6 +51,7 @@ class Bird:
 
     @classmethod
     def from_egg(egg):
+        """Create a bird from an egg."""
         pass
 
 
@@ -71,20 +73,22 @@ $ cat birds.py | srgn --python 'class' 'age'
 The string `age` was sought and found *only* within Python `class` definitions (and not,
 for example, in function bodies such as `register_bird`). By default, this 'search mode'
 also prints line numbers. **Search mode is entered if no actions are specified**, and a
-language such as `--python` is given (otherwise, if no language is requested, there is no
-point in using `srgn` and existing tools such as ripgrep are much better suited). Think
-of the mode like 'ripgrep but knows syntactical language elements'.
+language such as `--python` is given—it's like 'ripgrep but with syntactical language
+elements'.
 
 Searching can also be performed [across
 lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for example to
-find class methods of specific names:
+find methods (aka *`def` within `class`*) without docstrings:
 
 ```console
-$ cat birds.py | srgn --python 'class' '(?s)@classmethod\n\s+def from_egg'
-15:    @classmethod
-16:    def from_egg(egg):
+$ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
+11:    def celebrate_birthday(self):
+12:        print("🎉")
 
 ```
+
+Note how this does not surface either `from_egg` (has a docstring) or `register_bird`
+(not a method, *`def` outside `class`*).
 
 If standard input is not given, `srgn` knows how to find corresponding source files
 automatically, for example in this repository:

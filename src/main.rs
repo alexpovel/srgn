@@ -145,7 +145,7 @@ fn main() -> Result<()> {
 
     if actions.is_empty() && !search_mode {
         // Also kind of an error users will likely want to know about.
-        error!("No actions specified. Will return input unchanged, if any.")
+        error!("No actions specified, and not in search mode. Will return input unchanged, if any.")
     }
 
     // Now write out
@@ -522,7 +522,10 @@ fn apply(
             let i = i + 1;
             if !only_matching || line.has_any_in_scope() {
                 if line_numbers {
-                    destination.push_str(&format!("{}:", i.to_string().green()));
+                    // `ColoredString` needs to be 'evaluated' to do anything; make sure
+                    // to not forget even if this is moved outside of `format!`.
+                    #[allow(clippy::to_string_in_format_args)]
+                    destination.push_str(&format!("{}:", i.to_string().green().to_string()));
                 }
 
                 destination.push_str(&line.to_string())
