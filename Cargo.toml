@@ -76,7 +76,7 @@ pretty_assertions = "1.4.0"
 proptest = "1.2.0"
 rand = "0.8.5"
 rand_regex = "0.16.0"
-rstest = { version = "0.18.2", default-features = false }
+rstest = { version = "0.21.0", default-features = false }
 serde = { version = "1.0.204", features = ["derive"], default-features = false }
 
 [profile.dev.package.insta]
