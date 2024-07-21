@@ -1,11 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/core"
-    schedule:
-      interval: "monthly"
-  - package-ecosystem: "cargo"
-    directory: "/common"
+    directory: "/"
     schedule:
       interval: "monthly"
   - package-ecosystem: "github-actions"
