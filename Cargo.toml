@@ -49,7 +49,7 @@ pathdiff = "0.2.1"
 tempfile = "3.10.1"
 titlecase = "3.3.0"
 tree-sitter = "0.22.6"
-tree-sitter-c-sharp = "0.21.2"
+tree-sitter-c-sharp = "0.21.3"
 tree-sitter-go = "0.21.0"
 tree-sitter-hcl = { git = "https://github.com/alexpovel/tree-sitter-hcl.git" }
 tree-sitter-python = "0.21.0"
