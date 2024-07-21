@@ -186,6 +186,8 @@ lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax)).
 >
 > Search mode does not overwrite files, so is always safe.
 
+See [below](#help-output) for the full help output of the tool.
+
 ## Installation
 
 ### Prebuilt binaries
@@ -1141,6 +1143,323 @@ escaped:
 ```console
 $ echo 'stuff...' | srgn -d --literal-string '.'
 stuff
+```
+
+### Help output
+
+For reference, the full help output with all available options is:
+
+```console
+$ srgn --help
+A code surgeon for precise text and code transplantation
+
+Usage: srgn [OPTIONS] [SCOPE] [REPLACEMENT]
+
+Arguments:
+  [SCOPE]
+          Scope to apply to, as a regular expression pattern
+          
+          If string literal mode is requested, will be interpreted as a literal string.
+          
+          Actions will apply their transformations within this scope only.
+          
+          The default is the global scope, matching the entire input.
+          
+          Where that default is meaningless (e.g., deletion), this argument is
+          _required_.
+          
+          [default: .*]
+
+Options:
+      --completions <SHELL>
+          Print shell completions for the given shell
+          
+          [possible values: bash, elvish, fish, powershell, zsh]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Composable Actions:
+  -u, --upper
+          Uppercase scope
+          
+          [env: UPPER=]
+
+  -l, --lower
+          Lowercase scope
+          
+          [env: LOWER=]
+
+  -t, --titlecase
+          Titlecase scope
+          
+          [env: TITLECASE=]
+
+  -n, --normalize
+          Normalize (Normalization Form D) scope, and throw away marks
+          
+          [env: NORMALIZE=]
+
+  -g, --german
+          Perform substitutions on German words, such as 'Abenteuergruesse' to
+          'Abenteuergrüße'
+          
+          ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
+          their respective native Unicode (ä, ö, ü, ß).
+          
+          Arbitrary compound words are supported.
+          
+          Words legally containing alternative spellings are not modified.
+          
+          Words require correct spelling to be detected.
+
+  -S, --symbols
+          Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
+          
+          Helps translate 'ASCII art' into native Unicode representations.
+
+  [REPLACEMENT]
+          Replace scope by this (fixed) value
+          
+          Specially treated action for ergonomics and compatibility with `tr`.
+          
+          If given, will run before any other action.
+          
+          [env: REPLACE=]
+
+Standalone Actions (only usable alone):
+  -d, --delete
+          Delete scope
+          
+          Cannot be used with any other action: no point in deleting and performing any
+          other action. Sibling actions would either receive empty input or have their
+          work wiped.
+
+  -s, --squeeze
+          Squeeze consecutive occurrences of scope into one
+          
+          [env: SQUEEZE=]
+          [aliases: squeeze-repeats]
+
+Options (global):
+      --files <FILES>
+          Glob of files to work on (instead of reading stdin).
+          
+          If processing occurs, it is done in-place, overwriting originals.
+          
+          For supported glob syntax, see:
+          https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
+          
+          Names of processed files are written to stdout.
+
+      --fail-empty-glob
+          Fail if file globbing is requested but returns no matches.
+
+  -i, --invert
+          Undo the effects of passed actions, where applicable
+          
+          Requires a 1:1 mapping (bijection) between replacements and original, which
+          is currently available for:
+          
+          - symbols: '≠' <-> '!=' etc.
+          
+          Other actions:
+          
+          - german: inverting e.g. 'Ä' is ambiguous (can be 'Ae' or 'AE')
+          
+          - upper, lower, deletion, squeeze: inversion is impossible as information is
+            lost
+          
+          These may still be passed, but will be ignored for inversion and applied
+          normally
+          
+          [env: INVERT=]
+
+  -L, --literal-string
+          Do not interpret the scope as a regex. Instead, interpret it as a literal
+          string. Will require a scope to be passed.
+          
+          [env: LITERAL_STRING=]
+
+      --fail-any
+          If anything at all is found to be in scope, fail.
+          
+          The default is to continue processing normally.
+
+      --fail-none
+          If nothing is found to be in scope, fail.
+          
+          The default is to return the input unchanged (without failure).
+
+      --line-numbers
+          Prepend line numbers to output.
+
+      --only-matching
+          Print only matching lines.
+
+      --hidden
+          Do not ignore hidden files and directories.
+
+      --gitignored
+          Do not ignore `.gitignore`d files and directories.
+
+      --sorted
+          Process files in lexicographically sorted order, by file path.
+          
+          In search mode, this emits results in sorted order. Otherwise, it processes
+          files in sorted order.
+          
+          Sorted processing *disables all parallelism*.
+
+      --stdin-override-to <STDIN_OVERRIDE_TO>
+          Override detection heuristics for stdin readability, and force to value.
+          
+          `true` will always attempt to read from stdin. `false` will never read from
+          stdin, even if provided.
+          
+          [possible values: true, false]
+
+      --threads <THREADS>
+          Number of threads to run processing on, when working with files.
+          
+          If not specified, will default to available parallelism. Set to 1 for
+          sequential, deterministic (but not sorted) output.
+
+  -v, --verbose...
+          Increase log verbosity level
+          
+          The base log level to use is read from the `RUST_LOG` environment variable
+          (if missing, 'error'), and increased according to the number of times this
+          flag is given.
+
+Language scopes:
+      --csharp <CSHARP>
+          Scope CSharp code using a prepared query.
+          
+          [env: CSHARP=]
+
+          Possible values:
+          - comments: Comments (including XML, inline, doc comments)
+          - strings:  Strings (incl. verbatim, interpolated; incl. quotes, except for
+            interpolated)
+          - usings:   `using` directives (including periods)
+
+      --csharp-query <CSHARP_QUERY>
+          Scope CSharp code using a custom tree-sitter query.
+          
+          [env: CSHARP_QUERY=]
+
+      --go <GO>
+          Scope Go code using a prepared query.
+          
+          [env: GO=]
+
+          Possible values:
+          - comments:    Comments (single- and multi-line)
+          - strings:     Strings (interpreted and raw; excluding struct tags)
+          - imports:     Imports
+          - struct-tags: Struct tags
+
+      --go-query <GO_QUERY>
+          Scope Go code using a custom tree-sitter query.
+          
+          [env: GO_QUERY=]
+
+      --hcl <HCL>
+          Scope HashiCorp Configuration Language code using a prepared query.
+          
+          [env: HCL=]
+
+          Possible values:
+          - variables:      Variable declarations and usages
+          - resource-names: `resource` name declarations and usages
+          - resource-types: `resource` type declarations and usages
+          - data-names:     `data` name declarations and usages
+          - data-sources:   `data` source declarations and usages
+          - comments:       Comments
+          - strings:        Literal strings
+
+      --hcl-query <HCL_QUERY>
+          Scope HashiCorp Configuration Language code using a custom tree-sitter query.
+          
+          [env: HCL_QUERY=]
+
+      --python <PYTHON>
+          Scope Python code using a prepared query.
+          
+          [env: PYTHON=]
+
+          Possible values:
+          - comments:       Comments
+          - strings:        Strings (raw, byte, f-strings; interpolation is respected;
+            quotes included)
+          - imports:        Module names in imports (incl. periods; excl.
+            `import`/`from`/`as`/`*`)
+          - doc-strings:    Docstrings (not including multi-line strings)
+          - function-names: Function names, at the definition site
+          - function-calls: Function calls
+          - class:          Class definitions (in their entirety)
+
+      --python-query <PYTHON_QUERY>
+          Scope Python code using a custom tree-sitter query.
+          
+          [env: PYTHON_QUERY=]
+
+      --rust <RUST>
+          Scope Rust code using a prepared query.
+          
+          [env: RUST=]
+
+          Possible values:
+          - comments:     Comments (line and block styles; excluding doc comments; comment
+            chars incl.)
+          - doc-comments: Doc comments (comment chars included)
+          - uses:         Use statements (paths only; excl. `use`/`as`/`*`)
+          - strings:      Strings (regular, raw, byte; includes interpolation parts in
+            format strings!)
+
+      --rust-query <RUST_QUERY>
+          Scope Rust code using a custom tree-sitter query.
+          
+          [env: RUST_QUERY=]
+
+      --typescript <TYPESCRIPT>
+          Scope TypeScript code using a prepared query.
+          
+          [env: TYPESCRIPT=]
+
+          Possible values:
+          - comments: Comments
+          - strings:  Strings (literal, template; includes quote characters)
+          - imports:  Imports (module specifiers)
+
+      --typescript-query <TYPESCRIPT_QUERY>
+          Scope TypeScript code using a custom tree-sitter query.
+          
+          [env: TYPESCRIPT_QUERY=]
+
+Options (german):
+      --german-prefer-original
+          When some original version and its replacement are equally legal, prefer the
+          original and do not modify.
+          
+          For example, "Busse" (original) and "Buße" (replacement) are equally legal
+          words: by default, the tool would prefer the latter.
+          
+          [env: GERMAN_PREFER_ORIGINAL=]
+
+      --german-naive
+          Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
+          regardless of legality of the resulting word
+          
+          Useful for names, which are otherwise not modifiable as they do not occur in
+          dictionaries. Called 'naive' as this does not perform legal checks.
+          
+          [env: GERMAN_NAIVE=]
+
 ```
 
 ## Rust library

@@ -1,0 +1,6 @@
+{
+    "[markdown]": {
+        // README.md has tests which are sensitive to all whitespace being present
+        "files.trimTrailingWhitespace": false,
+    }
+}

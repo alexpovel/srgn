@@ -728,8 +728,6 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use std::num::NonZero;
-
     use clap::{builder::ArgPredicate, ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
     use srgn::{
@@ -743,13 +741,24 @@ mod cli {
         },
         GLOBAL_SCOPE,
     };
+    use std::num::NonZero;
 
     /// Main CLI entrypoint.
     ///
     /// Using `verbatim_doc_comment` a lot as otherwise lines wouldn't wrap neatly. I
     /// format them narrowly manually anyway, so can just use them verbatim.
     #[derive(Parser, Debug)]
-    #[command(author, version, about, verbatim_doc_comment, long_about = None)]
+    #[command(
+        author,
+        version,
+        about,
+        long_about = None,
+        // Really dumb to hard-code, but we need deterministic output for README tests
+        // to remain stable, and this is probably both a solid default *and* plays with
+        // this very source file which is wrapped at *below* that, so it fits and clap
+        // doesn't touch our manually formatted doc strings anymore.
+        term_width = 90,
+    )]
     pub(super) struct Cli {
         /// Scope to apply to, as a regular expression pattern
         ///
