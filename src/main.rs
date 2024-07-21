@@ -321,8 +321,6 @@ fn handle_actions_on_many_files_threaded(
         .git_ignore(!args.options.gitignored)
         .build_parallel()
         .run(|| {
-            // TODO: clean this up. Error handling is very verbose.
-            // Modelled after https://github.com/rust-lang/cargo/blob/a2b58c3dad4d554ba01ed6c45c41ff85390560f2/crates/cargo-util/src/du.rs#L54-L84
             Box::new(|entry| match entry {
                 Ok(entry) => {
                     let path = entry.path();
