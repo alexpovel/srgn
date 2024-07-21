@@ -3,9 +3,8 @@
 A code **s**u**rg**eo**n** for searching and manipulating text and source code with
 **enhanced precision**.
 
-`srgn` is organized around [*actions*](#actions) to take (if any), acting only within
-precise, optionally [language grammar-aware](https://tree-sitter.github.io/tree-sitter/)
-[*scopes*](#scopes).
+`srgn` is organized around actions to take (if any), acting only within precise,
+optionally language grammar-aware scopes.
 
 ## Quick walkthrough
 
@@ -33,14 +32,15 @@ Hello YOU!
 
 ### Multiple scopes
 
-Similarly, up to two scopes can be specified. If both are given, the one applied first
-is **language grammar-aware**, and can scope syntactical elements of source code (think,
-for example, "all bodies of `class` definitions in Python"). The second scope, the
-regular expression pattern, is then **applied only *within* that first scope**. This
-enables search and manipulation at precision not normally possible using plain regular
-expressions.
+Similarly, more than one scope can be specified: in addition to the regex pattern, a
+[**language grammar-aware**]((https://tree-sitter.github.io/tree-sitter/)) scope can be
+given, which scopes to **syntactical elements of source code** (think, for example, "all
+bodies of `class` definitions in Python"). If both are given, the regular expression
+pattern is then **only applied *within* that first scope**. This enables search and
+manipulation at precision not normally possible using plain regular expressions, and
+serving a dimension different from tools such as *Rename all* in IDEs.
 
-For example, consider this Python source file:
+For example, consider this (pointless) Python source file:
 
 ```python file=birds.py
 """Module for watching birds and their age."""
@@ -63,7 +63,7 @@ class Bird:
         pass
 
 
-def register_bird(bird: Bird, db) -> None:
+def register_bird(bird: Bird, db: Db) -> None:
     assert bird.age >= 0
     with db.tx() as tx:
         tx.insert(bird)
@@ -81,8 +81,9 @@ $ cat birds.py | srgn --python 'class' 'age'
 The string `age` was sought and found *only* within Python `class` definitions (and not,
 for example, in function bodies such as `register_bird`). By default, this 'search mode'
 also prints line numbers. **Search mode is entered if no actions are specified**, and a
-language such as `--python` is given[^3]—it's like 'ripgrep but with syntactical
-language elements'.
+language such as `--python` is given[^3]—think of it like
+'[ripgrep](https://github.com/BurntSushi/ripgrep) but with syntactical language
+elements'.
 
 Searching can also be performed [across
 lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for example to
@@ -116,11 +117,13 @@ docs/samples/birds.py
 
 ```
 
-It recursively walks its current directory, finding files based on file extensions and
-shebang lines, doing so at high speed. For example, `srgn --go strings '\d+'` finds and
-prints all ~140,000 runs of digits in literal Go strings inside the [Kubernetes
+It recursively walks its current directory, finding files based on [file
+extensions](docs/samples/birds.py) and [shebang lines](docs/samples/birds), processing
+at very high speed. For example, `srgn --go strings '\d+'` finds and prints all ~140,000
+runs of digits in literal Go strings inside the [Kubernetes
 codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
-of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3.
+of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more, see also
+[benchmarks](#run-against-multiple-files).
 
 ### Combining actions and scopes
 
@@ -1034,10 +1037,29 @@ with your own queries:
 Use the `--files` option to run against multiple files, in-place. This option accepts a
 [glob pattern](https://docs.rs/glob/0.3.1/glob/struct.Pattern.html). The glob is
 processed *within `srgn`*: it must be quoted to prevent premature shell interpretation.
+The `--files` option takes precedence over the heuristics of language scoping. For
+example,
 
-`srgn` will process results [fully parallel](https://github.com/rayon-rs/rayon), using
-all available threads. For example, **[450k lines of Python](./benches/django/) are
-processed in about a second**, altering over 1000 lines across a couple hundred files:
+<!-- markdownlint-disable MD010 -->
+```console
+$ srgn --go 'comments' --files 'tests/langs/go/other/*.go' '\w+'
+tests/langs/go/other/fizzbuzz.go
+5:// fizzBuzz prints the numbers from 1 to a specified limit.
+6:// For multiples of 3, it prints "Fizz" instead of the number,
+7:// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,
+8:// it prints "FizzBuzz".
+25:	// Run the FizzBuzz function for numbers from 1 to 100
+
+
+```
+<!-- markdownlint-enable MD010 -->
+
+finds only what's matched by the (narrow) glob, even though `--go` queries by themselves
+would match much more.
+
+`srgn` will process results fully parallel, using all available threads. For example,
+**[450k lines of Python](./benches/django/) are processed in about a second**, altering
+over 1000 lines across a couple hundred files:
 
 ![hyperfine benchmarks for files option](./docs/images/files-benchmarks.png)
 

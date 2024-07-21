@@ -462,17 +462,33 @@ mod tests {
                             // (just a flag). Alternatively, import `clap::Cli` here and
                             // `try_get_matches` with it, but cannot/don't want to
                             // expose (`pub`) that.
+                            //
+                            // Failure to add values here will result in bizarre and
+                            // wrong order of arguments. For example, if `--some-option
+                            // some_value` is given and `--some-option` is not
+                            // registered here, `--some-option` will be understood as a
+                            // *flag*, and `some_value` as a *positional argument*.
                             tag("--"),
                             alt((
+                                // Careful: all `--lang-query` options need to come
+                                // first; otherwise, the `--lang` options eat them and
+                                // results turn bad (complaining that `-query` is not a
+                                // valid value). Parsing is brittle here :-(
                                 tag("csharp-query"),
-                                tag("csharp"),
                                 tag("go-query"),
-                                tag("go"),
+                                tag("hcl-query"),
                                 tag("python-query"),
-                                tag("python"),
                                 tag("rust-query"),
-                                tag("rust"),
                                 tag("typescript-query"),
+                                //
+                                tag("csharp"),
+                                tag("files"),
+                                tag("go"),
+                                tag("hcl"),
+                                tag("python"),
+                                tag("rust"),
+                                tag("stdin-override-to"),
+                                tag("threads"),
                                 tag("typescript"),
                             )),
                         ),
