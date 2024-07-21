@@ -122,14 +122,13 @@ extensions](docs/samples/birds.py) and [shebang lines](docs/samples/birds), proc
 at very high speed. For example, `srgn --go strings '\d+'` finds and prints all ~140,000
 runs of digits in literal Go strings inside the [Kubernetes
 codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
-of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more, see also
-[benchmarks](#run-against-multiple-files).
+of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more, see
+[below](#run-against-multiple-files).
 
 ### Combining actions and scopes
 
-Lastly, scopes and actions can be combined almost arbitrarily. For example, consider
-this Python snippet (more languages are
-[supported](#prepared-queries-sample-showcases)):
+Scopes and actions can be combined almost arbitrarily. For example, consider this Python
+snippet (more languages are [supported](#prepared-queries-sample-showcases)):
 
 ```python file=gnu.py
 """GNU module."""
@@ -171,6 +170,9 @@ where the changes are limited to:
 ```diff
 - """GNU module."""
 + """GNU 🐂 IS NOT UNIX module."""
+
+def GNU_says_moo():
+    """The GNU -> say moo -> ✅"""
 ```
 
 which additionally demonstrates fully Unicode-capable operation, and advanced regex
