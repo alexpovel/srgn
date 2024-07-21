@@ -363,7 +363,7 @@ Heizoelrueckstossabdaempfung.
 
     /// Tests the helper function itself.
     #[test]
-    fn test_directory_comparison() {
+    fn test_directory_comparison() -> anyhow::Result<()> {
         for result in ignore::WalkBuilder::new("./src")
             .add("./tests")
             .add("./data")
@@ -377,7 +377,7 @@ Heizoelrueckstossabdaempfung.
 
                 {
                     // Any directory compares to itself fine.
-                    assert!(check_directories_equality(path.clone(), path.clone()).is_ok());
+                    check_directories_equality(path.clone(), path.clone())?;
                 }
 
                 {
@@ -396,6 +396,8 @@ Heizoelrueckstossabdaempfung.
                 }
             }
         }
+
+        Ok(())
     }
 
     fn get_cmd() -> Command {
@@ -461,9 +463,9 @@ Heizoelrueckstossabdaempfung.
 
             if metadata.is_file() {
                 // Recursion end
-                let left_contents = std::fs::read_to_string(left.path())
+                let left_contents = std::fs::read(left.path())
                     .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
-                let right_contents = std::fs::read_to_string(&candidate)
+                let right_contents = std::fs::read(&candidate)
                     .with_context(|| format!("Failure reading right file: {:?}", candidate))?;
 
                 if left_contents != right_contents {
@@ -483,8 +485,8 @@ right contents:
 ",
                             left.path(),
                             candidate,
-                            left_contents.escape_debug(),
-                            right_contents.escape_debug()
+                            String::from_utf8_lossy(&left_contents).escape_debug(),
+                            String::from_utf8_lossy(&right_contents).escape_debug()
                         ),
                     )
                     .into());

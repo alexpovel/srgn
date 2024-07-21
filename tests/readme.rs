@@ -234,8 +234,35 @@ mod tests {
         /// Assembles a list of programs into a pipe.
         ///
         /// The first program is specially treated, and needs to be able to produce some
-        /// stdin. The passed `stdout` is the expected output of the last program, aka
-        /// the entire pipe.
+        /// stdin to kick things off (unless there is only one `standalone` program in
+        /// the pipe). The passed `stdout` is the expected output of the last program,
+        /// aka the entire pipe. All programs in the middle (after *second*, before
+        /// last), which can be an unbounded number, are later on fed their stdin
+        /// dynamically, from the previous program's output, with their stdout becoming
+        /// the next piped program's stdin, and so on. These stdins and stdouts are not
+        /// set here.
+        ///
+        /// [`Program::Cat`] invocations may need access to [`Snippets`], so those are
+        /// provided as well; pipes may also be *expected* to fail.
+        ///
+        /// For example, a chain might look like:
+        ///
+        /// ```text
+        /// echo 'hello' | butest -a | butest -b | butest --cee | butest -d
+        /// ^^^^^^^^^^^^   ^^^^^^^^^
+        ///  produces      is fed      ^^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^
+        ///  initial       stdin to      these are provided       last one
+        ///  stdin         kick          their stdin *later*      in the
+        ///                things        on, and produce their    pipe:
+        ///                off           stdout dynamically too   its
+        ///                                                       stdout is
+        ///                                                       set here,
+        ///                                                       its stdin
+        ///                                                       provided
+        ///                                                       dynamically
+        /// ```
+        ///
+        /// with some binary under test (`butest`).
         fn assemble(
             chain: impl Iterator<Item = Program>,
             stdout: Option<&str>,
@@ -297,7 +324,6 @@ mod tests {
             // program's standard output.
             let mut first = first;
             match programs.back_mut() {
-                //.unwrap_or(&mut first1) {
                 Some(Program::Echo(_) | Program::Cat(_)) => {
                     return Err("Stdin-generating program should not be at the end of a pipe")
                 }
@@ -604,9 +630,7 @@ mod tests {
                     .map(|oss| oss.into_iter().map(OS::from).collect_vec()),
             };
 
-            if !options.is_empty() {
-                panic!("unknown keys in options: {:?}", options);
-            }
+            assert!(options.is_empty(), "unknown keys in options: {:?}", options);
 
             res
         }
@@ -802,8 +826,19 @@ mod tests {
     /// break. So hack strings which look like paths to spell `/` instead of `\` as
     /// their path separator.
     fn unixfy_file_paths(input: &str) -> String {
+        // Pattern for Windows-style file paths:
+        //
+        // ```text
+        // No Match: /usr/bin/local
+        // No Match: bin/local
+        // Matches: test\files
+        // Matches: test\some\more\files
+        // Matches: test
+        // Matches: test\some\file.py
+        //```
+        //
+        // https://regex101.com/r/NURPe2/1
         let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
-        // pattern.replace_all(input, rep)
         let mut res = input
             .lines()
             .map(|s| {
