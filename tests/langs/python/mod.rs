@@ -20,6 +20,7 @@ use srgn::scoping::langs::python::{PreparedPythonQuery, Python, PythonQuery};
     "function-calls.py",
     PythonQuery::Prepared(PreparedPythonQuery::FunctionCalls)
 )]
+#[case("class.py", PythonQuery::Prepared(PreparedPythonQuery::Class))]
 fn test_python_nuke(#[case] file: &str, #[case] query: PythonQuery) {
     let lang = Python::new(query);
 

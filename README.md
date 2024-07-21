@@ -48,6 +48,10 @@ class Bird:
         print("🎉")
         self.age += 1
 
+    @classmethod
+    def from_egg(egg):
+        pass
+
 
 def register_bird(bird: Bird, db) -> None:
     assert bird.age >= 0
@@ -70,6 +74,17 @@ also prints line numbers. **Search mode is entered if no actions are specified**
 language such as `--python` is given (otherwise, if no language is requested, there is no
 point in using `srgn` and existing tools such as ripgrep are much better suited). Think
 of the mode like 'ripgrep but knows syntactical language elements'.
+
+Searching can also be performed [across
+lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for example to
+find class methods of specific names:
+
+```console
+$ cat birds.py | srgn --python 'class' '(?s)@classmethod\n\s+def from_egg'
+15:    @classmethod
+16:    def from_egg(egg):
+
+```
 
 If standard input is not given, `srgn` knows how to find corresponding source files
 automatically, for example in this repository:

@@ -21,6 +21,7 @@ mod tests {
         sequence::{delimited, preceded, tuple},
         Finish, IResult,
     };
+    use pretty_assertions::assert_eq;
     use std::{
         cell::RefCell,
         collections::{HashMap, VecDeque},
@@ -802,8 +803,8 @@ mod tests {
                             // Get some more readable output diff compared to
                             // `assert::Command`'s `stdout()` function, for which diffing
                             // whitespace is very hard.
-                            observed_stdout.escape_debug().to_string(),
-                            expected_stdout.escape_debug().to_string(),
+                            expected_stdout,
+                            observed_stdout,
                             "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
                             obs_f.path().display(),
                             exp_f.path().display()

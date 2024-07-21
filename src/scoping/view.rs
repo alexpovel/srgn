@@ -141,7 +141,7 @@ impl<'viewee> ScopedView<'viewee> {
             for potential_line in s.split_inclusive('\n') {
                 // Is it supposed to be in or out of scope?
                 let child_scope = match &parent_scope.0 {
-                    In(_, ctx) => In(Cow::Borrowed(potential_line), ctx.clone()), // ⚠️ TODO: Adjust `ctx`
+                    In(_, ctx) => In(Cow::Borrowed(potential_line), ctx.clone()),
                     Out(_) => Out(potential_line),
                 };
 

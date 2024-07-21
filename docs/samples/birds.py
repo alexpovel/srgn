@@ -12,6 +12,10 @@ class Bird:
         print("🎉")
         self.age += 1
 
+    @classmethod
+    def from_egg(egg):
+        pass
+
 
 def register_bird(bird: Bird, db) -> None:
     assert bird.age >= 0, "Programming error"

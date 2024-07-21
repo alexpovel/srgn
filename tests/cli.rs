@@ -137,6 +137,12 @@ Heizoelrueckstossabdaempfung.
         &["--python", "strings", "--files", "**/*.py", "is"],
         Some(include_str!("langs/python/in/strings.py")),
     )]
+    #[case(
+        "python-search-stdin-across-lines",
+        false,
+        &["--python", "class", r"(?s)@classmethod\n\s+def from_ski_jumper"], // ?s: include newline
+        Some(include_str!("langs/python/out/class.py")),
+    )]
     fn test_cli(
         #[case] mut snapshot_name: String,
         #[case] os_dependent: bool,
