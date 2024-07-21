@@ -122,8 +122,23 @@ brew install srgn
 
 ### Nix
 
-Refer to [this pull request](https://github.com/NixOS/nixpkgs/pull/293076/files) to see
-how to package `srgn` using Nix.
+Available via [unstable](https://search.nixos.org/packages?channel=unstable&show=srgn&from=0&size=50&sort=relevance&type=packages&query=srgn):
+
+```bash
+nix-shell -p srgn
+```
+
+### Arch Linux
+
+Available via the [AUR](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=srgn).
+
+### MacPorts
+
+A [port](https://ports.macports.org/port/srgn/) is available:
+
+```bash
+sudo port install srgn
+```
 
 ### CI (GitHub Actions)
 
@@ -158,9 +173,9 @@ CI](https://github.com/cargo-bins/cargo-binstall#can-i-use-it-in-ci).
 
 1. Install the [Rust toolchain](https://www.rust-lang.org/tools/install)
 2. A C compiler is required:
-   1. On Linux, `gcc` works (tested).
-   2. On macOS, try `clang` (untested).
-   3. On Windows, [MSVC](https://visualstudio.microsoft.com/downloads/) works (tested).
+   1. On Linux, `gcc` works.
+   2. On macOS, use `clang`.
+   3. On Windows, [MSVC](https://visualstudio.microsoft.com/downloads/) works.
 
       Select "Desktop development with C++" on installation.
 3. Run `cargo install srgn`
