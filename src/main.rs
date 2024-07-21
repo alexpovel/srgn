@@ -334,7 +334,6 @@ fn handle_actions_on_many_files_threaded(
                         }
                         Err(e) => {
                             error!("Error walking at {} due to: {}", path.display(), e);
-                            *err.lock().unwrap() = Some(e);
 
                             if search_mode {
                                 WalkState::Continue
@@ -342,6 +341,7 @@ fn handle_actions_on_many_files_threaded(
                                 // Chances are something bad and/or unintended happened;
                                 // bail out to limit any potential damage.
                                 error!("Aborting walk for safety");
+                                *err.lock().unwrap() = Some(e);
                                 WalkState::Quit
                             }
                         }
