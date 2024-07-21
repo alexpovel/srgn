@@ -42,7 +42,7 @@ log = "0.4.20"
 once_cell = { version = "1.18.0", optional = true }
 pathdiff = "0.2.1"
 tempfile = "3.10.1"
-titlecase = "2.2.1"
+titlecase = "3.3.0"
 tree-sitter = "0.22.6"
 tree-sitter-c-sharp = "0.21.2"
 tree-sitter-go = "0.21.0"
