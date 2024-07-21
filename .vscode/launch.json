@@ -25,10 +25,6 @@
                 "--files",
                 "**/strings.py"
             ],
-            // "stdio": [
-            //     ".vscode/debug-input.txt",
-            //     null
-            // ],
             "cwd": "${workspaceFolder}",
         },
         {
