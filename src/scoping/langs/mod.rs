@@ -21,6 +21,7 @@ pub mod hcl;
 pub mod python;
 /// Rust.
 pub mod rust;
+mod tree_sitter_hcl;
 /// TypeScript.
 pub mod typescript;
 

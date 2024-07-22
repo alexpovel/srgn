@@ -3,6 +3,36 @@
 fn main() {
     #[cfg(feature = "german")]
     natural_languages::generate_word_lists();
+
+    hcl::build();
+}
+
+mod hcl {
+    /// The function body is mostly the output of `tree-sitter generate` (`tree-sitter`
+    /// version 0.22.5) inside of
+    /// <https://github.com/tree-sitter-grammars/tree-sitter-hcl>, see also
+    /// <https://tree-sitter.github.io/tree-sitter/creating-parsers#command-generate>.
+    /// The resulting `bindings/rust/build.rs` is the below code, slimmed down to only
+    /// what's strictly needed, e.g. not including any warning flags.
+    ///
+    /// **Remove this code once
+    /// <https://github.com/tree-sitter-grammars/tree-sitter-hcl> is available on
+    /// <https://crates.io> and updated to a high enough `tree-sitter` version**.
+    pub fn build() {
+        let src_dir = std::path::Path::new("src/scoping/langs/tree_sitter_hcl/upstream/src");
+
+        let mut c_config = cc::Build::new();
+        c_config.include(src_dir);
+        let parser_path = src_dir.join("parser.c");
+        c_config.file(&parser_path);
+        println!("cargo:rerun-if-changed={}", parser_path.to_str().unwrap());
+
+        let scanner_path = src_dir.join("scanner.c");
+        c_config.file(&scanner_path);
+        println!("cargo:rerun-if-changed={}", scanner_path.to_str().unwrap());
+
+        c_config.compile("parser");
+    }
 }
 
 #[cfg(feature = "german")]
