@@ -134,7 +134,7 @@ snippet (more languages are [supported](#prepared-queries-sample-showcases)):
 """GNU module."""
 
 def GNU_says_moo():
-    """The GNU -> say moo -> ✅"""
+    """The GNU function -> say moo -> ✅"""
 
     GNU = """
       GNU
@@ -146,17 +146,17 @@ def GNU_says_moo():
 An invocation of
 
 ```bash
-cat gnu.py | srgn --upper --python 'doc-strings' '(?<!The )GNU' 'GNU 🐂 is not Unix'
+cat gnu.py | srgn --titlecase --python 'doc-strings' '(?<!The )GNU ([a-z]+)' '$1: GNU 🐂 is not Unix'
 ```
 
 makes use of multiple scopes (language and regex pattern) and multiple actions
-(replacement and uppercasing). The result then reads
+(replacement and titlecasing). The result then reads
 
 ```python file=output-gnu.py
-"""GNU 🐂 IS NOT UNIX module."""
+"""Module: GNU 🐂 Is Not Unix."""
 
 def GNU_says_moo():
-    """The GNU -> say moo -> ✅"""
+    """The GNU function -> say moo -> ✅"""
 
     GNU = """
       GNU
@@ -169,15 +169,21 @@ where the changes are limited to:
 
 ```diff
 - """GNU module."""
-+ """GNU 🐂 IS NOT UNIX module."""
++ """Module: GNU 🐂 Is Not Unix."""
 
 def GNU_says_moo():
     """The GNU -> say moo -> ✅"""
 ```
 
-which additionally demonstrates fully Unicode-capable operation, and advanced regex
-features ([negative
-lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax)).
+which additionally demonstrates...
+
+- fully Unicode-capable operation (🐂),
+- advanced regex features ([negative
+lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax), excluding matches
+  <!-- markdownlint-disable-next-line MD038 -->
+  not prefixed by `The `), and
+- [variable binding and substitution](#variables) (`$1`, which carries the contents
+  captured by the first capturing regex group).
 
 > [!WARNING]
 >
