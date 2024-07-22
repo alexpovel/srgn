@@ -14,16 +14,20 @@ repos:
         name: cargo fmt
         entry: cargo fmt --
         language: system
-        types: [rust]
+        types:
+          - rust
       - id: clippy
         name: clippy
         entry: cargo clippy --workspace --all-targets --all-features -- --deny warnings
         language: system
         pass_filenames: false
-        types: [rust]
+        types:
+          - rust
       - id: cargo-test
         name: cargo test
         entry: cargo test --workspace --all-features
         language: system
         pass_filenames: false
-        types: [rust]
+        types_or:
+          - rust
+          - markdown # For our README.md doc tests
