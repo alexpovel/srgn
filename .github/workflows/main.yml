@@ -296,6 +296,25 @@ jobs:
           ${{ needs.release-please.outputs.tag_name }}
           "$ASSET_FILE"
 
+  publish-dry-run:
+    # Perform a dry run to see whether publishing *would* work. A convenience to avoid
+    # the actual publish step failing, which is super annoying as it's gated behind git
+    # tags etc. which we cannot just re-run.
+    name: Publish to crates.io - dry run
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: swatinem/rust-cache@v2
+
+      - name: Publish
+        run: >
+          cargo publish
+          --verbose
+          --locked
+          --dry-run
+
   publish:
     name: Publish to crates.io
 
