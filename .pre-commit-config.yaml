@@ -5,11 +5,11 @@ default_install_hook_types:
   - pre-push
 repos:
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.2.2
+    rev: v3.28.0
     hooks:
       - id: commitizen
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.34.0
+    rev: v0.41.0
     hooks:
       - id: markdownlint
   - repo: local
