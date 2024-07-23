@@ -1,7 +1,6 @@
 use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
+use crate::scoping::{scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
-use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -14,7 +13,7 @@ pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PreparedTypeScriptQu
 pub enum PreparedTypeScriptQuery {
     /// Comments.
     Comments,
-    /// Strings (literal, template; includes quote characters).
+    /// Strings (literal, template).
     Strings,
     /// Imports (module specifiers).
     Imports,
@@ -29,17 +28,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                 PreparedTypeScriptQuery::Imports => {
                     r"(import_statement source: (string (string_fragment) @sf))"
                 }
-                PreparedTypeScriptQuery::Strings => {
-                    formatcp!(
-                        r"
-                        [
-                            (string)
-                            (template_string (template_substitution) @{0})
-                        ]
-                        @string",
-                        IGNORE
-                    )
-                }
+                PreparedTypeScriptQuery::Strings => "(string_fragment) @string",
             },
         )
         .expect("Prepared queries to be valid")

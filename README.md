@@ -1438,7 +1438,7 @@ Language scopes:
 
           Possible values:
           - comments: Comments
-          - strings:  Strings (literal, template; includes quote characters)
+          - strings:  Strings (literal, template)
           - imports:  Imports (module specifiers)
 
       --typescript-query <TYPESCRIPT_QUERY>

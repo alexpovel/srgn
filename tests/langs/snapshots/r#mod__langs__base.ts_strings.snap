@@ -4,52 +4,55 @@ expression: inscope_parts
 ---
 - n: 2
   l: "import * as fs from \"fs\";\n"
-  m: "                    ^^^^^^   "
+  m: "                      ^^     "
 - n: 3
   l: "import 'some/package';\n"
-  m: "       ^^^^^^^^^^^^^^^^   "
+  m: "         ^^^^^^^^^^^^     "
 - n: 4
   l: "import { promisify } from \"util\";\n"
-  m: "                          ^^^^^^^^   "
+  m: "                            ^^^^     "
 - n: 18
   l: "    console.log(`Global testVar is now ${testVar}`);\n"
-  m: "                ^^^^^^^^^^^^^^^^^^^^^^^               "
-- n: 18
-  l: "    console.log(`Global testVar is now ${testVar}`);\n"
-  m: "                                                 ^    "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^               "
 - n: 24
   l: "        console.log(\"Function decorator called\");\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^      "
 - n: 31
   l: "    console.log(\"Inside decorated function\");\n"
-  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^      "
 - n: 36
   l: "    static classVar: string = \"Class variable\";\n"
-  m: "                              ^^^^^^^^^^^^^^^^^^   "
+  m: "                                ^^^^^^^^^^^^^^     "
 - n: 41
   l: "        this.classVar += \" updated\";\n"
-  m: "                         ^^^^^^^^^^^^   "
+  m: "                           ^^^^^^^^     "
 - n: 42
   l: "        console.log(`Class variable is now ${this.classVar}`);\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^                     "
-- n: 42
-  l: "        console.log(`Class variable is now ${this.classVar}`);\n"
-  m: "                                                           ^    "
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^                     "
 - n: 46
   l: "        this.instanceVar = 'Instance variable'; // Single quotes\n"
-  m: "                           ^^^^^^^^^^^^^^^^^^^^^                    "
+  m: "                             ^^^^^^^^^^^^^^^^^                      "
 - n: 47
   l: "        console.log(`Instance variable is ${this.instanceVar}`);\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^                        "
-- n: 47
-  l: "        console.log(`Instance variable is ${this.instanceVar}`);\n"
-  m: "                                                             ^    "
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^                        "
 - n: 51
   l: "        console.log(\"Inside static method\");\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                      ^^^^^^^^^^^^^^^^^^^^      "
+- n: 80
+  l: "const multiLineStr: string = `\n"
+  m: "                              ^^"
+- n: 81
+  l: "This is a\n"
+  m: ^^^^^^^^^^^
+- n: 82
+  l: "multi-line string\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 83
+  l: "for testing purposes.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
 - n: 86
   l: "const multilineFString: string = `This is a\n"
-  m: "                                 ^^^^^^^^^^^^"
+  m: "                                  ^^^^^^^^^^^"
 - n: 87
   l: "multiline ${multiLineStr} string\n"
   m: "^^^^^^^^^^                        "
@@ -59,63 +62,51 @@ expression: inscope_parts
 - n: 88
   l: "spanning several lines\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 89
-  l: "`;\n"
-  m: "^   "
+- n: 91
+  l: "const rawString: string = `This is a raw string with no special treatment for \\\\n`;\n"
+  m: "                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
+- n: 91
+  l: "const rawString: string = `This is a raw string with no special treatment for \\\\n`;\n"
+  m: "                                                                                  ^    "
 - n: 94
   l: "const squaredNumbers: string[] = Array.from(Array(10).keys()).map(x => \"x\" + square(x));\n"
-  m: "                                                                       ^^^^^                "
+  m: "                                                                         ^                  "
 - n: 104
   l: "            throw new Error(\"Negative value\");\n"
-  m: "                            ^^^^^^^^^^^^^^^^^^    "
+  m: "                              ^^^^^^^^^^^^^^      "
 - n: 106
   l: "            throw new Error(\"Division by zero\");\n"
-  m: "                            ^^^^^^^^^^^^^^^^^^^^    "
+  m: "                              ^^^^^^^^^^^^^^^^      "
 - n: 110
   l: "        console.error(`Caught an exception: ${e.message}`);\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^^^                 "
-- n: 110
-  l: "        console.error(`Caught an exception: ${e.message}`);\n"
-  m: "                                                        ^    "
+  m: "                       ^^^^^^^^^^^^^^^^^^^^^                 "
 - n: 112
   l: "        console.log(\"This will always be printed\");\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
 - n: 123
   l: "    console.log(`Inplace operations result: ${x}`);\n"
-  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
-- n: 123
-  l: "    console.log(`Inplace operations result: ${x}`);\n"
-  m: "                                                ^    "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
 - n: 129
   l: "        console.log(\"testVar is greater than 5\");\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^      "
 - n: 131
   l: "        console.log(\"testVar is 5 or less\");\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                      ^^^^^^^^^^^^^^^^^^^^      "
 - n: 136
   l: "        console.log(`Counter is ${counter}`);\n"
-  m: "                    ^^^^^^^^^^^^               "
-- n: 136
-  l: "        console.log(`Counter is ${counter}`);\n"
-  m: "                                          ^    "
+  m: "                     ^^^^^^^^^^^               "
 - n: 141
   l: "        console.log(`Loop iteration ${i}`);\n"
-  m: "                    ^^^^^^^^^^^^^^^^         "
-- n: 141
-  l: "        console.log(`Loop iteration ${i}`);\n"
-  m: "                                        ^    "
+  m: "                     ^^^^^^^^^^^^^^^         "
 - n: 146
   l: "        const content = fs.readFileSync(__filename, 'utf8');\n"
-  m: "                                                    ^^^^^^^^    "
+  m: "                                                      ^^^^      "
 - n: 147
   l: "        console.log(\"Read from file:\", content.split('\\n')[0]);\n"
-  m: "                    ^^^^^^^^^^^^^^^^^^^                               "
-- n: 147
-  l: "        console.log(\"Read from file:\", content.split('\\n')[0]);\n"
-  m: "                                                       ^^^^^^^        "
+  m: "                      ^^^^^^^^^^^^^^^                                 "
 - n: 149
   l: "        console.error(\"Failed to read file\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                        ^^^^^^^^^^^^^^^^^^^      "
 - n: 156
   l: "    console.log(\"Async function executed\");\n"
-  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^      "
