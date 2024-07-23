@@ -1,0 +1,28 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 5
+  l: "import asyncio\n"
+  m: "       ^^^^^^^  "
+- n: 6
+  l: "import os as operating_system\n"
+  m: "       ^^                      "
+- n: 7
+  l: "from collections import namedtuple\n"
+  m: "     ^^^^^^^^^^^                    "
+- n: 8
+  l: "from math import *\n"
+  m: "     ^^^^           "
+- n: 9
+  l: "from math import acos as soca\n"
+  m: "     ^^^^                      "
+- n: 10
+  l: "from typing import Dict, List\n"
+  m: "     ^^^^^^                    "
+- n: 12
+  l: "from ..parent import x\n"
+  m: "     ^^^^^^^^           "
+- n: 13
+  l: "from .sibling import y\n"
+  m: "     ^^^^^^^^           "

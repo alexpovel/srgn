@@ -1,0 +1,142 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 24
+  l: "    print(f\"Global test_var is now {test_var}\")\n"
+  m: "    ^^^^^                                          "
+- n: 32
+  l: "        print(\"Function decorator called\")\n"
+  m: "        ^^^^^                                 "
+- n: 33
+  l: "        return func(*args, **kwargs)\n"
+  m: "               ^^^^                   "
+- n: 41
+  l: "    print(\"Inside decorated function\")\n"
+  m: "    ^^^^^                                 "
+- n: 56
+  l: "            print(\"Static method decorator called\")\n"
+  m: "            ^^^^^                                      "
+- n: 57
+  l: "            return func(*args, **kwargs)\n"
+  m: "                   ^^^^                   "
+- n: 66
+  l: "        print(f\"Class variable is now {cls.class_var}\")\n"
+  m: "        ^^^^^                                              "
+- n: 72
+  l: "        print(f\"Instance variable is {self.instance_var}\")\n"
+  m: "        ^^^^^                                                 "
+- n: 78
+  l: "        print(\"Inside static method\")\n"
+  m: "        ^^^^^                            "
+- n: 102
+  l: "squared_numbers = [\"x\" + square(x) for x in range(10)]\n"
+  m: "                           ^^^^^^                         "
+- n: 102
+  l: "squared_numbers = [\"x\" + square(x) for x in range(10)]\n"
+  m: "                                              ^^^^^       "
+- n: 105
+  l: "unique_squares = {square(x) for x in range(10)}\n"
+  m: "                  ^^^^^^                         "
+- n: 105
+  l: "unique_squares = {square(x) for x in range(10)}\n"
+  m: "                                     ^^^^^       "
+- n: 108
+  l: "squares_dict = {x: square(x) for x in range(10)}\n"
+  m: "                   ^^^^^^                         "
+- n: 108
+  l: "squares_dict = {x: square(x) for x in range(10)}\n"
+  m: "                                      ^^^^^       "
+- n: 116
+  l: "            raise ValueError(\"Negative value\")\n"
+  m: "                  ^^^^^^^^^^                      "
+- n: 118
+  l: "            raise ZeroDivisionError(\"Division by zero\")\n"
+  m: "                  ^^^^^^^^^^^^^^^^^                        "
+- n: 121
+  l: "        print(f\"Caught an exception: {e}\")\n"
+  m: "        ^^^^^                                 "
+- n: 123
+  l: "        print(f\"Caught an exception: {e}\")\n"
+  m: "        ^^^^^                                 "
+- n: 125
+  l: "        print(\"No exceptions caught\")\n"
+  m: "        ^^^^^                            "
+- n: 127
+  l: "        print(\"This will always be printed\")\n"
+  m: "        ^^^^^                                   "
+- n: 139
+  l: "    inner()\n"
+  m: "    ^^^^^    "
+- n: 140
+  l: "    print(f\"Nonlocal variable is {nonlocal_var}\")\n"
+  m: "    ^^^^^                                            "
+- n: 150
+  l: "    print(f\"Inplace operations result: {x}\")\n"
+  m: "    ^^^^^                                       "
+- n: 158
+  l: "        print(\"test_var is greater than 5\")\n"
+  m: "        ^^^^^                                  "
+- n: 160
+  l: "        print(\"test_var is 5 or less\")\n"
+  m: "        ^^^^^                             "
+- n: 165
+  l: "        print(f\"Counter is {counter}\")\n"
+  m: "        ^^^^^                             "
+- n: 169
+  l: "    for i in range(3):\n"
+  m: "             ^^^^^      "
+- n: 170
+  l: "        print(f\"Loop iteration {i}\")\n"
+  m: "        ^^^^^                           "
+- n: 173
+  l: "    with open(__file__) as f:\n"
+  m: "         ^^^^                  "
+- n: 175
+  l: "        print(\"Read from file:\", content)\n"
+  m: "        ^^^^^                                "
+- n: 183
+  l: "            print(\"Zero\")\n"
+  m: "            ^^^^^            "
+- n: 185
+  l: "            print(\"One\")\n"
+  m: "            ^^^^^           "
+- n: 187
+  l: "            print(\"Other\")\n"
+  m: "            ^^^^^             "
+- n: 194
+  l: "    print(\"Async function executed\")\n"
+  m: "    ^^^^^                               "
+- n: 199
+  l: "    free_func()\n"
+  m: "    ^^^^^^^^^    "
+- n: 200
+  l: "    decorated_func()\n"
+  m: "    ^^^^^^^^^^^^^^    "
+- n: 202
+  l: "    instance = TestClass()\n"
+  m: "               ^^^^^^^^^    "
+- n: 205
+  l: "    print(square(5))\n"
+  m: "    ^^^^^             "
+- n: 205
+  l: "    print(square(5))\n"
+  m: "          ^^^^^^      "
+- n: 206
+  l: "    exception_handling(0)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^     "
+- n: 207
+  l: "    modify_nonlocal()\n"
+  m: "    ^^^^^^^^^^^^^^^    "
+- n: 208
+  l: "    inplace_operations()\n"
+  m: "    ^^^^^^^^^^^^^^^^^^    "
+- n: 209
+  l: "    control_flow()\n"
+  m: "    ^^^^^^^^^^^^    "
+- n: 210
+  l: "    match_statement(1)\n"
+  m: "    ^^^^^^^^^^^^^^^     "
+- n: 211
+  l: "    asyncio.run(async_function())\n"
+  m: "                ^^^^^^^^^^^^^^     "
