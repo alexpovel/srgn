@@ -2,13 +2,13 @@ mod csharp;
 mod go;
 mod hcl;
 mod rust;
-mod typescript;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::{
     langs::{
         python::{PreparedPythonQuery, Python},
+        typescript::{PreparedTypeScriptQuery, TypeScript},
         CodeQuery, LanguageScoper,
     },
     regex::Regex,
@@ -138,6 +138,21 @@ impl InScopeLinePart {
     "base.py_class",
     include_str!("python/base.py"),
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::Class)),
+)]
+#[case(
+    "base.ts_strings",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Strings)),
+)]
+#[case(
+    "base.ts_comments",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Comments)),
+)]
+#[case(
+    "base.ts_imports",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Imports)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

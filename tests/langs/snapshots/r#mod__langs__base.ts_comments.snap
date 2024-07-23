@@ -1,0 +1,100 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "// Import necessary modules\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 7
+  l: "// Global variable\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 10
+  l: "/**\n"
+  m: ^^^^^
+- n: 11
+  l: " * Proper function documentation.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 12
+  l: " * @param a Bla\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 13
+  l: " * @param b Bla.\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 14
+  l: " * @return Does not exist.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 15
+  l: "*/\n"
+  m: "^^  "
+- n: 21
+  l: "// Decorator for functions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 29
+  l: "// Function with a decorator\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 34
+  l: "// Class definition\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 46
+  l: "        this.instanceVar = 'Instance variable'; // Single quotes\n"
+  m: "                                                  ^^^^^^^^^^^^^^^^  "
+- n: 56
+  l: "    readonly suiteId: number;    // Readonly property\n"
+  m: "                                 ^^^^^^^^^^^^^^^^^^^^  "
+- n: 58
+  l: "    testsCount?: number;         // Optional property\n"
+  m: "                                 ^^^^^^^^^^^^^^^^^^^^  "
+- n: 59
+  l: "    [propName: string]: any;     // Index signature for additional properties\n"
+  m: "                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 61
+  l: "    // Method to describe the test suite\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 64
+  l: "    // Method to execute the test suite\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 68
+  l: "/*\n"
+  m: ^^^^
+- n: 69
+  l: "   This is a multi-line comment\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 70
+  l: "   It can span multiple lines\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "*/\n"
+  m: "^^  "
+- n: 73
+  l: "// Static method decorator\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 76
+  l: "// Lambda expression\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 79
+  l: "// Multiline string\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 93
+  l: "// List comprehension\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 96
+  l: "// Set and Dictionary comprehension\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 100
+  l: "// Exception handling\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 116
+  l: "// Inplace operations\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 126
+  l: "// Control flow\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 144
+  l: "    // with statement equivalent in TypeScript\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 153
+  l: "// Async function\n"
+  m: "^^^^^^^^^^^^^^^^^  "
+- n: 159
+  l: "// Main execution\n"
+  m: "^^^^^^^^^^^^^^^^^  "
