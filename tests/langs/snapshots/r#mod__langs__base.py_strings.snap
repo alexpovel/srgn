@@ -4,79 +4,67 @@ expression: inscope_parts
 ---
 - n: 1
   l: "\"\"\"\n"
-  m: ^^^^^^^^
+  m: "      ^^"
 - n: 2
   l: "Module for testing various Python grammar elements.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 3
-  l: "\"\"\"\n"
-  m: "^^^^^^  "
 - n: 21
   l: "    \"\"\"A free function for testing.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 24
   l: "    print(f\"Global test_var is now {test_var}\")\n"
-  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^               "
-- n: 24
-  l: "    print(f\"Global test_var is now {test_var}\")\n"
-  m: "                                              ^^   "
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^               "
 - n: 29
   l: "    \"\"\"Decorator for free function.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 32
   l: "        print(\"Function decorator called\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 40
   l: "    \"\"\"Function with a decorator.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 41
   l: "    print(\"Inside decorated function\")\n"
-  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 46
   l: "    \"\"\"Class for testing various features.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 48
   l: "    class_var = \"Class variable\"\n"
-  m: "                ^^^^^^^^^^^^^^^^^^  "
+  m: "                  ^^^^^^^^^^^^^^    "
 - n: 53
   l: "        \"\"\"Decorator for static methods.\"\"\"\n"
-  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 56
   l: "            print(\"Static method decorator called\")\n"
-  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 64
   l: "        \"\"\"Class method.\"\"\"\n"
-  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "              ^^^^^^^^^^^^^        "
 - n: 65
   l: "        cls.class_var += \" updated\"\n"
-  m: "                         ^^^^^^^^^^^^  "
+  m: "                           ^^^^^^^^    "
 - n: 66
   l: "        print(f\"Class variable is now {cls.class_var}\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^                    "
-- n: 66
-  l: "        print(f\"Class variable is now {cls.class_var}\")\n"
-  m: "                                                      ^^   "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^                    "
 - n: 70
   l: "        \"\"\"Instance method.\"\"\"\n"
-  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "              ^^^^^^^^^^^^^^^^        "
 - n: 71
   l: "        self.instance_var = \"Instance variable\"\n"
-  m: "                            ^^^^^^^^^^^^^^^^^^^^^  "
+  m: "                              ^^^^^^^^^^^^^^^^^    "
 - n: 72
   l: "        print(f\"Instance variable is {self.instance_var}\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^                        "
-- n: 72
-  l: "        print(f\"Instance variable is {self.instance_var}\")\n"
-  m: "                                                         ^^   "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^                        "
 - n: 77
   l: "        \"\"\"Static method.\"\"\"\n"
-  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "              ^^^^^^^^^^^^^^        "
 - n: 78
   l: "        print(\"Inside static method\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^     "
 - n: 85
   l: "multi_line_str = \"\"\"\n"
-  m: "                 ^^^^^^^^"
+  m: "                       ^^"
 - n: 86
   l: "This is a\n"
   m: ^^^^^^^^^^^
@@ -86,12 +74,9 @@ expression: inscope_parts
 - n: 88
   l: "for testing purposes.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 89
-  l: "\"\"\"\n"
-  m: "^^^^^^  "
 - n: 91
   l: "multiline_f_string = f\"\"\"This is a\n"
-  m: "                     ^^^^^^^^^^^^^^^^^^"
+  m: "                            ^^^^^^^^^^^"
 - n: 92
   l: "multiline{f_string} string\n"
   m: "^^^^^^^^^                   "
@@ -101,117 +86,93 @@ expression: inscope_parts
 - n: 93
   l: "spanning several lines\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 94
-  l: "\"\"\"\n"
-  m: "^^^^^^  "
 - n: 96
   l: "raw_string = r\"This is a raw string with no special treatment for \\n\"\n"
-  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
 - n: 97
   l: "bytes_string = b\"This is a bytes string\"\n"
-  m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^    "
 - n: 98
   l: "bytes_string = rf\"This is a raw f-string with {raw_string}\"\n"
-  m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                "
-- n: 98
-  l: "bytes_string = rf\"This is a raw f-string with {raw_string}\"\n"
-  m: "                                                           ^^  "
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                "
 - n: 102
   l: "squared_numbers = [\"x\" + square(x) for x in range(10)]\n"
-  m: "                   ^^^^^                                  "
+  m: "                     ^                                    "
 - n: 113
   l: "    \"\"\"Function for testing exceptions.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 116
   l: "            raise ValueError(\"Negative value\")\n"
-  m: "                             ^^^^^^^^^^^^^^^^^^   "
+  m: "                               ^^^^^^^^^^^^^^     "
 - n: 118
   l: "            raise ZeroDivisionError(\"Division by zero\")\n"
-  m: "                                    ^^^^^^^^^^^^^^^^^^^^   "
+  m: "                                      ^^^^^^^^^^^^^^^^     "
 - n: 121
   l: "        print(f\"Caught an exception: {e}\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^        "
-- n: 121
-  l: "        print(f\"Caught an exception: {e}\")\n"
-  m: "                                         ^^   "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^        "
 - n: 123
   l: "        print(f\"Caught an exception: {e}\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^        "
-- n: 123
-  l: "        print(f\"Caught an exception: {e}\")\n"
-  m: "                                         ^^   "
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^        "
 - n: 125
   l: "        print(\"No exceptions caught\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^     "
 - n: 127
   l: "        print(\"This will always be printed\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 132
   l: "    \"\"\"Function demonstrating nonlocal statement.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 133
   l: "    nonlocal_var = \"Initial value\"\n"
-  m: "                   ^^^^^^^^^^^^^^^^^  "
+  m: "                     ^^^^^^^^^^^^^    "
 - n: 137
   l: "        nonlocal_var = \"Modified value\"\n"
-  m: "                       ^^^^^^^^^^^^^^^^^^  "
+  m: "                         ^^^^^^^^^^^^^^    "
 - n: 140
   l: "    print(f\"Nonlocal variable is {nonlocal_var}\")\n"
-  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^                   "
-- n: 140
-  l: "    print(f\"Nonlocal variable is {nonlocal_var}\")\n"
-  m: "                                                ^^   "
+  m: "             ^^^^^^^^^^^^^^^^^^^^^                   "
 - n: 144
   l: "    \"\"\"Function demonstrating inplace operators.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 150
   l: "    print(f\"Inplace operations result: {x}\")\n"
-  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
-- n: 150
-  l: "    print(f\"Inplace operations result: {x}\")\n"
-  m: "                                           ^^   "
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 155
   l: "    \"\"\"Function demonstrating various control flow statements.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 158
   l: "        print(\"test_var is greater than 5\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 160
   l: "        print(\"test_var is 5 or less\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "                ^^^^^^^^^^^^^^^^^^^^^     "
 - n: 165
   l: "        print(f\"Counter is {counter}\")\n"
-  m: "              ^^^^^^^^^^^^^^              "
-- n: 165
-  l: "        print(f\"Counter is {counter}\")\n"
-  m: "                                     ^^   "
+  m: "                 ^^^^^^^^^^^              "
 - n: 170
   l: "        print(f\"Loop iteration {i}\")\n"
-  m: "              ^^^^^^^^^^^^^^^^^^        "
-- n: 170
-  l: "        print(f\"Loop iteration {i}\")\n"
-  m: "                                   ^^   "
+  m: "                 ^^^^^^^^^^^^^^^        "
 - n: 175
   l: "        print(\"Read from file:\", content)\n"
-  m: "              ^^^^^^^^^^^^^^^^^^^            "
+  m: "                ^^^^^^^^^^^^^^^              "
 - n: 180
   l: "    \"\"\"Function demonstrating match statement.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 183
   l: "            print(\"Zero\")\n"
-  m: "                  ^^^^^^^^   "
+  m: "                    ^^^^     "
 - n: 185
   l: "            print(\"One\")\n"
-  m: "                  ^^^^^^^   "
+  m: "                    ^^^     "
 - n: 187
   l: "            print(\"Other\")\n"
-  m: "                  ^^^^^^^^^   "
+  m: "                    ^^^^^     "
 - n: 192
   l: "    \"\"\"Function demonstrating async syntax.\"\"\"\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
 - n: 194
   l: "    print(\"Async function executed\")\n"
-  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^     "
 - n: 198
   l: "if __name__ == \"__main__\":\n"
-  m: "               ^^^^^^^^^^^^   "
+  m: "                 ^^^^^^^^     "

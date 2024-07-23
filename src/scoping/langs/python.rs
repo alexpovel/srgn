@@ -15,7 +15,7 @@ pub type PythonQuery = CodeQuery<CustomPythonQuery, PreparedPythonQuery>;
 pub enum PreparedPythonQuery {
     /// Comments.
     Comments,
-    /// Strings (raw, byte, f-strings; interpolation is respected; quotes included).
+    /// Strings (raw, byte, f-strings; interpolation not included).
     Strings,
     /// Module names in imports (incl. periods; excl. `import`/`from`/`as`/`*`).
     Imports,
@@ -35,19 +35,7 @@ impl From<PreparedPythonQuery> for TSQuery {
             &Python::lang(),
             match value {
                 PreparedPythonQuery::Comments => "(comment) @comment",
-                PreparedPythonQuery::Strings => {
-                    // Match either normal `string`s or `string`s with `interpolation`;
-                    // using only the latter doesn't include the former.
-                    formatcp!(
-                        r"
-                        [
-                            (string)
-                            (string (interpolation) @{0})
-                        ]
-                        @string",
-                        IGNORE
-                    )
-                }
+                PreparedPythonQuery::Strings => "(string_content) @string",
                 PreparedPythonQuery::Imports => {
                     r"[
                         (import_statement
@@ -68,14 +56,20 @@ impl From<PreparedPythonQuery> for TSQuery {
                     // Triple-quotes are also used for multi-line strings. So look only
                     // for stand-alone expressions, which are not part of some variable
                     // assignment.
-                    r#"
-                    (
-                        (expression_statement
-                            (string) @string
-                            (#match? @string "^\"\"\"")
+                    formatcp!(
+                        "
+                        (
+                            (expression_statement
+                                (string
+                                    (string_start) @{0}
+                                    (string_content) @string
+                                    (#match? @{0} \"\\^\\\"\\\"\\\"\")
+                                )
+                            )
                         )
+                        ",
+                        IGNORE
                     )
-                    "#
                 }
                 PreparedPythonQuery::FunctionNames => {
                     r"

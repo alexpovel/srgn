@@ -1400,8 +1400,7 @@ Language scopes:
 
           Possible values:
           - comments:       Comments
-          - strings:        Strings (raw, byte, f-strings; interpolation is respected;
-            quotes included)
+          - strings:        Strings (raw, byte, f-strings; interpolation not included)
           - imports:        Module names in imports (incl. periods; excl.
             `import`/`from`/`as`/`*`)
           - doc-strings:    Docstrings (not including multi-line strings)
