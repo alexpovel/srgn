@@ -196,6 +196,7 @@ jobs:
       created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
       tag_name_without_v: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
+      html_url: ${{ steps.release.outputs.html_url }}
 
     steps:
       # https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/making-authenticated-api-requests-with-a-github-app-in-a-github-actions-workflow
@@ -218,6 +219,10 @@ jobs:
     # Assumption: if release created, tests ran in corresponding PR, so it's safe to not
     # `needs` tests here.
     if: needs.release-please.outputs.created
+
+    environment:
+      name: binaries
+      url: ${{ needs.release-please.outputs.html_url }}
 
     strategy:
       matrix:
