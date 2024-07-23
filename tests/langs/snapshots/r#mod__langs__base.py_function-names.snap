@@ -1,0 +1,52 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 20
+  l: "def free_func():\n"
+  m: "    ^^^^^^^^^     "
+- n: 28
+  l: "def func_decorator(func):\n"
+  m: "    ^^^^^^^^^^^^^^         "
+- n: 31
+  l: "    def wrapper(*args, **kwargs):\n"
+  m: "        ^^^^^^^                    "
+- n: 39
+  l: "def decorated_func():\n"
+  m: "    ^^^^^^^^^^^^^^     "
+- n: 52
+  l: "    def static_decorator(func):\n"
+  m: "        ^^^^^^^^^^^^^^^^         "
+- n: 55
+  l: "        def wrapper(*args, **kwargs):\n"
+  m: "            ^^^^^^^                    "
+- n: 63
+  l: "    def class_method(cls) -> None:\n"
+  m: "        ^^^^^^^^^^^^                "
+- n: 69
+  l: "    def instance_method(self) -> None:\n"
+  m: "        ^^^^^^^^^^^^^^^                 "
+- n: 76
+  l: "    def static_method() -> None:\n"
+  m: "        ^^^^^^^^^^^^^             "
+- n: 112
+  l: "def exception_handling(x) -> None:\n"
+  m: "    ^^^^^^^^^^^^^^^^^^              "
+- n: 131
+  l: "def modify_nonlocal():\n"
+  m: "    ^^^^^^^^^^^^^^^     "
+- n: 135
+  l: "    def inner():\n"
+  m: "        ^^^^^     "
+- n: 143
+  l: "def inplace_operations():\n"
+  m: "    ^^^^^^^^^^^^^^^^^^     "
+- n: 154
+  l: "def control_flow():\n"
+  m: "    ^^^^^^^^^^^^     "
+- n: 179
+  l: "def match_statement(x):\n"
+  m: "    ^^^^^^^^^^^^^^^      "
+- n: 191
+  l: "async def async_function():\n"
+  m: "          ^^^^^^^^^^^^^^     "

@@ -1,0 +1,106 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 45
+  l: "class TestClass:\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 46
+  l: "    \"\"\"Class for testing various features.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 47
+  l: "\n"
+  m: ^^
+- n: 48
+  l: "    class_var = \"Class variable\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 49
+  l: "\n"
+  m: ^^
+- n: 50
+  l: "    # Decorator for methods\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 51
+  l: "    @staticmethod\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 52
+  l: "    def static_decorator(func):\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 53
+  l: "        \"\"\"Decorator for static methods.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 54
+  l: "\n"
+  m: ^^
+- n: 55
+  l: "        def wrapper(*args, **kwargs):\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 56
+  l: "            print(\"Static method decorator called\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 57
+  l: "            return func(*args, **kwargs)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 58
+  l: "\n"
+  m: ^^
+- n: 59
+  l: "        return wrapper\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 60
+  l: "\n"
+  m: ^^
+- n: 61
+  l: "    # Class method\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 62
+  l: "    @classmethod\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 63
+  l: "    def class_method(cls) -> None:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 64
+  l: "        \"\"\"Class method.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 65
+  l: "        cls.class_var += \" updated\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "        print(f\"Class variable is now {cls.class_var}\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 67
+  l: "\n"
+  m: ^^
+- n: 68
+  l: "    # Method\n"
+  m: ^^^^^^^^^^^^^^
+- n: 69
+  l: "    def instance_method(self) -> None:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 70
+  l: "        \"\"\"Instance method.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "        self.instance_var = \"Instance variable\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 72
+  l: "        print(f\"Instance variable is {self.instance_var}\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 73
+  l: "\n"
+  m: ^^
+- n: 74
+  l: "    @staticmethod\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 75
+  l: "    @static_decorator\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 76
+  l: "    def static_method() -> None:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 77
+  l: "        \"\"\"Static method.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 78
+  l: "        print(\"Inside static method\")\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

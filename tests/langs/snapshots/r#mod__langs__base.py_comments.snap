@@ -1,0 +1,70 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 15
+  l: "# Global variable\n"
+  m: "^^^^^^^^^^^^^^^^^  "
+- n: 19
+  l: "# Free function\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 27
+  l: "# Decorator for functions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 44
+  l: "# Class definition\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 50
+  l: "    # Decorator for methods\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 61
+  l: "    # Class method\n"
+  m: "    ^^^^^^^^^^^^^^  "
+- n: 68
+  l: "    # Method\n"
+  m: "    ^^^^^^^^  "
+- n: 81
+  l: "# Lambda expression\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 84
+  l: "# Multiline string\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 101
+  l: "# List comprehension\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 104
+  l: "# Set comprehension\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 107
+  l: "# Dictionary comprehension\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 111
+  l: "# Exception handling\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 130
+  l: "# Statements\n"
+  m: "^^^^^^^^^^^^  "
+- n: 153
+  l: "# Control flow\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 156
+  l: "    # if statement\n"
+  m: "    ^^^^^^^^^^^^^^  "
+- n: 162
+  l: "    # while statement\n"
+  m: "    ^^^^^^^^^^^^^^^^^  "
+- n: 168
+  l: "    # for statement\n"
+  m: "    ^^^^^^^^^^^^^^^  "
+- n: 172
+  l: "    # with statement\n"
+  m: "    ^^^^^^^^^^^^^^^^  "
+- n: 178
+  l: "# Pattern matching\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 190
+  l: "# Async syntax\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 197
+  l: "# Main execution\n"
+  m: "^^^^^^^^^^^^^^^^  "
