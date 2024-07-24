@@ -4,28 +4,28 @@ expression: inscope_parts
 ---
 - n: 3
   l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "    ^^^^                          "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 4
   l: "use a::item as b_item;\n"
-  m: "    ^^^^^^^             "
+  m: "    ^^^^^^^^^^^^^^^^^   "
 - n: 5
   l: "use something::prelude::*;\n"
-  m: "    ^^^^^^^^^^^^^^^^^^      "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^   "
 - n: 6
   l: "use std::collections::HashMap;\n"
-  m: "    ^^^^^^^^^^^^^^^^            "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 7
   l: "use std::collections::HashSet;\n"
-  m: "    ^^^^^^^^^^^^^^^^            "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 8
   l: "use std::fs::File;\n"
-  m: "    ^^^^^^^         "
+  m: "    ^^^^^^^^^^^^^   "
 - n: 9
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
-  m: "    ^^^^^^^                                      "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 10
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
-  m: "    ^^^^^^^^^^^^^^^^^                          "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 199
   l: "    use std::fs::read_to_string;\n"
-  m: "        ^^^^^^^                   "
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^   "
