@@ -97,6 +97,7 @@ impl From<PreparedHclQuery> for TSQuery {
                                         (#not-any-of? @{0}.usage
                                             "var"
                                             "data"
+                                            "count"
                                             "module"
                                             "local"
                                         )
@@ -131,6 +132,7 @@ impl From<PreparedHclQuery> for TSQuery {
                                         (#not-any-of? @name.usage
                                             "var"
                                             "data"
+                                            "count"
                                             "module"
                                             "local"
                                         )
