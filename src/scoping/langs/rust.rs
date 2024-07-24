@@ -68,15 +68,7 @@ impl From<PreparedRustQuery> for TSQuery {
                         )
                     "
                 }
-                PreparedRustQuery::Strings => {
-                    r"
-                    [
-                        (string_literal)
-                        (raw_string_literal)
-                    ]
-                    @string
-                    "
-                }
+                PreparedRustQuery::Strings => "(string_content) @string",
             },
         )
         .expect("Prepared queries to be valid")
