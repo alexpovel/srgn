@@ -1,0 +1,55 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "// This is an example HCL configuration file for testing various software configurations\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 3
+  l: "# Another line comment style\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 5
+  l: "/* This is a multi-line comment block.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 6
+  l: "It starts with a slash and a star, and ends with a star and a slash.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 7
+  l: "*/\n"
+  m: "^^  "
+- n: 9
+  l: "// Variable Definitions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 34
+  l: "// Locals\n"
+  m: "^^^^^^^^^  "
+- n: 40
+  l: "// Providers\n"
+  m: "^^^^^^^^^^^^  "
+- n: 45
+  l: "// Data Sources\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 56
+  l: "// Resources\n"
+  m: "^^^^^^^^^^^^  "
+- n: 67
+  l: "  // Dynamic block for user data\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 79
+  l: "// Output values\n"
+  m: "^^^^^^^^^^^^^^^^  "
+- n: 90
+  l: "// Modules\n"
+  m: "^^^^^^^^^^  "
+- n: 96
+  l: "// Conditional expression\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 102
+  l: "// Using template expressions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 112
+  l: "// Using for expressions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 133
+  l: "// Using nested blocks\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^  "

@@ -1,11 +1,11 @@
 mod csharp;
 mod go;
-mod hcl;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::{
     langs::{
+        hcl::{Hcl, PreparedHclQuery},
         python::{PreparedPythonQuery, Python},
         rust::{PreparedRustQuery, Rust},
         typescript::{PreparedTypeScriptQuery, TypeScript},
@@ -173,6 +173,41 @@ impl InScopeLinePart {
     "base.rs_doc-comments",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::DocComments)),
+)]
+#[case(
+    "base.tf_variables",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variables)),
+)]
+#[case(
+    "base.tf_resource-types",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::ResourceTypes)),
+)]
+#[case(
+    "base.tf_resource-names",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::ResourceNames)),
+)]
+#[case(
+    "base.tf_data-names",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::DataNames)),
+)]
+#[case(
+    "base.tf_data-sources",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::DataSources)),
+)]
+#[case(
+    "base.tf_comments",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Comments)),
+)]
+#[case(
+    "base.tf_strings",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Strings)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

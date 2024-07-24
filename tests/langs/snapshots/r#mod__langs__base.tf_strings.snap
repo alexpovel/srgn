@@ -1,0 +1,139 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 11
+  l: "  description = \"The name of the application\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 13
+  l: "  default     = \"TestApp\"\n"
+  m: "                ^^^^^^^^^^^  "
+- n: 17
+  l: "  description = \"Number of instances to deploy\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 23
+  l: "  description = \"Enable feature X\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^  "
+- n: 29
+  l: "  description = \"List of admin users\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 31
+  l: "  default     = [\"alice\", \"bob\"]\n"
+  m: "                 ^^^^^^^^^            "
+- n: 31
+  l: "  default     = [\"alice\", \"bob\"]\n"
+  m: "                            ^^^^^^^   "
+- n: 36
+  l: "  app_env = \"testing\"\n"
+  m: "            ^^^^^^^^^^^  "
+- n: 37
+  l: "  version = \"1.0.0\"\n"
+  m: "            ^^^^^^^^^  "
+- n: 42
+  l: "  region = \"us-west-2\"\n"
+  m: "           ^^^^^^^^^^^^^  "
+- n: 48
+  l: "  owners      = [\"self\"]\n"
+  m: "                 ^^^^^^^^   "
+- n: 51
+  l: "    name   = \"name\"\n"
+  m: "             ^^^^^^^^  "
+- n: 52
+  l: "    values = [\"ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*\"]\n"
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 60
+  l: "  instance_type = \"t2.micro\"\n"
+  m: "                  ^^^^^^^^^^^^  "
+- n: 62
+  l: "    Name        = \"${var.app_name}-${count.index}\"\n"
+  m: "                                   ^                  "
+- n: 72
+  l: "#!/bin/bash\n"
+  m: ^^^^^^^^^^^^^
+- n: 73
+  l: "echo \"Feature ${upper(var.app_name)} enabled\"\n"
+  m: "^^^^^^^^^^^^^^                                   "
+- n: 73
+  l: "echo \"Feature ${upper(var.app_name)} enabled\"\n"
+  m: "                                      ^^^^^^^^^  "
+- n: 81
+  l: "  description = \"List of instance IDs\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 86
+  l: "  description = \"Admin usernames\"\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^  "
+- n: 87
+  l: "  value       = join(\", \", var.admins)\n"
+  m: "                     ^^^^^^               "
+- n: 92
+  l: "  source   = \"./modules/network\"\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 93
+  l: "  vpc_cidr = \"10.0.0.0/16\"\n"
+  m: "             ^^^^^^^^^^^^^^^  "
+- n: 98
+  l: "  bucket = var.enable_feature_x ? \"${var.app_name}-feature-x\" : \"${var.app_name}\"\n"
+  m: "                                                   ^^^^^^^^^^                          "
+- n: 99
+  l: "  acl    = \"private\"\n"
+  m: "           ^^^^^^^^^^^  "
+- n: 106
+  l: "echo \"Application: ${var.app_name}\"\n"
+  m: "^^^^^^^^^^^^^^^^^^^                    "
+- n: 106
+  l: "echo \"Application: ${var.app_name}\"\n"
+  m: "                                   ^^^^"
+- n: 107
+  l: "echo \"Environment: ${local.app_env}\"\n"
+  m: "^^^^^^^^^^^^^^^^^^^                     "
+- n: 107
+  l: "echo \"Environment: ${local.app_env}\"\n"
+  m: "                                    ^^  "
+- n: 114
+  l: "  name        = \"${var.app_name}-web-sg\"\n"
+  m: "                                 ^^^^^^^    "
+- n: 115
+  l: "  description = \"Web security group for ${var.app_name}\"\n"
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^                    "
+- n: 121
+  l: "    protocol    = \"tcp\"\n"
+  m: "                  ^^^^^^^  "
+- n: 122
+  l: "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+  m: "                   ^^^^^^^^^^^^^   "
+- n: 128
+  l: "    protocol    = \"-1\"\n"
+  m: "                  ^^^^^^  "
+- n: 129
+  l: "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+  m: "                   ^^^^^^^^^^^^^   "
+- n: 135
+  l: "  name = \"${var.app_name}_role\"\n"
+  m: "                          ^^^^^    "
+- n: 138
+  l: "    Version = \"2012-10-17\",\n"
+  m: "              ^^^^^^^^^^^^^^   "
+- n: 141
+  l: "        Action = \"sts:AssumeRole\",\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^   "
+- n: 142
+  l: "        Effect = \"Allow\",\n"
+  m: "                 ^^^^^^^^^   "
+- n: 144
+  l: "          Service = \"ec2.amazonaws.com\"\n"
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 151
+  l: "    name = \"app_policy\"\n"
+  m: "           ^^^^^^^^^^^^^^  "
+- n: 154
+  l: "      Version = \"2012-10-17\",\n"
+  m: "                ^^^^^^^^^^^^^^   "
+- n: 157
+  l: "          Action   = [\"s3:ListBucket\"],\n"
+  m: "                      ^^^^^^^^^^^^^^^^^    "
+- n: 158
+  l: "          Effect   = \"Allow\",\n"
+  m: "                     ^^^^^^^^^   "
+- n: 159
+  l: "          Resource = \"*\"\n"
+  m: "                     ^^^^^  "
