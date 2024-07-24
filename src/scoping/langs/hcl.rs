@@ -60,7 +60,7 @@ impl From<PreparedHclQuery> for TSQuery {
                             [
                                 (block
                                     (identifier) @{0}.declaration
-                                    (string_lit) @name.declaration
+                                    (string_lit (template_literal) @name.declaration)
                                     (#match? @{0}.declaration "variable")
                                 )
                                 (
@@ -88,7 +88,7 @@ impl From<PreparedHclQuery> for TSQuery {
                                 (block
                                     (identifier) @{0}.declaration
                                     (string_lit)
-                                    (string_lit) @name.declaration
+                                    (string_lit (template_literal) @name.declaration)
                                     (#match? @{0}.declaration "resource")
                                 )
                                 (
@@ -121,7 +121,7 @@ impl From<PreparedHclQuery> for TSQuery {
                             [
                                 (block
                                     (identifier) @{0}.declaration
-                                    (string_lit) @name.type
+                                    (string_lit (template_literal) @name.type)
                                     (string_lit)
                                     (#match? @{0}.declaration "resource")
                                 )
@@ -157,7 +157,7 @@ impl From<PreparedHclQuery> for TSQuery {
                                 (block
                                     (identifier) @{0}.declaration
                                     (string_lit)
-                                    (string_lit) @name.declaration
+                                    (string_lit (template_literal) @name.declaration)
                                     (#match? @{0}.declaration "data")
                                 )
                                 (
@@ -188,7 +188,7 @@ impl From<PreparedHclQuery> for TSQuery {
                             [
                                 (block
                                     (identifier) @{0}.declaration
-                                    (string_lit) @name.provider
+                                    (string_lit (template_literal) @name.provider)
                                     (string_lit)
                                     (#match? @{0}.declaration "data")
                                 )
@@ -215,7 +215,11 @@ impl From<PreparedHclQuery> for TSQuery {
                 PreparedHclQuery::Strings => {
                     r"
                     [
-                        (literal_value (string_lit) @string.literal)
+                        (literal_value
+                            (string_lit
+                                (template_literal) @string.literal
+                            )
+                        )
                         (quoted_template
                             (template_literal) @string.template_literal
                         )

@@ -4,7 +4,7 @@ expression: inscope_parts
 ---
 - n: 46
   l: "data \"aws_ami\" \"latest_ubuntu\" {\n"
-  m: "     ^^^^^^^^^^^                      "
+  m: "       ^^^^^^^                        "
 - n: 59
   l: "  ami           = data.aws_ami.latest_ubuntu.id\n"
   m: "                       ^^^^^^^                   "

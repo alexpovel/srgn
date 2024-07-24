@@ -954,7 +954,7 @@ resource "aws_instance" "main" {
 with
 
 ```bash
-cat ec2.tf | srgn --hcl 'strings' '^"t2\.(\w+)"$' '"t3.$1"' | srgn --hcl 'data-names' 'tiny' 'small'
+cat ec2.tf | srgn --hcl 'strings' '^t2\.(\w+)$' 't3.$1' | srgn --hcl 'data-names' 'tiny' 'small'
 ```
 
 will give
@@ -969,8 +969,6 @@ resource "aws_instance" "main" {
   instance_type = data.aws_ec2_instance_type.small.instance_type
 }
 ```
-
-Note the quotes for `"t2...` and `"t3`.
 
 ##### Custom queries
 

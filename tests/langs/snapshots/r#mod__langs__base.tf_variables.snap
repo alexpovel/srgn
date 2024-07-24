@@ -4,16 +4,16 @@ expression: inscope_parts
 ---
 - n: 10
   l: "variable \"app_name\" {\n"
-  m: "         ^^^^^^^^^^^^    "
+  m: "           ^^^^^^^^      "
 - n: 16
   l: "variable \"instance_count\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^^^    "
+  m: "           ^^^^^^^^^^^^^^      "
 - n: 22
   l: "variable \"enable_feature_x\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^^^^^    "
+  m: "           ^^^^^^^^^^^^^^^^      "
 - n: 28
   l: "variable \"admins\" {\n"
-  m: "         ^^^^^^^^^^    "
+  m: "           ^^^^^^      "
 - n: 58
   l: "  count         = var.instance_count\n"
   m: "                      ^^^^^^^^^^^^^^  "

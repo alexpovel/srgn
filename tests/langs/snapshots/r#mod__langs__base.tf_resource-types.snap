@@ -4,19 +4,19 @@ expression: inscope_parts
 ---
 - n: 57
   l: "resource \"aws_instance\" \"app_server\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^                   "
+  m: "           ^^^^^^^^^^^^                     "
 - n: 82
   l: "  value       = aws_instance.app_server.*.id\n"
   m: "                ^^^^^^^^^^^^                  "
 - n: 97
   l: "resource \"aws_s3_bucket\" \"app_bucket\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^^                   "
+  m: "           ^^^^^^^^^^^^^                     "
 - n: 103
   l: "resource \"null_resource\" \"template_example\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^^                         "
+  m: "           ^^^^^^^^^^^^^                           "
 - n: 113
   l: "resource \"aws_security_group\" \"web_sg\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^^^^^^^               "
+  m: "           ^^^^^^^^^^^^^^^^^^                 "
 - n: 134
   l: "resource \"aws_iam_role\" \"app_role\" {\n"
-  m: "         ^^^^^^^^^^^^^^^^                 "
+  m: "           ^^^^^^^^^^^^                   "
