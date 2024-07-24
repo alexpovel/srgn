@@ -1,13 +1,13 @@
 mod csharp;
 mod go;
 mod hcl;
-mod rust;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::{
     langs::{
         python::{PreparedPythonQuery, Python},
+        rust::{PreparedRustQuery, Rust},
         typescript::{PreparedTypeScriptQuery, TypeScript},
         CodeQuery, LanguageScoper,
     },
@@ -153,6 +153,26 @@ impl InScopeLinePart {
     "base.ts_imports",
     include_str!("typescript/base.ts"),
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Imports)),
+)]
+#[case(
+    "base.rs_strings",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Strings)),
+)]
+#[case(
+    "base.rs_comments",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Comments)),
+)]
+#[case(
+    "base.rs_uses",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Uses)),
+)]
+#[case(
+    "base.rs_doc-comments",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::DocComments)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

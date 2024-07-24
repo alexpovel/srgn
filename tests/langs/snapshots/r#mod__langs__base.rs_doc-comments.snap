@@ -1,0 +1,34 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 29
+  l: "/// Free function\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "///\n"
+  m: ^^^^^
+- n: 31
+  l: "/// With a docstring.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 62
+  l: "/// Struct definition\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 63
+  l: "///\n"
+  m: ^^^^^
+- n: 64
+  l: "/// Also has a docstring. With code:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 65
+  l: "///\n"
+  m: ^^^^^
+- n: 66
+  l: "/// ```\n"
+  m: ^^^^^^^^^
+- n: 67
+  l: "/// let x = 3;\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 68
+  l: "/// ```\n"
+  m: ^^^^^^^^^

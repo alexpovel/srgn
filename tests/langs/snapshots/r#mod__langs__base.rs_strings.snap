@@ -1,0 +1,130 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "        println!(\"Function x from parent module\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 22
+  l: "        println!(\"Function y from sibling module\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 37
+  l: "    println!(\"Global test_var is now {}\", test_var);\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              "
+- n: 50
+  l: "        println!(\"Function decorator called\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 59
+  l: "    println!(\"Inside decorated function\");\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 76
+  l: "            instance_var: String::from(\"hello\"),\n"
+  m: "                                       ^^^^^^^^^    "
+- n: 91
+  l: "            println!(\"Static method decorator called\");\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 99
+  l: "        self.instance_var = \"Instance variable\".to_string();\n"
+  m: "                            ^^^^^^^^^^^^^^^^^^^^^               "
+- n: 100
+  l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^                       "
+- n: 105
+  l: "        println!(\"Inside static method\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 120
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "                                             ^^^^^^^    "
+- n: 121
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "                                             ^^^^^^^    "
+- n: 122
+  l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
+  m: "                                               ^^^^^^^^^    "
+- n: 129
+  l: "    let mut nonlocal_var = \"Initial value\".to_string();\n"
+  m: "                           ^^^^^^^^^^^^^^^^^               "
+- n: 133
+  l: "            nonlocal_var = \"Modified value\".to_string();\n"
+  m: "                           ^^^^^^^^^^^^^^^^^^               "
+- n: 137
+  l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^                  "
+- n: 147
+  l: "    println!(\"Inplace operations result: {}\", x);\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       "
+- n: 155
+  l: "        println!(\"test_var is greater than 5\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 157
+  l: "        println!(\"test_var is 5 or less\");\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 163
+  l: "        println!(\"Counter is {}\", counter);\n"
+  m: "                 ^^^^^^^^^^^^^^^^^             "
+- n: 169
+  l: "        println!(\"Loop iteration {}\", i);\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^       "
+- n: 173
+  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
+  m: "                                          ^^^^^^^^^^^^^^^^^^^^    "
+- n: 176
+  l: "        println!(\"Read from file: {:?}\", line);\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^          "
+- n: 183
+  l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
+  m: "                                     ^^^^^^^^^^^^^^^^^^           "
+- n: 186
+  l: "    client.set(\"hello\", \"world\".into()).await?;\n"
+  m: "               ^^^^^^^^^                             "
+- n: 186
+  l: "    client.set(\"hello\", \"world\".into()).await?;\n"
+  m: "                          ^^^^^^^^^                  "
+- n: 189
+  l: "    let result = client.get(\"hello\").await?;\n"
+  m: "                            ^^^^^^^^^           "
+- n: 191
+  l: "    println!(\"got value from the server; result={:?}\", result);\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^            "
+- n: 204
+  l: "    let multi_line_str = \"\n"
+  m: "                         ^^^^"
+- n: 205
+  l: "This is a\n"
+  m: ^^^^^^^^^^^
+- n: 206
+  l: "multi-line string\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 207
+  l: "for testing purposes.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 208
+  l: "\";\n"
+  m: "^^   "
+- n: 211
+  l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 212
+  l: "        \"{f_string}\"\n"
+  m: "        ^^^^^^^^^^^^^^  "
+- n: 215
+  l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 216
+  l: "    let raw_multiline_string = r#\"\n"
+  m: "                               ^^^^^^"
+- n: 217
+  l: "This is a raw string with no special treatment for \\n\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 218
+  l: "\"#;\n"
+  m: "^^^   "
+- n: 219
+  l: "    let bytes_string = b\"This is a bytes string\";\n"
+  m: "                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 220
+  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
+  m: "                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                "
+- n: 229
+  l: "    println!(\"{}\", square(5));\n"
+  m: "             ^^^^^^               "
