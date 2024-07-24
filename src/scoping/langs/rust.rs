@@ -50,17 +50,22 @@ impl From<PreparedRustQuery> for TSQuery {
                 }
                 PreparedRustQuery::Uses => {
                     r"
-                        (scoped_identifier
-                            path: [
-                                (scoped_identifier)
-                                (identifier)
-                            ] @use)
-                        (scoped_use_list
-                            path: [
-                                (scoped_identifier)
-                                (identifier)
-                            ] @use)
-                        (use_wildcard (scoped_identifier) @use)
+                        (use_declaration
+                            argument: [
+                                (scoped_identifier
+                                    path: [
+                                        (scoped_identifier)
+                                        (identifier)
+                                    ] @use)
+                                (scoped_use_list
+                                    path: [
+                                        (scoped_identifier)
+                                        (identifier)
+                                    ] @use)
+                                (use_wildcard (scoped_identifier) @use)
+                                (use_as_clause (scoped_identifier) @use)
+                            ]
+                        )
                     "
                 }
                 PreparedRustQuery::Strings => {

@@ -1,6 +1,7 @@
 //! Module for testing various Rust grammar elements.
 
 use a::b::{c, d, e::f, g::h::i};
+use a::item as b_item;
 use something::prelude::*;
 use std::collections::HashMap;
 use std::collections::HashSet;

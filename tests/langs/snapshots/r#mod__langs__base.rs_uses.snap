@@ -5,81 +5,27 @@ expression: inscope_parts
 - n: 3
   l: "use a::b::{c, d, e::f, g::h::i};\n"
   m: "    ^^^^                          "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                 ^                "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                       ^^^^       "
 - n: 4
+  l: "use a::item as b_item;\n"
+  m: "    ^^^^^^^             "
+- n: 5
   l: "use something::prelude::*;\n"
   m: "    ^^^^^^^^^^^^^^^^^^      "
-- n: 5
+- n: 6
   l: "use std::collections::HashMap;\n"
   m: "    ^^^^^^^^^^^^^^^^            "
-- n: 6
+- n: 7
   l: "use std::collections::HashSet;\n"
   m: "    ^^^^^^^^^^^^^^^^            "
-- n: 7
+- n: 8
   l: "use std::fs::File;\n"
   m: "    ^^^^^^^         "
-- n: 8
+- n: 9
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "    ^^^^^^^                                      "
-- n: 9
+- n: 10
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "    ^^^^^^^^^^^^^^^^^                          "
-- n: 27
-  l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
-  m: "                             ^^^^^^^^^            "
-- n: 34
-  l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
-  m: "                                     ^^^^^^^^            "
-- n: 36
-  l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
-  m: "                             ^^^^^^^^            "
-- n: 76
-  l: "            instance_var: String::from(\"hello\"),\n"
-  m: "                          ^^^^^^                    "
-- n: 120
-  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
-  m: "            ^^^^^^^^                                    "
-- n: 121
-  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
-  m: "            ^^^^^^^^                                    "
-- n: 122
-  l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
-  m: "            ^^^^^^^^                                        "
-- n: 154
-  l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
-  m: "                     ^^^^^^^^                 "
-- n: 173
-  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
-  m: "               ^^^^                                               "
-- n: 174
-  l: "    let reader = BufReader::new(file);\n"
-  m: "                 ^^^^^^^^^              "
-- n: 180
-  l: "#[tokio::main]\n"
-  m: "  ^^^^^         "
-- n: 183
-  l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
-  m: "                     ^^^^^^                                       "
-- n: 198
+- n: 199
   l: "    use std::fs::read_to_string;\n"
   m: "        ^^^^^^^                   "
-- n: 225
-  l: "        instance_var: String::new(),\n"
-  m: "                      ^^^^^^          "
-- n: 228
-  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
-  m: "    ^^^^^^^^^^                                                  "
-- n: 228
-  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
-  m: "                                 ^^^^^^^^^^                     "
-- n: 233
-  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
-  m: "    ^^^^^^^^                                          "
-- n: 233
-  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
-  m: "                              ^^^^^^^^                "

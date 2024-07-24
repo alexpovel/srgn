@@ -5,90 +5,90 @@ expression: inscope_parts
 - n: 1
   l: "//! Module for testing various Rust grammar elements.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 26
+- n: 27
   l: "// Global variable\n"
   m: "^^^^^^^^^^^^^^^^^^  "
-- n: 33
+- n: 34
   l: "    // A free function for testing.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 40
+- n: 41
   l: "// Decorator for functions\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 45
+- n: 46
   l: "    // Decorator for free function.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 58
+- n: 59
   l: "    // Function with a decorator.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 80
+- n: 81
   l: "    /*\n"
   m: "    ^^^^"
-- n: 81
+- n: 82
   l: "        More comment types\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 82
+- n: 83
   l: "    */\n"
   m: "^^^^^^  "
-- n: 84
+- n: 85
   l: "    // Static decorator for methods\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 89
+- n: 90
   l: "        // Decorator for static methods.\n"
   m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 96
+- n: 97
   l: "    // Method\n"
   m: "    ^^^^^^^^^  "
-- n: 98
+- n: 99
   l: "        // Instance method.\n"
   m: "        ^^^^^^^^^^^^^^^^^^^  "
-- n: 104
+- n: 105
   l: "        // Static method.\n"
   m: "        ^^^^^^^^^^^^^^^^^  "
-- n: 109
+- n: 110
   l: "// Enum definition\n"
   m: "^^^^^^^^^^^^^^^^^^  "
-- n: 118
+- n: 119
   l: "        // Function demonstrating match statement.\n"
   m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 127
+- n: 128
   l: "// Statements\n"
   m: "^^^^^^^^^^^^^  "
-- n: 141
+- n: 142
   l: "    // Function demonstrating inplace operators.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 150
+- n: 151
   l: "// Control flow\n"
   m: "^^^^^^^^^^^^^^^  "
-- n: 152
+- n: 153
   l: "    // Function demonstrating various control flow statements.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 153
+- n: 154
   l: "    // if statement\n"
   m: "    ^^^^^^^^^^^^^^^  "
-- n: 160
+- n: 161
   l: "    // while statement\n"
   m: "    ^^^^^^^^^^^^^^^^^^  "
-- n: 167
+- n: 168
   l: "    // for statement\n"
   m: "    ^^^^^^^^^^^^^^^^  "
-- n: 172
+- n: 173
   l: "    // with statement\n"
   m: "    ^^^^^^^^^^^^^^^^^  "
-- n: 182
+- n: 183
   l: "    // Open a connection to the mini-redis address.\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 185
+- n: 186
   l: "    // Set the key \"hello\" with value \"world\"\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 188
+- n: 189
   l: "    // Get key \"hello\"\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^  "
-- n: 196
+- n: 197
   l: "// Main execution\n"
   m: "^^^^^^^^^^^^^^^^^  "
-- n: 200
+- n: 201
   l: "    // Lambda expression\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^  "
-- n: 203
+- n: 204
   l: "    // Multiline string\n"
   m: "    ^^^^^^^^^^^^^^^^^^^  "
