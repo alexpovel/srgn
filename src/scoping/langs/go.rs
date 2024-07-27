@@ -38,8 +38,8 @@ impl From<PreparedGoQuery> for TSQuery {
                         [
                             (raw_string_literal)
                             (interpreted_string_literal)
-                            (import_spec (interpreted_string_literal) @{0})
-                            (field_declaration tag: (raw_string_literal) @{0})
+                            (import_spec (interpreted_string_literal)) @{0}
+                            (field_declaration tag: (raw_string_literal)) @{0}
                         ]
                         @string",
                         IGNORE
