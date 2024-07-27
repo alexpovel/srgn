@@ -339,6 +339,18 @@ Heizoelrueckstossabdaempfung.
     }
 
     #[test]
+    fn test_shell_completion() {
+        use predicates::str::contains;
+
+        let mut cmd = get_cmd();
+        cmd.args(["--completions", "zsh"]);
+
+        cmd.assert().success();
+        // Let's just see if this prints something that could *roughly* make sense.
+        cmd.assert().stdout(contains("python"));
+    }
+
+    #[test]
     fn test_cli_on_invalid_utf8() {
         let mut cmd = get_cmd();
 
