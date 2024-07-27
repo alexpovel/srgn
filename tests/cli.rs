@@ -2,10 +2,6 @@
 //! inputs/flags/options.
 
 #[cfg(test)]
-// Gives tons of nasty `error: linking with `cc` failed`, `/usr/bin/ld: final link
-// failed: bad value` errors when run under tarpaulin, so exclude. That will sadly
-// exclude these rich end-to-end tests from coverage reports.
-#[cfg(not(tarpaulin))]
 #[cfg(feature = "all")]
 mod tests {
     use anyhow::Context;
@@ -192,10 +188,6 @@ Heizoelrueckstossabdaempfung.
         // tests, seems excessive.
         let info = CommandInfo { stderr };
 
-        // Exclusion doesn't influence covered code, but fixes linking issues when
-        // `insta` is used, see also
-        // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
-        #[cfg(not(tarpaulin))]
         with_settings!({
             info => &info,
         }, {
@@ -328,10 +320,6 @@ Heizoelrueckstossabdaempfung.
 
             let info = CommandInfo { stderr };
 
-            // Exclusion doesn't influence covered code, but fixes linking issues when
-            // `insta` is used, see also
-            // https://github.com/xd009642/tarpaulin/issues/517#issuecomment-1779964669
-            #[cfg(not(tarpaulin))]
             with_settings!({
                 info => &info,
             }, {
