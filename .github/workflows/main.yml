@@ -122,28 +122,7 @@ jobs:
   build-test-coverage:
     name: Build and test with coverage
 
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - cli-option: "--lib"
-            codecov-flag: "unit"
-
-          # https://github.com/rust-lang/cargo/issues/8396#issuecomment-713126649
-          - cli-option: "--test '*'"
-            codecov-flag: "integration"
-
-          - cli-option: "--doc"
-            codecov-flag: "doc"
-
-          - cli-option: "--all-targets"
-            codecov-flag: "all-targets"
-
-          # The others might miss benches, examples, ..., so ensure we have a total as
-          # well. `--all-targets` does not include `--doc`, so put that extra.
-          - cli-option: "--all-targets --doc"
-            codecov-flag: "total"
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -168,7 +147,6 @@ jobs:
         run: >
           cargo tarpaulin
           --verbose
-          ${{ matrix.cli-option }}
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
@@ -184,7 +162,6 @@ jobs:
         with:
           fail_ci_if_error: true
           verbose: true
-          flags: ${{ matrix.codecov-flag }}
           token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
 
   release-please:
