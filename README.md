@@ -1521,6 +1521,7 @@ An unordered list of similar tools you might be interested in.
 - [GritQL](https://github.com/getgrit/gritql) (very similar)
 - [`ast-grep`](https://github.com/ast-grep/ast-grep) (very similar)
 - [Semgrep](https://semgrep.dev/)
+- [`pss`](https://github.com/eliben/pss)
 - [`fastmod`](https://github.com/facebookincubator/fastmod)
 - [`prefactor`](https://github.com/banga/prefactor)
 - [`grep-ast`](https://github.com/paul-gauthier/grep-ast)
