@@ -30,31 +30,45 @@ mod tests {
     #[case(
         "baseline-replacement",
         false,
-        &["A", "B"],
+        &[
+            "A",
+            "B",
+        ],
         Some(r"A;  B 😫"),
     )]
     #[case(
         "baseline-replacement-no-stdin",
         false,
-        &["A", "B"],
+        &[
+            "A",
+            "B",
+        ],
         None,
     )]
     #[case(
         "baseline-regex-replacement",
         false,
-        &[r"\W", "B"],
+        &[
+            r"\W",
+            "B",
+        ],
         Some(r"A;  B 😫"),
     )]
     #[case(
         "german-symbols",
         false,
-        &["--german", "--symbols"],
+        &[
+            "--german",
+            "--symbols",
+        ],
         Some(r"Duebel -> 1.5mm;  Wand != 3m²... UEBELTAETER! 😫"),
     )]
     #[case(
         "german-text",
         false,
-        &["--german"],
+        &[
+            "--german",
+        ],
         Some(r#"Zwei flinke Boxer jagen die quirlige Eva und ihren Mops durch Sylt.
 Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.
 Zwoelf Boxkaempfer jagen Viktor quer ueber den grossen Sylter Deich.
@@ -70,73 +84,121 @@ Heizoelrueckstossabdaempfung.
     #[case(
         "deleting-emojis",
         false,
-        &["--delete", r"\p{Emoji_Presentation}"],
+        &[
+            "--delete",
+            r"\p{Emoji_Presentation}",
+        ],
         Some("Some text  :) :-) and emojis 🤩!\nMore: 👽"),
     )]
     #[case(
         "failing-on-anything-found-trigger",
         false,
-        &["--fail-any", "X"],
+        &[
+            "--fail-any",
+            "X",
+        ],
         Some("XYZ"),
     )]
     #[case(
         "failing-on-anything-found-no-trigger",
         false,
-        &["--fail-any", "A"],
+        &[
+            "--fail-any",
+            "A",
+        ],
         Some("XYZ"),
     )]
     #[case(
         "failing-on-nothing-found-trigger",
         false,
-        &["--fail-none", "A"],
+        &[
+            "--fail-none",
+            "A",
+        ],
         Some("XYZ"),
     )]
     #[case(
         "failing-on-nothing-found-no-trigger",
         false,
-        &["--fail-none", "X"],
+        &[
+            "--fail-none",
+            "X",
+        ],
         Some("XYZ"),
     )]
     #[case(
         "go-search",
         false,
-        &["--go", "comments", "[fF]izz"],
+        &[
+            "--go",
+            "comments",
+            "[fF]izz",
+        ],
         Some(include_str!("langs/go/fizzbuzz.go")),
     )]
     #[case(
         "go-replacement",
         false,
-        &["--go", "comments", "[fF]izz", "🤡"],
+        &[
+            "--go",
+            "comments",
+            "[fF]izz",
+            "🤡",
+        ],
         Some(include_str!("langs/go/fizzbuzz.go")),
     )]
     #[case(
         "go-search-files",
         true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
-        &[/* need determinism */ "--sorted", "--go", "comments", "[fF]izz"],
+        &[
+            "--sorted", // Need determinism
+            "--go",
+            "comments",
+            "[fF]izz",
+        ],
         None,
     )]
     #[case(
         "python-search-files", // searches all files, in all Python strings
         true, // Prints different file paths! (but thanks to `autocrlf = false` has identical line endings)
-        &[/* need determinism */ "--sorted", "--python", "strings", "is"],
+        &[
+            "--sorted", // Need determinism
+            "--python",
+            "strings",
+            "is",
+        ],
         None,
     )]
     #[case(
         "python-search-stdin", // stdin takes precedence
         false,
-        &["--python", "strings", "is"],
+        &[
+            "--python",
+            "strings",
+            "is",
+        ],
         Some(include_str!("langs/python/base.py")),
     )]
     #[case(
         "python-search-stdin-and-files", // stdin takes precedence
         false,
-        &["--python", "strings", "--files", "**/*.py", "is"],
+        &[
+            "--python",
+            "strings",
+            "--files",
+            "**/*.py",
+            "is",
+        ],
         Some(include_str!("langs/python/base.py")),
     )]
     #[case(
         "python-search-stdin-across-lines",
         false,
-        &["--python", "class", r"(?s)@classmethod\n\s+def class_method"], // ?s: include newline
+        &[
+            "--python",
+            "class",
+            r"(?s)@classmethod\n\s+def class_method", // ?s: include newline
+        ],
         Some(include_str!("langs/python/base.py")),
     )]
     fn test_cli(
