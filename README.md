@@ -1085,8 +1085,8 @@ example,
 
 <!-- markdownlint-disable MD010 -->
 ```console
-$ srgn --go 'comments' --files 'tests/langs/go/other/*.go' '\w+'
-tests/langs/go/other/fizzbuzz.go
+$ srgn --go 'comments' --files 'tests/langs/go/fizz*.go' '\w+'
+tests/langs/go/fizzbuzz.go
 5:// fizzBuzz prints the numbers from 1 to a specified limit.
 6:// For multiples of 3, it prints "Fizz" instead of the number,
 7:// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,

@@ -1,0 +1,94 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 9
+  l: "\tu \"net/url\"\n"
+  m: "  ^^             "
+- n: 47
+  l: "\tName     string      `json:\"name,omitempty\" db:\"name\"`\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^                                       "
+- n: 48
+  l: "\tInput    interface{} `json:\"input\" db:\"input\"`\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^                               "
+- n: 49
+  l: "\tExpected interface{} `json:\"expected\" db:\"expected\"`\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^                                     "
+- n: 108
+  l: "\t\tfmt.Println(\"Cleanup after tests\")\n"
+  m: "                ^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 122
+  l: "\t\tt.Log(\"Positive number\")\n"
+  m: "          ^^^^^^^^^^^^^^^^^^^   "
+- n: 124
+  l: "\t\tt.Error(\"Non-positive number\")\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 130
+  l: "\t\tt.Error(\"Negative number\")\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^   "
+- n: 132
+  l: "\t\tt.Error(\"Zero\")\n"
+  m: "            ^^^^^^^^   "
+- n: 134
+  l: "\t\tt.Log(\"Positive number\")\n"
+  m: "          ^^^^^^^^^^^^^^^^^^^   "
+- n: 145
+  l: "\t\tt.Errorf(\"Expected sum to be 55, got %d\", sum)\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        "
+- n: 150
+  l: "\t\ttestChannel <- TestCase{Name: \"async test\", Input: 1, Expected: 1}\n"
+  m: "                                  ^^^^^^^^^^^^^^                          "
+- n: 156
+  l: "\t\tt.Logf(\"Received test case: %s\", tc.Name)\n"
+  m: "           ^^^^^^^^^^^^^^^^^^^^^^^^^^            "
+- n: 158
+  l: "\t\tt.Error(\"Timeout waiting for test case\")\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 164
+  l: "\t\t\tt.Log(\"Recovered from panic:\", r)\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^      "
+- n: 170
+  l: "\t\tpanic(\"This is a debug panic\")\n"
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 183
+  l: "\ttc := TestCase{Name: \"example\", Input: 2, Expected: 4}\n"
+  m: "                       ^^^^^^^^^^^                          "
+- n: 184
+  l: "\tfmt.Printf(\"Running test case: %s\\n\", tc.Name)\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^            "
+- n: 192
+  l: "\t\tfmt.Printf(\"Integer: %d\\n\", x)\n"
+  m: "               ^^^^^^^^^^^^^^^^^^      "
+- n: 196
+  l: "\t\t\tfmt.Printf(\"URL: %s\\n\", urlValue)\n"
+  m: "                 ^^^^^^^^^^^^^^             "
+- n: 198
+  l: "\t\t\tfmt.Printf(\"String: %s\\n\", x)\n"
+  m: "                 ^^^^^^^^^^^^^^^^^      "
+- n: 201
+  l: "\t\tfmt.Printf(\"Unknown type: %T\\n\", x)\n"
+  m: "               ^^^^^^^^^^^^^^^^^^^^^^^      "
+- n: 218
+  l: "\trawString    = `This is a \"raw\" string`\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 219
+  l: "\tinterpString = \"Interpolated \\n string\"\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 248
+  l: "\tfmt.Printf(\"Type: %v, Kind: %v\\n\", t, t.Kind())\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^^                "
+- n: 255
+  l: "\tfmt.Printf(\"First element: %d\\n\", *(*int)(p))\n"
+  m: "             ^^^^^^^^^^^^^^^^^^^^^^^^               "
+- n: 260
+  l: "\tfmt.Println(\"Initializing package\")\n"
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 278
+  l: "\t\treturn \"Low\"\n"
+  m: "           ^^^^^^^  "
+- n: 280
+  l: "\t\treturn \"Medium\"\n"
+  m: "           ^^^^^^^^^^  "
+- n: 282
+  l: "\t\treturn \"High\"\n"
+  m: "           ^^^^^^^^  "

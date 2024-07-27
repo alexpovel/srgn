@@ -1,6 +1,6 @@
 ---
 source: tests/cli.rs
-expression: "CommandSnap {\n    args,\n    stdin: stdin.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+expression: "CommandSnap {\n    args,\n    stdin: stdin.map(|s|\n            s.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec()),\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
 info:
   stderr: ""
 ---
@@ -9,7 +9,7 @@ args:
   - comments
   - "[fF]izz"
 stdin:
-  - "package main\n"
+  - "package package_test\n"
   - "\n"
   - "import \"fmt\"\n"
   - "\n"

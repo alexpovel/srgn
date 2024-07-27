@@ -11,7 +11,7 @@ args:
   - "[fF]izz"
 stdin: ~
 stdout:
-  - "tests/langs/go/other/fizzbuzz.go\n"
+  - "tests/langs/go/fizzbuzz.go\n"
   - "5:// fizzBuzz prints the numbers from 1 to a specified limit.\n"
   - "6:// For multiples of 3, it prints \"Fizz\" instead of the number,\n"
   - "8:// it prints \"FizzBuzz\".\n"

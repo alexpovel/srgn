@@ -105,13 +105,13 @@ Heizoelrueckstossabdaempfung.
         "go-search",
         false,
         &["--go", "comments", "[fF]izz"],
-        Some(include_str!("langs/go/other/fizzbuzz.go")),
+        Some(include_str!("langs/go/fizzbuzz.go")),
     )]
     #[case(
         "go-replacement",
         false,
         &["--go", "comments", "[fF]izz", "🤡"],
-        Some(include_str!("langs/go/other/fizzbuzz.go")),
+        Some(include_str!("langs/go/fizzbuzz.go")),
     )]
     #[case(
         "go-search-files",

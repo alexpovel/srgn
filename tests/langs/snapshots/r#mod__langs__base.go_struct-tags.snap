@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 47
+  l: "\tName     string      `json:\"name,omitempty\" db:\"name\"`\n"
+  m: "                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 48
+  l: "\tInput    interface{} `json:\"input\" db:\"input\"`\n"
+  m: "                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 49
+  l: "\tExpected interface{} `json:\"expected\" db:\"expected\"`\n"
+  m: "                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

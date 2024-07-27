@@ -1,10 +1,10 @@
 mod csharp;
-mod go;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::{
     langs::{
+        go::{Go, PreparedGoQuery},
         hcl::{Hcl, PreparedHclQuery},
         python::{PreparedPythonQuery, Python},
         rust::{PreparedRustQuery, Rust},
@@ -208,6 +208,26 @@ impl InScopeLinePart {
     "base.tf_strings",
     include_str!("hcl/base.tf"),
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Strings)),
+)]
+#[case(
+    "base.go_comments",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::Comments)),
+)]
+#[case(
+    "base.go_strings",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::Strings)),
+)]
+#[case(
+    "base.go_imports",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::Imports)),
+)]
+#[case(
+    "base.go_struct-tags",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::StructTags)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

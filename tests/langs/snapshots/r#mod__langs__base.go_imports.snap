@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 6
+  l: "\t\"context\"\n"
+  m: "  ^^^^^^^^^^^  "
+- n: 7
+  l: "\t\"fmt\"\n"
+  m: "  ^^^^^^^  "
+- n: 8
+  l: "\t\"math\"\n"
+  m: "  ^^^^^^^^  "
+- n: 9
+  l: "\tu \"net/url\"\n"
+  m: "    ^^^^^^^^^^^  "
+- n: 10
+  l: "\t\"reflect\"\n"
+  m: "  ^^^^^^^^^^^  "
+- n: 11
+  l: "\t\"sync\"\n"
+  m: "  ^^^^^^^^  "
+- n: 12
+  l: "\t\"testing\"\n"
+  m: "  ^^^^^^^^^^^  "
+- n: 13
+  l: "\t\"time\"\n"
+  m: "  ^^^^^^^^  "
+- n: 14
+  l: "\t\"unsafe\"\n"
+  m: "  ^^^^^^^^^^  "
