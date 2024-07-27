@@ -1,10 +1,20 @@
 # srgn - a code surgeon
 
-A code **s**u**rg**eo**n** for searching and manipulating text and source code with
-**enhanced precision**.
+A `grep`-like tool which understands source code syntax and allows for manipulation in
+addition to search.
 
-`srgn` is organized around actions to take (if any), acting only within precise,
-optionally language grammar-aware scopes.
+Like `grep`, regular expressions are a core primitive. Unlike `grep`, additional
+capabilities allow for **higher precision**, with options for manipulation. This allows
+`srgn` to operate along dimensions regular expressions and IDE tooling (*Rename all*,
+*Find all references*, ...) alone cannot, thus complementing them.
+
+`srgn` is organized around **actions** to take (if any), acting only within precise,
+optionally language grammar-aware **scopes**. In terms of existing tools, think of it as
+a mix of
+[`tr`](https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html#tr-invocation),
+[`sed`](https://www.gnu.org/software/sed/),
+[ripgrep](https://github.com/BurntSushi/ripgrep) and
+[`tree-sitter`](https://tree-sitter.github.io/tree-sitter/).
 
 ## Quick walkthrough
 
@@ -1155,7 +1165,8 @@ For reference, the full help output with all available options is:
 
 ```console
 $ srgn --help
-A code surgeon for precise text and code transplantation
+A grep-like tool which understands source code syntax and allows for manipulation in
+addition to search
 
 Usage: srgn [OPTIONS] [SCOPE] [REPLACEMENT]
 
