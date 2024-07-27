@@ -122,6 +122,9 @@ jobs:
   build-test-coverage:
     name: Build and test with coverage
 
+    # Fails catastrophically on `ubuntu-latest`, as linking fails if compiling while
+    # using `insta`. macOS works (locally as well) and is the fastest runner anyway, so
+    # just use that. See also https://github.com/xd009642/tarpaulin/issues/517
     runs-on: macos-latest
 
     steps:
@@ -139,10 +142,6 @@ jobs:
         run: rustup toolchain install --profile minimal nightly
 
       - name: Run tests (with coverage)
-        # Tarpaulin is very flaky, and coverage is just 'nice to have', so do not fail
-        # entire pipeline because of it.
-        continue-on-error: true
-        id: tarpaulin
         # Will read from `tarpaulin.toml`. Extra flags given here complement the config.
         run: >
           cargo tarpaulin
@@ -150,17 +149,8 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
-        # `steps.$STEP.conclusion` is "after" `continue-on-error` was applied,
-        # `steps.$STEP.outcome` is "before".
-        # That's why the `success()` expression doesn't work here.
-        if: ${{ steps.tarpaulin.outcome == 'success' }}
-        # Code coverage has been very flaky, causing the vast majority of pipeline
-        # failures.
-        # https://github.com/codecov/codecov-action/issues/1280 is another intermittent
-        # issue that we are just going to ignore here (coverage is only "nice to have").
-        continue-on-error: true
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           verbose: true
           token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
 
