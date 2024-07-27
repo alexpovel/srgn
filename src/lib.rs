@@ -148,7 +148,7 @@
 #![warn(trivial_casts, trivial_numeric_casts)]
 #![warn(unused_qualifications)]
 #![warn(variant_size_differences)]
-#![forbid(unsafe_code)]
+#![warn(unsafe_code)]
 #![warn(missing_docs)]
 #![allow(clippy::multiple_crate_versions)]
 #![allow(clippy::module_name_repetitions)]

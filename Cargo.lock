@@ -223,6 +223,10 @@ name = "cc"
 version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2aba8f4e9906c7ce3c73463f62a7f0c65183ada1a2d47e397cc8810827f9694f"
+dependencies = [
+ "jobserver",
+ "libc",
+]
 
 [[package]]
 name = "cfg-if"
@@ -687,6 +691,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "jobserver"
+version = "0.1.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2b099aaa34a9751c5bf0878add70444e1ed2dd73f347be99003d4577277de6e"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "js-sys"
 version = "0.3.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1109,6 +1122,7 @@ dependencies = [
  "anyhow",
  "assert_cmd",
  "cached",
+ "cc",
  "clap",
  "clap_complete",
  "colored",
@@ -1140,7 +1154,6 @@ dependencies = [
  "tree-sitter",
  "tree-sitter-c-sharp",
  "tree-sitter-go",
- "tree-sitter-hcl",
  "tree-sitter-python",
  "tree-sitter-rust",
  "tree-sitter-typescript",
@@ -1273,15 +1286,6 @@ name = "tree-sitter-go"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55cb318be5ccf75f44e054acf6898a5c95d59b53443eed578e16be0cd7ec037f"
-dependencies = [
- "cc",
- "tree-sitter",
-]
-
-[[package]]
-name = "tree-sitter-hcl"
-version = "0.0.1"
-source = "git+https://github.com/alexpovel/tree-sitter-hcl.git#6e750f5cda8eecb45de27410bdb5bc353d23acad"
 dependencies = [
  "cc",
  "tree-sitter",
