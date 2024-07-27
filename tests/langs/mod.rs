@@ -1,9 +1,8 @@
-mod csharp;
-
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::{
     langs::{
+        csharp::{CSharp, PreparedCSharpQuery},
         go::{Go, PreparedGoQuery},
         hcl::{Hcl, PreparedHclQuery},
         python::{PreparedPythonQuery, Python},
@@ -11,41 +10,10 @@ use srgn::scoping::{
         typescript::{PreparedTypeScriptQuery, TypeScript},
         CodeQuery, LanguageScoper,
     },
-    regex::Regex,
     scope::Scope,
     view::ScopedViewBuilder,
 };
-use std::{fs::read_to_string, ops::Range, path::Path};
-
-fn get_input_output(lang: &str, file: &str) -> (String, String) {
-    let path = Path::new("tests/langs");
-    let path = path.join(lang);
-
-    let input = read_to_string(path.join(format!("in/{file}"))).unwrap();
-    let output = read_to_string(path.join(format!("out/{file}"))).unwrap();
-
-    (input, output)
-}
-
-/// Nuke the target character from the input.
-///
-/// Convenience function for testing, as deleting a specific character, while
-/// *retaining* it elsewhere, where the language did *not* scope down, is an easy way to
-/// test.
-fn nuke_target(input: &str, lang: &impl LanguageScoper) -> String {
-    let mut builder = ScopedViewBuilder::new(input);
-
-    builder.explode(lang);
-
-    // Needs to be ASCII such that we can target e.g. variable names.
-    let target = String::from("__T__");
-    builder.explode(&Regex::try_from(target).unwrap());
-
-    let mut view = builder.build();
-    view.delete();
-
-    view.to_string()
-}
+use std::ops::Range;
 
 /// A type that when serialized, will visually highlight the portions of a line which
 /// were matched.
@@ -228,6 +196,21 @@ impl InScopeLinePart {
     "base.go_struct-tags",
     include_str!("go/base.go"),
     Go::new(CodeQuery::Prepared(PreparedGoQuery::StructTags)),
+)]
+#[case(
+    "base.cs_strings",
+    include_str!("csharp/base.cs"),
+    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Strings)),
+)]
+#[case(
+    "base.cs_usings",
+    include_str!("csharp/base.cs"),
+    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Usings)),
+)]
+#[case(
+    "base.cs_comments",
+    include_str!("csharp/base.cs"),
+    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Comments)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 152
+  l: "    /// <summary>\n"
+  m: "    ^^^^^^^^^^^^^  "
+- n: 153
+  l: "    /// Some class!\n"
+  m: "    ^^^^^^^^^^^^^^^  "
+- n: 154
+  l: "    /// </summary>\n"
+  m: "    ^^^^^^^^^^^^^^  "
+- n: 157
+  l: "        // Some comment.\n"
+  m: "        ^^^^^^^^^^^^^^^^  "
+- n: 158
+  l: "        public static void /* An inline comment */ Main(string[] args)\n"
+  m: "                           ^^^^^^^^^^^^^^^^^^^^^^^                      "
+- n: 160
+  l: "            /*\n"
+  m: "            ^^^^"
+- n: 161
+  l: "                A block comment.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 162
+  l: "                It has multiple lines.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 163
+  l: "            */\n"
+  m: "^^^^^^^^^^^^^^  "

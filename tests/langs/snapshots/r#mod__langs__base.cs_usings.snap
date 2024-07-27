@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "using System;\n"
+  m: "      ^^^^^^   "
+- n: 2
+  l: "using System.Collections.Generic;\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 3
+  l: "using static System.Math;\n"
+  m: "             ^^^^^^^^^^^   "
+- n: 4
+  l: "using Console = System.Console;\n"
+  m: "      ^^^^^^^                    "
+- n: 4
+  l: "using Console = System.Console;\n"
+  m: "                ^^^^^^^^^^^^^^   "

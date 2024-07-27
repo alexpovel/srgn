@@ -1,0 +1,85 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "                                                              ^^^^^^^^^^^^^^^^    "
+- n: 50
+  l: "        ~TestBase() => Console.WriteLine(\"Test finalized.\");\n"
+  m: "                                         ^^^^^^^^^^^^^^^^^^^    "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "                              ^^^^^^^^^^^^^^^^                          "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "                                                               ^^^^^    "
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: "                            ^^^^^^^^^^^^^^^^^^^                    "
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: "                                                             ^^    "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                                                ^^^^^^^^^                                 "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                                                               ^^^^^^^^^^^^^              "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                                                                                     ^^   "
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: "                                            ^^^^^^^^^^^^^^^^^^^^^^^              "
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: "                                                                            ^^   "
+- n: 173
+  l: "            string rawStringLiteral = \"\"\"This is a\n"
+  m: "                                      ^^^^^^^^^^^^^^^^^"
+- n: 174
+  l: "raw string\n"
+  m: ^^^^^^^^^^^^
+- n: 175
+  l: "literal\"\"\";\n"
+  m: "^^^^^^^^^^^^^   "
+- n: 176
+  l: "            string stringLiteral = \"Alice\";\n"
+  m: "                                   ^^^^^^^^^   "
+- n: 177
+  l: "            string verbatimStringLiteral = @\"C:\\Users\\Alice\\Documents\";\n"
+  m: "                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: "                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: "                               ^^^^^^^^               "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                              ^^^^^^^^^^                                 "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                                    ^^                   "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                                                   ^^    "
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: "                                        ^^^^^^^^^^^^^^^^                     "
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: "                                                                        ^^   "
+- n: 190
+  l: "                Console.WriteLine(\"High iteration performance test\");\n"
+  m: "                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: "                                               ^^^^^^^^^^^^^^^^^                   "
+- n: 203
+  l: "            Console.WriteLine(\"Labeled statement\");\n"
+  m: "                              ^^^^^^^^^^^^^^^^^^^^^    "
