@@ -14,10 +14,9 @@ a mix of
 [`tr`](https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html#tr-invocation),
 [`sed`](https://www.gnu.org/software/sed/),
 [ripgrep](https://github.com/BurntSushi/ripgrep) and
-[`tree-sitter`](https://tree-sitter.github.io/tree-sitter/).
-
-`srgn` is also designed to be **simple**: if you know regex and the basics of the
-language you want to apply it to, you are ready to go.
+[`tree-sitter`](https://tree-sitter.github.io/tree-sitter/), with a design goal of
+*simplicity*: if you know regex and the basics of the language you are working with, you
+are ready to go.
 
 ## Quick walkthrough
 
