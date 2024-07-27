@@ -16,6 +16,9 @@ a mix of
 [ripgrep](https://github.com/BurntSushi/ripgrep) and
 [`tree-sitter`](https://tree-sitter.github.io/tree-sitter/).
 
+`srgn` is also designed to be **simple**: if you know regex and the basics of the
+language you want to apply it to, you are ready to go.
+
 ## Quick walkthrough
 
 > [!TIP]
