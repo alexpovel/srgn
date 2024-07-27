@@ -636,10 +636,10 @@ mod tests {
                 Out("\n"),
             ],
             vec![
-                #[cfg(never)]Out(""), // Dropped!
+                #[cfg(not(test))]Out(""), // Dropped! (do not compile)
                 In("World\n", None),
             ],
-            #[cfg(never)] // Dropped!
+            #[cfg(not(test))] // Dropped! (do not compile)
             vec![
                 Out(""),
             ],

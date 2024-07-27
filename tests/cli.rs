@@ -526,7 +526,7 @@ right contents:
             if entry.file_type()?.is_dir() {
                 copy_tree(&entry.path(), &dst.join(entry.file_name()))?;
             } else {
-                std::fs::copy(&entry.path(), &dst.join(entry.file_name()))?;
+                std::fs::copy(entry.path(), dst.join(entry.file_name()))?;
             }
         }
 

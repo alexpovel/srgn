@@ -260,12 +260,12 @@ impl German {
     /// # Arguments
     ///
     /// * `prefer_original`: For a tied situation, where an original word and some
-    /// replacement are *both* legal, controls which one is returned. See
-    /// [below](#example-words-valid-both-in-original-and-replaced-form) for when this
-    /// is relevant.
+    ///   replacement are *both* legal, controls which one is returned. See
+    ///   [below](#example-words-valid-both-in-original-and-replaced-form) for when this
+    ///   is relevant.
     /// * `naive`: If `true`, perform any possible replacement, regardless of legality
-    /// of the resulting word. Useful for names, which are otherwise not modifiable as
-    /// they do not occur in dictionaries. See [example](#example-naive-mode).
+    ///   of the resulting word. Useful for names, which are otherwise not modifiable as
+    ///   they do not occur in dictionaries. See [example](#example-naive-mode).
     ///
     /// ## Example: Words valid both in original and replaced form
     ///

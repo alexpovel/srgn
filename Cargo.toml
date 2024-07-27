@@ -80,6 +80,13 @@ rand_regex = "0.17.0"
 rstest = { version = "0.21.0", default-features = false }
 serde = { version = "1.0.204", features = ["derive"], default-features = false }
 
+[lints.rust]
+# Ignore these. See also
+# https://blog.rust-lang.org/2024/07/25/Rust-1.80.0.html#checked-cfg-names-and-values
+# https://github.com/xd009642/tarpaulin?tab=readme-ov-file#ignoring-code-in-files
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(tarpaulin)"] }
+
+
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs
 opt-level = 3
