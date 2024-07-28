@@ -1,5 +1,4 @@
 use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{scope::RangesWithContext, Scoper};
 use clap::ValueEnum;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
@@ -54,12 +53,6 @@ impl From<CustomTypeScriptQuery> for TSQuery {
     fn from(value: CustomTypeScriptQuery) -> Self {
         TSQuery::new(&TypeScript::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
-    }
-}
-
-impl Scoper for TypeScript {
-    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        self.scope_via_query(input).into()
     }
 }
 
