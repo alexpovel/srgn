@@ -1,5 +1,5 @@
 use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::{langs::IGNORE, scope::RangesWithContext, Scoper};
+use crate::scoping::langs::IGNORE;
 use clap::ValueEnum;
 use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
@@ -111,12 +111,6 @@ impl From<CustomPythonQuery> for TSQuery {
     fn from(value: CustomPythonQuery) -> Self {
         TSQuery::new(&Python::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
-    }
-}
-
-impl Scoper for Python {
-    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        self.scope_via_query(input).into()
     }
 }
 

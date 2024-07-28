@@ -1,8 +1,5 @@
 use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::{
-    find::Find,
-    scoping::{langs::IGNORE, scope::RangesWithContext, Scoper},
-};
+use crate::{find::Find, scoping::langs::IGNORE};
 use clap::ValueEnum;
 use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
@@ -74,12 +71,6 @@ impl From<CustomGoQuery> for TSQuery {
     fn from(value: CustomGoQuery) -> Self {
         TSQuery::new(&Go::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
-    }
-}
-
-impl Scoper for Go {
-    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        self.scope_via_query(input).into()
     }
 }
 

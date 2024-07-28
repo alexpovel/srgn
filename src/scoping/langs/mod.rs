@@ -120,7 +120,7 @@ pub(super) const IGNORE: &str = "_SRGN_IGNORE";
 /// A scoper for a language.
 ///
 /// Functions much the same, but provides specific language-related functionality.
-pub trait LanguageScoper: Scoper + Find {
+pub trait LanguageScoper: Find + Send + Sync {
     /// The language's tree-sitter language.
     fn lang() -> TSLanguage
     where
@@ -202,5 +202,14 @@ pub trait LanguageScoper: Scoper + Find {
             Some(nq) => ranges - run(nq),
             None => ranges,
         }
+    }
+}
+
+impl<T> Scoper for T
+where
+    T: LanguageScoper,
+{
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> super::scope::RangesWithContext<'viewee> {
+        self.scope_via_query(input).into()
     }
 }
