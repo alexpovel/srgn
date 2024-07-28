@@ -27,24 +27,14 @@ pub trait Find {
     /// `path` valid?
     fn is_valid_path(&self, path: &Path) -> bool {
         match (path.extension(), self.interpreters()) {
-            (Some(ext), _) => {
-                if let Some(ext) = ext.to_str() {
-                    self.extensions().contains(&ext)
-                } else {
-                    false
-                }
-            }
-            (None, Some(interpreters)) => {
-                if let Ok(mut fh) = File::open(path) {
-                    if let Some(interpreter) = find_interpreter(&mut fh) {
-                        interpreters.contains(&interpreter.as_str())
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            }
+            (Some(ext), _) => ext
+                .to_str()
+                .map_or(false, |ext| self.extensions().contains(&ext)),
+            (None, Some(interpreters)) => File::open(path).map_or(false, |mut fh| {
+                find_interpreter(&mut fh).map_or(false, |interpreter| {
+                    interpreters.contains(&interpreter.as_str())
+                })
+            }),
             _ => false,
         }
     }

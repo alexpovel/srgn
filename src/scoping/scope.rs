@@ -112,7 +112,7 @@ impl<'viewee> ROScopes<'viewee> {
         }
 
         let range = last_end..input.len();
-        let tail = &input[range.clone()];
+        let tail = &input[range];
         if !tail.is_empty() {
             scopes.push(ROScope(Out(tail)));
         }
@@ -162,10 +162,7 @@ impl PartialEq<&str> for ROScopes<'_> {
             start = end.unwrap();
         }
 
-        match end {
-            Some(e) => other.len() == e,
-            None => other.is_empty(),
-        }
+        end.map_or(other.is_empty(), |e| other.len() == e)
     }
 }
 

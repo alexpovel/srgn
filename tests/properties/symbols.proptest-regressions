@@ -6,3 +6,4 @@
 # everyone who runs the test benefits from these saved cases.
 cc 3c13a08da966a59d349dd05e3f42ee6ee8913f9342120cbbf52f9912a8d3ca94 # shrinks to input = "--–"
 cc ca6238be74662e93a4d5bdebb2df15060febd7336f782eebbe6d4df369d8f95b # shrinks to input = "--"
+cc 2f75c0d295edf326a3e3162b327f26cf2e7bd84f8d545f21eec0bbdec7f659c2 # shrinks to input = "--"

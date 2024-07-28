@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 fn main() {
     #[cfg(feature = "german")]
     natural_languages::generate_word_lists();
@@ -27,7 +29,7 @@ mod natural_languages {
             let destination_file = base_destination_path.join("de.fst");
             destination_file.parent().map(fs::create_dir_all);
 
-            german::process_german(
+            german::process(
                 &mut BufReader::new(File::open(&source_file).unwrap()),
                 &mut BufWriter::new(File::create(destination_file).unwrap()),
             );
@@ -55,7 +57,7 @@ mod natural_languages {
             }};
         }
 
-        pub fn process_german<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
+        pub fn process<R, W>(source: &mut BufReader<R>, destination: &mut BufWriter<W>)
         where
             R: Read,
             W: Write,
@@ -65,7 +67,7 @@ mod natural_languages {
 
             let words: HashSet<&str> = time_it!(
                 "Constructing hashset of words",
-                contents.lines().map(|word| word.trim()).collect()
+                contents.lines().map(str::trim).collect()
             );
             let keepers = Mutex::new(Vec::with_capacity(words.len()));
 
@@ -74,6 +76,7 @@ mod natural_languages {
                 // Parallel iteration is a massive time-saver, more than an order of magnitude
                 // (approx. 2 minutes -> 5 seconds)
                 words.par_iter().for_each(|word| {
+                    #[allow(clippy::single_match_else)]
                     match decompound(
                         word,
                         &|w| words.contains(w),
@@ -96,8 +99,8 @@ mod natural_languages {
 
             let mut keepers = keepers.into_inner().unwrap();
             let dropped_words: HashSet<_> = words
-                .difference(&keepers.iter().cloned().collect::<HashSet<_>>())
-                .cloned()
+                .difference(&keepers.iter().copied().collect::<HashSet<_>>())
+                .copied()
                 .collect();
 
             drop(words); // Prevent misuse; these are unfiltered!
@@ -117,7 +120,7 @@ mod natural_languages {
                 );
             }
 
-            time_it!("Sorting filtered words", keepers.sort());
+            time_it!("Sorting filtered words", keepers.sort_unstable());
 
             // `fst::SetBuilder.insert` doesn't check for dupes, so be sure (?)
             time_it!("Deduplicating filtered words", keepers.dedup());

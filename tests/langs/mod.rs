@@ -40,7 +40,7 @@ struct InScopeLinePart {
 }
 
 impl InScopeLinePart {
-    fn new(line_number: usize, line_contents: String, match_: String, span: Range<usize>) -> Self {
+    fn new(line_number: usize, line_contents: String, match_: &str, span: Range<usize>) -> Self {
         // Split into the three components
         let (start, mid, end) = (
             &line_contents[..span.start],
@@ -59,7 +59,7 @@ impl InScopeLinePart {
         m.push_str(&" ".repeat(end.escape_default().to_string().len()));
 
         assert_eq!(
-            line_contents[span], match_,
+            &line_contents[span], match_,
             "What is highlighted is what was matched"
         );
 
@@ -240,8 +240,7 @@ fn test_language_scopers(
                     let contents: &str = (&scope).into();
                     let end = start + contents.len();
                     let span = start..end;
-                    let part =
-                        InScopeLinePart::new(i + 1, line.to_string(), contents.to_string(), span);
+                    let part = InScopeLinePart::new(i + 1, line.to_string(), contents, span);
                     start = end;
 
                     match scope.0 {

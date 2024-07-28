@@ -20,7 +20,7 @@ pub use replace::{Replacement, ReplacementError};
 use std::{error::Error, fmt};
 pub use style::Style;
 #[cfg(feature = "symbols")]
-pub use symbols::{inversion::SymbolsInversion, Symbols};
+pub use symbols::{inversion::Symbols as SymbolsInversion, Symbols};
 pub use titlecase::Titlecase;
 pub use upper::Upper;
 

@@ -20,7 +20,7 @@ pub enum PreparedTypeScriptQuery {
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
     fn from(value: PreparedTypeScriptQuery) -> Self {
-        TSQuery::new(
+        Self::new(
             &TypeScript::lang(),
             match value {
                 PreparedTypeScriptQuery::Comments => "(comment) @comment",
@@ -51,7 +51,7 @@ impl FromStr for CustomTypeScriptQuery {
 
 impl From<CustomTypeScriptQuery> for TSQuery {
     fn from(value: CustomTypeScriptQuery) -> Self {
-        TSQuery::new(&TypeScript::lang(), &value.0)
+        Self::new(&TypeScript::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

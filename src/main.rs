@@ -1,3 +1,8 @@
+//! The main entrypoint to `srgn` as a CLI application.
+//!
+//! It mainly draws from `srgn`, the library, for actual implementations. This file then
+//! deals with CLI argument handling, I/O, threading, and more.
+
 use anyhow::anyhow;
 use anyhow::{Context, Result};
 use colored::Color;
@@ -51,6 +56,7 @@ use std::{
     io::{self, stdout, Write},
 };
 
+#[allow(clippy::too_many_lines)] // Only slightly above.
 fn main() -> Result<()> {
     let mut args = cli::Cli::init();
 
@@ -99,7 +105,9 @@ fn main() -> Result<()> {
         language_scoper,
     ) {
         // stdin considered viable: always use it.
-        (true, None, _) => Input::Stdin,
+        (true, None, _)
+        // Nothing explicitly available: this should open an interactive stdin prompt.
+        | (false, None, None) => Input::Stdin,
         (true, Some(..), _) => {
             // Usage error... warn loudly, the user is likely interested.
             error!("Detected stdin, and request for files: will use stdin and ignore files.");
@@ -124,9 +132,6 @@ fn main() -> Result<()> {
             );
             res
         })),
-
-        // Nothing explicitly available: this should open an interactive stdin prompt.
-        (false, None, None) => Input::Stdin,
     };
 
     if search_mode {
@@ -145,7 +150,9 @@ fn main() -> Result<()> {
 
     if actions.is_empty() && !search_mode {
         // Also kind of an error users will likely want to know about.
-        error!("No actions specified, and not in search mode. Will return input unchanged, if any.")
+        error!(
+            "No actions specified, and not in search mode. Will return input unchanged, if any."
+        );
     }
 
     // Now write out
@@ -157,26 +164,26 @@ fn main() -> Result<()> {
         (Input::WalkOn(validator), false) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_threaded(
-                validator,
+                &validator,
                 &all_scopers,
                 &actions,
                 &args,
                 search_mode,
-                args.options
-                    .threads
-                    .map(|n| n.get())
-                    .unwrap_or(std::thread::available_parallelism().map_or(1, |n| n.get())),
-            )?
+                args.options.threads.map_or(
+                    std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
+                    std::num::NonZero::get,
+                ),
+            )?;
         }
         (Input::WalkOn(validator), true) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_sorted(
-                validator,
+                &validator,
                 &all_scopers,
                 &actions,
                 &args,
                 search_mode,
-            )?
+            )?;
         }
     };
 
@@ -186,7 +193,7 @@ fn main() -> Result<()> {
 
 /// Indicates whether a filesystem path is valid according to some criteria (glob
 /// pattern, ...).
-type Validator = Box<dyn Fn(&std::path::Path) -> bool + Send + Sync>;
+type Validator = Box<dyn Fn(&Path) -> bool + Send + Sync>;
 
 /// The input to read from.
 enum Input {
@@ -205,7 +212,7 @@ fn handle_actions_on_stdin(
     args: &cli::Cli,
 ) -> Result<(), anyhow::Error> {
     info!("Will use stdin to stdout.");
-    let mut source = std::io::stdin().lock();
+    let mut source = io::stdin().lock();
     let mut destination = String::new();
 
     apply(
@@ -221,7 +228,7 @@ fn handle_actions_on_stdin(
     )
     .context("Failed to process stdin")?;
 
-    std::io::stdout().lock().write_all(destination.as_bytes())?;
+    stdout().lock().write_all(destination.as_bytes())?;
 
     Ok(())
 }
@@ -235,7 +242,7 @@ fn handle_actions_on_stdin(
 /// [ripgrep]:
 ///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
 fn handle_actions_on_many_files_sorted(
-    validator: Validator,
+    validator: &Validator,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
@@ -251,13 +258,13 @@ fn handle_actions_on_many_files_sorted(
     for entry in WalkBuilder::new(&root)
         .hidden(!args.options.hidden)
         .git_ignore(!args.options.gitignored)
-        .sort_by_file_path(|a, b| a.cmp(b))
+        .sort_by_file_path(Ord::cmp)
         .build()
     {
         match entry {
             Ok(entry) => {
                 let path = entry.path();
-                match process_path(path, &root, &validator, scopers, actions, args, search_mode) {
+                match process_path(path, &root, validator, scopers, actions, args, search_mode) {
                     Ok(()) => n += 1,
                     Err(e) => {
                         if search_mode {
@@ -295,7 +302,7 @@ fn handle_actions_on_many_files_sorted(
 
 /// Main entrypoint for processing using at least 1 thread.
 fn handle_actions_on_many_files_threaded(
-    validator: Validator,
+    validator: &Validator,
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
@@ -324,7 +331,7 @@ fn handle_actions_on_many_files_threaded(
             Box::new(|entry| match entry {
                 Ok(entry) => {
                     let path = entry.path();
-                    match process_path(path, &root, &validator, scopers, actions, args, search_mode)
+                    match process_path(path, &root, validator, scopers, actions, args, search_mode)
                     {
                         Ok(()) => {
                             *n_files.lock().unwrap() += 1;
@@ -397,9 +404,10 @@ fn process_path(
     let (new_contents, filesize, changed) = {
         let file = File::open(&path)?;
 
-        let filesize = file.metadata().map_or(0, |m| m.len() as usize);
-        let mut destination = String::with_capacity(filesize);
-        let mut source = std::io::BufReader::new(file);
+        let filesize = file.metadata().map_or(0, |m| m.len());
+        let mut destination =
+            String::with_capacity(filesize.try_into().unwrap_or(/* no perf gains for you */ 0));
+        let mut source = io::BufReader::new(file);
 
         let changed = apply(
             &mut source,
@@ -466,6 +474,7 @@ fn process_path(
 /// Runs the actual core processing, returning whether anything changed in the output
 /// compared to the input.
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
+#[allow(clippy::fn_params_excessive_bools)] // TODO: use an options struct
 fn apply(
     source: &mut impl io::BufRead,
     // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
@@ -528,7 +537,7 @@ fn apply(
                     destination.push_str(&format!("{}:", i.to_string().green().to_string()));
                 }
 
-                destination.push_str(&line.to_string())
+                destination.push_str(&line.to_string());
             }
         }
     } else {
@@ -562,8 +571,7 @@ impl fmt::Display for ApplicationError {
 impl Error for ApplicationError {}
 
 #[derive(Debug)]
-pub enum ScoperBuildError {
-    EmptyScope,
+enum ScoperBuildError {
     RegexError(RegexError),
     LiteralError(LiteralError),
 }
@@ -583,9 +591,8 @@ impl From<RegexError> for ScoperBuildError {
 impl fmt::Display for ScoperBuildError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptyScope => write!(f, "Empty scope"),
-            Self::RegexError(e) => write!(f, "Regex error: {}", e),
-            Self::LiteralError(e) => write!(f, "Literal error: {}", e),
+            Self::RegexError(e) => write!(f, "Regex error: {e}"),
+            Self::LiteralError(e) => write!(f, "Literal error: {e}"),
         }
     }
 }
@@ -708,8 +715,8 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
 /// verbosity level, clamped to the maximum available.
 ///
 /// See also
-/// https://docs.rs/env_logger/latest/env_logger/struct.Env.html#default-environment-variables
-/// and https://docs.rs/env_logger/latest/env_logger/#enabling-logging
+/// <https://docs.rs/env_logger/latest/env_logger/struct.Env.html#default-environment-variables>
+/// and <https://docs.rs/env_logger/latest/env_logger/#enabling-logging>
 fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter {
     let available = LevelFilter::iter().collect::<Vec<_>>();
     let default = env_logger::Builder::from_default_env().build().filter();
@@ -759,7 +766,7 @@ mod cli {
         // doesn't touch our manually formatted doc strings anymore.
         term_width = 90,
     )]
-    pub(super) struct Cli {
+    pub struct Cli {
         /// Scope to apply to, as a regular expression pattern
         ///
         /// If string literal mode is requested, will be interpreted as a literal string.
@@ -802,21 +809,22 @@ mod cli {
         pub german_options: GermanOptions,
     }
 
-    /// https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69
-    pub(super) fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    /// <https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69>
+    pub fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
         generate(gen, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
     }
 
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (global)")]
-    pub(super) struct GlobalOptions {
+    #[allow(clippy::struct_excessive_bools)]
+    pub struct GlobalOptions {
         /// Glob of files to work on (instead of reading stdin).
         ///
         /// If processing occurs, it is done in-place, overwriting originals.
         ///
         /// For supported glob syntax, see:
-        /// https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
+        /// <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
         ///
         /// Names of processed files are written to stdout.
         #[arg(long, verbatim_doc_comment)]
@@ -906,7 +914,8 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Composable Actions")]
-    pub(super) struct ComposableActions {
+    #[allow(clippy::struct_excessive_bools)]
+    pub struct ComposableActions {
         /// Replace scope by this (fixed) value
         ///
         /// Specially treated action for ergonomics and compatibility with `tr`.
@@ -957,7 +966,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Standalone Actions (only usable alone)")]
-    pub(super) struct StandaloneActions {
+    pub struct StandaloneActions {
         /// Delete scope
         ///
         /// Cannot be used with any other action: no point in deleting and performing any
@@ -986,7 +995,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Language scopes")]
-    pub(super) struct LanguageScopes {
+    pub struct LanguageScopes {
         #[command(flatten)]
         pub csharp: Option<CSharpScope>,
         #[command(flatten)]
@@ -1003,23 +1012,25 @@ mod cli {
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct CSharpScope {
-        /// Scope CSharp code using a prepared query.
+    pub struct CSharpScope {
+        /// Scope C# code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub csharp: Option<PreparedCSharpQuery>,
 
-        /// Scope CSharp code using a custom tree-sitter query.
+        /// Scope C# code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub csharp_query: Option<CustomCSharpQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct HclScope {
+    pub struct HclScope {
+        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub hcl: Option<PreparedHclQuery>,
 
+        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment)]
         pub hcl_query: Option<CustomHclQuery>,
@@ -1027,7 +1038,7 @@ mod cli {
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct GoScope {
+    pub struct GoScope {
         /// Scope Go code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub go: Option<PreparedGoQuery>,
@@ -1039,7 +1050,7 @@ mod cli {
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct PythonScope {
+    pub struct PythonScope {
         /// Scope Python code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub python: Option<PreparedPythonQuery>,
@@ -1051,7 +1062,7 @@ mod cli {
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct RustScope {
+    pub struct RustScope {
         /// Scope Rust code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub rust: Option<PreparedRustQuery>,
@@ -1063,7 +1074,7 @@ mod cli {
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub(super) struct TypeScriptScope {
+    pub struct TypeScriptScope {
         /// Scope TypeScript code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         pub typescript: Option<PreparedTypeScriptQuery>,
@@ -1077,7 +1088,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true, id("german-opts"))]
     #[command(next_help_heading = "Options (german)")]
-    pub(super) struct GermanOptions {
+    pub struct GermanOptions {
         /// When some original version and its replacement are equally legal, prefer the
         /// original and do not modify.
         ///
@@ -1101,7 +1112,7 @@ mod cli {
             Self::parse()
         }
 
-        pub(super) fn command() -> clap::Command {
+        pub(super) fn command() -> Command {
             <Self as CommandFactory>::command()
         }
     }

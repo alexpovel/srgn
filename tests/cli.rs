@@ -18,7 +18,7 @@ mod tests {
         args: Vec<String>,
         stdin: Option<Vec<String>>,
         stdout: Vec<String>,
-        exit_code: u8,
+        exit_code: i32, // `u8` would make sense but this is what the library returns 🤷‍♀️
     }
 
     #[derive(Debug, Serialize)]
@@ -240,8 +240,7 @@ Heizoelrueckstossabdaempfung.
         let exit_code = output
             .status
             .code()
-            .expect("Process unexpectedly terminated via signal, not `exit`.")
-            as u8;
+            .expect("Process unexpectedly terminated via signal, not `exit`.");
         let stdout = String::from_utf8(output.stdout).unwrap();
         let stderr = String::from_utf8(output.stderr).unwrap();
 
@@ -257,8 +256,8 @@ Heizoelrueckstossabdaempfung.
                 snapshot_name,
                 CommandSnap {
                     args,
-                    stdin: stdin.map(|s| s.split_inclusive('\n').map(|s| s.to_owned()).collect_vec()),
-                    stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                    stdin: stdin.map(|s| s.split_inclusive('\n').map(ToOwned::to_owned).collect_vec()),
+                    stdout: stdout.split_inclusive('\n').map(ToOwned::to_owned).collect_vec(),
                     exit_code,
                 }
             );
@@ -328,7 +327,7 @@ Heizoelrueckstossabdaempfung.
     ) -> anyhow::Result<()> {
         use std::mem::ManuallyDrop;
 
-        let args = args.iter().map(|s| s.to_string()).collect_vec();
+        let args = args.iter().map(ToString::to_string).collect_vec();
 
         // Arrange
         let mut cmd = get_cmd();
@@ -375,8 +374,7 @@ Heizoelrueckstossabdaempfung.
             let exit_code = output
                 .status
                 .code()
-                .expect("Process unexpectedly terminated via signal, not `exit`.")
-                as u8;
+                .expect("Process unexpectedly terminated via signal, not `exit`.");
             let stdout = String::from_utf8(output.stdout).unwrap();
             let stderr = String::from_utf8(output.stderr).unwrap();
 
@@ -390,7 +388,7 @@ Heizoelrueckstossabdaempfung.
                     CommandSnap {
                         args,
                         stdin: None,
-                        stdout: stdout.split_inclusive('\n').map(|s| s.to_owned()).collect_vec(),
+                        stdout: stdout.split_inclusive('\n').map(ToOwned::to_owned).collect_vec(),
                         exit_code,
                     }
                 );
@@ -503,12 +501,11 @@ Heizoelrueckstossabdaempfung.
 
         for entry in baseline
             .read_dir()
-            .with_context(|| format!("Failure reading left dir: {:?}", baseline))?
+            .with_context(|| format!("Failure reading left dir: {baseline:?}"))?
         {
             // This shadows on purpose: less risk of misuse
-            let left = entry.with_context(|| {
-                format!("Failure reading left dir entry (left: {:?})", baseline)
-            })?;
+            let left = entry
+                .with_context(|| format!("Failure reading left dir entry (left: {baseline:?})"))?;
 
             candidate.push(left.file_name());
 
@@ -532,7 +529,7 @@ Heizoelrueckstossabdaempfung.
                 let left_contents = std::fs::read(left.path())
                     .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
                 let right_contents = std::fs::read(&candidate)
-                    .with_context(|| format!("Failure reading right file: {:?}", candidate))?;
+                    .with_context(|| format!("Failure reading right file: {candidate:?}"))?;
 
                 if left_contents != right_contents {
                     return Err(std::io::Error::new(

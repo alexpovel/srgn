@@ -29,10 +29,9 @@ impl Action for Style {
                 // gives bad results for... reasons. Put the suffix, if any, back later
                 // manually. We might not get a suffix at all if there's none at all in
                 // `input`.
-                let (s, suffix) = match s.strip_suffix(NEWLINE) {
-                    Some(without_suffix) => (without_suffix, Some(NEWLINE)),
-                    None => (s, None),
-                };
+                let (s, suffix) = s
+                    .strip_suffix(NEWLINE)
+                    .map_or((s, None), |without_suffix| (without_suffix, Some(NEWLINE)));
 
                 // Debug-only: not mission-critical if this fires
                 debug_assert!(!s.ends_with(NEWLINE));

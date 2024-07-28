@@ -26,7 +26,7 @@ pub enum PreparedRustQuery {
 
 impl From<PreparedRustQuery> for TSQuery {
     fn from(value: PreparedRustQuery) -> Self {
-        TSQuery::new(
+        Self::new(
             &Rust::lang(),
             match value {
                 PreparedRustQuery::Comments => {
@@ -88,7 +88,7 @@ impl FromStr for CustomRustQuery {
 
 impl From<CustomRustQuery> for TSQuery {
     fn from(value: CustomRustQuery) -> Self {
-        TSQuery::new(&Rust::lang(), &value.0)
+        Self::new(&Rust::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

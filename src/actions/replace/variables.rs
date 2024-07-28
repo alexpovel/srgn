@@ -228,7 +228,7 @@ pub(super) fn inject_variables(
 }
 
 /// Gets the width in characters of a number.
-fn width(num: usize) -> usize {
+const fn width(num: usize) -> usize {
     if num == 0 {
         1
     } else {

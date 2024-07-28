@@ -43,6 +43,7 @@ impl Action for Symbols {
     /// coroutine so it can be yielded again.
     ///
     /// All in all, ugly and verbose, would not recommend, but a worthwhile experiment.
+    #[allow(clippy::cognitive_complexity)] // Yep, it's terrible alright
     fn act(&self, input: &str) -> String {
         let mut deque = input.chars().collect::<VecDeque<_>>();
         let mut out = String::new();
@@ -182,19 +183,19 @@ impl TryFrom<char> for Symbol {
     fn try_from(c: char) -> Result<Self, Self::Error> {
         match c {
             // Typographic symbols
-            '–' => Ok(Symbol::EnDash),
-            '—' => Ok(Symbol::EmDash),
+            '–' => Ok(Self::EnDash),
+            '—' => Ok(Self::EmDash),
             // Arrows
-            '→' => Ok(Symbol::ShortRightArrow),
-            '←' => Ok(Symbol::ShortLeftArrow),
-            '⟶' => Ok(Symbol::LongRightArrow),
-            '⟵' => Ok(Symbol::LongLeftArrow),
-            '↔' => Ok(Symbol::LeftRightArrow),
-            '⇒' => Ok(Symbol::RightDoubleArrow),
+            '→' => Ok(Self::ShortRightArrow),
+            '←' => Ok(Self::ShortLeftArrow),
+            '⟶' => Ok(Self::LongRightArrow),
+            '⟵' => Ok(Self::LongLeftArrow),
+            '↔' => Ok(Self::LeftRightArrow),
+            '⇒' => Ok(Self::RightDoubleArrow),
             // Math
-            '≠' => Ok(Symbol::NotEqual),
-            '≤' => Ok(Symbol::LessThanOrEqual),
-            '≥' => Ok(Symbol::GreaterThanOrEqual),
+            '≠' => Ok(Self::NotEqual),
+            '≤' => Ok(Self::LessThanOrEqual),
+            '≥' => Ok(Self::GreaterThanOrEqual),
             _ => Err(()),
         }
     }

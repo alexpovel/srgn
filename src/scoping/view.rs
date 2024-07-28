@@ -28,13 +28,13 @@ pub struct ScopedView<'viewee> {
 impl<'viewee> ScopedView<'viewee> {
     /// Create a new view from the given scopes.
     #[must_use]
-    pub fn new(scopes: RWScopes<'viewee>) -> Self {
+    pub const fn new(scopes: RWScopes<'viewee>) -> Self {
         Self { scopes }
     }
 
     /// Access the scopes contained in this view.
     #[must_use]
-    pub fn scopes(&self) -> &RWScopes<'viewee> {
+    pub const fn scopes(&self) -> &RWScopes<'viewee> {
         &self.scopes
     }
 
@@ -522,7 +522,7 @@ mod tests {
     )]
     fn test_squeeze(#[case] input: &str, #[case] pattern: RegexPattern, #[case] expected: &str) {
         let mut builder = ScopedViewBuilder::new(input);
-        builder.explode(&crate::scoping::regex::Regex::new(pattern.clone()));
+        builder.explode(&crate::scoping::regex::Regex::new(pattern));
         let mut view = builder.build();
 
         view.squeeze();

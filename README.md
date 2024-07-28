@@ -1268,7 +1268,7 @@ Options (global):
           If processing occurs, it is done in-place, overwriting originals.
           
           For supported glob syntax, see:
-          https://docs.rs/glob/0.3.1/glob/struct.Pattern.html
+          <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
           
           Names of processed files are written to stdout.
 
@@ -1354,7 +1354,7 @@ Options (global):
 
 Language scopes:
       --csharp <CSHARP>
-          Scope CSharp code using a prepared query.
+          Scope C# code using a prepared query.
           
           [env: CSHARP=]
 
@@ -1365,7 +1365,7 @@ Language scopes:
           - usings:   `using` directives (including periods)
 
       --csharp-query <CSHARP_QUERY>
-          Scope CSharp code using a custom tree-sitter query.
+          Scope C# code using a custom tree-sitter query.
           
           [env: CSHARP_QUERY=]
 

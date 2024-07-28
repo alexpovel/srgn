@@ -26,7 +26,7 @@ pub enum PreparedCSharpQuery {
 
 impl From<PreparedCSharpQuery> for TSQuery {
     fn from(value: PreparedCSharpQuery) -> Self {
-        TSQuery::new(
+        Self::new(
             &CSharp::lang(),
             match value {
                 PreparedCSharpQuery::Comments => "(comment) @comment",
@@ -70,7 +70,7 @@ impl FromStr for CustomCSharpQuery {
 
 impl From<CustomCSharpQuery> for TSQuery {
     fn from(value: CustomCSharpQuery) -> Self {
-        TSQuery::new(&CSharp::lang(), &value.0)
+        Self::new(&CSharp::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

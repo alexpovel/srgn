@@ -342,7 +342,7 @@ impl German {
     /// ```
     ///
     #[must_use]
-    pub fn new(prefer_original: bool, naive: bool) -> Self {
+    pub const fn new(prefer_original: bool, naive: bool) -> Self {
         Self {
             prefer_original,
             naive,

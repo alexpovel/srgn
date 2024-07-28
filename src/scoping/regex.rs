@@ -27,8 +27,8 @@ pub enum CaptureGroup {
 impl fmt::Display for CaptureGroup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (value, r#type) = match self {
-            CaptureGroup::Named(name) => (name.clone(), "named"),
-            CaptureGroup::Numbered(number) => (number.to_string(), "numbered"),
+            Self::Named(name) => (name.clone(), "named"),
+            Self::Numbered(number) => (number.to_string(), "numbered"),
         };
         write!(f, "{value} ({type})")
     }
@@ -41,9 +41,10 @@ impl Regex {
         let capture_names = pattern
             .capture_names()
             .enumerate()
-            .map(|(i, name)| match name {
-                Some(name) => CaptureGroup::Named(name.to_owned()),
-                None => CaptureGroup::Numbered(i),
+            .map(|(i, name)| {
+                name.map_or(CaptureGroup::Numbered(i), |name| {
+                    CaptureGroup::Named(name.to_owned())
+                })
             })
             .collect();
 

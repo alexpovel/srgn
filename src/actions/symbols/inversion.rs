@@ -1,16 +1,14 @@
 use super::Symbol;
-#[cfg(doc)]
-use super::Symbols;
 use crate::actions::Action;
 
-/// Inverts all symbols inserted by [`Symbols`].
+/// Inverts all symbols inserted by [`super::Symbols`].
 ///
-/// This is guaranteed to be the inverse of [`Symbols`], as the replacements and
+/// This is guaranteed to be the inverse of [`super::Symbols`], as the replacements and
 /// originals form a [bijection](https://en.wikipedia.org/wiki/Bijection).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct SymbolsInversion {}
+pub struct Symbols {}
 
-impl Action for SymbolsInversion {
+impl Action for Symbols {
     fn act(&self, input: &str) -> String {
         input
             .chars()

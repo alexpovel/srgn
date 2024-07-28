@@ -100,8 +100,8 @@ where
 
 impl<C, P> From<CodeQuery<C, P>> for TSQuery
 where
-    C: FromStr + Into<TSQuery>,
-    P: Into<TSQuery>,
+    C: FromStr + Into<Self>,
+    P: Into<Self>,
 {
     fn from(value: CodeQuery<C, P>) -> Self {
         match value {

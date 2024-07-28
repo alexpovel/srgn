@@ -42,7 +42,7 @@ pub enum PreparedHclQuery {
 impl From<PreparedHclQuery> for TSQuery {
     #[allow(clippy::too_many_lines)] // No good way to avoid
     fn from(value: PreparedHclQuery) -> Self {
-        TSQuery::new(
+        Self::new(
             &Hcl::lang(),
             // Seems to not play nice with the macro. Put up here, else interpolation is
             // affected.
@@ -249,7 +249,7 @@ impl FromStr for CustomHclQuery {
 
 impl From<CustomHclQuery> for TSQuery {
     fn from(value: CustomHclQuery) -> Self {
-        TSQuery::new(&Hcl::lang(), &value.0)
+        Self::new(&Hcl::lang(), &value.0)
             .expect("Valid query, as object cannot be constructed otherwise")
     }
 }

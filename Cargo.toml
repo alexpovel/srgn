@@ -81,6 +81,20 @@ rand_regex = "0.17.0"
 rstest = { version = "0.21.0", default-features = false }
 serde = { version = "1.0.204", features = ["derive"], default-features = false }
 
+[lints.clippy]
+pedantic = "warn"
+cargo = "warn"
+style = "warn"
+perf = "warn"
+complexity = "warn"
+correctness = "warn"
+nursery = "warn"
+suspicious = "warn"
+
+# Overrides
+multiple_crate_versions = { level = "allow", priority = 1 }
+module_name_repetitions = { level = "allow", priority = 1 }
+
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs
 opt-level = 3

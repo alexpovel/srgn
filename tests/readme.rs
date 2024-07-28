@@ -59,8 +59,8 @@ mod tests {
     impl fmt::Display for Flag {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::Short(c) => write!(f, "-{}", c),
-                Self::Long(s) => write!(f, "--{}", s),
+                Self::Short(c) => write!(f, "-{c}"),
+                Self::Long(s) => write!(f, "--{s}"),
             }
         }
     }
@@ -139,7 +139,7 @@ mod tests {
             }
         }
 
-        fn name(&self) -> &str {
+        const fn name(&self) -> &str {
             match self {
                 Self::Echo(_) => "echo",
                 Self::Cat(_) => "cat",
@@ -149,9 +149,7 @@ mod tests {
 
         fn stdout(&self) -> Option<String> {
             match self {
-                Self::Echo(inv) => inv.stdout.clone(),
-                Self::Cat(inv) => inv.stdout.clone(),
-                Self::Self_(inv) => inv.stdout.clone(),
+                Self::Echo(inv) | Self::Cat(inv) | Self::Self_(inv) => inv.stdout.clone(),
             }
         }
 
@@ -163,7 +161,7 @@ mod tests {
         /// For that scenario, we need a hacky method to disable stdin for good.
         fn force_ignore_stdin(&mut self) {
             match self {
-                Program::Self_(inv) => inv
+                Self::Self_(inv) => inv
                     .opts
                     .push(Opt::Long("stdin-override-to".into(), "false".into())),
                 _ => panic!("Forcing stdin ignore only applicable to `self` program"),
@@ -182,7 +180,7 @@ mod tests {
                     Err("Cannot be run, only used to generate stdin")
                 }
                 Program::Self_(inv) => {
-                    let mut cmd = Command::cargo_bin(name).expect("Should be able to find binary");
+                    let mut cmd = Self::cargo_bin(name).expect("Should be able to find binary");
 
                     for flag in &inv.flags {
                         cmd.arg(flag.to_string());
@@ -267,11 +265,11 @@ mod tests {
         fn assemble(
             chain: impl Iterator<Item = Program>,
             stdout: Option<&str>,
-            snippets: Snippets,
+            snippets: &Snippets,
             should_fail: bool,
-        ) -> Result<Self, &str> {
+        ) -> Result<Self, &'static str> {
             let mut programs = chain.collect::<VecDeque<_>>();
-            eprintln!("Will assemble programs: {:?}", programs);
+            eprintln!("Will assemble programs: {programs:?}");
 
             // There's a trailing newline inserted which ruins/fails diffs.
             let stdout = stdout.map(|s| s.strip_suffix('\n').unwrap().to_string());
@@ -317,7 +315,7 @@ mod tests {
                 }
                 None => {
                     // Nothing to do; assert flag was set already.
-                    assert!(standalone)
+                    assert!(standalone);
                 }
             }
 
@@ -406,16 +404,16 @@ mod tests {
     /// $ echo 'some other input' | program arg1
     /// some other output
     /// ```
-    fn parse_piped_programs_with_prompt_and_output(
-        input: &str,
-        snippets: Snippets,
-    ) -> IResult<&str, PipedPrograms> {
+    fn parse_piped_programs_with_prompt_and_output<'a>(
+        input: &'a str,
+        snippets: &Snippets,
+    ) -> IResult<&'a str, PipedPrograms> {
         let prompt = '$';
         let (input, _) = opt(char(prompt))(input)?;
         let (input, _) = space0(input)?;
 
         let (input, programs) = parse_piped_programs(input)?;
-        eprintln!("Parsed programs: {:#?}", programs);
+        eprintln!("Parsed programs: {programs:#?}");
 
         // Advance to end; this eats optional comments and trailing whitespace.
         let (input, tail) = take_until("\n")(input)?;
@@ -424,7 +422,7 @@ mod tests {
 
         // Parse stdout; anything up to the next prompt.
         let (input, stdout) = opt(is_not(prompt.to_string().as_str()))(input)?;
-        eprintln!("Parsed stdout: {:#?}", stdout);
+        eprintln!("Parsed stdout: {stdout:#?}");
 
         Ok((
             input,
@@ -433,7 +431,7 @@ mod tests {
         ))
     }
 
-    /// https://docs.rs/nom/7.1.3/nom/recipes/index.html#wrapper-combinators-that-eat-whitespace-before-and-after-a-parser
+    /// <https://docs.rs/nom/7.1.3/nom/recipes/index.html#wrapper-combinators-that-eat-whitespace-before-and-after-a-parser>
     /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
     /// trailing whitespace, returning the output of `inner`.
     fn maybe_ws<'a, F, O, E>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
@@ -558,7 +556,7 @@ mod tests {
                     tuple((ascii_alphanumeric1, char('.'), ascii_alphanumeric1)),
                     |parts: (&str, char, &str)| {
                         let (stem, sep, suffix) = parts;
-                        let file_name = format!("{}{}{}", stem, sep, suffix);
+                        let file_name = format!("{stem}{sep}{suffix}");
 
                         inv.borrow_mut().args.push(file_name.as_str().into());
 
@@ -579,11 +577,14 @@ mod tests {
     }
 
     /// Parses multiple pairs of 'command and output' into a list of them.
-    fn parse_code_blocks(input: &str, snippets: Snippets) -> IResult<&str, Vec<PipedPrograms>> {
-        many1(|input| parse_piped_programs_with_prompt_and_output(input, snippets.clone()))(input)
+    fn parse_code_blocks<'a>(
+        input: &'a str,
+        snippets: &Snippets,
+    ) -> IResult<&'a str, Vec<PipedPrograms>> {
+        many1(|input| parse_piped_programs_with_prompt_and_output(input, snippets))(input)
     }
 
-    /// https://stackoverflow.com/a/58907488/11477374
+    /// <https://stackoverflow.com/a/58907488/11477374>
     fn parse_quoted(input: &str) -> IResult<&str, &str> {
         let esc = escaped(none_of(r"'"), '\\', tag("'"));
         let esc_or_empty = alt((esc, tag("")));
@@ -601,15 +602,17 @@ mod tests {
         Windows,
     }
 
-    impl From<String> for OS {
+    impl TryFrom<String> for OS {
+        type Error = &'static str;
+
         /// Convert from a value as returned by [`std::env::consts::OS`].
-        fn from(value: String) -> Self {
+        fn try_from(value: String) -> Result<Self, Self::Error> {
             match value.as_str() {
-                "linux" => Self::Linux,
-                "macos" => Self::MacOS,
-                "windows" => Self::Windows,
+                "linux" => Ok(Self::Linux),
+                "macos" => Ok(Self::MacOS),
+                "windows" => Ok(Self::Windows),
                 // Just a double check to ensure parsing of options went right.
-                _ => panic!("Unknown OS: {}", value),
+                _ => Err("unknown OS"),
             }
         }
     }
@@ -637,17 +640,18 @@ mod tests {
                 .map(|(k, v)| (k, v.to_string()))
                 .collect();
 
-            let get_many = |s: String| s.split(',').map(|s| s.to_owned()).collect_vec();
+            let get_many = |s: String| s.split(',').map(ToOwned::to_owned).collect_vec();
 
             let res = Self {
                 filename: options.remove("file"),
-                skip_os: options
-                    .remove("skip-os")
-                    .map(get_many)
-                    .map(|oss| oss.into_iter().map(OS::from).collect_vec()),
+                skip_os: options.remove("skip-os").map(get_many).map(|oss| {
+                    oss.into_iter()
+                        .map(|os| os.try_into().expect("any used OS to be known"))
+                        .collect_vec()
+                }),
             };
 
-            assert!(options.is_empty(), "unknown keys in options: {:?}", options);
+            assert!(options.is_empty(), "unknown keys in options: {options:?}");
 
             res
         }
@@ -691,15 +695,13 @@ mod tests {
                     ..
                 } = options
                 {
-                    file_name = match file_name.strip_prefix("output-") {
-                        Some(stripped_file_name) => {
-                            snippet.output = Some(ncb.literal);
-                            stripped_file_name.to_owned()
-                        }
-                        None => {
-                            snippet.original = Some(ncb.literal);
-                            file_name
-                        }
+                    file_name = if let Some(stripped_file_name) = file_name.strip_prefix("output-")
+                    {
+                        snippet.output = Some(ncb.literal);
+                        stripped_file_name.to_owned()
+                    } else {
+                        snippet.original = Some(ncb.literal);
+                        file_name
                     };
 
                     if let Some(other) = snippets.remove(&file_name) {
@@ -711,34 +713,36 @@ mod tests {
             }
         });
 
-        eprintln!("Snippets: {:#?}", snippets);
+        eprintln!("Snippets: {snippets:#?}");
 
         snippets
     }
 
-    fn get_readme_program_pipes(snippets: Snippets) -> Vec<PipedPrograms> {
+    fn get_readme_program_pipes(snippets: &Snippets) -> Vec<PipedPrograms> {
         let mut pipes = Vec::new();
 
         map_on_markdown_codeblocks(DOCUMENT, |ncb| {
             let (language, options): (&str, Option<BlockOptions>) = ncb
                 .info
                 .split_once(' ')
-                .map(|(l, o)| (l, Some(o.into())))
-                .unwrap_or_else(|| (ncb.info.as_str(), None));
+                .map_or_else(|| (ncb.info.as_str(), None), |(l, o)| (l, Some(o.into())));
 
             if let Some(BlockOptions {
                 skip_os: Some(oss), ..
             }) = options
             {
-                let curr_os: OS = std::env::consts::OS.to_owned().into();
+                let curr_os: OS = std::env::consts::OS
+                    .to_owned()
+                    .try_into()
+                    .expect("any used OS to be known");
                 if oss.contains(&curr_os) {
-                    eprintln!("Skipping OS: {:?}", curr_os);
+                    eprintln!("Skipping OS: {curr_os:?}");
                     return;
                 }
             }
 
             if language == "console" || language == "bash" {
-                let (_, commands) = parse_code_blocks(&ncb.literal, snippets.clone())
+                let (_, commands) = parse_code_blocks(&ncb.literal, &snippets.clone())
                     .finish()
                     .expect("Anything in `console` should be parseable as a command");
 
@@ -746,7 +750,7 @@ mod tests {
             }
         });
 
-        eprintln!("Piped programs: {:?}", pipes);
+        eprintln!("Piped programs: {pipes:?}");
 
         pipes
     }
@@ -768,7 +772,7 @@ mod tests {
     #[test]
     fn test_readme_code_blocks() {
         let snippets = get_readme_snippets();
-        let pipes = get_readme_program_pipes(snippets);
+        let pipes = get_readme_program_pipes(&snippets);
 
         for pipe in pipes {
             let mut previous_stdin = None;
@@ -790,7 +794,7 @@ mod tests {
                     cmd.write_stdin(previous_stdin);
                 }
 
-                eprintln!("Running command: {:?}", cmd);
+                eprintln!("Running command: {cmd:?}");
 
                 let mut assertion = cmd.assert();
 
@@ -842,13 +846,13 @@ mod tests {
     }
 
     fn fix_windows_output(mut input: String) -> String {
-        input = unixfy_file_paths(input);
-        input = remove_exe_suffix(input);
+        input = unixfy_file_paths(&input);
+        input = remove_exe_suffix(&input);
 
         input
     }
 
-    fn remove_exe_suffix(input: String) -> String {
+    fn remove_exe_suffix(input: &str) -> String {
         input.replace(
             concat!(env!("CARGO_PKG_NAME"), ".exe"),
             env!("CARGO_PKG_NAME"),
@@ -859,7 +863,7 @@ mod tests {
     /// under Windows, where `\` might be printed as the path separator, tests will
     /// break. So hack strings which look like paths to spell `/` instead of `\` as
     /// their path separator.
-    fn unixfy_file_paths(input: String) -> String {
+    fn unixfy_file_paths(input: &str) -> String {
         // Pattern for Windows-style file paths:
         //
         // ```text

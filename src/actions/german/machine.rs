@@ -31,12 +31,12 @@ pub(super) enum Transition {
 }
 
 impl Transition {
-    fn from_states(from: &State, to: &State) -> Self {
+    const fn from_states(from: &State, to: &State) -> Self {
         match (from, to) {
-            (State::Word(_), State::Other) => Transition::Exited,
-            (State::Other, State::Word(_)) => Transition::Entered,
-            (State::Word(_), State::Word(_)) => Transition::Internal,
-            (State::Other, State::Other) => Transition::External,
+            (State::Word(_), State::Other) => Self::Exited,
+            (State::Other, State::Word(_)) => Self::Entered,
+            (State::Word(_), State::Word(_)) => Self::Internal,
+            (State::Other, State::Other) => Self::External,
         }
     }
 }
@@ -59,12 +59,12 @@ impl StateMachine {
         }
     }
 
-    pub fn current_word(&self) -> &Word {
+    pub const fn current_word(&self) -> &Word {
         &self.word
     }
 
     fn pre_transition(&mut self) {
-        if let State::Other = self.state {
+        if matches!(self.state, State::Other) {
             self.word.clear();
 
             trace!("Cleared current word, machine now is: {self:?}.");

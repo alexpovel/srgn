@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::{fmt::Display, ops::Range};
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum WordCasing {
+pub enum WordCasing {
     AllLowercase,
     AllUppercase,
     Titlecase,
@@ -79,12 +79,12 @@ impl Display for Umlaut {
             f,
             "{}",
             match self {
-                Umlaut::Ae(LetterCasing::Lower) => 'ä',
-                Umlaut::Ae(LetterCasing::Upper) => 'Ä',
-                Umlaut::Oe(LetterCasing::Lower) => 'ö',
-                Umlaut::Oe(LetterCasing::Upper) => 'Ö',
-                Umlaut::Ue(LetterCasing::Lower) => 'ü',
-                Umlaut::Ue(LetterCasing::Upper) => 'Ü',
+                Self::Ae(LetterCasing::Lower) => 'ä',
+                Self::Ae(LetterCasing::Upper) => 'Ä',
+                Self::Oe(LetterCasing::Lower) => 'ö',
+                Self::Oe(LetterCasing::Upper) => 'Ö',
+                Self::Ue(LetterCasing::Lower) => 'ü',
+                Self::Ue(LetterCasing::Upper) => 'Ü',
             }
         )
     }
@@ -102,9 +102,9 @@ impl Display for SpecialCharacter {
             f,
             "{}",
             match self {
-                SpecialCharacter::Umlaut(umlaut) => umlaut.to_string(),
-                SpecialCharacter::Eszett(LetterCasing::Lower) => String::from('ß'),
-                SpecialCharacter::Eszett(LetterCasing::Upper) => String::from('ẞ'),
+                Self::Umlaut(umlaut) => umlaut.to_string(),
+                Self::Eszett(LetterCasing::Lower) => String::from('ß'),
+                Self::Eszett(LetterCasing::Upper) => String::from('ẞ'),
             }
         )
     }
@@ -144,7 +144,7 @@ impl Word {
         });
     }
 
-    pub fn replacements(&self) -> &Vec<Replacement> {
+    pub const fn replacements(&self) -> &Vec<Replacement> {
         &self.replacements
     }
 
@@ -163,15 +163,15 @@ impl Default for Word {
 }
 
 impl Replacement {
-    pub fn start(&self) -> usize {
+    pub const fn start(&self) -> usize {
         self.span.start
     }
 
-    pub fn end(&self) -> usize {
+    pub const fn end(&self) -> usize {
         self.span.end
     }
 
-    pub fn content(&self) -> &SpecialCharacter {
+    pub const fn content(&self) -> &SpecialCharacter {
         &self.content
     }
 }
