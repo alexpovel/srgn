@@ -80,7 +80,7 @@ impl From<CustomCSharpQuery> for TSQuery {
 
 impl Scoper for CSharp {
     fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        Self::scope_via_query(&mut self.query(), input).into()
+        self.scope_via_query(input).into()
     }
 }
 
@@ -89,8 +89,12 @@ impl LanguageScoper for CSharp {
         tree_sitter_c_sharp::language()
     }
 
-    fn query(&self) -> TSQuery {
-        self.query.clone().into()
+    fn pos_query(&self) -> &TSQuery {
+        &self.positive_query
+    }
+
+    fn neg_query(&self) -> Option<&TSQuery> {
+        self.negative_query.as_ref()
     }
 }
 
