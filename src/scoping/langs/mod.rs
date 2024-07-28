@@ -3,7 +3,7 @@ use super::Scoper;
 use crate::scoping::scope::Scope::{In, Out};
 use crate::{find::Find, ranges::Ranges};
 use log::{debug, trace};
-use std::str::FromStr;
+use std::{marker::PhantomData, str::FromStr};
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
 };
@@ -24,13 +24,59 @@ pub mod typescript;
 /// Represents a (programming) language.
 #[derive(Debug)]
 pub struct Language<Q> {
-    query: Q,
+    /// The *positive* query: it will be run against input and its results used for
+    /// scoping.
+    positive_query: TSQuery,
+    /// The *negative* query: if present (if [`IGNORE`] is present) will be run and
+    /// *subtracted* from the positive query.
+    negative_query: Option<TSQuery>,
+    /// We are generic over this to allow languages to be their own type.
+    ///
+    /// We only store constructed [`TSQuery`]s as those are actually actionable and
+    /// references to them are required. However, [`TSQuery`]s are neither [`Clone`] nor
+    /// type-safe (a [`TSQuery`] is *associated* with a [`TSLanguage`], but that's not
+    /// enforced at the type level: a query constructed for Python could accidentally be
+    /// passed to Go etc.), so use this field to be more type-safe.
+    _marker: PhantomData<Q>,
 }
 
-impl<Q> Language<Q> {
+impl<Q> Language<Q>
+where
+    Q: Into<TSQuery> + Clone,
+{
     /// Create a new language with the given associated query over it.
+    #[allow(clippy::needless_pass_by_value)] // TODO: refactor later
     pub fn new(query: Q) -> Self {
-        Self { query }
+        let positive_query = query.clone().into();
+
+        let is_ignored = |name: &str| name.starts_with(IGNORE);
+        let has_ignored_captures = positive_query
+            .capture_names()
+            .iter()
+            .any(|name| is_ignored(name));
+
+        let negative_query = has_ignored_captures.then(|| {
+            let mut query = query.clone().into();
+            let acknowledged_captures = query
+                .capture_names()
+                .iter()
+                .filter(|name| !is_ignored(name))
+                .map(|s| String::from(*s))
+                .collect::<Vec<_>>();
+
+            for name in acknowledged_captures {
+                trace!("Disabling capture for: {:?}", name);
+                query.disable_capture(&name);
+            }
+
+            query
+        });
+
+        Self {
+            positive_query,
+            negative_query,
+            _marker: PhantomData,
+        }
     }
 }
 
@@ -80,8 +126,17 @@ pub trait LanguageScoper: Scoper + Find {
     where
         Self: Sized; // Exclude from trait object
 
-    /// The language's tree-sitter query.
-    fn query(&self) -> TSQuery
+    /// The language's *positive* tree-sitter query.
+    ///
+    /// Its results indicate items in scope.
+    fn pos_query(&self) -> &TSQuery
+    where
+        Self: Sized; // Exclude from trait object
+
+    /// The language's *negative* tree-sitter query.
+    ///
+    /// Its results will be *subtracted* from the positive ones.
+    fn neg_query(&self) -> Option<&TSQuery>
     where
         Self: Sized; // Exclude from trait object
 
@@ -102,7 +157,7 @@ pub trait LanguageScoper: Scoper + Find {
     /// Scope the given input using the language's query.
     ///
     /// In principle, this is the same as [`Scoper::scope`].
-    fn scope_via_query(query: &mut TSQuery, input: &str) -> Ranges<usize>
+    fn scope_via_query(&self, input: &str) -> Ranges<usize>
     where
         Self: Sized, // Exclude from trait object
     {
@@ -121,7 +176,7 @@ pub trait LanguageScoper: Scoper + Find {
             root.to_sexp()
         );
 
-        let run = |query: &mut TSQuery| {
+        let run = |query: &TSQuery| {
             trace!("Running query: {:?}", query);
 
             let mut qc = TSQueryCursor::new();
@@ -142,35 +197,10 @@ pub trait LanguageScoper: Scoper + Find {
             ranges
         };
 
-        let ranges = run(query);
-
-        let is_ignored = |name: &str| name.starts_with(IGNORE);
-        let has_ignored_captures = query.capture_names().iter().any(|name| is_ignored(name));
-
-        if has_ignored_captures {
-            let ignored_ranges = {
-                let acknowledged_captures = query
-                    .capture_names()
-                    .iter()
-                    .filter(|name| !is_ignored(name))
-                    .map(|s| String::from(*s))
-                    .collect::<Vec<_>>();
-
-                for name in acknowledged_captures {
-                    trace!("Disabling capture for: {:?}", name);
-                    query.disable_capture(&name);
-                }
-
-                debug!("Query has captures to ignore: running additional query");
-                run(query)
-            };
-
-            let res = ranges - ignored_ranges;
-            debug!("Ranges cleaned up after subtracting ignores: {:?}", res);
-
-            res
-        } else {
-            ranges
+        let ranges = run(self.pos_query());
+        match &self.neg_query() {
+            Some(nq) => ranges - run(nq),
+            None => ranges,
         }
     }
 }
