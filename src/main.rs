@@ -810,8 +810,13 @@ mod cli {
     }
 
     /// <https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69>
-    pub fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
-        generate(gen, cmd, cmd.get_name().to_string(), &mut std::io::stdout());
+    pub fn print_completions<G: Generator>(generator: G, cmd: &mut Command) {
+        generate(
+            generator,
+            cmd,
+            cmd.get_name().to_string(),
+            &mut std::io::stdout(),
+        );
     }
 
     #[derive(Parser, Debug)]
@@ -1175,11 +1180,18 @@ mod tests {
             (Some("trace"), 1, LevelFilter::Trace),
             (Some("trace"), 128, LevelFilter::Trace),
         ] {
+            #[allow(unsafe_code)]
+            // Test itself runs sequentially and this env var doesn't otherwise matter.
+            // And it's just a test...
             if let Some(env_value) = env_value {
-                env::set_var(DEFAULT_FILTER_ENV, env_value);
+                unsafe {
+                    env::set_var(DEFAULT_FILTER_ENV, env_value);
+                }
             } else {
-                // Might be set on parent and fork()ed down
-                env::remove_var(DEFAULT_FILTER_ENV);
+                unsafe {
+                    // Might be set on parent and fork()ed down
+                    env::remove_var(DEFAULT_FILTER_ENV);
+                }
             }
 
             // Sanity check for sequential tests

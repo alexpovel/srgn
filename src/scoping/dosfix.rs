@@ -75,7 +75,7 @@ mod tests {
     #[case("\r", ScopedView::new(RWScopes(vec![RWScope(Out("\r"))])))]
     #[case("a\r", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None)), RWScope(Out("\r"))])))]
     #[case("a\r\n", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None)), RWScope(Out("\r")), RWScope(In(Borrowed("\n"), None))])))]
-    fn test_dos_fix(#[case] input: &str, #[case] expected: ScopedView) {
+    fn test_dos_fix(#[case] input: &str, #[case] expected: ScopedView<'_>) {
         let mut builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let dosfix = DosFix;
         builder.explode(&dosfix);

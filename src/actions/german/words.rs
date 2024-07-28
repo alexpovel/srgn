@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::{fmt::Display, ops::Range};
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum WordCasing {
+pub(super) enum WordCasing {
     AllLowercase,
     AllUppercase,
     Titlecase,
@@ -11,7 +11,7 @@ pub enum WordCasing {
 
 /// Error conditions when parsing a string into a `WordCasing`.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum WordCasingError {
+pub(super) enum WordCasingError {
     /// The string is empty.
     EmptyString,
     /// The string contains characters with undecidable casing.
@@ -124,31 +124,31 @@ pub(super) struct Replacement {
 
 impl Word {
     /// Clears the word's contents while retaining any allocated capacities.
-    pub fn clear(&mut self) {
+    pub(super) fn clear(&mut self) {
         self.content.clear();
         self.replacements.clear();
     }
 
-    pub fn push(&mut self, character: char) {
+    pub(super) fn push(&mut self, character: char) {
         self.content.push(character);
     }
 
-    pub fn len(&self) -> usize {
+    pub(super) fn len(&self) -> usize {
         self.content.len()
     }
 
-    pub fn add_replacement(&mut self, start: usize, end: usize, content: SpecialCharacter) {
+    pub(super) fn add_replacement(&mut self, start: usize, end: usize, content: SpecialCharacter) {
         self.replacements.push(Replacement {
             span: Range { start, end },
             content,
         });
     }
 
-    pub const fn replacements(&self) -> &Vec<Replacement> {
+    pub(super) const fn replacements(&self) -> &Vec<Replacement> {
         &self.replacements
     }
 
-    pub fn content(&self) -> &str {
+    pub(super) fn content(&self) -> &str {
         &self.content
     }
 }
@@ -163,15 +163,15 @@ impl Default for Word {
 }
 
 impl Replacement {
-    pub const fn start(&self) -> usize {
+    pub(super) const fn start(&self) -> usize {
         self.span.start
     }
 
-    pub const fn end(&self) -> usize {
+    pub(super) const fn end(&self) -> usize {
         self.span.end
     }
 
-    pub const fn content(&self) -> &SpecialCharacter {
+    pub(super) const fn content(&self) -> &SpecialCharacter {
         &self.content
     }
 }

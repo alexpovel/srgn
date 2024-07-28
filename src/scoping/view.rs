@@ -131,7 +131,7 @@ impl<'viewee> ScopedView<'viewee> {
     ///
     /// Scopes are retained, and broken across lines as needed.
     #[must_use]
-    pub fn lines(&self) -> ScopedViewLines {
+    pub fn lines(&self) -> ScopedViewLines<'_> {
         let mut lines = Vec::new();
         let mut curr = Vec::new();
 
@@ -184,7 +184,7 @@ impl<'viewee> IntoIterator for ScopedViewLines<'viewee> {
 /// Implementations of all available actions as dedicated methods.
 ///
 /// Where actions don't take arguments, neither do the methods.
-impl<'viewee> ScopedView<'viewee> {
+impl ScopedView<'_> {
     /// Apply the default [`actions::Deletion`] action to this view (see
     /// [`Self::map_without_context`]).
     pub fn delete(&mut self) -> &mut Self {
@@ -645,7 +645,10 @@ mod tests {
             ],
         ],
     )]
-    fn test_lines(#[case] input: Vec<Scope<&str>>, #[case] expected: Vec<Vec<Scope<&str>>>) {
+    fn test_lines(
+        #[case] input: Vec<Scope<'_, &str>>,
+        #[case] expected: Vec<Vec<Scope<'_, &str>>>,
+    ) {
         let view = ScopedView {
             scopes: input.into(),
         };

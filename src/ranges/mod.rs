@@ -596,7 +596,7 @@ mod tests {
     #[case(1u128..2)]
     #[case(1usize..2)]
     fn test_various_generic_inputs(#[case] range: Range<impl Ord + Copy + Debug>) {
-        let _ = Ranges::from_iter(vec![range]);
+        Ranges::from_iter(vec![range]);
     }
 
     #[test]

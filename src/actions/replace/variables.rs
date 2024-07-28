@@ -11,7 +11,7 @@ type Variables<'a> = HashMap<CaptureGroup, &'a str>;
 #[allow(clippy::too_many_lines)] // :(
 pub(super) fn inject_variables(
     input: &str,
-    variables: &Variables,
+    variables: &Variables<'_>,
 ) -> Result<String, VariableExpressionError> {
     let mut state = State::default();
     let mut out = String::with_capacity(input.len());
@@ -359,7 +359,7 @@ mod test {
     fn test_inject_variables(
         #[case] expression: &str,
         #[case] expected: Result<&str, VariableExpressionError>,
-        variables: Variables,
+        variables: Variables<'_>,
     ) {
         let result = inject_variables(expression, &variables);
         let expected = expected.map(str::to_owned);

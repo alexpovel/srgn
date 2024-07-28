@@ -3,7 +3,8 @@ mod deletion;
 mod german;
 mod lower;
 mod normalization;
-mod replace;
+/// Replacing inputs.
+pub mod replace;
 mod style;
 #[cfg(feature = "symbols")]
 mod symbols;
@@ -45,7 +46,11 @@ pub trait Action: Send + Sync {
     ///
     /// This is fallible, as the context is dynamically created at runtime and
     /// potentially contains bad data. See docs of the [`Err`] variant type.
-    fn act_with_context(&self, input: &str, context: &ScopeContext) -> Result<String, ActionError> {
+    fn act_with_context(
+        &self,
+        input: &str,
+        context: &ScopeContext<'_>,
+    ) -> Result<String, ActionError> {
         let _ = context; // Mark variable as used
         Ok(self.act(input))
     }
@@ -87,7 +92,11 @@ impl Action for Box<dyn Action> {
         self.as_ref().act(input)
     }
 
-    fn act_with_context(&self, input: &str, context: &ScopeContext) -> Result<String, ActionError> {
+    fn act_with_context(
+        &self,
+        input: &str,
+        context: &ScopeContext<'_>,
+    ) -> Result<String, ActionError> {
         self.as_ref().act_with_context(input, context)
     }
 }

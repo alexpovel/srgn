@@ -90,10 +90,68 @@ complexity = "warn"
 correctness = "warn"
 nursery = "warn"
 suspicious = "warn"
-
 # Overrides
 multiple_crate_versions = { level = "allow", priority = 1 }
 module_name_repetitions = { level = "allow", priority = 1 }
+
+[lints.rust]
+# Just took everything at
+# https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html
+# and made it more strict. Will perhaps get too annoying.
+
+absolute_paths_not_starting_with_crate = "warn"
+async-idents = "warn"
+box_pointers = "allow"                          # Not useful nowadays
+deprecated_safe = "warn"
+disjoint-capture-migration = "warn"
+elided-lifetime-in-path = "warn"
+elided_lifetimes_in_paths = "warn"
+explicit_outlives_requirements = "warn"
+ffi_unwind_calls = "warn"
+# fuzzy_provenance_casts = "warn" # Unstable
+# impl_trait_overcaptures = "warn" # Unstable
+keyword-idents = "warn"
+keyword_idents_2018 = "warn"
+keyword_idents_2024 = "warn"
+let_underscore_drop = "warn"
+# lossy_provenance_casts = "warn" # Unstable
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_abi = "warn"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+missing_unsafe_on_extern = "warn"
+# multiple_supertrait_upcastable = "warn" # Unstable
+# must_not_suspend = "warn" # Unstable
+non_ascii_idents = "warn"
+# non_exhaustive_omitted_patterns = "warn" # Unstable
+non_local_definitions = "warn"
+or-patterns-back-compat = "warn"
+redundant_lifetimes = "warn"
+rust_2021_incompatible_closure_captures = "warn"
+rust_2021_incompatible_or_patterns = "warn"
+rust_2021_prefixes_incompatible_syntax = "warn"
+rust_2021_prelude_collisions = "warn"
+# rust_2024_incompatible_pat = "warn" # Unstable
+single-use-lifetime = "warn"
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unit_bindings = "warn"
+unnameable_types = "warn"
+unreachable_pub = "allow"           # Too noisy
+unsafe_code = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+unstable_features = "warn"
+unused_crate_dependencies = "allow"
+unused_extern_crates = "allow"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+unused_qualifications = "warn"
+unused_results = "allow"            # Too noisy
+variant_size_differences = "warn"
 
 [profile.dev.package.insta]
 # https://insta.rs/docs/quickstart/#optional-faster-runs

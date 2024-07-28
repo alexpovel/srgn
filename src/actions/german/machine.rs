@@ -51,7 +51,7 @@ pub(super) struct StateMachine {
 }
 
 impl StateMachine {
-    pub fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
             state: State::default(),
             word: Word::default(),
@@ -59,7 +59,7 @@ impl StateMachine {
         }
     }
 
-    pub const fn current_word(&self) -> &Word {
+    pub(super) const fn current_word(&self) -> &Word {
         &self.word
     }
 
@@ -71,7 +71,7 @@ impl StateMachine {
         };
     }
 
-    pub fn transition(&mut self, input: MachineInput) -> Transition {
+    pub(super) fn transition(&mut self, input: MachineInput) -> Transition {
         self.pre_transition();
 
         let next = match (&self.state, input) {

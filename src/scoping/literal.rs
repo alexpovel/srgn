@@ -149,7 +149,7 @@ mod tests {
     fn test_literal_scoping(
         #[case] input: &str,
         #[case] literal: &str,
-        #[case] expected: ScopedView,
+        #[case] expected: ScopedView<'_>,
     ) {
         let mut builder = crate::scoping::view::ScopedViewBuilder::new(input);
         let literal = Literal::try_from(literal.to_owned()).unwrap();

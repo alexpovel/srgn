@@ -6,6 +6,7 @@ fn main() {
 }
 
 #[cfg(feature = "german")]
+#[allow(unreachable_pub)] // Cannot get this to play nice with clippy
 mod natural_languages {
     use std::io::{BufReader, BufWriter};
     use std::{
@@ -27,7 +28,10 @@ mod natural_languages {
             // German
             let source_file = base_source_path.join("de.txt");
             let destination_file = base_destination_path.join("de.fst");
-            destination_file.parent().map(fs::create_dir_all);
+            destination_file
+                .parent()
+                .map(|p| fs::create_dir_all(p).expect("directory creation to succeed"))
+                .expect("parent directory to be present");
 
             german::process(
                 &mut BufReader::new(File::open(&source_file).unwrap()),
@@ -63,7 +67,7 @@ mod natural_languages {
             W: Write,
         {
             let mut contents = String::new();
-            source.read_to_string(&mut contents).unwrap();
+            let _ = source.read_to_string(&mut contents).unwrap();
 
             let words: HashSet<&str> = time_it!(
                 "Constructing hashset of words",
@@ -113,7 +117,7 @@ mod natural_languages {
                     keepers.len(),
                     {
                         let mut path: std::path::PathBuf = env::var_os("OUT_DIR").unwrap().into();
-                        path.pop(); // Remove "out"
+                        assert!(path.pop(), "no parent element"); // Remove "out"
                         path.push("output"); // The log file
                         path
                     },

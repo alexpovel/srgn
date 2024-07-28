@@ -5,7 +5,8 @@ use std::{error::Error, fmt};
 use unescape::unescape;
 use variables::{inject_variables, VariableExpressionError};
 
-mod variables;
+/// Items for dealing with variables in replacement values.
+pub mod variables;
 
 /// Replaces input with a fixed string.
 ///
@@ -135,7 +136,7 @@ impl Action for Replacement {
     fn act_with_context(
         &self,
         _input: &str,
-        context: &ScopeContext,
+        context: &ScopeContext<'_>,
     ) -> Result<String, ActionError> {
         match context {
             ScopeContext::CaptureGroups(cgs) => {

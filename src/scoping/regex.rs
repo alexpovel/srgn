@@ -144,7 +144,7 @@ mod tests {
 
     /// Get 'Capture Group 0', the default which is always present.
     #[allow(clippy::unnecessary_wraps)]
-    fn cg0(string: &str) -> Option<ScopeContext> {
+    fn cg0(string: &str) -> Option<ScopeContext<'_>> {
         Some(ScopeContext::CaptureGroups(HashMap::from([(
             CaptureGroup::Numbered(0),
             string,
@@ -454,7 +454,7 @@ mod tests {
     fn test_regex_scoping(
         #[case] input: &str,
         #[case] pattern: &str,
-        #[case] expected: ScopedView,
+        #[case] expected: ScopedView<'_>,
     ) {
         let mut builder = ScopedViewBuilder::new(input);
         let regex = Regex::new(RegexPattern::new(pattern).unwrap());
@@ -545,7 +545,7 @@ mod tests {
             // https://docs.rs/regex/latest/regex/#matching-one-character
             // https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values
             let pattern = r"\P{other}+";
-            let gen = rand_regex::Regex::compile(pattern, 100).unwrap();
+            let generated = rand_regex::Regex::compile(pattern, 100).unwrap();
 
             let now = Instant::now();
 
@@ -556,7 +556,7 @@ mod tests {
                     continue;
                 };
                 let scope = Regex::new(regex);
-                let input: String = rng.sample(&gen);
+                let input: String = rng.sample(&generated);
 
                 let scopes = scope.scope(&input);
 

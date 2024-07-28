@@ -54,7 +54,7 @@ where
     }
 }
 
-impl<'viewee> ROScope<'viewee> {
+impl ROScope<'_> {
     /// Check whether the scope is empty.
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -70,7 +70,7 @@ pub type RangesWithContext<'viewee> = Vec<(Range<usize>, Option<ScopeContext<'vi
 ///
 /// A convenience to support [`Ranges`] where there's no meaningful context to be
 /// inserted for [`RangesWithContext`].
-impl<'viewee> From<Ranges<usize>> for RangesWithContext<'viewee> {
+impl From<Ranges<usize>> for RangesWithContext<'_> {
     fn from(val: Ranges<usize>) -> Self {
         val.into_iter()
             .map(|range| (range, Option::default()))
@@ -176,7 +176,7 @@ impl<'viewee> From<&'viewee ROScope<'viewee>> for &'viewee str {
     /// Get the underlying string slice.
     ///
     /// All variants contain such a slice, so this is a convenient method.
-    fn from(s: &'viewee ROScope) -> Self {
+    fn from(s: &'viewee ROScope<'_>) -> Self {
         match s.0 {
             In(s, ..) | Out(s) => s,
         }
@@ -196,7 +196,7 @@ impl<'viewee> From<&'viewee RWScope<'viewee>> for &'viewee str {
     /// Get the underlying string slice.
     ///
     /// All variants contain such a slice, so this is a convenient method.
-    fn from(s: &'viewee RWScope) -> Self {
+    fn from(s: &'viewee RWScope<'_>) -> Self {
         match &s.0 {
             In(s, ..) => s,
             Out(s) => s,
