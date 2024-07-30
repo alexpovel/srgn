@@ -1,3 +1,15 @@
+//! This module contains a small bash interpreter, capable of interpreting simple pipes
+//! of programs such as `echo 'Hello World!' | some-program --some-option | some-program
+//! arg1 arg2`. It knows how to process and forward stdin and stdout, and will assert
+//! commands run terminate as expected, with stdout as expected.
+//!
+//! There is also a small facility for tracking files, enabling usage of `cat some-file`
+//! as stdin for later processes.
+//!
+//! The interpreter can be used to run some binary under test on provided input and test
+//! against expected output. In this case, the source for all these elements is a
+//! Markdown document.
+
 #[cfg(all(test, feature = "all"))]
 mod tests {
     use assert_cmd::Command;
