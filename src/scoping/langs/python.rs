@@ -25,15 +25,18 @@ pub enum PreparedPythonQuery {
     FunctionNames,
     /// Function calls.
     FunctionCalls,
-    /// Class definitions (in their entirety)
+    /// Class definitions (in their entirety).
     Class,
-    /// Function definitions (*all* `def` block in their entirety)
+    /// Function definitions (*all* `def` block in their entirety).
     Def,
-    /// Async function definitions (*all* `async def` block in their entirety)
+    /// Async function definitions (*all* `async def` block in their entirety).
     AsyncDef,
+    /// Function definitions inside `class` bodies.
+    Methods,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
+    #[allow(clippy::too_many_lines)]
     fn from(value: PreparedPythonQuery) -> Self {
         Self::new(
             &Python::lang(),
@@ -93,6 +96,18 @@ impl From<PreparedPythonQuery> for TSQuery {
                 PreparedPythonQuery::Def => "(function_definition) @def",
                 PreparedPythonQuery::AsyncDef => {
                     r#"((function_definition) @def (#match? @def "^async "))"#
+                }
+                PreparedPythonQuery::Methods => {
+                    r"
+                    (class_definition
+                        body: (block
+                            [
+                                (function_definition) @method
+                                (decorated_definition definition: (function_definition)) @method
+                            ]
+                        )
+                    )
+                    "
                 }
             },
         )
