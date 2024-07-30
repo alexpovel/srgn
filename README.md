@@ -1426,6 +1426,7 @@ Language scopes:
             decorator)
           - static-methods: Function definitions decorated as `staticmethod` (excl. the
             decorator)
+          - with:           `with` blocks (in their entirety)
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.

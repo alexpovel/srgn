@@ -37,6 +37,8 @@ pub enum PreparedPythonQuery {
     ClassMethods,
     /// Function definitions decorated as `staticmethod` (excl. the decorator).
     StaticMethods,
+    /// `with` blocks (in their entirety).
+    With,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -143,6 +145,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                         IGNORE
                     )
                 }
+                PreparedPythonQuery::With => "(with_statement) @with",
             },
         )
         .expect("Prepared queries to be valid")

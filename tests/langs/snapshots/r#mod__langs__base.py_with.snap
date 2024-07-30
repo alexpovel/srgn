@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 173
+  l: "    with open(__file__) as f:\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 174
+  l: "        content = f.readline()\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 175
+  l: "        print(\"Read from file:\", content)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
