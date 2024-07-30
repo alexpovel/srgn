@@ -1429,6 +1429,7 @@ Language scopes:
           - with:           `with` blocks (in their entirety)
           - try:            `try` blocks (in their entirety)
           - lambda:         `lambda` statements (in their entirety)
+          - globals:        Global, i.e. module-level variables
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.

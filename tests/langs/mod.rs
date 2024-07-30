@@ -148,6 +148,11 @@ impl InScopeLinePart {
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::Lambda)),
 )]
 #[case(
+    "base.py_globals",
+    include_str!("python/base.py"),
+    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Globals)),
+)]
+#[case(
     "base.ts_strings",
     include_str!("typescript/base.ts"),
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Strings)),

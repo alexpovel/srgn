@@ -1,0 +1,34 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "test_var: int = 10\n"
+  m: "^^^^^^^^            "
+- n: 82
+  l: "square = lambda x: x * x\n"
+  m: "^^^^^^                    "
+- n: 85
+  l: "multi_line_str = \"\"\"\n"
+  m: "^^^^^^^^^^^^^^           "
+- n: 91
+  l: "multiline_f_string = f\"\"\"This is a\n"
+  m: "^^^^^^^^^^^^^^^^^^                     "
+- n: 96
+  l: "raw_string = r\"This is a raw string with no special treatment for \\n\"\n"
+  m: "^^^^^^^^^^                                                                "
+- n: 97
+  l: "bytes_string = b\"This is a bytes string\"\n"
+  m: "^^^^^^^^^^^^                                "
+- n: 98
+  l: "bytes_string = rf\"This is a raw f-string with {raw_string}\"\n"
+  m: "^^^^^^^^^^^^                                                   "
+- n: 102
+  l: "squared_numbers = [\"x\" + square(x) for x in range(10)]\n"
+  m: "^^^^^^^^^^^^^^^                                           "
+- n: 105
+  l: "unique_squares = {square(x) for x in range(10)}\n"
+  m: "^^^^^^^^^^^^^^                                   "
+- n: 108
+  l: "squares_dict = {x: square(x) for x in range(10)}\n"
+  m: "^^^^^^^^^^^^                                      "

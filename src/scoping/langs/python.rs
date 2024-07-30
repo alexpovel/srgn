@@ -43,6 +43,8 @@ pub enum PreparedPythonQuery {
     Try,
     /// `lambda` statements (in their entirety).
     Lambda,
+    /// Global, i.e. module-level variables.
+    Globals,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -152,6 +154,9 @@ impl From<PreparedPythonQuery> for TSQuery {
                 PreparedPythonQuery::With => "(with_statement) @with",
                 PreparedPythonQuery::Try => "(try_statement) @try",
                 PreparedPythonQuery::Lambda => "(lambda) @lambda",
+                PreparedPythonQuery::Globals => {
+                    "(module (expression_statement (assignment left: (identifier) @global)))"
+                }
             },
         )
         .expect("Prepared queries to be valid")
