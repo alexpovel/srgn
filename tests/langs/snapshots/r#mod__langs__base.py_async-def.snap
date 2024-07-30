@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 191
+  l: "async def async_function():\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 192
+  l: "    \"\"\"Function demonstrating async syntax.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 193
+  l: "    await asyncio.sleep(1)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 194
+  l: "    print(\"Async function executed\")\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

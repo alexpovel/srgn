@@ -29,6 +29,8 @@ pub enum PreparedPythonQuery {
     Class,
     /// Function definitions (*all* `def` block in their entirety)
     Def,
+    /// Async function definitions (*all* `async def` block in their entirety)
+    AsyncDef,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -89,6 +91,9 @@ impl From<PreparedPythonQuery> for TSQuery {
                 }
                 PreparedPythonQuery::Class => "(class_definition) @class",
                 PreparedPythonQuery::Def => "(function_definition) @def",
+                PreparedPythonQuery::AsyncDef => {
+                    r#"((function_definition) @def (#match? @def "^async "))"#
+                }
             },
         )
         .expect("Prepared queries to be valid")
