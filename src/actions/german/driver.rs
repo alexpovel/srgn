@@ -32,38 +32,32 @@ use unicode_titlecase::StrTitleCase;
 /// errors in processing could be the result of a faulty word list *or* faulty
 /// algorithms.
 ///
-/// # Example: A simple greeting, with Umlaut and Eszett
+/// # Examples
+///
+/// Provided here as a single doctest due to [performance
+/// issues](https://github.com/rust-lang/rust/issues/75341).
 ///
 /// ```
 /// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
+///
+/// // A simple greeting, with Umlaut and Eszett
 /// let result = action.act("Gruess Gott!");
 /// assert_eq!(result, "Grüß Gott!");
-/// ```
 ///
-/// # Example: A compound word
-///
-/// Note that this compound word is *not* part of the word list (that would be an
-/// *elaborate* word list!), but is still handled, as its constituents are.
-///
-/// ```
-/// use srgn::actions::{Action, German};
-///
-/// let action = German::default();
+/// // A compound word
+/// //
+/// // Note that this compound word is *not* part of the word list (that would be an
+/// // *elaborate* word list!), but is still handled, as its constituents are.
 /// let result = action.act("Du Suesswassertagtraeumer!");
 /// assert_eq!(result, "Du Süßwassertagträumer!");
-/// ```
 ///
-/// # Example: Words *validly* containing alternative Umlaut spelling
-///
-/// These spellings are *not* replaced, as they are valid words in their own right.
-/// Naive implementations/translations (e.g.
-/// [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
-///
-/// ```
-/// use srgn::actions::{Action, German};
-///
+/// // Words *validly* containing alternative Umlaut spelling
+/// //
+/// // These spellings are *not* replaced, as they are valid words in their own right.
+/// // Naive implementations/translations (e.g.
+/// // [`tr`](https://en.wikipedia.org/wiki/Tr_(Unix))) would not handle this correctly.
 /// for word in &[
 ///     // "ae"
 ///     "Aerodynamik",   // should not be "Ärodynamik"
@@ -84,15 +78,15 @@ use unicode_titlecase::StrTitleCase;
 /// }
 /// ```
 ///
-/// Note that `ss`/`ß` is not mentioned, as it is handled
-/// [elsewhere][`German::new`], dealing with the topic of words with valid
-/// alternative *and* special character spellings.
+/// Note that `ss`/`ß` is not mentioned, as it is handled [elsewhere][`German::new`],
+/// dealing with the topic of words with valid alternative *and* special character
+/// spellings.
 ///
 /// # Example: Upper- and mixed case
 ///
-/// This action can handle any case, but assumes **nouns are never lower case** (a pretty
-/// mild assumption). The **first letter governs the case** of the entity (Umlaut,
-/// Eszett or entire word) in question:
+/// This action can handle any case, but assumes **nouns are never lower case** (a
+/// pretty mild assumption). The **first letter governs the case** of the entity
+/// (Umlaut, Eszett or entire word) in question:
 ///
 /// | Input | Example Umlaut/Eszett | Example word | Detected case |
 /// | ----- | --------------------- | ------------ | ------------- |
@@ -107,47 +101,25 @@ use unicode_titlecase::StrTitleCase;
 /// If whatever case was detected is not considered a valid word, the replacement is not
 /// made. Example flows follow.
 ///
-/// ## Subexample: mixed case, invalid word
-///
-/// The flow looks like:
-///
-/// `aEpFeL` → lowercase Umlaut → `äpFeL` → lowercase word → squash → `äpfel` → ❌ →
-/// output is `aEpFeL`
-///
-///
 /// ```
 /// use srgn::actions::{Action, German};
 ///
 /// let action = German::default();
+///
+///
+/// // `aEpFeL` → lowercase Umlaut → `äpFeL` → lowercase word → squash → `äpfel` → ❌ →
+/// // output is `aEpFeL`
 /// let result = action.act("aEpFeL");
-///
-/// // Error: MiXeD CaSe noun without leading capital letter
+/// // Error: MiXeD CaSe noun without leading capital letter.
 /// assert_eq!(result, "aEpFeL");
-/// ```
 ///
-/// ## Subexample: mixed case, valid word
-///
-/// The flow looks like:
-///
-/// `AePfEl` → uppercase Umlaut → `ÄPfEl` → uppercase word → squash → `Äpfel` → ✅ →
-/// output is `Äpfel`
-///
-/// ```
-/// use srgn::actions::{Action, German};
-///
-/// let action = German::default();
+/// // `AePfEl` → uppercase Umlaut → `ÄPfEl` → uppercase word → squash → `Äpfel` → ✅ →
+/// // output is `Äpfel`
 /// let result: String = action.act("AePfEl");
-///
 /// // OK: MiXeD CaSe words nouns are okay, *if* starting with a capital letter
 /// assert_eq!(result, "ÄPfEl");
-/// ```
 ///
-/// ## Subexample: other cases
-///
-/// ```
-/// use srgn::actions::{Action, German};
-///
-/// let action = German::default();
+/// // Other cases
 /// let f = |word: &str| -> String {action.act(word)};
 ///
 /// // OK: The normal case, adjective lowercase
@@ -173,17 +145,8 @@ use unicode_titlecase::StrTitleCase;
 ///
 /// // OK: MiXeD CaSe verb: inserted special character is lowercase
 /// assert_eq!(f("FuElLEn"), "FülLEn");
-/// ```
 ///
-/// ### Capital Eszett (ẞ)
-///
-/// Note the spelling of `SCHLIEẞEN` containing `ẞ`, the [uppercase version of
-/// `ß`](https://www.wikidata.org/wiki/Q9693), part of [official spelling since
-/// 2017](https://web.archive.org/web/20230206102049/https://www.rechtschreibrat.com/DOX/rfdr_PM_2017-06-29_Aktualisierung_Regelwerk.pdf).
-/// It's the result of uppercasing `ß` of `schließen`. This does **not** follow Rust's
-/// usual behavior, which is why it is specially mentioned here:
-///
-/// ```
+/// // Eszett behavior
 /// let lc = "ß";
 /// let uc = "ẞ";
 ///
@@ -199,10 +162,17 @@ use unicode_titlecase::StrTitleCase;
 /// assert_eq!(lc.to_lowercase().to_string(), lc);
 /// ```
 ///
-/// The `SS` of `SCHLIESSEN` is detected as an uppercase Eszett, which is specifically
-/// inserted. You might want to run additional processing if this is undesired.
+/// ### Capital Eszett (ẞ)
 ///
-/// # Example: Other bytes
+/// Note the spelling of `SCHLIEẞEN` containing `ẞ`, the [uppercase version of
+/// `ß`](https://www.wikidata.org/wiki/Q9693), part of [official spelling since
+/// 2017](https://web.archive.org/web/20230206102049/https://www.rechtschreibrat.com/DOX/rfdr_PM_2017-06-29_Aktualisierung_Regelwerk.pdf).
+/// It's the result of uppercasing `ß` of `schließen`. This does **not** follow Rust's
+/// usual behavior, which is why it is specially mentioned here. The `SS` of
+/// `SCHLIESSEN` is detected as an uppercase Eszett, which is specifically inserted. You
+/// might want to run additional processing if this is undesired.
+///
+/// # Other bytes
 ///
 /// This action handles the German alphabet *only*, and will leave other input bytes
 /// untouched. You get to keep your trailing newlines, emojis (also multi-[`char`]
@@ -210,14 +180,6 @@ use unicode_titlecase::StrTitleCase;
 ///
 /// Of course, the input has to be valid UTF-8, as is ensured by its signature
 /// ([`str`]).
-///
-/// ```
-/// use srgn::actions::{Action, German};
-///
-/// let action = German::default();
-/// let result = action.act("\0Schoener    你好 Satz... 👋🏻\r\n\n");
-/// assert_eq!(result, "\0Schöner    你好 Satz... 👋🏻\r\n\n");
-/// ```
 ///
 /// # Performance
 ///
@@ -310,15 +272,8 @@ impl German {
     ///    let result = action.act(original);
     ///    assert_eq!(result, original.to_string());
     /// }
-    /// ```
     ///
-    /// ## Example: naive mode
-    ///
-    /// Naive mode is essentially forcing a maximum number of replacements.
-    ///
-    /// ```
-    /// use srgn::actions::{Action, German};
-    ///
+    /// // Naive mode is essentially forcing a maximum number of replacements.
     /// for (original, output) in &[
     ///     ("Frau Schroekedaek", "Frau Schrökedäk"), // Names are not in the word list
     ///     ("Abenteuer", "Abenteür"), // Illegal, but possible now
@@ -340,7 +295,6 @@ impl German {
     ///    assert_eq!(result, original.to_string());
     /// }
     /// ```
-    ///
     #[must_use]
     pub const fn new(prefer_original: bool, naive: bool) -> Self {
         Self {
@@ -721,6 +675,12 @@ mod tests {
     #[case(
         "Oel ist ein wichtiger Bestandteil von Oel.",
         "Öl ist ein wichtiger Bestandteil von Öl."
+    )]
+    //
+    // Edge cases
+    #[case(
+        "\0Schoener    你好 Satz... 👋🏻\r\n\n",
+        "\0Schöner    你好 Satz... 👋🏻\r\n\n"
     )]
     fn test_substitution(#[case] input: &str, #[case] expected: &str) {
         let action = German::default();

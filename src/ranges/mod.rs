@@ -175,79 +175,55 @@ impl<Idx: Ord + Copy + Debug> Sub for Ranges<Idx> {
     ///
     /// Using single ranges for simplicity.
     ///
-    /// ### To the left, no overlap
-    ///
-    /// ```text
-    /// self:        |-------XXXXX--->
-    /// rhs:         |-XXXX---------->
-    /// self - rhs = |-------XXXXX--->
-    /// ```
     ///
     /// ```rust
     /// use srgn::ranges::Ranges as Rs;
     ///
+    /// // To the left, no overlap
+    /// //
+    /// // self:        |-------XXXXX--->
+    /// // rhs:         |-XXXX---------->
+    /// // self - rhs = |-------XXXXX--->
+    /// //
     /// let self_: Rs<i8> = vec![4..5].into_iter().collect();
     /// let rhs: Rs<i8> = vec![1..2].into_iter().collect();
     ///
     /// assert_eq!(self_ - rhs, vec![4..5].into_iter().collect());
-    /// ```
     ///
-    /// ### Regular overlap
-    ///
-    /// ```text
-    /// self:        |---XXXXX------->
-    /// rhs:         |-XXXX---------->
-    /// self - rhs = |-----XXX------->
-    /// ```
-    ///
-    /// ```rust
-    /// use srgn::ranges::Ranges as Rs;
-    ///
+    /// // Regular overlap
+    /// //
+    /// // self:        |---XXXXX------->
+    /// // rhs:         |-XXXX---------->
+    /// // self - rhs = |-----XXX------->
+    /// //
     /// let self_: Rs<i8> = vec![3..6].into_iter().collect();
     /// let rhs: Rs<i8> = vec![1..4].into_iter().collect();
     ///
     /// assert_eq!(self_ - rhs, vec![4..6].into_iter().collect());
-    /// ```
     ///
-    /// ### Splits
-    ///
-    /// ```text
-    /// self:        |--XXXXXXXXXX--->
-    /// rhs:         |----XXXXX------>
-    /// self - rhs = |--XX-----XXX--->
-    /// ```
-    ///
-    /// ```rust
-    /// use srgn::ranges::Ranges as Rs;
-    ///
+    /// // Splits
+    /// //
+    /// // self:        |--XXXXXXXXXX--->
+    /// // rhs:         |----XXXXX------>
+    /// // self - rhs = |--XX-----XXX--->
+    /// //
     /// let self_: Rs<i8> = vec![1..6].into_iter().collect();
     /// let rhs: Rs<i8> = vec![3..5].into_iter().collect();
     ///
     /// assert_eq!(self_ - rhs, vec![1..3, 5..6].into_iter().collect());
-    /// ```
     ///
-    /// ### Envelops
-    ///
-    /// ```text
-    /// self:        |----XXXXX------>
-    /// rhs:         |--XXXXXXXXXX--->
-    /// self - rhs = |--------------->
-    /// ```
-    ///
-    /// ```rust
-    /// use srgn::ranges::Ranges as Rs;
-    ///
+    /// // Envelops
+    /// //
+    /// // self:        |----XXXXX------>
+    /// // rhs:         |--XXXXXXXXXX--->
+    /// // self - rhs = |--------------->
+    /// //
     /// let self_: Rs<i8> = vec![3..5].into_iter().collect();
     /// let rhs: Rs<i8> = vec![1..6].into_iter().collect();
     ///
     /// assert_eq!(self_ - rhs, vec![].into_iter().collect());
-    /// ```
     ///
-    /// ### Combined
-    ///
-    /// ```rust
-    /// use srgn::ranges::Ranges as Rs;
-    ///
+    /// // Combined
     /// let self_: Rs<u16> = vec![2..7, 10..15, 20..25, 40..50, 100..137, 200..300].into_iter().collect();
     /// let rhs: Rs<u16> = vec![0..1, 5..9, 12..15, 20..23, 30..35, 40..50, 99..138].into_iter().collect();
     ///

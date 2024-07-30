@@ -10,12 +10,13 @@ pub mod variables;
 
 /// Replaces input with a fixed string.
 ///
-/// ## Example: replacing invalid characters in identifiers
+/// ## Examples
 ///
 /// ```rust
 /// use srgn::RegexPattern;
 /// use srgn::scoping::{view::ScopedViewBuilder, regex::Regex};
 ///
+/// // Replacing invalid characters in identifiers
 /// let scoper = Regex::new(RegexPattern::new(r"[^a-zA-Z0-9]+").unwrap());
 /// let mut builder = ScopedViewBuilder::new("hyphenated-variable-name");
 /// builder.explode(&scoper);
@@ -26,13 +27,8 @@ pub mod variables;
 ///    view.to_string(),
 ///   "hyphenated_variable_name"
 /// );
-/// ```
 ///
-/// ## Example: replace emojis
-///
-/// ```rust
-/// use srgn::RegexPattern;
-/// use srgn::scoping::{view::ScopedViewBuilder, regex::Regex};
+/// // Replacing emojis
 ///
 /// // A Unicode character class category. See also
 /// // https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties
@@ -59,11 +55,12 @@ impl TryFrom<String> for Replacement {
     /// Escape sequences are accepted and processed, with invalid escape sequences
     /// returning an [`Err`].
     ///
-    /// ## Example: Basic usage
+    /// ## Examples
     ///
     /// ```
     /// use srgn::actions::Replacement;
     ///
+    /// // Basic usage
     /// // Successful creation of a regular string
     /// let replacement = Replacement::try_from("Some Replacement".to_owned());
     /// assert!(replacement.is_ok());
@@ -71,15 +68,11 @@ impl TryFrom<String> for Replacement {
     /// // Successful creation, with escape characters
     /// let replacement = Replacement::try_from(r"Some \t Escape".to_owned());
     /// assert!(replacement.is_ok());
-    /// ```
     ///
-    /// ## Example: Invalid escape sequence
+    /// use srgn::actions::ReplacementError;
     ///
-    /// Creation fails due to invalid escape sequences.
-    ///
-    /// ```
-    /// use srgn::actions::{Replacement, ReplacementError};
-    ///
+    /// // Invalid escape sequence
+    /// // Creation fails due to invalid escape sequences.
     /// let replacement = Replacement::try_from(r"Invalid \z Escape".to_owned());
     /// assert_eq!(
     ///    replacement,
