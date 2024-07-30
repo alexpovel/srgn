@@ -39,6 +39,8 @@ pub enum PreparedPythonQuery {
     StaticMethods,
     /// `with` blocks (in their entirety).
     With,
+    /// `try` blocks (in their entirety).
+    Try,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -146,6 +148,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                     )
                 }
                 PreparedPythonQuery::With => "(with_statement) @with",
+                PreparedPythonQuery::Try => "(try_statement) @try",
             },
         )
         .expect("Prepared queries to be valid")
