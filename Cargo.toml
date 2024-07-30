@@ -100,11 +100,8 @@ module_name_repetitions = { level = "allow", priority = 1 }
 # and made it more strict. Will perhaps get too annoying.
 
 absolute_paths_not_starting_with_crate = "warn"
-async-idents = "warn"
 box_pointers = "allow"                          # Not useful nowadays
 deprecated_safe = "warn"
-disjoint-capture-migration = "warn"
-elided-lifetime-in-path = "warn"
 elided_lifetimes_in_paths = "warn"
 explicit_outlives_requirements = "warn"
 ffi_unwind_calls = "warn"
@@ -127,14 +124,12 @@ missing_unsafe_on_extern = "warn"
 non_ascii_idents = "warn"
 # non_exhaustive_omitted_patterns = "warn" # Unstable
 non_local_definitions = "warn"
-or-patterns-back-compat = "warn"
 redundant_lifetimes = "warn"
 rust_2021_incompatible_closure_captures = "warn"
 rust_2021_incompatible_or_patterns = "warn"
 rust_2021_prefixes_incompatible_syntax = "warn"
 rust_2021_prelude_collisions = "warn"
 # rust_2024_incompatible_pat = "warn" # Unstable
-single-use-lifetime = "warn"
 single_use_lifetimes = "warn"
 trivial_casts = "warn"
 trivial_numeric_casts = "warn"
