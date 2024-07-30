@@ -1,0 +1,37 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 52
+  l: "    def static_decorator(func):\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 53
+  l: "        \"\"\"Decorator for static methods.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 54
+  l: "\n"
+  m: ^^
+- n: 55
+  l: "        def wrapper(*args, **kwargs):\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 56
+  l: "            print(\"Static method decorator called\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 57
+  l: "            return func(*args, **kwargs)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 58
+  l: "\n"
+  m: ^^
+- n: 59
+  l: "        return wrapper\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 76
+  l: "    def static_method() -> None:\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 77
+  l: "        \"\"\"Static method.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 78
+  l: "        print(\"Inside static method\")\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

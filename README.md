@@ -1424,6 +1424,8 @@ Language scopes:
           - methods:        Function definitions inside `class` bodies
           - class-methods:  Function definitions decorated as `classmethod` (excl. the
             decorator)
+          - static-methods: Function definitions decorated as `staticmethod` (excl. the
+            decorator)
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.

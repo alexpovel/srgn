@@ -35,6 +35,8 @@ pub enum PreparedPythonQuery {
     Methods,
     /// Function definitions decorated as `classmethod` (excl. the decorator).
     ClassMethods,
+    /// Function definitions decorated as `staticmethod` (excl. the decorator).
+    StaticMethods,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -120,6 +122,21 @@ impl From<PreparedPythonQuery> for TSQuery {
                                     (decorator (identifier) @{0})
                                     definition: (function_definition) @method
                                     (#eq? @{0} \"classmethod\")
+                                )
+                            )
+                        )",
+                        IGNORE
+                    )
+                }
+                PreparedPythonQuery::StaticMethods => {
+                    formatcp!(
+                        "
+                        (class_definition
+                            body: (block
+                                (decorated_definition
+                                    (decorator (identifier) @{0})
+                                    definition: (function_definition) @method
+                                    (#eq? @{0} \"staticmethod\")
                                 )
                             )
                         )",
