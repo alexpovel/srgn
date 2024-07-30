@@ -27,6 +27,8 @@ pub enum PreparedPythonQuery {
     FunctionCalls,
     /// Class definitions (in their entirety)
     Class,
+    /// Function definitions (*all* `def` block in their entirety)
+    Def,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -86,6 +88,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                     "
                 }
                 PreparedPythonQuery::Class => "(class_definition) @class",
+                PreparedPythonQuery::Def => "(function_definition) @def",
             },
         )
         .expect("Prepared queries to be valid")

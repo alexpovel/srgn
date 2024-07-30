@@ -108,6 +108,11 @@ impl InScopeLinePart {
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::Class)),
 )]
 #[case(
+    "base.py_def",
+    include_str!("python/base.py"),
+    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Def)),
+)]
+#[case(
     "base.ts_strings",
     include_str!("typescript/base.ts"),
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Strings)),

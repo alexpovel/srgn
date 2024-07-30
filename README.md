@@ -1418,6 +1418,7 @@ Language scopes:
           - function-names: Function names, at the definition site
           - function-calls: Function calls
           - class:          Class definitions (in their entirety)
+          - def:            Function definitions (*all* `def` block in their entirety)
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.
