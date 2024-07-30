@@ -45,6 +45,8 @@ pub enum PreparedPythonQuery {
     Lambda,
     /// Global, i.e. module-level variables.
     Globals,
+    /// Identifiers for variables (left-hand side of assignments).
+    VariableIdentifiers,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -156,6 +158,9 @@ impl From<PreparedPythonQuery> for TSQuery {
                 PreparedPythonQuery::Lambda => "(lambda) @lambda",
                 PreparedPythonQuery::Globals => {
                     "(module (expression_statement (assignment left: (identifier) @global)))"
+                }
+                PreparedPythonQuery::VariableIdentifiers => {
+                    "(assignment left: (identifier) @identifier)"
                 }
             },
         )

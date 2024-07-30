@@ -1410,26 +1410,30 @@ Language scopes:
           [env: PYTHON=]
 
           Possible values:
-          - comments:       Comments
-          - strings:        Strings (raw, byte, f-strings; interpolation not included)
-          - imports:        Module names in imports (incl. periods; excl.
+          - comments:             Comments
+          - strings:              Strings (raw, byte, f-strings; interpolation not
+            included)
+          - imports:              Module names in imports (incl. periods; excl.
             `import`/`from`/`as`/`*`)
-          - doc-strings:    Docstrings (not including multi-line strings)
-          - function-names: Function names, at the definition site
-          - function-calls: Function calls
-          - class:          Class definitions (in their entirety)
-          - def:            Function definitions (*all* `def` block in their entirety)
-          - async-def:      Async function definitions (*all* `async def` block in their
+          - doc-strings:          Docstrings (not including multi-line strings)
+          - function-names:       Function names, at the definition site
+          - function-calls:       Function calls
+          - class:                Class definitions (in their entirety)
+          - def:                  Function definitions (*all* `def` block in their
             entirety)
-          - methods:        Function definitions inside `class` bodies
-          - class-methods:  Function definitions decorated as `classmethod` (excl. the
-            decorator)
-          - static-methods: Function definitions decorated as `staticmethod` (excl. the
-            decorator)
-          - with:           `with` blocks (in their entirety)
-          - try:            `try` blocks (in their entirety)
-          - lambda:         `lambda` statements (in their entirety)
-          - globals:        Global, i.e. module-level variables
+          - async-def:            Async function definitions (*all* `async def` block in
+            their entirety)
+          - methods:              Function definitions inside `class` bodies
+          - class-methods:        Function definitions decorated as `classmethod` (excl.
+            the decorator)
+          - static-methods:       Function definitions decorated as `staticmethod` (excl.
+            the decorator)
+          - with:                 `with` blocks (in their entirety)
+          - try:                  `try` blocks (in their entirety)
+          - lambda:               `lambda` statements (in their entirety)
+          - globals:              Global, i.e. module-level variables
+          - variable-identifiers: Identifiers for variables (left-hand side of
+            assignments)
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.

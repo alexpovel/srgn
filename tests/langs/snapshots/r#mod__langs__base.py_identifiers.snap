@@ -1,0 +1,58 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "test_var: int = 10\n"
+  m: "^^^^^^^^            "
+- n: 48
+  l: "    class_var = \"Class variable\"\n"
+  m: "    ^^^^^^^^^                       "
+- n: 82
+  l: "square = lambda x: x * x\n"
+  m: "^^^^^^                    "
+- n: 85
+  l: "multi_line_str = \"\"\"\n"
+  m: "^^^^^^^^^^^^^^           "
+- n: 91
+  l: "multiline_f_string = f\"\"\"This is a\n"
+  m: "^^^^^^^^^^^^^^^^^^                     "
+- n: 96
+  l: "raw_string = r\"This is a raw string with no special treatment for \\n\"\n"
+  m: "^^^^^^^^^^                                                                "
+- n: 97
+  l: "bytes_string = b\"This is a bytes string\"\n"
+  m: "^^^^^^^^^^^^                                "
+- n: 98
+  l: "bytes_string = rf\"This is a raw f-string with {raw_string}\"\n"
+  m: "^^^^^^^^^^^^                                                   "
+- n: 102
+  l: "squared_numbers = [\"x\" + square(x) for x in range(10)]\n"
+  m: "^^^^^^^^^^^^^^^                                           "
+- n: 105
+  l: "unique_squares = {square(x) for x in range(10)}\n"
+  m: "^^^^^^^^^^^^^^                                   "
+- n: 108
+  l: "squares_dict = {x: square(x) for x in range(10)}\n"
+  m: "^^^^^^^^^^^^                                      "
+- n: 119
+  l: "        result = 10 / x\n"
+  m: "        ^^^^^^           "
+- n: 133
+  l: "    nonlocal_var = \"Initial value\"\n"
+  m: "    ^^^^^^^^^^^^                      "
+- n: 137
+  l: "        nonlocal_var = \"Modified value\"\n"
+  m: "        ^^^^^^^^^^^^                       "
+- n: 145
+  l: "    x = 10\n"
+  m: "    ^       "
+- n: 163
+  l: "    counter = 0\n"
+  m: "    ^^^^^^^      "
+- n: 174
+  l: "        content = f.readline()\n"
+  m: "        ^^^^^^^                 "
+- n: 202
+  l: "    instance = TestClass()\n"
+  m: "    ^^^^^^^^                "
