@@ -1422,6 +1422,8 @@ Language scopes:
           - async-def:      Async function definitions (*all* `async def` block in their
             entirety)
           - methods:        Function definitions inside `class` bodies
+          - class-methods:  Function definitions decorated as `classmethod` (excl. the
+            decorator)
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.

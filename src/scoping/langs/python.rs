@@ -33,6 +33,8 @@ pub enum PreparedPythonQuery {
     AsyncDef,
     /// Function definitions inside `class` bodies.
     Methods,
+    /// Function definitions decorated as `classmethod` (excl. the decorator).
+    ClassMethods,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -108,6 +110,21 @@ impl From<PreparedPythonQuery> for TSQuery {
                         )
                     )
                     "
+                }
+                PreparedPythonQuery::ClassMethods => {
+                    formatcp!(
+                        "
+                        (class_definition
+                            body: (block
+                                (decorated_definition
+                                    (decorator (identifier) @{0})
+                                    definition: (function_definition) @method
+                                    (#eq? @{0} \"classmethod\")
+                                )
+                            )
+                        )",
+                        IGNORE
+                    )
                 }
             },
         )

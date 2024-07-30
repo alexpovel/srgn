@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 63
+  l: "    def class_method(cls) -> None:\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 64
+  l: "        \"\"\"Class method.\"\"\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 65
+  l: "        cls.class_var += \" updated\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "        print(f\"Class variable is now {cls.class_var}\")\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
