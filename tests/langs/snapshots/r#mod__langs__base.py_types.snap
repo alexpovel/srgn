@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "test_var: int = 10\n"
+  m: "          ^^^       "
+- n: 63
+  l: "    def class_method(cls) -> None:\n"
+  m: "                             ^^^^   "
+- n: 69
+  l: "    def instance_method(self) -> None:\n"
+  m: "                                 ^^^^   "
+- n: 76
+  l: "    def static_method() -> None:\n"
+  m: "                           ^^^^   "
+- n: 112
+  l: "def exception_handling(x) -> None:\n"
+  m: "                             ^^^^   "

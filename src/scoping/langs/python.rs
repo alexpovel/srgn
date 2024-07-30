@@ -47,6 +47,8 @@ pub enum PreparedPythonQuery {
     Globals,
     /// Identifiers for variables (left-hand side of assignments).
     VariableIdentifiers,
+    /// Types in type hints.
+    Types,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -162,6 +164,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                 PreparedPythonQuery::VariableIdentifiers => {
                     "(assignment left: (identifier) @identifier)"
                 }
+                PreparedPythonQuery::Types => "(type) @type",
             },
         )
         .expect("Prepared queries to be valid")

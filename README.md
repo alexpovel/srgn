@@ -1434,6 +1434,7 @@ Language scopes:
           - globals:              Global, i.e. module-level variables
           - variable-identifiers: Identifiers for variables (left-hand side of
             assignments)
+          - types:                Types in type hints
 
       --python-query <PYTHON_QUERY>
           Scope Python code using a custom tree-sitter query.
