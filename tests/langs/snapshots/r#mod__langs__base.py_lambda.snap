@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 82
+  l: "square = lambda x: x * x\n"
+  m: "         ^^^^^^^^^^^^^^^  "

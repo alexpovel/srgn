@@ -41,6 +41,8 @@ pub enum PreparedPythonQuery {
     With,
     /// `try` blocks (in their entirety).
     Try,
+    /// `lambda` statements (in their entirety).
+    Lambda,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -149,6 +151,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                 }
                 PreparedPythonQuery::With => "(with_statement) @with",
                 PreparedPythonQuery::Try => "(try_statement) @try",
+                PreparedPythonQuery::Lambda => "(lambda) @lambda",
             },
         )
         .expect("Prepared queries to be valid")
