@@ -27,18 +27,23 @@ mod natural_languages {
         {
             // German
             let source_file = base_source_path.join("de.txt");
+            println!("cargo::rerun-if-changed={}", source_file.display());
+
             let destination_file = base_destination_path.join("de.fst");
             destination_file
                 .parent()
                 .map(|p| fs::create_dir_all(p).expect("directory creation to succeed"))
                 .expect("parent directory to be present");
 
+            if destination_file.exists() {
+                println!("Output file already exists, skipping generation");
+                return;
+            }
+
             german::process(
                 &mut BufReader::new(File::open(&source_file).unwrap()),
                 &mut BufWriter::new(File::create(destination_file).unwrap()),
             );
-
-            println!("cargo::rerun-if-changed={}", source_file.display());
         }
     }
 
