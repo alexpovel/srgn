@@ -17,6 +17,8 @@ pub enum PreparedHclQuery {
     Variable,
     /// `resource` blocks (in their entirety).
     Resource,
+    /// `data` blocks (in their entirety).
+    Data,
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -65,6 +67,14 @@ impl From<PreparedHclQuery> for TSQuery {
                         (block
                             (identifier) @name
                             (#match? @name "resource")
+                        ) @block
+                    "#
+                }
+                PreparedHclQuery::Data => {
+                    r#"
+                        (block
+                            (identifier) @name
+                            (#match? @name "data")
                         ) @block
                     "#
                 }

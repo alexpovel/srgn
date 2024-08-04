@@ -208,6 +208,11 @@ impl InScopeLinePart {
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Resource)),
 )]
 #[case(
+    "base.tf_data-block",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Data)),
+)]
+#[case(
     "base.tf_variables",
     include_str!("hcl/base.tf"),
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variables)),
