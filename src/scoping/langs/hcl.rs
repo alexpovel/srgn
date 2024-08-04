@@ -13,6 +13,8 @@ pub type HclQuery = CodeQuery<CustomHclQuery, PreparedHclQuery>;
 /// Prepared tree-sitter queries for Hcl.
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum PreparedHclQuery {
+    /// `variable` blocks (in their entirety).
+    Variable,
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -48,6 +50,14 @@ impl From<PreparedHclQuery> for TSQuery {
             // affected.
             #[allow(clippy::needless_raw_string_hashes)]
             match value {
+                PreparedHclQuery::Variable => {
+                    r#"
+                        (block
+                            (identifier) @name
+                            (#match? @name "variable")
+                        ) @block
+                    "#
+                }
                 PreparedHclQuery::Variables => {
                     // Capturing nodes with names, such as `@id`, requires names to be
                     // unique across the *entire* query, else things break. Hence, us

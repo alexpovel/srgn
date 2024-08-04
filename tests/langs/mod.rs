@@ -198,6 +198,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::DocComments)),
 )]
 #[case(
+    "base.tf_variable-block",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variable)),
+)]
+#[case(
     "base.tf_variables",
     include_str!("hcl/base.tf"),
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variables)),
