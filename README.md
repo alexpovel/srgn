@@ -1392,6 +1392,7 @@ Language scopes:
 
           Possible values:
           - variable:       `variable` blocks (in their entirety)
+          - resource:       `resource` blocks (in their entirety)
           - variables:      Variable declarations and usages
           - resource-names: `resource` name declarations and usages
           - resource-types: `resource` type declarations and usages

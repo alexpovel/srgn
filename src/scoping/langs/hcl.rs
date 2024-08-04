@@ -15,6 +15,8 @@ pub type HclQuery = CodeQuery<CustomHclQuery, PreparedHclQuery>;
 pub enum PreparedHclQuery {
     /// `variable` blocks (in their entirety).
     Variable,
+    /// `resource` blocks (in their entirety).
+    Resource,
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -55,6 +57,14 @@ impl From<PreparedHclQuery> for TSQuery {
                         (block
                             (identifier) @name
                             (#match? @name "variable")
+                        ) @block
+                    "#
+                }
+                PreparedHclQuery::Resource => {
+                    r#"
+                        (block
+                            (identifier) @name
+                            (#match? @name "resource")
                         ) @block
                     "#
                 }
