@@ -38,7 +38,7 @@ mod natural_languages {
                 &mut BufWriter::new(File::create(destination_file).unwrap()),
             );
 
-            println!("cargo:rerun-if-changed={}", source_file.display());
+            println!("cargo::rerun-if-changed={}", source_file.display());
         }
     }
 
@@ -112,7 +112,7 @@ mod natural_languages {
             let n_dropped = dropped_words.len();
             if n_dropped > 0 {
                 println!(
-                    "cargo:warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
+                    "cargo::warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
                     n_dropped,
                     keepers.len(),
                     {
