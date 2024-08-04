@@ -1398,6 +1398,7 @@ Language scopes:
           - provider:       `provider` blocks (in their entirety)
           - terraform:      `terraform` blocks (in their entirety)
           - locals:         `locals` blocks (in their entirety)
+          - module:         `module` blocks (in their entirety)
           - variables:      Variable declarations and usages
           - resource-names: `resource` name declarations and usages
           - resource-types: `resource` type declarations and usages

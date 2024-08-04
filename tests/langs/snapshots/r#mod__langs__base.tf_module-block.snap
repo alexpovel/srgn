@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 107
+  l: "module \"network\" {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "  source   = \"./modules/network\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 109
+  l: "  vpc_cidr = \"10.0.0.0/16\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 110
+  l: "}\n"
+  m: "^  "
