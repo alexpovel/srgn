@@ -18,38 +18,41 @@ expression: inscope_parts
   l: "*/\n"
   m: "^^  "
 - n: 9
+  l: "// Terraform block\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 25
   l: "// Variable Definitions\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 34
+- n: 50
   l: "// Locals\n"
   m: "^^^^^^^^^  "
-- n: 40
+- n: 56
   l: "// Providers\n"
   m: "^^^^^^^^^^^^  "
-- n: 45
+- n: 61
   l: "// Data Sources\n"
   m: "^^^^^^^^^^^^^^^  "
-- n: 56
+- n: 72
   l: "// Resources\n"
   m: "^^^^^^^^^^^^  "
-- n: 67
+- n: 83
   l: "  // Dynamic block for user data\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 79
+- n: 95
   l: "// Output values\n"
   m: "^^^^^^^^^^^^^^^^  "
-- n: 90
+- n: 106
   l: "// Modules\n"
   m: "^^^^^^^^^^  "
-- n: 96
+- n: 112
   l: "// Conditional expression\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 102
+- n: 118
   l: "// Using template expressions\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 112
+- n: 128
   l: "// Using for expressions\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 133
+- n: 149
   l: "// Using nested blocks\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^  "

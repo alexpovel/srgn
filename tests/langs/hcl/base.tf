@@ -6,6 +6,22 @@
 It starts with a slash and a star, and ends with a star and a slash.
 */
 
+// Terraform block
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+  backend "s3" {
+    bucket = "my-terraform-state"
+    key    = "test-app/terraform.tfstate"
+    region = "us-west-2"
+  }
+}
+
 // Variable Definitions
 variable "app_name" {
   description = "The name of the application"
@@ -161,4 +177,11 @@ resource "aws_iam_role" "app_role" {
       ]
     })
   }
+}
+
+
+output "app_url" {
+  description = "URL of the application"
+  value       = "https://${aws_instance.app_server[0].public_dns}"
+  sensitive   = false
 }

@@ -2,21 +2,24 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 57
+- n: 73
   l: "resource \"aws_instance\" \"app_server\" {\n"
   m: "                            ^^^^^^^^^^      "
-- n: 82
+- n: 98
   l: "  value       = aws_instance.app_server.*.id\n"
   m: "                             ^^^^^^^^^^       "
-- n: 97
+- n: 113
   l: "resource \"aws_s3_bucket\" \"app_bucket\" {\n"
   m: "                             ^^^^^^^^^^      "
-- n: 103
+- n: 119
   l: "resource \"null_resource\" \"template_example\" {\n"
   m: "                             ^^^^^^^^^^^^^^^^      "
-- n: 113
+- n: 129
   l: "resource \"aws_security_group\" \"web_sg\" {\n"
   m: "                                  ^^^^^^      "
-- n: 134
+- n: 150
   l: "resource \"aws_iam_role\" \"app_role\" {\n"
   m: "                            ^^^^^^^^      "
+- n: 185
+  l: "  value       = \"https://${aws_instance.app_server[0].public_dns}\"\n"
+  m: "                                         ^^^^^^^^^^                   "

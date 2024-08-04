@@ -2,51 +2,51 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 10
+- n: 26
   l: "variable \"app_name\" {\n"
   m: "           ^^^^^^^^      "
-- n: 16
+- n: 32
   l: "variable \"instance_count\" {\n"
   m: "           ^^^^^^^^^^^^^^      "
-- n: 22
+- n: 38
   l: "variable \"enable_feature_x\" {\n"
   m: "           ^^^^^^^^^^^^^^^^      "
-- n: 28
+- n: 44
   l: "variable \"admins\" {\n"
   m: "           ^^^^^^      "
-- n: 58
+- n: 74
   l: "  count         = var.instance_count\n"
   m: "                      ^^^^^^^^^^^^^^  "
-- n: 62
+- n: 78
   l: "    Name        = \"${var.app_name}-${count.index}\"\n"
   m: "                          ^^^^^^^^                    "
-- n: 69
+- n: 85
   l: "    for_each = var.enable_feature_x ? [1] : []\n"
   m: "                   ^^^^^^^^^^^^^^^^             "
-- n: 73
+- n: 89
   l: "echo \"Feature ${upper(var.app_name)} enabled\"\n"
   m: "                           ^^^^^^^^              "
-- n: 87
+- n: 103
   l: "  value       = join(\", \", var.admins)\n"
   m: "                                 ^^^^^^   "
-- n: 98
+- n: 114
   l: "  bucket = var.enable_feature_x ? \"${var.app_name}-feature-x\" : \"${var.app_name}\"\n"
   m: "               ^^^^^^^^^^^^^^^^                                                        "
-- n: 98
+- n: 114
   l: "  bucket = var.enable_feature_x ? \"${var.app_name}-feature-x\" : \"${var.app_name}\"\n"
   m: "                                          ^^^^^^^^                                     "
-- n: 98
+- n: 114
   l: "  bucket = var.enable_feature_x ? \"${var.app_name}-feature-x\" : \"${var.app_name}\"\n"
   m: "                                                                          ^^^^^^^^     "
-- n: 106
+- n: 122
   l: "echo \"Application: ${var.app_name}\"\n"
   m: "                          ^^^^^^^^     "
-- n: 114
+- n: 130
   l: "  name        = \"${var.app_name}-web-sg\"\n"
   m: "                        ^^^^^^^^            "
-- n: 115
+- n: 131
   l: "  description = \"Web security group for ${var.app_name}\"\n"
   m: "                                               ^^^^^^^^     "
-- n: 135
+- n: 151
   l: "  name = \"${var.app_name}_role\"\n"
   m: "                 ^^^^^^^^          "

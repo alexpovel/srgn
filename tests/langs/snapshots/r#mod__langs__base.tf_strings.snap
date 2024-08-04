@@ -3,137 +3,161 @@ source: tests/langs/mod.rs
 expression: inscope_parts
 ---
 - n: 11
+  l: "  required_version = \">= 1.0.0\"\n"
+  m: "                       ^^^^^^^^    "
+- n: 14
+  l: "      source  = \"hashicorp/aws\"\n"
+  m: "                  ^^^^^^^^^^^^^    "
+- n: 15
+  l: "      version = \"~> 4.0\"\n"
+  m: "                  ^^^^^^    "
+- n: 19
+  l: "    bucket = \"my-terraform-state\"\n"
+  m: "               ^^^^^^^^^^^^^^^^^^    "
+- n: 20
+  l: "    key    = \"test-app/terraform.tfstate\"\n"
+  m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 21
+  l: "    region = \"us-west-2\"\n"
+  m: "               ^^^^^^^^^    "
+- n: 27
   l: "  description = \"The name of the application\"\n"
   m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
-- n: 13
+- n: 29
   l: "  default     = \"TestApp\"\n"
   m: "                  ^^^^^^^    "
-- n: 17
+- n: 33
   l: "  description = \"Number of instances to deploy\"\n"
   m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
-- n: 23
+- n: 39
   l: "  description = \"Enable feature X\"\n"
   m: "                  ^^^^^^^^^^^^^^^^    "
-- n: 29
+- n: 45
   l: "  description = \"List of admin users\"\n"
   m: "                  ^^^^^^^^^^^^^^^^^^^    "
-- n: 31
+- n: 47
   l: "  default     = [\"alice\", \"bob\"]\n"
   m: "                   ^^^^^              "
-- n: 31
+- n: 47
   l: "  default     = [\"alice\", \"bob\"]\n"
   m: "                              ^^^     "
-- n: 36
+- n: 52
   l: "  app_env = \"testing\"\n"
   m: "              ^^^^^^^    "
-- n: 37
+- n: 53
   l: "  version = \"1.0.0\"\n"
   m: "              ^^^^^    "
-- n: 42
+- n: 58
   l: "  region = \"us-west-2\"\n"
   m: "             ^^^^^^^^^    "
-- n: 48
+- n: 64
   l: "  owners      = [\"self\"]\n"
   m: "                   ^^^^     "
-- n: 51
+- n: 67
   l: "    name   = \"name\"\n"
   m: "               ^^^^    "
-- n: 52
+- n: 68
   l: "    values = [\"ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*\"]\n"
   m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     "
-- n: 60
+- n: 76
   l: "  instance_type = \"t2.micro\"\n"
   m: "                    ^^^^^^^^    "
-- n: 62
+- n: 78
   l: "    Name        = \"${var.app_name}-${count.index}\"\n"
   m: "                                   ^                  "
-- n: 72
+- n: 88
   l: "#!/bin/bash\n"
   m: ^^^^^^^^^^^^^
-- n: 73
+- n: 89
   l: "echo \"Feature ${upper(var.app_name)} enabled\"\n"
   m: "^^^^^^^^^^^^^^                                   "
-- n: 73
+- n: 89
   l: "echo \"Feature ${upper(var.app_name)} enabled\"\n"
   m: "                                      ^^^^^^^^^  "
-- n: 81
+- n: 97
   l: "  description = \"List of instance IDs\"\n"
   m: "                  ^^^^^^^^^^^^^^^^^^^^    "
-- n: 86
+- n: 102
   l: "  description = \"Admin usernames\"\n"
   m: "                  ^^^^^^^^^^^^^^^    "
-- n: 87
+- n: 103
   l: "  value       = join(\", \", var.admins)\n"
   m: "                       ^                  "
-- n: 92
+- n: 108
   l: "  source   = \"./modules/network\"\n"
   m: "               ^^^^^^^^^^^^^^^^^    "
-- n: 93
+- n: 109
   l: "  vpc_cidr = \"10.0.0.0/16\"\n"
   m: "               ^^^^^^^^^^^    "
-- n: 98
+- n: 114
   l: "  bucket = var.enable_feature_x ? \"${var.app_name}-feature-x\" : \"${var.app_name}\"\n"
   m: "                                                   ^^^^^^^^^^                          "
-- n: 99
+- n: 115
   l: "  acl    = \"private\"\n"
   m: "             ^^^^^^^    "
-- n: 106
+- n: 122
   l: "echo \"Application: ${var.app_name}\"\n"
   m: "^^^^^^^^^^^^^^^^^^^                    "
-- n: 106
+- n: 122
   l: "echo \"Application: ${var.app_name}\"\n"
   m: "                                   ^^^^"
-- n: 107
+- n: 123
   l: "echo \"Environment: ${local.app_env}\"\n"
   m: "^^^^^^^^^^^^^^^^^^^                     "
-- n: 107
+- n: 123
   l: "echo \"Environment: ${local.app_env}\"\n"
   m: "                                    ^^  "
-- n: 114
+- n: 130
   l: "  name        = \"${var.app_name}-web-sg\"\n"
   m: "                                 ^^^^^^^    "
-- n: 115
+- n: 131
   l: "  description = \"Web security group for ${var.app_name}\"\n"
   m: "                  ^^^^^^^^^^^^^^^^^^^^^^                    "
-- n: 121
+- n: 137
   l: "    protocol    = \"tcp\"\n"
   m: "                    ^^^    "
-- n: 122
+- n: 138
   l: "    cidr_blocks = [\"0.0.0.0/0\"]\n"
   m: "                     ^^^^^^^^^     "
-- n: 128
+- n: 144
   l: "    protocol    = \"-1\"\n"
   m: "                    ^^    "
-- n: 129
+- n: 145
   l: "    cidr_blocks = [\"0.0.0.0/0\"]\n"
   m: "                     ^^^^^^^^^     "
-- n: 135
+- n: 151
   l: "  name = \"${var.app_name}_role\"\n"
   m: "                          ^^^^^    "
-- n: 138
+- n: 154
   l: "    Version = \"2012-10-17\",\n"
   m: "                ^^^^^^^^^^     "
-- n: 141
+- n: 157
   l: "        Action = \"sts:AssumeRole\",\n"
   m: "                   ^^^^^^^^^^^^^^     "
-- n: 142
+- n: 158
   l: "        Effect = \"Allow\",\n"
   m: "                   ^^^^^     "
-- n: 144
+- n: 160
   l: "          Service = \"ec2.amazonaws.com\"\n"
   m: "                      ^^^^^^^^^^^^^^^^^    "
-- n: 151
+- n: 167
   l: "    name = \"app_policy\"\n"
   m: "             ^^^^^^^^^^    "
-- n: 154
+- n: 170
   l: "      Version = \"2012-10-17\",\n"
   m: "                  ^^^^^^^^^^     "
-- n: 157
+- n: 173
   l: "          Action   = [\"s3:ListBucket\"],\n"
   m: "                        ^^^^^^^^^^^^^      "
-- n: 158
+- n: 174
   l: "          Effect   = \"Allow\",\n"
   m: "                       ^^^^^     "
-- n: 159
+- n: 175
   l: "          Resource = \"*\"\n"
   m: "                       ^    "
+- n: 184
+  l: "  description = \"URL of the application\"\n"
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 185
+  l: "  value       = \"https://${aws_instance.app_server[0].public_dns}\"\n"
+  m: "                  ^^^^^^^^                                            "
