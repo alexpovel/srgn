@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 51
+  l: "locals {\n"
+  m: ^^^^^^^^^^
+- n: 52
+  l: "  app_env = \"testing\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 53
+  l: "  version = \"1.0.0\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 54
+  l: "}\n"
+  m: "^  "

@@ -25,6 +25,8 @@ pub enum PreparedHclQuery {
     Provider,
     /// `terraform` blocks (in their entirety).
     Terraform,
+    /// `locals` blocks (in their entirety).
+    Locals,
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -105,6 +107,14 @@ impl From<PreparedHclQuery> for TSQuery {
                         (block
                             (identifier) @name
                             (#eq? @name "terraform")
+                        ) @block
+                    "#
+                }
+                PreparedHclQuery::Locals => {
+                    r#"
+                        (block
+                            (identifier) @name
+                            (#eq? @name "locals")
                         ) @block
                     "#
                 }
