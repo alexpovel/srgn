@@ -23,6 +23,8 @@ pub enum PreparedHclQuery {
     Output,
     /// `provider` blocks (in their entirety).
     Provider,
+    /// `terraform` blocks (in their entirety).
+    Terraform,
     /// Variable declarations and usages.
     Variables,
     /// `resource` name declarations and usages.
@@ -95,6 +97,14 @@ impl From<PreparedHclQuery> for TSQuery {
                         (block
                             (identifier) @name
                             (#eq? @name "provider")
+                        ) @block
+                    "#
+                }
+                PreparedHclQuery::Terraform => {
+                    r#"
+                        (block
+                            (identifier) @name
+                            (#eq? @name "terraform")
                         ) @block
                     "#
                 }

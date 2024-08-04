@@ -223,6 +223,11 @@ impl InScopeLinePart {
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Provider)),
 )]
 #[case(
+    "base.tf_terraform-block",
+    include_str!("hcl/base.tf"),
+    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Terraform)),
+)]
+#[case(
     "base.tf_variables",
     include_str!("hcl/base.tf"),
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variables)),
