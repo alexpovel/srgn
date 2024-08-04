@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.13.0](https://github.com/alexpovel/srgn/compare/srgn-v0.12.0...srgn-v0.13.0) (2024-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `grep`-like, recursive search mode
+* Update `tree-sitter` & bindings
+* Adjust `IGNORE` pattern
+* Variables for replacement action
+* `Ranges`
+
+### Features
+
+* `grep`-like, recursive search mode ([d55b28f](https://github.com/alexpovel/srgn/commit/d55b28fd9e266545d31d679c92b91e28efee4769))
+* `Ranges` ([bd8b0bc](https://github.com/alexpovel/srgn/commit/bd8b0bc0b96afe5ba3e0632c5ff51d0a6842e8aa))
+* HCL (HashiCorp Configuration Language) ([814a592](https://github.com/alexpovel/srgn/commit/814a592dbc3e446c6751bc2ab40b9e83337c726b))
+* **hcl:** Scope `data` blocks ([dc38287](https://github.com/alexpovel/srgn/commit/dc3828760e01fb0f258cea393ccb84ba1073cd9e))
+* **hcl:** Scope `locals` blocks ([c22c475](https://github.com/alexpovel/srgn/commit/c22c4757aa113d16453bdc59aed15bfebe3f6d9e))
+* **hcl:** Scope `module` blocks ([84965ed](https://github.com/alexpovel/srgn/commit/84965ed82d7e0133e29bd741311dfe48050a613a))
+* **hcl:** Scope `output` blocks ([9627961](https://github.com/alexpovel/srgn/commit/9627961efc444c1dd3d8bc0c70d68fbeeda5525d))
+* **hcl:** Scope `provider` blocks ([a77e603](https://github.com/alexpovel/srgn/commit/a77e6037bfe6cdf5bbe648652059db7d4549ddd4))
+* **hcl:** Scope `resource` blocks ([963d9a4](https://github.com/alexpovel/srgn/commit/963d9a44721144eae166e9846bda4232f3329cec))
+* **hcl:** Scope `terraform` blocks ([a60a754](https://github.com/alexpovel/srgn/commit/a60a754465462ffb6b9fce5b5adc749357ff547a))
+* **hcl:** Scope `variable` blocks ([6b8dcdc](https://github.com/alexpovel/srgn/commit/6b8dcdc59a438b459623395524a761d56d7e43ac))
+* **python:** Scope `lambda`s ([94894c0](https://github.com/alexpovel/srgn/commit/94894c06993595c6795c7a89622d72197e02aae3))
+* **python:** Scope `try` blocks ([107d87f](https://github.com/alexpovel/srgn/commit/107d87f12103ee429fa05d1bd53e7ddd4b4dfcb8))
+* **python:** Scope `with` blocks ([b0f9825](https://github.com/alexpovel/srgn/commit/b0f9825dcaa5eb288f025cdaa99dd6404695953d))
+* **python:** Scope async function definitions (`async def`) ([4debfff](https://github.com/alexpovel/srgn/commit/4debfff76351dd504750d321861dbed8648f70ec))
+* **python:** Scope classmethods (`[@classmethod](https://github.com/classmethod) def` inside `class`) ([4779d69](https://github.com/alexpovel/srgn/commit/4779d695038059fd9f01bf32e2c8074dd0064ada))
+* **python:** Scope function definitions (`def`) ([10ef4d5](https://github.com/alexpovel/srgn/commit/10ef4d5caddeafe11aa5ed6a1747748bd8444ef2))
+* **python:** Scope global aka module-level variable (assignments) ([fc5c027](https://github.com/alexpovel/srgn/commit/fc5c027fd19537fa45a25ba35ef6e8f3031a0dfe))
+* **python:** Scope methods (`def` inside `class`) ([e151d9a](https://github.com/alexpovel/srgn/commit/e151d9a7a84cdd5248d085969eafe88c45fd55e2))
+* **python:** Scope staticmethods (`[@staticmethod](https://github.com/staticmethod) def` inside `class`) ([8f53aa5](https://github.com/alexpovel/srgn/commit/8f53aa59d025eca863398df34e8031941651105f))
+* **python:** Scope type hints ([5dc106f](https://github.com/alexpovel/srgn/commit/5dc106f5721c8382870744bf1f1a8b8d65e5f3e4))
+* **python:** Scope variable names (from their assignment) ([0fb549c](https://github.com/alexpovel/srgn/commit/0fb549ca64f804cac964df894b852565003a13a1))
+* Variables for replacement action ([7f6cfcb](https://github.com/alexpovel/srgn/commit/7f6cfcbcef8f8d010de5b12df4d3e749b655d128))
+
+
+### Bug Fixes
+
+* **go:** String scoping no longer scopes parts of imports/field decl. ([f4796c0](https://github.com/alexpovel/srgn/commit/f4796c0c5beded2de1a3c149afc6d59c9e8844f7))
+* **hcl:** Check blocks for exact `identifier` `eq`uality ([1f26d56](https://github.com/alexpovel/srgn/commit/1f26d5640166b9ca5fdb7a8a33a5c3d6a4d8f8cb))
+* **hcl:** Exclude `count` metavariable from {`resource`,`data`}-names ([6ff7a05](https://github.com/alexpovel/srgn/commit/6ff7a052b592181c3542f57f995366a5d2e5a58c))
+* **hcl:** Scopes exclude quotes ([df30f9e](https://github.com/alexpovel/srgn/commit/df30f9e946f8007d7cb1d0e8dff6797b860db52f))
+* **language-scoping:** Construct `TSQuery` only once ([084df95](https://github.com/alexpovel/srgn/commit/084df951e190a29ac03a6d16704d4fd8c997f1e0)), closes [#76](https://github.com/alexpovel/srgn/issues/76)
+* **logging:** Logs display timestamps again ([70ffd1c](https://github.com/alexpovel/srgn/commit/70ffd1c1615b9db56e9f760d4bfa18ca782f6614))
+* **python:** Scoping docstrings and strings no longer includes quotes ([2a743c8](https://github.com/alexpovel/srgn/commit/2a743c83f5b1a9b6fac4b99832c2d3f476f6569a))
+* **rust:** `uses` scope only scopes things actually behind a `use` ([ea1a734](https://github.com/alexpovel/srgn/commit/ea1a734bd6b5c72115f7dd3aa618e04f8507b5cc))
+* **rust:** `uses` scopes to its entire argument ([0ca45a1](https://github.com/alexpovel/srgn/commit/0ca45a1d323ee1b3522d5caeb5472863844a0446))
+* **rust:** Scoping strings no longer includes quotes ([8fb5da8](https://github.com/alexpovel/srgn/commit/8fb5da8cc782f30ecd6d412b628a8955edf26deb))
+* **typescript:** Scoping strings no longer includes quotes ([f1626d7](https://github.com/alexpovel/srgn/commit/f1626d7cee8aed4cce47349f741a427bdf37a944))
+
+
+### Miscellaneous Chores
+
+* Adjust `IGNORE` pattern ([96d4d4c](https://github.com/alexpovel/srgn/commit/96d4d4cb4ac3e66eedd668260e5ab16e94dc9ae9))
+* Update `tree-sitter` & bindings ([5debd0e](https://github.com/alexpovel/srgn/commit/5debd0e1f029bd64ff150672ce6c2d7b5952f728))
+
 ## [0.12.0](https://github.com/alexpovel/srgn/compare/srgn-v0.11.0...srgn-v0.12.0) (2024-03-25)
 
 
