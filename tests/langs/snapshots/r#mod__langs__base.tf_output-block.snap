@@ -1,0 +1,43 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 96
+  l: "output \"instance_ids\" {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 97
+  l: "  description = \"List of instance IDs\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 98
+  l: "  value       = aws_instance.app_server.*.id\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 99
+  l: "}\n"
+  m: "^  "
+- n: 101
+  l: "output \"admin_usernames\" {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 102
+  l: "  description = \"Admin usernames\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 103
+  l: "  value       = join(\", \", var.admins)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 104
+  l: "}\n"
+  m: "^  "
+- n: 183
+  l: "output \"app_url\" {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 184
+  l: "  description = \"URL of the application\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 185
+  l: "  value       = \"https://${aws_instance.app_server[0].public_dns}\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 186
+  l: "  sensitive   = false\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 187
+  l: "}\n"
+  m: "^  "
