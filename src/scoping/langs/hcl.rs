@@ -62,7 +62,7 @@ impl From<PreparedHclQuery> for TSQuery {
                     r#"
                         (block
                             (identifier) @name
-                            (#match? @name "variable")
+                            (#eq? @name "variable")
                         ) @block
                     "#
                 }
@@ -70,7 +70,7 @@ impl From<PreparedHclQuery> for TSQuery {
                     r#"
                         (block
                             (identifier) @name
-                            (#match? @name "resource")
+                            (#eq? @name "resource")
                         ) @block
                     "#
                 }
@@ -78,7 +78,7 @@ impl From<PreparedHclQuery> for TSQuery {
                     r#"
                         (block
                             (identifier) @name
-                            (#match? @name "data")
+                            (#eq? @name "data")
                         ) @block
                     "#
                 }
@@ -86,7 +86,7 @@ impl From<PreparedHclQuery> for TSQuery {
                     r#"
                         (block
                             (identifier) @name
-                            (#match? @name "output")
+                            (#eq? @name "output")
                         ) @block
                     "#
                 }
@@ -94,7 +94,7 @@ impl From<PreparedHclQuery> for TSQuery {
                     r#"
                         (block
                             (identifier) @name
-                            (#match? @name "provider")
+                            (#eq? @name "provider")
                         ) @block
                     "#
                 }
