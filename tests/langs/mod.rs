@@ -332,6 +332,11 @@ impl InScopeLinePart {
     include_str!("csharp/base.cs"),
     CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Interface)),
 )]
+#[case(
+    "base.cs_class",
+    include_str!("csharp/base.cs"),
+    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Class)),
+)]
 fn test_language_scopers(
     #[case] snapshot_name: &str,
     #[case] contents: &str,
