@@ -3,7 +3,6 @@
 //! It mainly draws from `srgn`, the library, for actual implementations. This file then
 //! deals with CLI argument handling, I/O, threading, and more.
 
-use anyhow::anyhow;
 use anyhow::{Context, Result};
 use colored::Color;
 use colored::Colorize;
@@ -14,6 +13,7 @@ use log::error;
 use log::trace;
 use log::{debug, info, LevelFilter};
 use pathdiff::diff_paths;
+use srgn::actions::ActionError;
 use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -45,7 +45,8 @@ use srgn::{
         Scoper,
     },
 };
-use std::path::Path;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::{
@@ -146,6 +147,7 @@ fn main() -> Result<()> {
 
         args.options.only_matching = true;
         args.options.line_numbers = true;
+        args.options.fail_none = true;
     }
 
     if actions.is_empty() && !search_mode {
@@ -210,13 +212,14 @@ fn handle_actions_on_stdin(
     scopers: &[Box<dyn Scoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
-    let mut source = io::stdin().lock();
+    let mut source = String::new();
+    io::stdin().lock().read_to_string(&mut source)?;
     let mut destination = String::new();
 
     apply(
-        &mut source,
+        &source,
         &mut destination,
         scopers,
         actions,
@@ -225,8 +228,7 @@ fn handle_actions_on_stdin(
         args.standalone_actions.squeeze,
         args.options.only_matching,
         args.options.line_numbers,
-    )
-    .context("Failed to process stdin")?;
+    )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
 
@@ -247,14 +249,15 @@ fn handle_actions_on_many_files_sorted(
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
     info!(
         "Will walk file tree sequentially, in sorted order, starting from: {:?}",
         root.canonicalize()
     );
 
-    let mut n: usize = 0;
+    let mut n_files_processed: usize = 0;
+    let mut n_files_seen: usize = 0;
     for entry in WalkBuilder::new(&root)
         .hidden(!args.options.hidden)
         .git_ignore(!args.options.gitignored)
@@ -264,18 +267,40 @@ fn handle_actions_on_many_files_sorted(
         match entry {
             Ok(entry) => {
                 let path = entry.path();
-                match process_path(path, &root, validator, scopers, actions, args, search_mode) {
-                    Ok(()) => n += 1,
-                    Err(e) => {
+                let res = process_path(path, &root, validator, scopers, actions, args, search_mode);
+
+                n_files_seen += match res {
+                    Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => 0,
+                    _ => 1,
+                };
+
+                n_files_processed += match res {
+                    Ok(()) => 1,
+                    Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => 0,
+                    Err(PathProcessingError::ApplicationError(ApplicationError::SomeInScope))
+                        if args.options.fail_any =>
+                    {
+                        // Early-out
+                        info!("Match at {}, exiting early", path.display());
+                        return Err(ProgramError::SomethingProcessed);
+                    }
+                    #[allow(clippy::match_same_arms)]
+                    Err(PathProcessingError::ApplicationError(
+                        ApplicationError::NoneInScope | ApplicationError::SomeInScope,
+                    )) => 0,
+                    Err(
+                        e @ (PathProcessingError::ApplicationError(ApplicationError::ActionError(
+                            ..,
+                        ))
+                        | PathProcessingError::IoError(..)),
+                    ) => {
+                        // Hard errors we should do something about.
                         if search_mode {
                             error!("Error walking at {}: {}", path.display(), e);
+                            0
                         } else {
                             error!("Aborting walk at {} due to: {}", path.display(), e);
-                            return Err(anyhow!(
-                                "error processing files at {}, bailing early",
-                                path.display()
-                            )
-                            .context(e));
+                            return Err(e.into());
                         }
                     }
                 }
@@ -285,16 +310,19 @@ fn handle_actions_on_many_files_sorted(
                     error!("Error walking: {}", e);
                 } else {
                     error!("Aborting walk due to: {}", e);
-                    return Err(anyhow!("error processing files, bailing early").context(e));
+                    return Err(e.into());
                 }
             }
         }
     }
 
-    info!("Processed {} files", n);
+    info!("Saw {} items", n_files_seen);
+    info!("Processed {} files", n_files_processed);
 
-    if args.options.fail_empty_glob && n == 0 {
-        Err(ApplicationError::NoFilesFound).context("No files processed")
+    if n_files_seen == 0 && args.options.fail_empty_glob {
+        Err(ProgramError::NoFilesFound)
+    } else if n_files_processed == 0 && args.options.fail_none {
+        Err(ProgramError::NothingProcessed)
     } else {
         Ok(())
     }
@@ -308,7 +336,7 @@ fn handle_actions_on_many_files_threaded(
     args: &cli::Cli,
     search_mode: bool,
     n_threads: usize,
-) -> Result<(), anyhow::Error> {
+) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
     info!(
         "Will walk file tree using {:?} thread(s), processing in arbitrary order, starting from: {:?}",
@@ -316,8 +344,9 @@ fn handle_actions_on_many_files_threaded(
         root.canonicalize()
     );
 
-    let n_files = Arc::new(Mutex::new(0usize));
-    let err: Arc<Mutex<Option<anyhow::Error>>> = Arc::new(Mutex::new(None));
+    let n_files_processed = Arc::new(Mutex::new(0usize));
+    let n_files_seen = Arc::new(Mutex::new(0usize));
+    let err: Arc<Mutex<Option<ProgramError>>> = Arc::new(Mutex::new(None));
 
     WalkBuilder::new(&root)
         .threads(
@@ -331,13 +360,39 @@ fn handle_actions_on_many_files_threaded(
             Box::new(|entry| match entry {
                 Ok(entry) => {
                     let path = entry.path();
-                    match process_path(path, &root, validator, scopers, actions, args, search_mode)
-                    {
+                    let res =
+                        process_path(path, &root, validator, scopers, actions, args, search_mode);
+
+                    match res {
+                        Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => (),
+                        _ => *n_files_seen.lock().unwrap() += 1,
+                    }
+
+                    match res {
                         Ok(()) => {
-                            *n_files.lock().unwrap() += 1;
+                            *n_files_processed.lock().unwrap() += 1;
                             WalkState::Continue
                         }
-                        Err(e) => {
+                        Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => {
+                            WalkState::Continue
+                        }
+                        Err(
+                            e
+                            @ PathProcessingError::ApplicationError(ApplicationError::SomeInScope),
+                        ) if args.options.fail_any => {
+                            // Early-out
+                            info!("Match at {}, exiting early", path.display());
+                            *err.lock().unwrap() = Some(e.into());
+                            WalkState::Quit
+                        }
+                        Err(PathProcessingError::ApplicationError(
+                            ApplicationError::NoneInScope | ApplicationError::SomeInScope,
+                        )) => WalkState::Continue,
+                        Err(
+                            e @ (PathProcessingError::ApplicationError(..)
+                            | PathProcessingError::IoError(..)),
+                        ) => {
+                            // Hard errors we should do something about.
                             error!("Error walking at {} due to: {}", path.display(), e);
 
                             if search_mode {
@@ -346,7 +401,7 @@ fn handle_actions_on_many_files_threaded(
                                 // Chances are something bad and/or unintended happened;
                                 // bail out to limit any potential damage.
                                 error!("Aborting walk for safety");
-                                *err.lock().unwrap() = Some(e);
+                                *err.lock().unwrap() = Some(e.into());
                                 WalkState::Quit
                             }
                         }
@@ -358,6 +413,7 @@ fn handle_actions_on_many_files_threaded(
                         WalkState::Continue
                     } else {
                         error!("Aborting walk due to: {}", e);
+                        *err.lock().unwrap() = Some(e.into());
                         WalkState::Quit
                     }
                 }
@@ -368,11 +424,15 @@ fn handle_actions_on_many_files_threaded(
         return Err(e);
     }
 
-    let n = *n_files.lock().unwrap();
-    info!("Processed {} files", n);
+    let n_files_seen = *n_files_seen.lock().unwrap();
+    info!("Saw {} items", n_files_seen);
+    let n_files_processed = *n_files_processed.lock().unwrap();
+    info!("Processed {} files", n_files_processed);
 
-    if args.options.fail_empty_glob && n == 0 {
-        Err(ApplicationError::NoFilesFound).context("No files processed")
+    if n_files_seen == 0 && args.options.fail_empty_glob {
+        Err(ProgramError::NoFilesFound)
+    } else if n_files_processed == 0 && args.options.fail_none {
+        Err(ProgramError::NothingProcessed)
     } else {
         Ok(())
     }
@@ -386,31 +446,32 @@ fn process_path(
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
-) -> Result<()> {
+) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
         trace!("Skipping path (not a file): {:?}", path);
-        return Ok(());
+        return Err(PathProcessingError::NotAFile);
     }
 
     let path = diff_paths(path, root).expect("started walk at root, so relative to root works");
 
     if !validator(&path) {
         trace!("Skipping path (invalid): {:?}", path);
-        return Ok(());
+        return Err(PathProcessingError::InvalidFile);
     }
 
     debug!("Processing path: {:?}", path);
 
     let (new_contents, filesize, changed) = {
-        let file = File::open(&path)?;
+        let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
         let mut destination =
             String::with_capacity(filesize.try_into().unwrap_or(/* no perf gains for you */ 0));
-        let mut source = io::BufReader::new(file);
+        let mut source = String::new();
+        file.read_to_string(&mut source)?;
 
         let changed = apply(
-            &mut source,
+            &source,
             &mut destination,
             scopers,
             actions,
@@ -443,7 +504,11 @@ fn process_path(
                     path.display(),
                     filesize
                 );
-            return Err(anyhow!("attempt to wipe non-empty file (failsafe guard)"));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "attempt to wipe non-empty file (failsafe guard)",
+            )
+            .into());
         }
 
         if changed {
@@ -476,7 +541,7 @@ fn process_path(
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 #[allow(clippy::fn_params_excessive_bools)] // TODO: use an options struct
 fn apply(
-    source: &mut impl io::BufRead,
+    source: &str,
     // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
     // corresponding checks.
     destination: &mut String,
@@ -487,20 +552,9 @@ fn apply(
     squeeze: bool,
     only_matching: bool,
     line_numbers: bool,
-) -> Result<bool> {
-    // Streaming (e.g., line-based) wouldn't be too bad, and much more memory-efficient,
-    // but language grammar-aware scoping needs entire files for context. Single lines
-    // wouldn't do. There's no smart way of streaming that I can think of (where would
-    // one break?).
-    debug!("Reading entire source to string.");
-    let mut buf = String::new();
-    source
-        .read_to_string(&mut buf)
-        .context("Failed reading in source")?;
-    debug!("Done reading source.");
-
+) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
-    let mut builder = ScopedViewBuilder::new(&buf);
+    let mut builder = ScopedViewBuilder::new(source);
     for scoper in scopers {
         builder.explode(scoper);
     }
@@ -508,11 +562,11 @@ fn apply(
     debug!("Done building view: {view:?}");
 
     if fail_none && !view.has_any_in_scope() {
-        return Err(ApplicationError::NoneInScope.into());
+        return Err(ApplicationError::NoneInScope);
     }
 
     if fail_any && view.has_any_in_scope() {
-        return Err(ApplicationError::SomeInScope.into());
+        return Err(ApplicationError::SomeInScope);
     };
 
     debug!("Applying actions to view.");
@@ -545,30 +599,142 @@ fn apply(
     };
     debug!("Done writing to destination.");
 
-    Ok(buf != *destination)
+    Ok(source != *destination)
 }
 
+/// Top-level, user-facing errors, affecting and possibly terminating program execution
+/// as a whole.
+#[derive(Debug)]
+enum ProgramError {
+    /// Error when handling a path.
+    PathProcessingError(PathProcessingError),
+    /// Error when applying.
+    ApplicationError(ApplicationError),
+    /// No files were found, unexpectedly.
+    NoFilesFound,
+    /// Files were found but nothing ended up being processed, unexpectedly.
+    NothingProcessed,
+    /// Files were found but some input ended up being processed, unexpectedly.
+    SomethingProcessed,
+    /// I/O error.
+    IoError(io::Error),
+    /// Error while processing files for walking.
+    IgnoreError(ignore::Error),
+}
+
+impl fmt::Display for ProgramError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::PathProcessingError(e) => write!(f, "Error processing path: {e}"),
+            Self::ApplicationError(e) => write!(f, "Error applying: {e}"),
+            Self::NoFilesFound => write!(f, "No files found"),
+            Self::NothingProcessed => write!(f, "No input was in scope"),
+            Self::SomethingProcessed => write!(f, "Some input was in scope"),
+            Self::IoError(e) => write!(f, "I/O error: {e}"),
+            Self::IgnoreError(e) => write!(f, "Error walking files: {e}"),
+        }
+    }
+}
+
+impl From<ApplicationError> for ProgramError {
+    fn from(err: ApplicationError) -> Self {
+        Self::ApplicationError(err)
+    }
+}
+
+impl From<PathProcessingError> for ProgramError {
+    fn from(err: PathProcessingError) -> Self {
+        Self::PathProcessingError(err)
+    }
+}
+
+impl From<io::Error> for ProgramError {
+    fn from(err: io::Error) -> Self {
+        Self::IoError(err)
+    }
+}
+
+impl From<ignore::Error> for ProgramError {
+    fn from(err: ignore::Error) -> Self {
+        Self::IgnoreError(err)
+    }
+}
+
+impl Error for ProgramError {}
+
+/// Errors when applying actions to scoped views.
 #[derive(Debug)]
 enum ApplicationError {
+    /// Something was *unexpectedly* in scope.
     SomeInScope,
+    /// Nothing was in scope, *unexpectedly*.
     NoneInScope,
-    NoFilesFound,
+    /// Error with an [`Action`].
+    ActionError(ActionError),
 }
 
 impl fmt::Display for ApplicationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::SomeInScope => write!(
-                f,
-                "Some input was in scope, and explicit failure requested."
-            ),
-            Self::NoneInScope => write!(f, "Nothing in scope and explicit failure requested."),
-            Self::NoFilesFound => write!(f, "No files found"),
+            Self::SomeInScope => write!(f, "Some input was in scope"),
+            Self::NoneInScope => write!(f, "No input was in scope"),
+            Self::ActionError(e) => write!(f, "Error in an action: {e}"),
         }
     }
 }
 
+impl From<ActionError> for ApplicationError {
+    fn from(err: ActionError) -> Self {
+        Self::ActionError(err)
+    }
+}
+
 impl Error for ApplicationError {}
+
+/// Errors when processing a (file) path.
+#[derive(Debug)]
+enum PathProcessingError {
+    /// I/O error.
+    IoError(io::Error, Option<PathBuf>),
+    /// Item was not a file (directory, symlink, ...).
+    NotAFile,
+    /// Item is a file but is unsuitable for processing.
+    InvalidFile,
+    /// Error when applying.
+    ApplicationError(ApplicationError),
+}
+
+impl fmt::Display for PathProcessingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::IoError(e, None) => write!(f, "I/O error: {e}"),
+            Self::IoError(e, Some(path)) => write!(f, "I/O error at path {}: {e}", path.display()),
+            Self::NotAFile => write!(f, "Item is not a file"),
+            Self::InvalidFile => write!(f, "Item is not a valid file"),
+            Self::ApplicationError(e) => write!(f, "Error applying: {e}"),
+        }
+    }
+}
+
+impl From<io::Error> for PathProcessingError {
+    fn from(err: io::Error) -> Self {
+        Self::IoError(err, None)
+    }
+}
+
+impl From<ApplicationError> for PathProcessingError {
+    fn from(err: ApplicationError) -> Self {
+        Self::ApplicationError(err)
+    }
+}
+
+impl From<tempfile::PersistError> for PathProcessingError {
+    fn from(err: tempfile::PersistError) -> Self {
+        Self::IoError(err.error, Some(err.file.path().to_owned()))
+    }
+}
+
+impl Error for PathProcessingError {}
 
 #[derive(Debug)]
 enum ScoperBuildError {
@@ -835,7 +1001,7 @@ mod cli {
         #[arg(long, verbatim_doc_comment)]
         pub files: Option<glob::Pattern>,
         /// Fail if file globbing is requested but returns no matches.
-        #[arg(long, verbatim_doc_comment, requires = "files")]
+        #[arg(long, verbatim_doc_comment)]
         pub fail_empty_glob: bool,
         /// Undo the effects of passed actions, where applicable
         ///

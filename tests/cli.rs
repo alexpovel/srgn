@@ -23,7 +23,19 @@ mod tests {
 
     #[derive(Debug, Serialize)]
     struct CommandInfo {
-        stderr: String,
+        stderr: Vec<String>,
+    }
+
+    impl CommandInfo {
+        pub fn new(stderr: &str) -> Self {
+            Self {
+                stderr: stderr
+                    .lines()
+                    .filter(|l| !l.starts_with('[')) // Normal log lines
+                    .map(ToOwned::to_owned)
+                    .collect(),
+            }
+        }
     }
 
     #[rstest]
@@ -247,7 +259,7 @@ Heizoelrueckstossabdaempfung.
         // For debugging, include this, but do not rely on it for snapshot
         // validity/correctness. We do not want changes in error messages etc. break
         // tests, seems excessive.
-        let info = CommandInfo { stderr };
+        let info = CommandInfo::new(&stderr);
 
         with_settings!({
             info => &info,
@@ -378,7 +390,7 @@ Heizoelrueckstossabdaempfung.
             let stdout = String::from_utf8(output.stdout).unwrap();
             let stderr = String::from_utf8(output.stderr).unwrap();
 
-            let info = CommandInfo { stderr };
+            let info = CommandInfo::new(&stderr);
 
             with_settings!({
                 info => &info,
@@ -396,6 +408,259 @@ Heizoelrueckstossabdaempfung.
         }
 
         Ok(())
+    }
+
+    /// Tests various *expected* failure modes.
+    #[rstest]
+    //
+    // stdin
+    #[case(
+        "fail-none-implicitly-in-search-mode-stdin",
+        Some(r#"x = "y""#),
+        &[
+            "--python",
+            "strings",
+            "z",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-none-explicitly-in-search-mode-stdin",
+        Some(r#"x = "y""#),
+        &[
+            "--fail-none",
+            "--python",
+            "strings",
+            "z",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-any-in-search-mode-stdin",
+        Some(r#"x = "y""#),
+        &[
+            "--fail-any",
+            "--python",
+            "strings",
+            "y",
+        ],
+        None,
+    )]
+    //
+    // Multiple files, sorted
+    #[case(
+        "fail-none-implicitly-in-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--python",
+            "strings",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-none-explicitly-in-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-none",
+            "--python",
+            "strings",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-none-explicitly-outside-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-none",
+            "--files",
+            "**/*.py",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-any-in-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-any",
+            "--python",
+            "strings",
+            r".",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-any-outside-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-any",
+            "--files",
+            "**/*.py",
+            r".",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-empty-glob-in-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-empty-glob",
+            "--python",
+            "strings",
+            r".",
+        ],
+        Some(Path::new("tests/langs/go")), // No Python files here...
+    )]
+    #[case(
+        "fail-empty-glob-outside-search-mode-sorted",
+        None,
+        &[
+            "--sorted",
+            "--fail-empty-glob",
+            "--files",
+            "**/*.there-is-no-such-suffix",
+            r".",
+        ],
+        None,
+    )]
+    //
+    // Multiple files, not sorted aka multi-threaded
+    #[case(
+        "fail-none-implicitly-in-search-mode-multithreaded",
+        None,
+        &[
+            "--python",
+            "strings",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-none-explicitly-in-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-none",
+            "--python",
+            "strings",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-none-explicitly-outside-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-none",
+            "--files",
+            "**/*.py",
+            "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-any-in-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-any",
+            "--python",
+            "strings",
+            r".",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-any-outside-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-any",
+            "--files",
+            "**/*.py",
+            r".",
+        ],
+        None,
+    )]
+    #[case(
+        "fail-empty-glob-in-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-empty-glob",
+            "--python",
+            "strings",
+            r".",
+        ],
+        Some(Path::new("tests/langs/go")), // No Python files here...
+    )]
+    #[case(
+        "fail-empty-glob-outside-search-mode-multithreaded",
+        None,
+        &[
+            "--fail-empty-glob",
+            "--files",
+            "**/*.there-is-no-such-suffix",
+            r".",
+        ],
+        None,
+    )]
+    fn test_cli_failure_modes(
+        #[case] snapshot_name: String,
+        #[case] stdin: Option<&str>,
+        #[case] args: &[&str],
+        #[case] cwd: Option<&Path>,
+    ) {
+        let args = args.iter().map(ToString::to_string).collect_vec();
+
+        // Arrange
+        let mut cmd = get_cmd();
+
+        if let Some(stdin) = stdin {
+            cmd.write_stdin(stdin);
+        } else {
+            cmd.args(
+                // Override; `Command` is detected as providing stdin but we're working on
+                // files here.
+                ["--stdin-override-to", "false"],
+            );
+        }
+        cmd.args(&args);
+
+        if let Some(cwd) = cwd {
+            cmd.current_dir(cwd);
+        }
+
+        // Act
+        let output = cmd.output().expect("failed to execute binary under test");
+
+        // Assert
+        let exit_code = output
+            .status
+            .code()
+            .expect("Process unexpectedly terminated via signal, not `exit`.");
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+
+        let info = CommandInfo::new(&stderr);
+
+        with_settings!({
+            info => &info,
+        }, {
+            insta::assert_yaml_snapshot!(
+                snapshot_name,
+                CommandSnap {
+                    args,
+                    stdin: None,
+                    stdout: stdout.split_inclusive('\n').map(ToOwned::to_owned).collect_vec(),
+                    exit_code,
+                }
+            );
+        });
     }
 
     #[test]

@@ -1,0 +1,16 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: None,\n    stdout: stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr:
+    - "Error: No files found"
+---
+args:
+  - "--sorted"
+  - "--fail-empty-glob"
+  - "--files"
+  - "**/*.there-is-no-such-suffix"
+  - "."
+stdin: ~
+stdout: []
+exit_code: 1
