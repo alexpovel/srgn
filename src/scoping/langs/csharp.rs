@@ -36,6 +36,8 @@ pub enum PreparedCSharpQuery {
     Property,
     /// Constructor definitions (in their entirety).
     Constructor,
+    /// Destructor definitions (in their entirety).
+    Destructor,
     /// Field definitions on types (in their entirety).
     Field,
     /// Attribute names.
@@ -72,6 +74,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                 PreparedCSharpQuery::VariableDeclaration => "(variable_declaration) @variable",
                 PreparedCSharpQuery::Property => "(property_declaration) @property",
                 PreparedCSharpQuery::Constructor => "(constructor_declaration) @constructor",
+                PreparedCSharpQuery::Destructor => "(destructor_declaration) @destructor",
                 PreparedCSharpQuery::Field => "(field_declaration) @field",
                 PreparedCSharpQuery::Attribute => "(attribute) @attribute",
             },

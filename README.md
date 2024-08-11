@@ -1370,6 +1370,7 @@ Language scopes:
           - variable-declaration: Variable declarations (in their entirety)
           - property:             Property definitions (in their entirety)
           - constructor:          Constructor definitions (in their entirety)
+          - destructor:           Destructor definitions (in their entirety)
           - field:                Field definitions on types (in their entirety)
           - attribute:            Attribute names
 
