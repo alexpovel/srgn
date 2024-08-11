@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 11
+  l: "    public unsafe struct TestResult<T> where T : struct\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 12
+  l: "    {\n"
+  m: ^^^^^^^
+- n: 13
+  l: "        public T Value;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 14
+  l: "        public fixed byte ErrorCode[16];\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 15
+  l: "    }\n"
+  m: "^^^^^  "

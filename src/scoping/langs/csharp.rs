@@ -22,6 +22,8 @@ pub enum PreparedCSharpQuery {
     Strings,
     /// `using` directives (including periods).
     Usings,
+    /// `struct` definitions (in their entirety).
+    Struct,
 }
 
 impl From<PreparedCSharpQuery> for TSQuery {
@@ -47,6 +49,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                         IGNORE
                     )
                 }
+                PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
             },
         )
         .expect("Prepared queries to be valid")
