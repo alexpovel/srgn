@@ -492,7 +492,7 @@ mod tests {
                                 tag("typescript-query"),
                                 //
                                 tag("csharp"),
-                                tag("files"),
+                                tag("glob"),
                                 tag("go"),
                                 tag("hcl"),
                                 tag("python"),

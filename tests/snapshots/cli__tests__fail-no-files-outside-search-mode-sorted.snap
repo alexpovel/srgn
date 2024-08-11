@@ -8,7 +8,7 @@ info:
 args:
   - "--sorted"
   - "--fail-no-files"
-  - "--files"
+  - "--glob"
   - "**/*.there-is-no-such-suffix"
   - "."
 stdin: ~

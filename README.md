@@ -1076,15 +1076,15 @@ with your own queries:
 
 #### Run against multiple files
 
-Use the `--files` option to run against multiple files, in-place. This option accepts a
+Use the `--glob` option to run against multiple files, in-place. This option accepts a
 [glob pattern](https://docs.rs/glob/0.3.1/glob/struct.Pattern.html). The glob is
 processed *within `srgn`*: it must be quoted to prevent premature shell interpretation.
-The `--files` option takes precedence over the heuristics of language scoping. For
+The `--glob` option takes precedence over the heuristics of language scoping. For
 example,
 
 <!-- markdownlint-disable MD010 -->
 ```console
-$ srgn --go 'comments' --files 'tests/langs/go/fizz*.go' '\w+'
+$ srgn --go 'comments' --glob 'tests/langs/go/fizz*.go' '\w+'
 tests/langs/go/fizzbuzz.go
 5:// fizzBuzz prints the numbers from 1 to a specified limit.
 6:// For multiples of 3, it prints "Fizz" instead of the number,
@@ -1262,7 +1262,7 @@ Standalone Actions (only usable alone):
           [aliases: squeeze-repeats]
 
 Options (global):
-      --files <FILES>
+      --glob <GLOB>
           Glob of files to work on (instead of reading stdin).
           
           If processing occurs, it is done in-place, overwriting originals.

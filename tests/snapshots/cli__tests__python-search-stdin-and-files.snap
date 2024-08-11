@@ -7,7 +7,7 @@ info:
 args:
   - "--python"
   - strings
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - is
 stdin:

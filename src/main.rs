@@ -102,7 +102,7 @@ fn main() -> Result<()> {
     // See where we're reading from
     let input = match (
         args.options.stdin_override_to.unwrap_or(is_readable_stdin),
-        args.options.files.clone(),
+        args.options.glob.clone(),
         language_scoper,
     ) {
         // stdin considered viable: always use it.
@@ -998,8 +998,8 @@ mod cli {
         /// <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
         ///
         /// Names of processed files are written to stdout.
-        #[arg(long, verbatim_doc_comment)]
-        pub files: Option<glob::Pattern>,
+        #[arg(long, verbatim_doc_comment, alias = "files")]
+        pub glob: Option<glob::Pattern>,
         /// Fail if working on files (e.g. globbing is requested) but none are found.
         #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
         pub fail_no_files: bool,

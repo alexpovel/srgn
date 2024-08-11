@@ -6,7 +6,7 @@ info:
 ---
 args:
   - "--sorted"
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - foo
   - baz

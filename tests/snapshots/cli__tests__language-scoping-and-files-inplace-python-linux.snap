@@ -8,7 +8,7 @@ args:
   - "--sorted"
   - "--python"
   - function-names
-  - "--files"
+  - "--glob"
   - subdir/**/*.py
   - foo
   - baz

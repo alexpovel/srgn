@@ -7,7 +7,7 @@ info:
 ---
 args:
   - "--fail-no-files"
-  - "--files"
+  - "--glob"
   - "**/*.there-is-no-such-suffix"
   - "."
 stdin: ~

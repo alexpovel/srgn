@@ -8,7 +8,7 @@ info:
 args:
   - "--sorted"
   - "--fail-any"
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - "."
 stdin: ~

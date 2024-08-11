@@ -22,7 +22,7 @@
             "args": [
                 "--python",
                 "comments",
-                "--files",
+                "--glob",
                 "**/strings.py"
             ],
             "cwd": "${workspaceFolder}",

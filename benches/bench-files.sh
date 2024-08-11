@@ -23,9 +23,9 @@ bench() {
 
         hyperfine \
             --warmup 1 \
-            "./srgn --gitignored --fail-no-files --go comments --files 'kubernetes/**/*.go' '[tT]he (\w+)'" \
-            "./srgn --gitignored --fail-no-files --python comments --files 'django/**/*.py' '[tT]he (\w+)'" \
-            "./srgn --gitignored --fail-no-files --python comments --files 'pydantic/**/*.py' '[tT]he (\w+)'"
+            "./srgn --gitignored --fail-no-files --go comments --glob 'kubernetes/**/*.go' '[tT]he (\w+)'" \
+            "./srgn --gitignored --fail-no-files --python comments --glob 'django/**/*.py' '[tT]he (\w+)'" \
+            "./srgn --gitignored --fail-no-files --python comments --glob 'pydantic/**/*.py' '[tT]he (\w+)'"
     )
 }
 

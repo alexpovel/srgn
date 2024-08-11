@@ -197,7 +197,7 @@ Heizoelrueckstossabdaempfung.
         &[
             "--python",
             "strings",
-            "--files",
+            "--glob",
             "**/*.py",
             "is",
         ],
@@ -282,7 +282,7 @@ Heizoelrueckstossabdaempfung.
         "tests/files/files-python/in",
         &[
             "--sorted",
-            "--files",
+            "--glob",
             "**/*.py",
             "foo",
             "baz"
@@ -308,7 +308,7 @@ Heizoelrueckstossabdaempfung.
             "--sorted",
             "--python",
             "function-names",
-            "--files", // Will override language scoper
+            "--glob", // Will override language scoper
             "subdir/**/*.py",
             "foo",
             "baz"
@@ -321,7 +321,7 @@ Heizoelrueckstossabdaempfung.
         &[
             "--python",
             "function-names",
-            "--files", // Will override language scoper
+            "--glob", // Will override language scoper
             "subdir/**/*.py",
             "foo",
             "baz"
@@ -477,7 +477,7 @@ Heizoelrueckstossabdaempfung.
         &[
             "--sorted",
             "--fail-none",
-            "--files",
+            "--glob",
             "**/*.py",
             "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
         ],
@@ -501,7 +501,7 @@ Heizoelrueckstossabdaempfung.
         &[
             "--sorted",
             "--fail-any",
-            "--files",
+            "--glob",
             "**/*.py",
             r".",
         ],
@@ -525,7 +525,7 @@ Heizoelrueckstossabdaempfung.
         &[
             "--sorted",
             "--fail-no-files",
-            "--files",
+            "--glob",
             "**/*.there-is-no-such-suffix",
             r".",
         ],
@@ -559,7 +559,7 @@ Heizoelrueckstossabdaempfung.
         None,
         &[
             "--fail-none",
-            "--files",
+            "--glob",
             "**/*.py",
             "unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih",
         ],
@@ -581,7 +581,7 @@ Heizoelrueckstossabdaempfung.
         None,
         &[
             "--fail-any",
-            "--files",
+            "--glob",
             "**/*.py",
             r".",
         ],
@@ -603,7 +603,7 @@ Heizoelrueckstossabdaempfung.
         None,
         &[
             "--fail-no-files",
-            "--files",
+            "--glob",
             "**/*.there-is-no-such-suffix",
             r".",
         ],

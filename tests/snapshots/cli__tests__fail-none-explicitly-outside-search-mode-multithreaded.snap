@@ -7,7 +7,7 @@ info:
 ---
 args:
   - "--fail-none"
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih
 stdin: ~

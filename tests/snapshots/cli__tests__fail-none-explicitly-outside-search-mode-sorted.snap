@@ -8,7 +8,7 @@ info:
 args:
   - "--sorted"
   - "--fail-none"
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - unfindable-string-dheuihiuhiulerfiuehrilufhiusdho438ryh9vuoih
 stdin: ~

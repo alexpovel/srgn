@@ -7,7 +7,7 @@ info:
 ---
 args:
   - "--fail-any"
-  - "--files"
+  - "--glob"
   - "**/*.py"
   - "."
 stdin: ~
