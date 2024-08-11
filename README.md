@@ -1365,6 +1365,7 @@ Language scopes:
           - usings:    `using` directives (including periods)
           - struct:    `struct` definitions (in their entirety)
           - enum:      `enum` definitions (in their entirety)
+          - interface: `interface` definitions (in their entirety)
           - field:     Field definitions on types (in their entirety)
           - attribute: Attribute names
 

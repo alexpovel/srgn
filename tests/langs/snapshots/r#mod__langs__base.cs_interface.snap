@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 26
+  l: "    public interface ITestable<out TResult>\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 27
+  l: "    {\n"
+  m: ^^^^^^^
+- n: 28
+  l: "        TResult RunTest();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 29
+  l: "        event EventHandler<TResult> TestCompleted;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "    }\n"
+  m: "^^^^^  "

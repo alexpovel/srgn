@@ -26,6 +26,8 @@ pub enum PreparedCSharpQuery {
     Struct,
     /// `enum` definitions (in their entirety).
     Enum,
+    /// `interface` definitions (in their entirety).
+    Interface,
     /// Field definitions on types (in their entirety).
     Field,
     /// Attribute names.
@@ -57,6 +59,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                 }
                 PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
                 PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
+                PreparedCSharpQuery::Interface => "(interface_declaration) @interface",
                 PreparedCSharpQuery::Field => "(field_declaration) @field",
                 PreparedCSharpQuery::Attribute => "(attribute) @attribute",
             },
