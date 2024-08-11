@@ -30,6 +30,8 @@ pub enum PreparedCSharpQuery {
     Interface,
     /// `class` definitions (in their entirety).
     Class,
+    /// Variable declarations (in their entirety).
+    VariableDeclaration,
     /// Field definitions on types (in their entirety).
     Field,
     /// Attribute names.
@@ -63,6 +65,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                 PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
                 PreparedCSharpQuery::Interface => "(interface_declaration) @interface",
                 PreparedCSharpQuery::Class => "(class_declaration) @class",
+                PreparedCSharpQuery::VariableDeclaration => "(variable_declaration) @variable",
                 PreparedCSharpQuery::Field => "(field_declaration) @field",
                 PreparedCSharpQuery::Attribute => "(attribute) @attribute",
             },

@@ -1,0 +1,124 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 13
+  l: "        public T Value;\n"
+  m: "               ^^^^^^^   "
+- n: 14
+  l: "        public fixed byte ErrorCode[16];\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^   "
+- n: 29
+  l: "        event EventHandler<TResult> TestCompleted;\n"
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 35
+  l: "        protected internal const double Epsilon = 1e-6;\n"
+  m: "                                 ^^^^^^^^^^^^^^^^^^^^^   "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 38
+  l: "        private TestStatus _status;\n"
+  m: "                ^^^^^^^^^^^^^^^^^^   "
+- n: 45
+  l: "        public event EventHandler<TestResult<double>> TestCompleted;\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 60
+  l: "        private readonly Func<double, double> _functionUnderTest;\n"
+  m: "                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 61
+  l: "        private readonly int _iterations;\n"
+  m: "                         ^^^^^^^^^^^^^^^   "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: "                 ^^^^^^^^^                         "
+- n: 81
+  l: "            var result = new TestResult<double>\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 82
+  l: "            {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 84
+  l: "            };\n"
+  m: "^^^^^^^^^^^^^   "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 114
+  l: "        private TestLogger _logger;\n"
+  m: "                ^^^^^^^^^^^^^^^^^^   "
+- n: 116
+  l: "        public event EventHandler AllTestsCompleted;\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 128
+  l: "                    var result = test.RunTest();\n"
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 164
+  l: "            TestRunner runner = new TestRunner();\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 173
+  l: "            string rawStringLiteral = \"\"\"This is a\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 174
+  l: "raw string\n"
+  m: ^^^^^^^^^^^^
+- n: 175
+  l: "literal\"\"\";\n"
+  m: "^^^^^^^^^^^^^   "
+- n: 176
+  l: "            string stringLiteral = \"Alice\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 177
+  l: "            string verbatimStringLiteral = @\"C:\\Users\\Alice\\Documents\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 179
+  l: "            int? nullableInt = 5;\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^   "
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 196
+  l: "                        where test is PerformanceTest\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 197
+  l: "                        select test;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 199
+  l: "            int[] numbers = { 1, 2, 3, 4, 5 };\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 210
+  l: "            int value = 42;\n"
+  m: "            ^^^^^^^^^^^^^^   "
+- n: 211
+  l: "            int* ptr = &value;\n"
+  m: "            ^^^^^^^^^^^^^^^^^   "
