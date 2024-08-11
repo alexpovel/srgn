@@ -1364,7 +1364,7 @@ Language scopes:
             interpolated)
           - usings:   `using` directives (including periods)
 
-      --csharp-query <CSHARP_QUERY>
+      --csharp-query <TREE-SITTER-QUERY>
           Scope C# code using a custom tree-sitter query.
           
           [env: CSHARP_QUERY=]
@@ -1380,7 +1380,7 @@ Language scopes:
           - imports:     Imports
           - struct-tags: Struct tags
 
-      --go-query <GO_QUERY>
+      --go-query <TREE-SITTER-QUERY>
           Scope Go code using a custom tree-sitter query.
           
           [env: GO_QUERY=]
@@ -1407,7 +1407,7 @@ Language scopes:
           - comments:       Comments
           - strings:        Literal strings
 
-      --hcl-query <HCL_QUERY>
+      --hcl-query <TREE-SITTER-QUERY>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.
           
           [env: HCL_QUERY=]
@@ -1444,7 +1444,7 @@ Language scopes:
             assignments)
           - types:                Types in type hints
 
-      --python-query <PYTHON_QUERY>
+      --python-query <TREE-SITTER-QUERY>
           Scope Python code using a custom tree-sitter query.
           
           [env: PYTHON_QUERY=]
@@ -1462,7 +1462,7 @@ Language scopes:
           - strings:      Strings (regular, raw, byte; includes interpolation parts in
             format strings!)
 
-      --rust-query <RUST_QUERY>
+      --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.
           
           [env: RUST_QUERY=]
@@ -1477,7 +1477,7 @@ Language scopes:
           - strings:  Strings (literal, template)
           - imports:  Imports (module specifiers)
 
-      --typescript-query <TYPESCRIPT_QUERY>
+      --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.
           
           [env: TYPESCRIPT_QUERY=]

@@ -1163,6 +1163,9 @@ mod cli {
         pub squeeze: bool,
     }
 
+    /// For use as <https://docs.rs/clap/latest/clap/struct.Arg.html#method.value_name>
+    const TREE_SITTER_QUERY_VALUE_NAME: &str = "TREE-SITTER-QUERY";
+
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Language scopes")]
@@ -1189,7 +1192,7 @@ mod cli {
         pub csharp: Option<PreparedCSharpQuery>,
 
         /// Scope C# code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub csharp_query: Option<CustomCSharpQuery>,
     }
 
@@ -1203,7 +1206,7 @@ mod cli {
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub hcl_query: Option<CustomHclQuery>,
     }
 
@@ -1215,7 +1218,7 @@ mod cli {
         pub go: Option<PreparedGoQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub go_query: Option<CustomGoQuery>,
     }
 
@@ -1227,7 +1230,7 @@ mod cli {
         pub python: Option<PreparedPythonQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub python_query: Option<CustomPythonQuery>,
     }
 
@@ -1239,7 +1242,7 @@ mod cli {
         pub rust: Option<PreparedRustQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub rust_query: Option<CustomRustQuery>,
     }
 
@@ -1251,7 +1254,7 @@ mod cli {
         pub typescript: Option<PreparedTypeScriptQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub typescript_query: Option<CustomTypeScriptQuery>,
     }
 
