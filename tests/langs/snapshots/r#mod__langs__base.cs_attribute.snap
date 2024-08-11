@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 17
+  l: "    [Flags]\n"
+  m: "     ^^^^^   "
+- n: 32
+  l: "    [Serializable]\n"
+  m: "     ^^^^^^^^^^^^   "
+- n: 144
+  l: "    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]\n"
+  m: "     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 207
+  l: "        [Benchmark(100)]\n"
+  m: "         ^^^^^^^^^^^^^^   "

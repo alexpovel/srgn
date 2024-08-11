@@ -1359,13 +1359,14 @@ Language scopes:
           [env: CSHARP=]
 
           Possible values:
-          - comments: Comments (including XML, inline, doc comments)
-          - strings:  Strings (incl. verbatim, interpolated; incl. quotes, except for
+          - comments:  Comments (including XML, inline, doc comments)
+          - strings:   Strings (incl. verbatim, interpolated; incl. quotes, except for
             interpolated)
-          - usings:   `using` directives (including periods)
-          - struct:   `struct` definitions (in their entirety)
-          - enum:     `enum` definitions (in their entirety)
-          - field:    Field definitions on types (in their entirety)
+          - usings:    `using` directives (including periods)
+          - struct:    `struct` definitions (in their entirety)
+          - enum:      `enum` definitions (in their entirety)
+          - field:     Field definitions on types (in their entirety)
+          - attribute: Attribute names
 
       --csharp-query <TREE-SITTER-QUERY>
           Scope C# code using a custom tree-sitter query.
