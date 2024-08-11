@@ -1,0 +1,334 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 28
+  l: "        TResult RunTest();\n"
+  m: "        ^^^^^^^^^^^^^^^^^^  "
+- n: 43
+  l: "        public abstract TestResult<double> RunTest();\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 47
+  l: "        protected virtual void OnTestCompleted(TestResult<double> result) =>\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 48
+  l: "            TestCompleted?.Invoke(this, result);\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 52
+  l: "        public void Dispose()\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 53
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 54
+  l: "            GC.SuppressFinalize(this);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 55
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 69
+  l: "        public override TestResult<double> RunTest()\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 70
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 71
+  l: "            _status = TestStatus.Running;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 73
+  l: "\n"
+  m: ^^
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 75
+  l: "            {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 76
+  l: "                _functionUnderTest(i);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 77
+  l: "            }\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 78
+  l: "\n"
+  m: ^^
+- n: 79
+  l: "            stopwatch.Stop();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 80
+  l: "\n"
+  m: ^^
+- n: 81
+  l: "            var result = new TestResult<double>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 82
+  l: "            {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 84
+  l: "            };\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 85
+  l: "\n"
+  m: ^^
+- n: 86
+  l: "            _status = TestStatus.Passed;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 87
+  l: "            OnTestCompleted(result);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 88
+  l: "            return result;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 89
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 97
+  l: "        public override bool Equals(object obj) =>\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 98
+  l: "            obj is PerformanceTest test && this == test;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 100
+  l: "        public override int GetHashCode() => _iterations;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 105
+  l: "        public static void PrintResult(this TestResult<double> result) =>\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 123
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 124
+  l: "            foreach (var test in _tests)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 125
+  l: "            {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 127
+  l: "                {\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 128
+  l: "                    var result = test.RunTest();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 130
+  l: "                });\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 131
+  l: "            }\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 132
+  l: "\n"
+  m: ^^
+- n: 133
+  l: "            AllTestsCompleted?.Invoke(this, EventArgs.Empty);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 134
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 136
+  l: "        partial void OnTestRunnerInitialized();\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 158
+  l: "        public static void /* An inline comment */ Main(string[] args)\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 159
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 160
+  l: "            /*\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 161
+  l: "                A block comment.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 162
+  l: "                It has multiple lines.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 163
+  l: "            */\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 164
+  l: "            TestRunner runner = new TestRunner();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 166
+  l: "\n"
+  m: ^^
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 168
+  l: "\n"
+  m: ^^
+- n: 169
+  l: "            _ = runner.RunAllTestsAsync();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 170
+  l: "\n"
+  m: ^^
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 173
+  l: "            string rawStringLiteral = \"\"\"This is a\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 174
+  l: "raw string\n"
+  m: ^^^^^^^^^^^^
+- n: 175
+  l: "literal\"\"\";\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 176
+  l: "            string stringLiteral = \"Alice\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 177
+  l: "            string verbatimStringLiteral = @\"C:\\Users\\Alice\\Documents\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 178
+  l: "\n"
+  m: ^^
+- n: 179
+  l: "            int? nullableInt = 5;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 181
+  l: "\n"
+  m: ^^
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 184
+  l: "\n"
+  m: ^^
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 186
+  l: "\n"
+  m: ^^
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 189
+  l: "            {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 190
+  l: "                Console.WriteLine(\"High iteration performance test\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 191
+  l: "            }\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 192
+  l: "\n"
+  m: ^^
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 194
+  l: "\n"
+  m: ^^
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 196
+  l: "                        where test is PerformanceTest\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 197
+  l: "                        select test;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 198
+  l: "\n"
+  m: ^^
+- n: 199
+  l: "            int[] numbers = { 1, 2, 3, 4, 5 };\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 201
+  l: "\n"
+  m: ^^
+- n: 202
+  l: "            Test:\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 203
+  l: "            Console.WriteLine(\"Labeled statement\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 204
+  l: "            goto Test;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 205
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 207
+  l: "        [Benchmark(100)]\n"
+  m: "        ^^^^^^^^^^^^^^^^^^"
+- n: 208
+  l: "        public static unsafe void UnsafeMethod()\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 209
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 210
+  l: "            int value = 42;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 211
+  l: "            int* ptr = &value;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 212
+  l: "            Console.WriteLine(*ptr);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 213
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 217
+  l: "        public static void Deconstruct(this (int, string) tuple, out int number, out string text)\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 218
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 219
+  l: "            number = tuple.Item1;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 220
+  l: "            text = tuple.Item2;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 221
+  l: "        }\n"
+  m: "^^^^^^^^^  "

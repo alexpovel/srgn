@@ -1367,6 +1367,7 @@ Language scopes:
           - enum:                 `enum` definitions (in their entirety)
           - interface:            `interface` definitions (in their entirety)
           - class:                `class` definitions (in their entirety)
+          - method:               Method definitions (in their entirety)
           - variable-declaration: Variable declarations (in their entirety)
           - property:             Property definitions (in their entirety)
           - constructor:          Constructor definitions (in their entirety)
