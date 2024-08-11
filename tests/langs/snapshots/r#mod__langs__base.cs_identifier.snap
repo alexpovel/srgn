@@ -1,0 +1,937 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "using System;\n"
+  m: "      ^^^^^^   "
+- n: 2
+  l: "using System.Collections.Generic;\n"
+  m: "      ^^^^^^                       "
+- n: 2
+  l: "using System.Collections.Generic;\n"
+  m: "             ^^^^^^^^^^^           "
+- n: 2
+  l: "using System.Collections.Generic;\n"
+  m: "                         ^^^^^^^   "
+- n: 3
+  l: "using static System.Math;\n"
+  m: "             ^^^^^^        "
+- n: 3
+  l: "using static System.Math;\n"
+  m: "                    ^^^^   "
+- n: 4
+  l: "using Console = System.Console;\n"
+  m: "      ^^^^^^^                    "
+- n: 4
+  l: "using Console = System.Console;\n"
+  m: "                ^^^^^^           "
+- n: 4
+  l: "using Console = System.Console;\n"
+  m: "                       ^^^^^^^   "
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "           ^^^^^^                                                                 "
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "                  ^^^^^^^                                                         "
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "                          ^^^^^^^^^^^^^^^^                                        "
+- n: 7
+  l: "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"TestAssembly\")]\n"
+  m: "                                           ^^^^^^^^^^^^^^^^^^                     "
+- n: 9
+  l: "namespace SoftwareTesting\n"
+  m: "          ^^^^^^^^^^^^^^^  "
+- n: 11
+  l: "    public unsafe struct TestResult<T> where T : struct\n"
+  m: "                         ^^^^^^^^^^                      "
+- n: 11
+  l: "    public unsafe struct TestResult<T> where T : struct\n"
+  m: "                                    ^                    "
+- n: 11
+  l: "    public unsafe struct TestResult<T> where T : struct\n"
+  m: "                                             ^           "
+- n: 13
+  l: "        public T Value;\n"
+  m: "               ^         "
+- n: 13
+  l: "        public T Value;\n"
+  m: "                 ^^^^^   "
+- n: 14
+  l: "        public fixed byte ErrorCode[16];\n"
+  m: "                          ^^^^^^^^^       "
+- n: 17
+  l: "    [Flags]\n"
+  m: "     ^^^^^   "
+- n: 18
+  l: "    public enum TestStatus : byte\n"
+  m: "                ^^^^^^^^^^         "
+- n: 20
+  l: "        None = 0,\n"
+  m: "        ^^^^       "
+- n: 21
+  l: "        Running = 1 << 0,\n"
+  m: "        ^^^^^^^            "
+- n: 22
+  l: "        Passed = 1 << 1,\n"
+  m: "        ^^^^^^            "
+- n: 23
+  l: "        Failed = 1 << 2\n"
+  m: "        ^^^^^^           "
+- n: 26
+  l: "    public interface ITestable<out TResult>\n"
+  m: "                     ^^^^^^^^^               "
+- n: 26
+  l: "    public interface ITestable<out TResult>\n"
+  m: "                                   ^^^^^^^   "
+- n: 28
+  l: "        TResult RunTest();\n"
+  m: "        ^^^^^^^             "
+- n: 28
+  l: "        TResult RunTest();\n"
+  m: "                ^^^^^^^     "
+- n: 29
+  l: "        event EventHandler<TResult> TestCompleted;\n"
+  m: "              ^^^^^^^^^^^^                          "
+- n: 29
+  l: "        event EventHandler<TResult> TestCompleted;\n"
+  m: "                           ^^^^^^^                  "
+- n: 29
+  l: "        event EventHandler<TResult> TestCompleted;\n"
+  m: "                                    ^^^^^^^^^^^^^   "
+- n: 32
+  l: "    [Serializable]\n"
+  m: "     ^^^^^^^^^^^^   "
+- n: 33
+  l: "    public abstract class TestBase : ITestable<TestResult<double>>, IDisposable\n"
+  m: "                          ^^^^^^^^                                               "
+- n: 33
+  l: "    public abstract class TestBase : ITestable<TestResult<double>>, IDisposable\n"
+  m: "                                     ^^^^^^^^^                                   "
+- n: 33
+  l: "    public abstract class TestBase : ITestable<TestResult<double>>, IDisposable\n"
+  m: "                                               ^^^^^^^^^^                        "
+- n: 33
+  l: "    public abstract class TestBase : ITestable<TestResult<double>>, IDisposable\n"
+  m: "                                                                    ^^^^^^^^^^^  "
+- n: 35
+  l: "        protected internal const double Epsilon = 1e-6;\n"
+  m: "                                        ^^^^^^^          "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "                               ^^^^^^^^                                "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "                                        ^^^^^^^^^^^^^                  "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "                                                        ^^^^^^^^       "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "                                                                 ^^^   "
+- n: 38
+  l: "        private TestStatus _status;\n"
+  m: "                ^^^^^^^^^^           "
+- n: 38
+  l: "        private TestStatus _status;\n"
+  m: "                           ^^^^^^^   "
+- n: 39
+  l: "        public ref readonly TestStatus Status => ref _status;\n"
+  m: "                            ^^^^^^^^^^                         "
+- n: 39
+  l: "        public ref readonly TestStatus Status => ref _status;\n"
+  m: "                                       ^^^^^^                  "
+- n: 39
+  l: "        public ref readonly TestStatus Status => ref _status;\n"
+  m: "                                                     ^^^^^^^   "
+- n: 41
+  l: "        protected TestBase() => _status = TestStatus.None;\n"
+  m: "                  ^^^^^^^^                                  "
+- n: 41
+  l: "        protected TestBase() => _status = TestStatus.None;\n"
+  m: "                                ^^^^^^^                     "
+- n: 41
+  l: "        protected TestBase() => _status = TestStatus.None;\n"
+  m: "                                          ^^^^^^^^^^        "
+- n: 41
+  l: "        protected TestBase() => _status = TestStatus.None;\n"
+  m: "                                                     ^^^^   "
+- n: 43
+  l: "        public abstract TestResult<double> RunTest();\n"
+  m: "                        ^^^^^^^^^^                     "
+- n: 43
+  l: "        public abstract TestResult<double> RunTest();\n"
+  m: "                                           ^^^^^^^     "
+- n: 45
+  l: "        public event EventHandler<TestResult<double>> TestCompleted;\n"
+  m: "                     ^^^^^^^^^^^^                                     "
+- n: 45
+  l: "        public event EventHandler<TestResult<double>> TestCompleted;\n"
+  m: "                                  ^^^^^^^^^^                          "
+- n: 45
+  l: "        public event EventHandler<TestResult<double>> TestCompleted;\n"
+  m: "                                                      ^^^^^^^^^^^^^   "
+- n: 47
+  l: "        protected virtual void OnTestCompleted(TestResult<double> result) =>\n"
+  m: "                               ^^^^^^^^^^^^^^^                                "
+- n: 47
+  l: "        protected virtual void OnTestCompleted(TestResult<double> result) =>\n"
+  m: "                                               ^^^^^^^^^^                     "
+- n: 47
+  l: "        protected virtual void OnTestCompleted(TestResult<double> result) =>\n"
+  m: "                                                                  ^^^^^^      "
+- n: 48
+  l: "            TestCompleted?.Invoke(this, result);\n"
+  m: "            ^^^^^^^^^^^^^                         "
+- n: 48
+  l: "            TestCompleted?.Invoke(this, result);\n"
+  m: "                           ^^^^^^                 "
+- n: 48
+  l: "            TestCompleted?.Invoke(this, result);\n"
+  m: "                                        ^^^^^^    "
+- n: 50
+  l: "        ~TestBase() => Console.WriteLine(\"Test finalized.\");\n"
+  m: "         ^^^^^^^^                                               "
+- n: 50
+  l: "        ~TestBase() => Console.WriteLine(\"Test finalized.\");\n"
+  m: "                       ^^^^^^^                                  "
+- n: 50
+  l: "        ~TestBase() => Console.WriteLine(\"Test finalized.\");\n"
+  m: "                               ^^^^^^^^^                        "
+- n: 52
+  l: "        public void Dispose()\n"
+  m: "                    ^^^^^^^    "
+- n: 54
+  l: "            GC.SuppressFinalize(this);\n"
+  m: "            ^^                          "
+- n: 54
+  l: "            GC.SuppressFinalize(this);\n"
+  m: "               ^^^^^^^^^^^^^^^^         "
+- n: 58
+  l: "    public sealed class PerformanceTest : TestBase\n"
+  m: "                        ^^^^^^^^^^^^^^^             "
+- n: 58
+  l: "    public sealed class PerformanceTest : TestBase\n"
+  m: "                                          ^^^^^^^^  "
+- n: 60
+  l: "        private readonly Func<double, double> _functionUnderTest;\n"
+  m: "                         ^^^^                                      "
+- n: 60
+  l: "        private readonly Func<double, double> _functionUnderTest;\n"
+  m: "                                              ^^^^^^^^^^^^^^^^^^   "
+- n: 61
+  l: "        private readonly int _iterations;\n"
+  m: "                             ^^^^^^^^^^^   "
+- n: 63
+  l: "        public PerformanceTest(Func<double, double> func, int iterations)\n"
+  m: "               ^^^^^^^^^^^^^^^                                             "
+- n: 63
+  l: "        public PerformanceTest(Func<double, double> func, int iterations)\n"
+  m: "                               ^^^^                                        "
+- n: 63
+  l: "        public PerformanceTest(Func<double, double> func, int iterations)\n"
+  m: "                                                    ^^^^                   "
+- n: 63
+  l: "        public PerformanceTest(Func<double, double> func, int iterations)\n"
+  m: "                                                              ^^^^^^^^^^   "
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: "            ^^^^^^^^^^^^^^^^^^                                                           "
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: "                                 ^^^^                                                    "
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: "                                                   ^^^^^^^^^^^^^^^^^^^^^                 "
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: "                                                                         ^^^^^^          "
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: "                                                                                ^^^^     "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "            ^^^^^^^^^^^                                                                                             "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "                          ^^^^^^^^^^                                                                                "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "                                           ^^^^^^^^^^                                                               "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^                       "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "                                                                                              ^^^^^^                "
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: "                                                                                                     ^^^^^^^^^^     "
+- n: 69
+  l: "        public override TestResult<double> RunTest()\n"
+  m: "                        ^^^^^^^^^^                    "
+- n: 69
+  l: "        public override TestResult<double> RunTest()\n"
+  m: "                                           ^^^^^^^    "
+- n: 71
+  l: "            _status = TestStatus.Running;\n"
+  m: "            ^^^^^^^                        "
+- n: 71
+  l: "            _status = TestStatus.Running;\n"
+  m: "                      ^^^^^^^^^^           "
+- n: 71
+  l: "            _status = TestStatus.Running;\n"
+  m: "                                 ^^^^^^^   "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "                ^^^^^^^^^                                             "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "                            ^^^^^^                                    "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "                                   ^^^^^^^^^^^                        "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "                                               ^^^^^^^^^              "
+- n: 72
+  l: "            var stopwatch = System.Diagnostics.Stopwatch.StartNew();\n"
+  m: "                                                         ^^^^^^^^     "
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: "                     ^                             "
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: "                            ^                      "
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: "                                ^^^^^^^^^^^        "
+- n: 74
+  l: "            for (int i = 0; i < _iterations; i++)\n"
+  m: "                                             ^     "
+- n: 76
+  l: "                _functionUnderTest(i);\n"
+  m: "                ^^^^^^^^^^^^^^^^^^      "
+- n: 76
+  l: "                _functionUnderTest(i);\n"
+  m: "                                   ^    "
+- n: 79
+  l: "            stopwatch.Stop();\n"
+  m: "            ^^^^^^^^^          "
+- n: 79
+  l: "            stopwatch.Stop();\n"
+  m: "                      ^^^^     "
+- n: 81
+  l: "            var result = new TestResult<double>\n"
+  m: "                ^^^^^^                           "
+- n: 81
+  l: "            var result = new TestResult<double>\n"
+  m: "                             ^^^^^^^^^^          "
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: "                ^^^^^                                                      "
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: "                        ^^^^^^^^^                                          "
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: "                                  ^^^^^^^                                  "
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: "                                          ^^^^^^^^^^^^^^^^^                "
+- n: 83
+  l: "                Value = stopwatch.Elapsed.TotalMilliseconds / _iterations\n"
+  m: "                                                              ^^^^^^^^^^^  "
+- n: 86
+  l: "            _status = TestStatus.Passed;\n"
+  m: "            ^^^^^^^                       "
+- n: 86
+  l: "            _status = TestStatus.Passed;\n"
+  m: "                      ^^^^^^^^^^          "
+- n: 86
+  l: "            _status = TestStatus.Passed;\n"
+  m: "                                 ^^^^^^   "
+- n: 87
+  l: "            OnTestCompleted(result);\n"
+  m: "            ^^^^^^^^^^^^^^^           "
+- n: 87
+  l: "            OnTestCompleted(result);\n"
+  m: "                            ^^^^^^    "
+- n: 88
+  l: "            return result;\n"
+  m: "                   ^^^^^^   "
+- n: 91
+  l: "        public static bool operator ==(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                       ^^^^^^^^^^^^^^^                                  "
+- n: 91
+  l: "        public static bool operator ==(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                       ^^^^                             "
+- n: 91
+  l: "        public static bool operator ==(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                             ^^^^^^^^^^^^^^^            "
+- n: 91
+  l: "        public static bool operator ==(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                                             ^^^^^      "
+- n: 92
+  l: "            left?._iterations == right?._iterations;\n"
+  m: "            ^^^^                                      "
+- n: 92
+  l: "            left?._iterations == right?._iterations;\n"
+  m: "                  ^^^^^^^^^^^                         "
+- n: 92
+  l: "            left?._iterations == right?._iterations;\n"
+  m: "                                 ^^^^^                "
+- n: 92
+  l: "            left?._iterations == right?._iterations;\n"
+  m: "                                        ^^^^^^^^^^^   "
+- n: 94
+  l: "        public static bool operator !=(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                       ^^^^^^^^^^^^^^^                                  "
+- n: 94
+  l: "        public static bool operator !=(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                       ^^^^                             "
+- n: 94
+  l: "        public static bool operator !=(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                             ^^^^^^^^^^^^^^^            "
+- n: 94
+  l: "        public static bool operator !=(PerformanceTest left, PerformanceTest right) =>\n"
+  m: "                                                                             ^^^^^      "
+- n: 95
+  l: "            !(left == right);\n"
+  m: "              ^^^^             "
+- n: 95
+  l: "            !(left == right);\n"
+  m: "                      ^^^^^    "
+- n: 97
+  l: "        public override bool Equals(object obj) =>\n"
+  m: "                             ^^^^^^                 "
+- n: 97
+  l: "        public override bool Equals(object obj) =>\n"
+  m: "                                           ^^^      "
+- n: 98
+  l: "            obj is PerformanceTest test && this == test;\n"
+  m: "            ^^^                                           "
+- n: 98
+  l: "            obj is PerformanceTest test && this == test;\n"
+  m: "                   ^^^^^^^^^^^^^^^                        "
+- n: 98
+  l: "            obj is PerformanceTest test && this == test;\n"
+  m: "                                   ^^^^                   "
+- n: 98
+  l: "            obj is PerformanceTest test && this == test;\n"
+  m: "                                                   ^^^^   "
+- n: 100
+  l: "        public override int GetHashCode() => _iterations;\n"
+  m: "                            ^^^^^^^^^^^                    "
+- n: 100
+  l: "        public override int GetHashCode() => _iterations;\n"
+  m: "                                             ^^^^^^^^^^^   "
+- n: 103
+  l: "    public static class TestExtensions\n"
+  m: "                        ^^^^^^^^^^^^^^  "
+- n: 105
+  l: "        public static void PrintResult(this TestResult<double> result) =>\n"
+  m: "                           ^^^^^^^^^^^                                     "
+- n: 105
+  l: "        public static void PrintResult(this TestResult<double> result) =>\n"
+  m: "                                            ^^^^^^^^^^                     "
+- n: 105
+  l: "        public static void PrintResult(this TestResult<double> result) =>\n"
+  m: "                                                               ^^^^^^      "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "            ^^^^^^^                                                     "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "                    ^^^^^^^^^                                           "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "                                               ^^^^^^                   "
+- n: 106
+  l: "            Console.WriteLine($\"Test result: {result.Value:F3} ms\");\n"
+  m: "                                                      ^^^^^             "
+- n: 109
+  l: "    public delegate void TestLogger(string message);\n"
+  m: "                         ^^^^^^^^^^                   "
+- n: 109
+  l: "    public delegate void TestLogger(string message);\n"
+  m: "                                           ^^^^^^^    "
+- n: 111
+  l: "    public partial class TestRunner\n"
+  m: "                         ^^^^^^^^^^  "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                         ^^^^                                           "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                              ^^^^^^^^                                  "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                                        ^^^^^^                          "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                                                     ^^^^               "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "                                                          ^^^^^^^^      "
+- n: 114
+  l: "        private TestLogger _logger;\n"
+  m: "                ^^^^^^^^^^           "
+- n: 114
+  l: "        private TestLogger _logger;\n"
+  m: "                           ^^^^^^^   "
+- n: 116
+  l: "        public event EventHandler AllTestsCompleted;\n"
+  m: "                     ^^^^^^^^^^^^                     "
+- n: 116
+  l: "        public event EventHandler AllTestsCompleted;\n"
+  m: "                                  ^^^^^^^^^^^^^^^^^   "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "               ^^^^^^^^^^                                                                      "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                          ^^^^^^^^^^                                                           "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                                     ^^^^^^                                                    "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                                                       ^^^^^^^                                 "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                                                                 ^^^^^^                        "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                                                                           ^^^^^^^             "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "                                                                                   ^^^^^^^^^   "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                    ^^^^^^^                                      "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                            ^^^^^^^^                             "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                                     ^^^^                        "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                                              ^^^^^^             "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                                                     ^^^         "
+- n: 120
+  l: "        public void AddTest(TestBase test) => _tests.Add(test);\n"
+  m: "                                                         ^^^^    "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "                     ^^^^^^                                          "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "                            ^^^^^^^^^                                "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "                                      ^^^^^                          "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "                                            ^^^^                     "
+- n: 122
+  l: "        public async System.Threading.Tasks.Task RunAllTestsAsync()\n"
+  m: "                                                 ^^^^^^^^^^^^^^^^    "
+- n: 124
+  l: "            foreach (var test in _tests)\n"
+  m: "                         ^^^^             "
+- n: 124
+  l: "            foreach (var test in _tests)\n"
+  m: "                                 ^^^^^^   "
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: "                      ^^^^^^                                 "
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: "                             ^^^^^^^^^                       "
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: "                                       ^^^^^                 "
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: "                                             ^^^^            "
+- n: 126
+  l: "                await System.Threading.Tasks.Task.Run(() =>\n"
+  m: "                                                  ^^^        "
+- n: 128
+  l: "                    var result = test.RunTest();\n"
+  m: "                        ^^^^^^                    "
+- n: 128
+  l: "                    var result = test.RunTest();\n"
+  m: "                                 ^^^^             "
+- n: 128
+  l: "                    var result = test.RunTest();\n"
+  m: "                                      ^^^^^^^     "
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: "                    ^^^^^^^                                        "
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: "                                                ^^^^^^             "
+- n: 129
+  l: "                    _logger($\"Test completed: {result.Value}\");\n"
+  m: "                                                       ^^^^^       "
+- n: 133
+  l: "            AllTestsCompleted?.Invoke(this, EventArgs.Empty);\n"
+  m: "            ^^^^^^^^^^^^^^^^^                                  "
+- n: 133
+  l: "            AllTestsCompleted?.Invoke(this, EventArgs.Empty);\n"
+  m: "                               ^^^^^^                          "
+- n: 133
+  l: "            AllTestsCompleted?.Invoke(this, EventArgs.Empty);\n"
+  m: "                                            ^^^^^^^^^          "
+- n: 133
+  l: "            AllTestsCompleted?.Invoke(this, EventArgs.Empty);\n"
+  m: "                                                      ^^^^^    "
+- n: 136
+  l: "        partial void OnTestRunnerInitialized();\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^     "
+- n: 139
+  l: "    public class TestException : Exception\n"
+  m: "                 ^^^^^^^^^^^^^              "
+- n: 139
+  l: "    public class TestException : Exception\n"
+  m: "                                 ^^^^^^^^^  "
+- n: 141
+  l: "        public TestException(string message) : base(message) { }\n"
+  m: "               ^^^^^^^^^^^^^                                      "
+- n: 141
+  l: "        public TestException(string message) : base(message) { }\n"
+  m: "                                    ^^^^^^^                       "
+- n: 141
+  l: "        public TestException(string message) : base(message) { }\n"
+  m: "                                                    ^^^^^^^       "
+- n: 144
+  l: "    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]\n"
+  m: "     ^^^^^^^^^^^^^^                                                   "
+- n: 144
+  l: "    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]\n"
+  m: "                    ^^^^^^^^^^^^^^^^                                  "
+- n: 144
+  l: "    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]\n"
+  m: "                                     ^^^^^^                           "
+- n: 144
+  l: "    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]\n"
+  m: "                                             ^^^^^^^^^^^^^            "
+- n: 145
+  l: "    public class BenchmarkAttribute : Attribute\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^              "
+- n: 145
+  l: "    public class BenchmarkAttribute : Attribute\n"
+  m: "                                      ^^^^^^^^^  "
+- n: 147
+  l: "        public int Iterations { get; }\n"
+  m: "                   ^^^^^^^^^^           "
+- n: 148
+  l: "        public BenchmarkAttribute(int iterations) => Iterations = iterations;\n"
+  m: "               ^^^^^^^^^^^^^^^^^^                                              "
+- n: 148
+  l: "        public BenchmarkAttribute(int iterations) => Iterations = iterations;\n"
+  m: "                                      ^^^^^^^^^^                               "
+- n: 148
+  l: "        public BenchmarkAttribute(int iterations) => Iterations = iterations;\n"
+  m: "                                                     ^^^^^^^^^^                "
+- n: 148
+  l: "        public BenchmarkAttribute(int iterations) => Iterations = iterations;\n"
+  m: "                                                                  ^^^^^^^^^^   "
+- n: 155
+  l: "    public class Program\n"
+  m: "                 ^^^^^^^  "
+- n: 158
+  l: "        public static void /* An inline comment */ Main(string[] args)\n"
+  m: "                                                   ^^^^                 "
+- n: 158
+  l: "        public static void /* An inline comment */ Main(string[] args)\n"
+  m: "                                                                 ^^^^   "
+- n: 164
+  l: "            TestRunner runner = new TestRunner();\n"
+  m: "            ^^^^^^^^^^                             "
+- n: 164
+  l: "            TestRunner runner = new TestRunner();\n"
+  m: "                       ^^^^^^                      "
+- n: 164
+  l: "            TestRunner runner = new TestRunner();\n"
+  m: "                                    ^^^^^^^^^^     "
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: "            ^^^^^^                                                      "
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: "                   ^^^^^^^                                              "
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: "                               ^^^^^^^^^^^^^^^                          "
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: "                                                    ^^^                 "
+- n: 165
+  l: "            runner.AddTest(new PerformanceTest(x => Pow(x, 2), 1000));\n"
+  m: "                                                        ^               "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "            ^^^^^^                                                                                   "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                   ^^^^^^^^^^^^^^^^^                                                                 "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                                         ^^^^^^                                                      "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                                                 ^                                                   "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                                                       ^^^^^^^                                       "
+- n: 167
+  l: "            runner.AllTestsCompleted += (sender, e) => Console.WriteLine(\"All tests completed!\");\n"
+  m: "                                                               ^^^^^^^^^                             "
+- n: 169
+  l: "            _ = runner.RunAllTestsAsync();\n"
+  m: "            ^                               "
+- n: 169
+  l: "            _ = runner.RunAllTestsAsync();\n"
+  m: "                ^^^^^^                      "
+- n: 169
+  l: "            _ = runner.RunAllTestsAsync();\n"
+  m: "                       ^^^^^^^^^^^^^^^^     "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^                                             "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                                                          ^^^^                            "
+- n: 171
+  l: "            string interpolatedVerbatimString = $@\"User {name} has the ID: {user_Id}\";\n"
+  m: "                                                                             ^^^^^^^      "
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^^                                        "
+- n: 172
+  l: "            string interpolatedStringText = $\"Found user with ID: {user_Id}\";\n"
+  m: "                                                                    ^^^^^^^      "
+- n: 173
+  l: "            string rawStringLiteral = \"\"\"This is a\n"
+  m: "                   ^^^^^^^^^^^^^^^^                    "
+- n: 176
+  l: "            string stringLiteral = \"Alice\";\n"
+  m: "                   ^^^^^^^^^^^^^               "
+- n: 177
+  l: "            string verbatimStringLiteral = @\"C:\\Users\\Alice\\Documents\";\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^                                      "
+- n: 179
+  l: "            int? nullableInt = 5;\n"
+  m: "                 ^^^^^^^^^^^       "
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: "                ^^^^^^^^^^^^^^                                                                       "
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: "                                 ^^^^^^^^^^^                                                         "
+- n: 180
+  l: "            int nonNullableInt = nullableInt ?? throw new TestException(\"Unexpected null value\");\n"
+  m: "                                                          ^^^^^^^^^^^^^                              "
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: "                ^^^^^                                 "
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: "                         ^^^^                         "
+- n: 182
+  l: "            var tuple = (Name: \"Test\", Value: 42);\n"
+  m: "                                         ^^^^^        "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "            ^^^^^^^                                                      "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                    ^^^^^^^^^                                            "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                         ^^^^^                           "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                               ^^^^                      "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                                       ^^^^^             "
+- n: 183
+  l: "            Console.WriteLine($\"Tuple: {tuple.Name}, {tuple.Value}\");\n"
+  m: "                                                             ^^^^^       "
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^                                        "
+- n: 185
+  l: "            string interpolatedString = $\"The value is {nonNullableInt}\";\n"
+  m: "                                                         ^^^^^^^^^^^^^^      "
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: "                   ^^^                                        "
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: "                             ^^^^^^^^^^^^^^^                  "
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: "                                             ^^^^             "
+- n: 187
+  l: "            object obj = new PerformanceTest(Math.Sin, 100);\n"
+  m: "                                                  ^^^         "
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: "                ^^^                                                "
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: "                       ^^^^^^^^^^^^^^^                             "
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: "                                       ^^                          "
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: "                                             ^^                    "
+- n: 188
+  l: "            if (obj is PerformanceTest pt && pt._iterations > 50)\n"
+  m: "                                                ^^^^^^^^^^^        "
+- n: 190
+  l: "                Console.WriteLine(\"High iteration performance test\");\n"
+  m: "                ^^^^^^^                                                  "
+- n: 190
+  l: "                Console.WriteLine(\"High iteration performance test\");\n"
+  m: "                        ^^^^^^^^^                                        "
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: "                ^^^^^^^^^^^^^^^                                                    "
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: "                                        ^^^^                                       "
+- n: 193
+  l: "            var anonymousObject = new { Name = \"AnonymousTest\", Value = 3.14 };\n"
+  m: "                                                                  ^^^^^            "
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: "                ^^^^^                               "
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: "                             ^^^^                   "
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: "                                     ^^^^^^         "
+- n: 195
+  l: "            var query = from test in runner._tests\n"
+  m: "                                            ^^^^^^  "
+- n: 196
+  l: "                        where test is PerformanceTest\n"
+  m: "                              ^^^^                     "
+- n: 196
+  l: "                        where test is PerformanceTest\n"
+  m: "                                      ^^^^^^^^^^^^^^^  "
+- n: 197
+  l: "                        select test;\n"
+  m: "                               ^^^^   "
+- n: 199
+  l: "            int[] numbers = { 1, 2, 3, 4, 5 };\n"
+  m: "                  ^^^^^^^                       "
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: "                ^^^^^^^^^^^                                    "
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: "                              ^^^^^^^                          "
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: "                                      ^^^^^                    "
+- n: 200
+  l: "            var evenNumbers = numbers.Where(n => n % 2 == 0);\n"
+  m: "                                                 ^             "
+- n: 202
+  l: "            Test:\n"
+  m: "            ^^^^   "
+- n: 203
+  l: "            Console.WriteLine(\"Labeled statement\");\n"
+  m: "            ^^^^^^^                                    "
+- n: 203
+  l: "            Console.WriteLine(\"Labeled statement\");\n"
+  m: "                    ^^^^^^^^^                          "
+- n: 204
+  l: "            goto Test;\n"
+  m: "                 ^^^^   "
+- n: 207
+  l: "        [Benchmark(100)]\n"
+  m: "         ^^^^^^^^^        "
+- n: 208
+  l: "        public static unsafe void UnsafeMethod()\n"
+  m: "                                  ^^^^^^^^^^^^    "
+- n: 210
+  l: "            int value = 42;\n"
+  m: "                ^^^^^        "
+- n: 211
+  l: "            int* ptr = &value;\n"
+  m: "                 ^^^            "
+- n: 211
+  l: "            int* ptr = &value;\n"
+  m: "                        ^^^^^   "
+- n: 212
+  l: "            Console.WriteLine(*ptr);\n"
+  m: "            ^^^^^^^                   "
+- n: 212
+  l: "            Console.WriteLine(*ptr);\n"
+  m: "                    ^^^^^^^^^         "
+- n: 212
+  l: "            Console.WriteLine(*ptr);\n"
+  m: "                               ^^^    "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                      ^^^^^^^                                                  "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                              ^^^^^^^^^^^                                      "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                                          ^^^^^^^                              "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                                                  ^^^^^                        "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                                                            ^^^^^              "
+- n: 215
+  l: "        public static dynamic TestDynamic(dynamic input) => input.ToString();\n"
+  m: "                                                                  ^^^^^^^^     "
+- n: 217
+  l: "        public static void Deconstruct(this (int, string) tuple, out int number, out string text)\n"
+  m: "                           ^^^^^^^^^^^                                                             "
+- n: 217
+  l: "        public static void Deconstruct(this (int, string) tuple, out int number, out string text)\n"
+  m: "                                                          ^^^^^                                    "
+- n: 217
+  l: "        public static void Deconstruct(this (int, string) tuple, out int number, out string text)\n"
+  m: "                                                                         ^^^^^^                    "
+- n: 217
+  l: "        public static void Deconstruct(this (int, string) tuple, out int number, out string text)\n"
+  m: "                                                                                            ^^^^   "
+- n: 219
+  l: "            number = tuple.Item1;\n"
+  m: "            ^^^^^^                 "
+- n: 219
+  l: "            number = tuple.Item1;\n"
+  m: "                     ^^^^^         "
+- n: 219
+  l: "            number = tuple.Item1;\n"
+  m: "                           ^^^^^   "
+- n: 220
+  l: "            text = tuple.Item2;\n"
+  m: "            ^^^^                 "
+- n: 220
+  l: "            text = tuple.Item2;\n"
+  m: "                   ^^^^^         "
+- n: 220
+  l: "            text = tuple.Item2;\n"
+  m: "                         ^^^^^   "

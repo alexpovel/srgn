@@ -1374,6 +1374,7 @@ Language scopes:
           - destructor:           Destructor definitions (in their entirety)
           - field:                Field definitions on types (in their entirety)
           - attribute:            Attribute names
+          - identifier:           Identifier names
 
       --csharp-query <TREE-SITTER-QUERY>
           Scope C# code using a custom tree-sitter query.

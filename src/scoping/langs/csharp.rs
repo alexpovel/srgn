@@ -44,6 +44,8 @@ pub enum PreparedCSharpQuery {
     Field,
     /// Attribute names.
     Attribute,
+    /// Identifier names.
+    Identifier,
 }
 
 impl From<PreparedCSharpQuery> for TSQuery {
@@ -80,6 +82,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                 PreparedCSharpQuery::Destructor => "(destructor_declaration) @destructor",
                 PreparedCSharpQuery::Field => "(field_declaration) @field",
                 PreparedCSharpQuery::Attribute => "(attribute) @attribute",
+                PreparedCSharpQuery::Identifier => "(identifier) @identifier",
             },
         )
         .expect("Prepared queries to be valid")
