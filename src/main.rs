@@ -319,7 +319,7 @@ fn handle_actions_on_many_files_sorted(
     info!("Saw {} items", n_files_seen);
     info!("Processed {} files", n_files_processed);
 
-    if n_files_seen == 0 && args.options.fail_empty_glob {
+    if n_files_seen == 0 && args.options.fail_no_files {
         Err(ProgramError::NoFilesFound)
     } else if n_files_processed == 0 && args.options.fail_none {
         Err(ProgramError::NothingProcessed)
@@ -429,7 +429,7 @@ fn handle_actions_on_many_files_threaded(
     let n_files_processed = *n_files_processed.lock().unwrap();
     info!("Processed {} files", n_files_processed);
 
-    if n_files_seen == 0 && args.options.fail_empty_glob {
+    if n_files_seen == 0 && args.options.fail_no_files {
         Err(ProgramError::NoFilesFound)
     } else if n_files_processed == 0 && args.options.fail_none {
         Err(ProgramError::NothingProcessed)
@@ -1000,9 +1000,9 @@ mod cli {
         /// Names of processed files are written to stdout.
         #[arg(long, verbatim_doc_comment)]
         pub files: Option<glob::Pattern>,
-        /// Fail if file globbing is requested but returns no matches.
-        #[arg(long, verbatim_doc_comment)]
-        pub fail_empty_glob: bool,
+        /// Fail if working on files (e.g. globbing is requested) but none are found.
+        #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
+        pub fail_no_files: bool,
         /// Undo the effects of passed actions, where applicable
         ///
         /// Requires a 1:1 mapping (bijection) between replacements and original, which

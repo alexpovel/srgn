@@ -6,10 +6,9 @@ info:
     - "Error: No files found"
 ---
 args:
-  - "--sorted"
-  - "--fail-empty-glob"
-  - "--python"
-  - strings
+  - "--fail-no-files"
+  - "--files"
+  - "**/*.there-is-no-such-suffix"
   - "."
 stdin: ~
 stdout: []

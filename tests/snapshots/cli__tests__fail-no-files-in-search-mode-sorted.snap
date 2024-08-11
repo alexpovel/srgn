@@ -7,9 +7,9 @@ info:
 ---
 args:
   - "--sorted"
-  - "--fail-empty-glob"
-  - "--files"
-  - "**/*.there-is-no-such-suffix"
+  - "--fail-no-files"
+  - "--python"
+  - strings
   - "."
 stdin: ~
 stdout: []

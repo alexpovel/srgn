@@ -6,7 +6,7 @@ info:
     - "Error: No files found"
 ---
 args:
-  - "--fail-empty-glob"
+  - "--fail-no-files"
   - "--python"
   - strings
   - "."

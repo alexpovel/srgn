@@ -508,11 +508,11 @@ Heizoelrueckstossabdaempfung.
         None,
     )]
     #[case(
-        "fail-empty-glob-in-search-mode-sorted",
+        "fail-no-files-in-search-mode-sorted",
         None,
         &[
             "--sorted",
-            "--fail-empty-glob",
+            "--fail-no-files",
             "--python",
             "strings",
             r".",
@@ -520,11 +520,11 @@ Heizoelrueckstossabdaempfung.
         Some(Path::new("tests/langs/go")), // No Python files here...
     )]
     #[case(
-        "fail-empty-glob-outside-search-mode-sorted",
+        "fail-no-files-outside-search-mode-sorted",
         None,
         &[
             "--sorted",
-            "--fail-empty-glob",
+            "--fail-no-files",
             "--files",
             "**/*.there-is-no-such-suffix",
             r".",
@@ -588,10 +588,10 @@ Heizoelrueckstossabdaempfung.
         None,
     )]
     #[case(
-        "fail-empty-glob-in-search-mode-multithreaded",
+        "fail-no-files-in-search-mode-multithreaded",
         None,
         &[
-            "--fail-empty-glob",
+            "--fail-no-files",
             "--python",
             "strings",
             r".",
@@ -599,10 +599,10 @@ Heizoelrueckstossabdaempfung.
         Some(Path::new("tests/langs/go")), // No Python files here...
     )]
     #[case(
-        "fail-empty-glob-outside-search-mode-multithreaded",
+        "fail-no-files-outside-search-mode-multithreaded",
         None,
         &[
-            "--fail-empty-glob",
+            "--fail-no-files",
             "--files",
             "**/*.there-is-no-such-suffix",
             r".",

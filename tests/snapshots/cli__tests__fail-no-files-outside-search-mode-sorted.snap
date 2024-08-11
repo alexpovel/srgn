@@ -6,7 +6,8 @@ info:
     - "Error: No files found"
 ---
 args:
-  - "--fail-empty-glob"
+  - "--sorted"
+  - "--fail-no-files"
   - "--files"
   - "**/*.there-is-no-such-suffix"
   - "."

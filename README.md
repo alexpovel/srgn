@@ -1272,8 +1272,8 @@ Options (global):
           
           Names of processed files are written to stdout.
 
-      --fail-empty-glob
-          Fail if file globbing is requested but returns no matches.
+      --fail-no-files
+          Fail if working on files (e.g. globbing is requested) but none are found.
 
   -i, --invert
           Undo the effects of passed actions, where applicable
