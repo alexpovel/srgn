@@ -1368,6 +1368,7 @@ Language scopes:
           - interface:            `interface` definitions (in their entirety)
           - class:                `class` definitions (in their entirety)
           - variable-declaration: Variable declarations (in their entirety)
+          - property:             Property definitions (in their entirety)
           - field:                Field definitions on types (in their entirety)
           - attribute:            Attribute names
 

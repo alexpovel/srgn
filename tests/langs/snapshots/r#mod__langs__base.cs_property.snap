@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 39
+  l: "        public ref readonly TestStatus Status => ref _status;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 147
+  l: "        public int Iterations { get; }\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
