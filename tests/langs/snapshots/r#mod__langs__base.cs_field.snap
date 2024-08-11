@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 13
+  l: "        public T Value;\n"
+  m: "        ^^^^^^^^^^^^^^^  "
+- n: 14
+  l: "        public fixed byte ErrorCode[16];\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 35
+  l: "        protected internal const double Epsilon = 1e-6;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 36
+  l: "        public static readonly DateTime TestStartTime = DateTime.Now;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 38
+  l: "        private TestStatus _status;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 60
+  l: "        private readonly Func<double, double> _functionUnderTest;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 61
+  l: "        private readonly int _iterations;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 113
+  l: "        private readonly List<TestBase> _tests = new List<TestBase>();\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 114
+  l: "        private TestLogger _logger;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
