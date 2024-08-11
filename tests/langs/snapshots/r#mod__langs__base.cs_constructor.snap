@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 41
+  l: "        protected TestBase() => _status = TestStatus.None;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 63
+  l: "        public PerformanceTest(Func<double, double> func, int iterations)\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 64
+  l: "        {\n"
+  m: ^^^^^^^^^^^
+- n: 65
+  l: "            _functionUnderTest = func ?? throw new ArgumentNullException(nameof(func));\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "            _iterations = iterations > 0 ? iterations : throw new ArgumentOutOfRangeException(nameof(iterations));\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 67
+  l: "        }\n"
+  m: "^^^^^^^^^  "
+- n: 118
+  l: "        public TestRunner(TestLogger logger = null) => _logger = logger ?? Console.WriteLine;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 141
+  l: "        public TestException(string message) : base(message) { }\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 148
+  l: "        public BenchmarkAttribute(int iterations) => Iterations = iterations;\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
