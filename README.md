@@ -1364,6 +1364,7 @@ Language scopes:
             interpolated)
           - usings:   `using` directives (including periods)
           - struct:   `struct` definitions (in their entirety)
+          - enum:     `enum` definitions (in their entirety)
 
       --csharp-query <TREE-SITTER-QUERY>
           Scope C# code using a custom tree-sitter query.

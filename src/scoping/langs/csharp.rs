@@ -24,6 +24,8 @@ pub enum PreparedCSharpQuery {
     Usings,
     /// `struct` definitions (in their entirety).
     Struct,
+    /// `enum` definitions (in their entirety).
+    Enum,
 }
 
 impl From<PreparedCSharpQuery> for TSQuery {
@@ -50,6 +52,7 @@ impl From<PreparedCSharpQuery> for TSQuery {
                     )
                 }
                 PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
+                PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
             },
         )
         .expect("Prepared queries to be valid")
