@@ -24,6 +24,8 @@ pub enum PreparedRustQuery {
     Strings,
     /// Attributes like `#[attr]`.
     Attribute,
+    /// Anything in `mod` blocks.
+    Mod,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -68,6 +70,7 @@ impl From<PreparedRustQuery> for TSQuery {
                 }
                 PreparedRustQuery::Strings => "(string_content) @string",
                 PreparedRustQuery::Attribute => "(attribute) @attribute",
+                PreparedRustQuery::Mod => "(mod_item) @mod_item",
             },
         )
         .expect("Prepared queries to be valid")

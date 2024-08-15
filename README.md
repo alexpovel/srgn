@@ -1474,6 +1474,7 @@ Language scopes:
           - strings:      Strings (regular, raw, byte; includes interpolation parts in
             format strings!)
           - attribute:    Attributes like `#[attr]`
+          - mod:          Anything in `mod` blocks
 
       --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.
