@@ -26,39 +26,39 @@ expression: inscope_parts
 - n: 115
   l: "}\n"
   m: "^  "
-- n: 260
+- n: 268
   l: "pub struct PubStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 261
+- n: 269
   l: "pub(crate) struct PubCrateStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 262
+- n: 270
   l: "pub(self) struct PubSelfStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 263
+- n: 271
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 265
+- n: 273
   l: "pub enum PubEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 266
+- n: 274
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 267
+- n: 275
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 268
+- n: 276
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 271
+- n: 279
   l: "union MyUnion {\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 272
+- n: 280
   l: "    f1: u32,\n"
   m: ^^^^^^^^^^^^^^
-- n: 273
+- n: 281
   l: "    f2: f32,\n"
   m: ^^^^^^^^^^^^^^
-- n: 274
+- n: 282
   l: "}\n"
   m: "^  "

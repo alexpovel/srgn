@@ -23,6 +23,15 @@ expression: inscope_parts
 - n: 250
   l: "    #[test]\n"
   m: "      ^^^^   "
-- n: 270
+- n: 255
+  l: "    #[rstest]\n"
+  m: "      ^^^^^^   "
+- n: 256
+  l: "    #[case(3)]\n"
+  m: "      ^^^^^^^   "
+- n: 257
+  l: "    fn test_with_rstest(#[case] i: u64) {\n"
+  m: "                          ^^^^             "
+- n: 278
   l: "#[repr(C)]\n"
   m: "  ^^^^^^^   "

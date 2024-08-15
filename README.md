@@ -1495,6 +1495,8 @@ Language scopes:
           - const-fn:         Function definitions marked `const`
           - async-fn:         Function definitions marked `async`
           - unsafe-fn:        Function definitions marked `unsafe`
+          - test-fn:          Function definitions with attributes containing `test`
+            (`#[test]`, `#[rstest]`, ...)
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)

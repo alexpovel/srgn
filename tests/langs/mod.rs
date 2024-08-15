@@ -308,6 +308,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::UnsafeFn)),
 )]
 #[case(
+    "base.rs_test-fn",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TestFn)),
+)]
+#[case(
     "base.rs_mod",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Mod)),

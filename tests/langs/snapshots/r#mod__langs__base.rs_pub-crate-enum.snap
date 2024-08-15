@@ -2,6 +2,6 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 266
+- n: 274
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

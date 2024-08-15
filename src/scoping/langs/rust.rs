@@ -1,5 +1,6 @@
-use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
 use clap::ValueEnum;
+use const_format::formatcp;
 use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
 
@@ -66,6 +67,9 @@ pub enum PreparedRustQuery {
     AsyncFn,
     /// Function definitions marked `unsafe`
     UnsafeFn,
+    /// Function definitions with attributes containing `test` (`#[test]`, `#[rstest]`,
+    /// ...).
+    TestFn,
     /// `mod` blocks.
     Mod,
     /// `mod tests` blocks.
@@ -218,6 +222,25 @@ impl From<PreparedRustQuery> for TSQuery {
                         (function_modifiers) @funcmods
                         (#match? @funcmods "unsafe")
                     ) @function_item"#
+                }
+                PreparedRustQuery::TestFn => {
+                    // Any attribute which matches aka contains `test`, preceded or
+                    // followed by more attributes, eventually preceded by a function.
+                    // The anchors of `.` ensure nothing but the items we're after occur
+                    // in between.
+                    formatcp!(
+                        "
+                        (
+                            (attribute_item)*
+                            .
+                            (attribute_item (attribute) @{0}.attr (#match? @{0}.attr \"test\"))
+                            .
+                            (attribute_item)*
+                            .
+                            (function_item) @func
+                        )",
+                        IGNORE
+                    )
                 }
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",
                 PreparedRustQuery::ModTests => {

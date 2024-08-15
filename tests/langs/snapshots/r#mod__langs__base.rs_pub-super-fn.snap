@@ -2,9 +2,9 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 258
+- n: 266
   l: "pub(super) fn function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 280
+- n: 288
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

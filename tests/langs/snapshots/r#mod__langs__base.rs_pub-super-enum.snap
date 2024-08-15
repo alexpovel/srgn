@@ -2,6 +2,6 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 268
+- n: 276
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

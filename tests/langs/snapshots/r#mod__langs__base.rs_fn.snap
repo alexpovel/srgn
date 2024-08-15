@@ -507,41 +507,56 @@ expression: inscope_parts
   l: "fn function_with_attributes() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
 - n: 251
-  l: "    fn some_test() {}\n"
-  m: "    ^^^^^^^^^^^^^^^^^  "
-- n: 254
+  l: "    fn some_test() {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^"
+- n: 252
+  l: "        assert_eq!(3, 3);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 253
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 257
+  l: "    fn test_with_rstest(#[case] i: u64) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 258
+  l: "        assert_eq!(1337, 1337);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 259
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 262
   l: "pub(crate) fn function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 256
+- n: 264
   l: "pub(self) fn function_pub_self() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 258
+- n: 266
   l: "pub(super) fn function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 276
+- n: 284
   l: "const fn const_function() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 277
+- n: 285
   l: "pub const fn const_function_pub() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 278
+- n: 286
   l: "pub(crate) const fn const_function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 279
+- n: 287
   l: "pub(self) const fn const_function_pub_self() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 280
+- n: 288
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 282
+- n: 290
   l: "unsafe fn perform_unsafe_operation() {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 283
+- n: 291
   l: "    let ptr = 0x1234 as *mut i32;\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 284
+- n: 292
   l: "    *ptr = 42;\n"
   m: ^^^^^^^^^^^^^^^^
-- n: 285
+- n: 293
   l: "}\n"
   m: "^  "

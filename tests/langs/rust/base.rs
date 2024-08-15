@@ -248,7 +248,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn some_test() {}
+    fn some_test() {
+        assert_eq!(3, 3);
+    }
+
+    #[rstest]
+    #[case(3)]
+    fn test_with_rstest(#[case] i: u64) {
+        assert_eq!(1337, 1337);
+    }
 }
 
 pub(crate) fn function_pub_crate() {}

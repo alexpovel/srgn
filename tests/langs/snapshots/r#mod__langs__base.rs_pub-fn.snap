@@ -29,6 +29,6 @@ expression: inscope_parts
 - n: 199
   l: "}\n"
   m: "^  "
-- n: 277
+- n: 285
   l: "pub const fn const_function_pub() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

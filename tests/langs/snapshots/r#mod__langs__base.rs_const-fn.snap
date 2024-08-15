@@ -2,18 +2,18 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 276
+- n: 284
   l: "const fn const_function() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 277
+- n: 285
   l: "pub const fn const_function_pub() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 278
+- n: 286
   l: "pub(crate) const fn const_function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 279
+- n: 287
   l: "pub(self) const fn const_function_pub_self() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 280
+- n: 288
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

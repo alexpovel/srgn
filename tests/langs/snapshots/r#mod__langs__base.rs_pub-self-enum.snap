@@ -2,6 +2,6 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 267
+- n: 275
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

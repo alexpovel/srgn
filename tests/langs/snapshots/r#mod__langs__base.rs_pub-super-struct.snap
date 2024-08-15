@@ -2,6 +2,6 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 263
+- n: 271
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
