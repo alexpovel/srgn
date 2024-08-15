@@ -256,3 +256,8 @@ pub(crate) fn function_pub_crate() {}
 pub(self) fn function_pub_self() {}
 
 pub(super) fn function_pub_super() {}
+
+pub struct PubStruct {}
+pub(crate) struct PubCrateStruct {}
+pub(self) struct PubSelfStruct {}
+pub(super) struct PubSuperStruct {}

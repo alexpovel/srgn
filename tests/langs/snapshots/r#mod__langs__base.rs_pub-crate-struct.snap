@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 261
+  l: "pub(crate) struct PubCrateStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

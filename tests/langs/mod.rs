@@ -203,6 +203,31 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Attribute)),
 )]
 #[case(
+    "base.rs_struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Struct)),
+)]
+#[case(
+    "base.rs_pub-struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubStruct)),
+)]
+#[case(
+    "base.rs_pub-crate-struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateStruct)),
+)]
+#[case(
+    "base.rs_pub-self-struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSelfStruct)),
+)]
+#[case(
+    "base.rs_pub-super-struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperStruct)),
+)]
+#[case(
     "base.rs_fn",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Fn)),

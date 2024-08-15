@@ -24,6 +24,16 @@ pub enum PreparedRustQuery {
     Strings,
     /// Attributes like `#[attr]`.
     Attribute,
+    /// `struct` definitions.
+    Struct,
+    /// `struct` definitions marked `pub`.
+    PubStruct,
+    /// `struct` definitions marked `pub(crate)`.
+    PubCrateStruct,
+    /// `struct` definitions marked `pub(self)`.
+    PubSelfStruct,
+    /// `struct` definitions marked `pub(super)`.
+    PubSuperStruct,
     /// Function definitions.
     Fn,
     /// Function definitions marked `pub`.
@@ -82,6 +92,28 @@ impl From<PreparedRustQuery> for TSQuery {
                 }
                 PreparedRustQuery::Strings => "(string_content) @string",
                 PreparedRustQuery::Attribute => "(attribute) @attribute",
+                PreparedRustQuery::Struct => "(struct_item) @struct_item",
+                PreparedRustQuery::PubStruct => {
+                    r#"(struct_item
+                        (visibility_modifier) @vis
+                        (#eq? @vis "pub")
+                    ) @struct_item"#
+                }
+                PreparedRustQuery::PubCrateStruct => {
+                    r"(struct_item
+                        (visibility_modifier (crate))
+                    ) @struct_item"
+                }
+                PreparedRustQuery::PubSelfStruct => {
+                    r"(struct_item
+                        (visibility_modifier (self))
+                    ) @struct_item"
+                }
+                PreparedRustQuery::PubSuperStruct => {
+                    r"(struct_item
+                        (visibility_modifier (super))
+                    ) @struct_item"
+                }
                 PreparedRustQuery::Fn => "(function_item) @function_item",
                 PreparedRustQuery::PubFn => {
                     r#"(function_item

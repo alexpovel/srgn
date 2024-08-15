@@ -1467,20 +1467,25 @@ Language scopes:
           [env: RUST=]
 
           Possible values:
-          - comments:     Comments (line and block styles; excluding doc comments; comment
-            chars incl.)
-          - doc-comments: Doc comments (comment chars included)
-          - uses:         Use statements (paths only; excl. `use`/`as`/`*`)
-          - strings:      Strings (regular, raw, byte; includes interpolation parts in
+          - comments:         Comments (line and block styles; excluding doc comments;
+            comment chars incl.)
+          - doc-comments:     Doc comments (comment chars included)
+          - uses:             Use statements (paths only; excl. `use`/`as`/`*`)
+          - strings:          Strings (regular, raw, byte; includes interpolation parts in
             format strings!)
-          - attribute:    Attributes like `#[attr]`
-          - fn:           Function definitions
-          - pub-fn:       Function definitions marked `pub`
-          - pub-crate-fn: Function definitions marked `pub(crate)`
-          - pub-self-fn:  Function definitions marked `pub(self)`
-          - pub-super-fn: Function definitions marked `pub(super)`
-          - mod:          `mod` blocks
-          - mod-tests:    `mod tests` blocks
+          - attribute:        Attributes like `#[attr]`
+          - struct:           `struct` definitions
+          - pub-struct:       `struct` definitions marked `pub`
+          - pub-crate-struct: `struct` definitions marked `pub(crate)`
+          - pub-self-struct:  `struct` definitions marked `pub(self)`
+          - pub-super-struct: `struct` definitions marked `pub(super)`
+          - fn:               Function definitions
+          - pub-fn:           Function definitions marked `pub`
+          - pub-crate-fn:     Function definitions marked `pub(crate)`
+          - pub-self-fn:      Function definitions marked `pub(self)`
+          - pub-super-fn:     Function definitions marked `pub(super)`
+          - mod:              `mod` blocks
+          - mod-tests:        `mod tests` blocks
 
       --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.

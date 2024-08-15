@@ -1,0 +1,25 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 70
+  l: "struct TestStruct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "    instance_var: String,\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 72
+  l: "}\n"
+  m: "^  "
+- n: 260
+  l: "pub struct PubStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 261
+  l: "pub(crate) struct PubCrateStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 262
+  l: "pub(self) struct PubSelfStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 263
+  l: "pub(super) struct PubSuperStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
