@@ -64,6 +64,8 @@ pub enum PreparedRustQuery {
     Mod,
     /// `mod tests` blocks.
     ModTests,
+    /// Type definitions (`struct`, `enum`, `union`).
+    TypeDef,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -200,6 +202,16 @@ impl From<PreparedRustQuery> for TSQuery {
                         (#eq? @mod_name "tests")
                     ) @mod_tests
                     "#
+                }
+                PreparedRustQuery::TypeDef => {
+                    r"
+                    [
+                        (struct_item)
+                        (enum_item)
+                        (union_item)
+                    ]
+                    @typedef
+                    "
                 }
             },
         )

@@ -23,3 +23,6 @@ expression: inscope_parts
 - n: 250
   l: "    #[test]\n"
   m: "      ^^^^   "
+- n: 270
+  l: "#[repr(C)]\n"
+  m: "  ^^^^^^^   "

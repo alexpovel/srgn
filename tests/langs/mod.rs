@@ -303,6 +303,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::ModTests)),
 )]
 #[case(
+    "base.rs_typedefs",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TypeDef)),
+)]
+#[case(
     "base.tf_variable-block",
     include_str!("hcl/base.tf"),
     Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variable)),

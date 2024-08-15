@@ -266,3 +266,9 @@ pub enum PubEnum {}
 pub(crate) enum PubCrateEnum {}
 pub(self) enum PubSelfEnum {}
 pub(super) enum PubSuperEnum {}
+
+#[repr(C)]
+union MyUnion {
+    f1: u32,
+    f2: f32,
+}
