@@ -238,3 +238,11 @@ This is a raw string with no special treatment for \n
 #[allow(clippy::single_match_else)]
 #[cfg(doc)]
 fn function_with_attributes() {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn some_test() {}
+}

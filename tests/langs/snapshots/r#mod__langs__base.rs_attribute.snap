@@ -17,3 +17,9 @@ expression: inscope_parts
 - n: 239
   l: "#[cfg(doc)]\n"
   m: "  ^^^^^^^^   "
+- n: 242
+  l: "#[cfg(test)]\n"
+  m: "  ^^^^^^^^^   "
+- n: 246
+  l: "    #[test]\n"
+  m: "      ^^^^   "

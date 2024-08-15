@@ -1,0 +1,52 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 15
+  l: "mod parent {\n"
+  m: ^^^^^^^^^^^^^^
+- n: 16
+  l: "    pub fn x() {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 17
+  l: "        println!(\"Function x from parent module\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 18
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 19
+  l: "}\n"
+  m: "^  "
+- n: 21
+  l: "mod sibling {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 22
+  l: "    pub fn y() {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 23
+  l: "        println!(\"Function y from sibling module\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 24
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 25
+  l: "}\n"
+  m: "^  "
+- n: 243
+  l: "mod tests {\n"
+  m: ^^^^^^^^^^^^^
+- n: 244
+  l: "    use super::*;\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 245
+  l: "\n"
+  m: ^^
+- n: 246
+  l: "    #[test]\n"
+  m: ^^^^^^^^^^^^^
+- n: 247
+  l: "    fn some_test() {}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 248
+  l: "}\n"
+  m: "^  "

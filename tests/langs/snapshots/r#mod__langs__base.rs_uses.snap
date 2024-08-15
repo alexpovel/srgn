@@ -29,3 +29,6 @@ expression: inscope_parts
 - n: 199
   l: "    use std::fs::read_to_string;\n"
   m: "        ^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 244
+  l: "    use super::*;\n"
+  m: "        ^^^^^^^^   "

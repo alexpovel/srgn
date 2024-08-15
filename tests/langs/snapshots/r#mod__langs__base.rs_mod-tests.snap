@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 243
+  l: "mod tests {\n"
+  m: ^^^^^^^^^^^^^
+- n: 244
+  l: "    use super::*;\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 245
+  l: "\n"
+  m: ^^
+- n: 246
+  l: "    #[test]\n"
+  m: ^^^^^^^^^^^^^
+- n: 247
+  l: "    fn some_test() {}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 248
+  l: "}\n"
+  m: "^  "
