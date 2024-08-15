@@ -278,3 +278,8 @@ pub const fn const_function_pub() {}
 pub(crate) const fn const_function_pub_crate() {}
 pub(self) const fn const_function_pub_self() {}
 pub(super) const fn const_function_pub_super() {}
+
+unsafe fn perform_unsafe_operation() {
+    let ptr = 0x1234 as *mut i32;
+    *ptr = 42;
+}

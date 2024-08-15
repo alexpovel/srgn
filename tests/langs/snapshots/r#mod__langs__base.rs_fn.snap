@@ -533,3 +533,15 @@ expression: inscope_parts
 - n: 280
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 282
+  l: "unsafe fn perform_unsafe_operation() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 283
+  l: "    let ptr = 0x1234 as *mut i32;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 284
+  l: "    *ptr = 42;\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 285
+  l: "}\n"
+  m: "^  "
