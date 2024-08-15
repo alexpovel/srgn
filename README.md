@@ -1475,6 +1475,7 @@ Language scopes:
             format strings!)
           - attribute:    Attributes like `#[attr]`
           - fn:           Function definitions
+          - pub-fn:       Function definitions marked `pub`
           - mod:          `mod` blocks
           - mod-tests:    `mod tests` blocks
 

@@ -194,6 +194,10 @@ async fn async_main() -> Result<(), ()> {
     Ok(())
 }
 
+pub async fn async_pub_fn() -> Result<(), ()> {
+    Ok(())
+}
+
 // Main execution
 fn main() {
     use std::fs::read_to_string;

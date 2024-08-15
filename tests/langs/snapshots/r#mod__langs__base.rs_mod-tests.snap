@@ -2,21 +2,21 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 243
+- n: 247
   l: "mod tests {\n"
   m: ^^^^^^^^^^^^^
-- n: 244
+- n: 248
   l: "    use super::*;\n"
   m: ^^^^^^^^^^^^^^^^^^^
-- n: 245
+- n: 249
   l: "\n"
   m: ^^
-- n: 246
+- n: 250
   l: "    #[test]\n"
   m: ^^^^^^^^^^^^^
-- n: 247
+- n: 251
   l: "    fn some_test() {}\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 248
+- n: 252
   l: "}\n"
   m: "^  "

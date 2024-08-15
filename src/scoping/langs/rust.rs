@@ -26,6 +26,8 @@ pub enum PreparedRustQuery {
     Attribute,
     /// Function definitions.
     Fn,
+    /// Function definitions marked `pub`.
+    PubFn,
     /// `mod` blocks.
     Mod,
     /// `mod tests` blocks.
@@ -75,6 +77,12 @@ impl From<PreparedRustQuery> for TSQuery {
                 PreparedRustQuery::Strings => "(string_content) @string",
                 PreparedRustQuery::Attribute => "(attribute) @attribute",
                 PreparedRustQuery::Fn => "(function_item) @function_item",
+                PreparedRustQuery::PubFn => {
+                    r#"(function_item
+                        (visibility_modifier) @vis
+                        (#eq? @vis "pub")
+                    ) @function_item"#
+                }
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",
                 PreparedRustQuery::ModTests => {
                     r#"(mod_item

@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "    pub fn x() {\n"
+  m: "    ^^^^^^^^^^^^^^"
+- n: 17
+  l: "        println!(\"Function x from parent module\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 18
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 22
+  l: "    pub fn y() {\n"
+  m: "    ^^^^^^^^^^^^^^"
+- n: 23
+  l: "        println!(\"Function y from sibling module\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 24
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 197
+  l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 198
+  l: "    Ok(())\n"
+  m: ^^^^^^^^^^^^
+- n: 199
+  l: "}\n"
+  m: "^  "

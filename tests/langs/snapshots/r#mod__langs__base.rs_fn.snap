@@ -380,123 +380,132 @@ expression: inscope_parts
 - n: 195
   l: "}\n"
   m: "^  "
+- n: 197
+  l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 198
-  l: "fn main() {\n"
-  m: ^^^^^^^^^^^^^
+  l: "    Ok(())\n"
+  m: ^^^^^^^^^^^^
 - n: 199
-  l: "    use std::fs::read_to_string;\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 200
-  l: "\n"
-  m: ^^
-- n: 201
-  l: "    // Lambda expression\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 202
-  l: "    let square = |x: i32| -> i32 { x * x };\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 203
-  l: "\n"
-  m: ^^
-- n: 204
-  l: "    // Multiline string\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 205
-  l: "    let multi_line_str = \"\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 206
-  l: "This is a\n"
-  m: ^^^^^^^^^^^
-- n: 207
-  l: "multi-line string\n"
-  m: ^^^^^^^^^^^^^^^^^^^
-- n: 208
-  l: "for testing purposes.\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 209
-  l: "\";\n"
-  m: ^^^^^
-- n: 210
-  l: "\n"
-  m: ^^
-- n: 211
-  l: "    let multiline_f_string = format!(\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 212
-  l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 213
-  l: "        \"{f_string}\"\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 214
-  l: "    );\n"
-  m: ^^^^^^^^
-- n: 215
-  l: "\n"
-  m: ^^
-- n: 216
-  l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 217
-  l: "    let raw_multiline_string = r#\"\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 218
-  l: "This is a raw string with no special treatment for \\n\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 219
-  l: "\"#;\n"
-  m: ^^^^^^
-- n: 220
-  l: "    let bytes_string = b\"This is a bytes string\";\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 221
-  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 222
-  l: "\n"
-  m: ^^
-- n: 223
-  l: "    free_func();\n"
-  m: ^^^^^^^^^^^^^^^^^^
-- n: 224
-  l: "    func_decorator(decorated_func);\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 225
-  l: "    let mut instance = TestStruct {\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 226
-  l: "        instance_var: String::new(),\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 227
-  l: "    };\n"
-  m: ^^^^^^^^
-- n: 228
-  l: "    instance.instance_method();\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 229
-  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 230
-  l: "    println!(\"{}\", square(5));\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 231
-  l: "    modify_nonlocal();\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 232
-  l: "    inplace_operations();\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 233
-  l: "    control_flow();\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^
-- n: 234
-  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 235
   l: "}\n"
   m: "^  "
-- n: 240
+- n: 202
+  l: "fn main() {\n"
+  m: ^^^^^^^^^^^^^
+- n: 203
+  l: "    use std::fs::read_to_string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 204
+  l: "\n"
+  m: ^^
+- n: 205
+  l: "    // Lambda expression\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 206
+  l: "    let square = |x: i32| -> i32 { x * x };\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 207
+  l: "\n"
+  m: ^^
+- n: 208
+  l: "    // Multiline string\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 209
+  l: "    let multi_line_str = \"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 210
+  l: "This is a\n"
+  m: ^^^^^^^^^^^
+- n: 211
+  l: "multi-line string\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 212
+  l: "for testing purposes.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 213
+  l: "\";\n"
+  m: ^^^^^
+- n: 214
+  l: "\n"
+  m: ^^
+- n: 215
+  l: "    let multiline_f_string = format!(\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 216
+  l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 217
+  l: "        \"{f_string}\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 218
+  l: "    );\n"
+  m: ^^^^^^^^
+- n: 219
+  l: "\n"
+  m: ^^
+- n: 220
+  l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 221
+  l: "    let raw_multiline_string = r#\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 222
+  l: "This is a raw string with no special treatment for \\n\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 223
+  l: "\"#;\n"
+  m: ^^^^^^
+- n: 224
+  l: "    let bytes_string = b\"This is a bytes string\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 225
+  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 226
+  l: "\n"
+  m: ^^
+- n: 227
+  l: "    free_func();\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 228
+  l: "    func_decorator(decorated_func);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 229
+  l: "    let mut instance = TestStruct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 230
+  l: "        instance_var: String::new(),\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 231
+  l: "    };\n"
+  m: ^^^^^^^^
+- n: 232
+  l: "    instance.instance_method();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 233
+  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 234
+  l: "    println!(\"{}\", square(5));\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 235
+  l: "    modify_nonlocal();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 236
+  l: "    inplace_operations();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 237
+  l: "    control_flow();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 238
+  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 239
+  l: "}\n"
+  m: "^  "
+- n: 244
   l: "fn function_with_attributes() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 247
+- n: 251
   l: "    fn some_test() {}\n"
   m: "    ^^^^^^^^^^^^^^^^^  "

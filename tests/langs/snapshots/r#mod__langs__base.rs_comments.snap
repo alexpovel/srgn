@@ -83,12 +83,12 @@ expression: inscope_parts
 - n: 189
   l: "    // Get key \"hello\"\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^  "
-- n: 197
+- n: 201
   l: "// Main execution\n"
   m: "^^^^^^^^^^^^^^^^^  "
-- n: 201
+- n: 205
   l: "    // Lambda expression\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^  "
-- n: 204
+- n: 208
   l: "    // Multiline string\n"
   m: "    ^^^^^^^^^^^^^^^^^^^  "
