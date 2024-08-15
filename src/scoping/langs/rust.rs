@@ -34,6 +34,16 @@ pub enum PreparedRustQuery {
     PubSelfStruct,
     /// `struct` definitions marked `pub(super)`.
     PubSuperStruct,
+    /// `enum` definitions.
+    Enum,
+    /// `enum` definitions marked `pub`.
+    PubEnum,
+    /// `enum` definitions marked `pub(crate)`.
+    PubCrateEnum,
+    /// `enum` definitions marked `pub(self)`.
+    PubSelfEnum,
+    /// `enum` definitions marked `pub(super)`.
+    PubSuperEnum,
     /// Function definitions.
     Fn,
     /// Function definitions marked `pub`.
@@ -51,6 +61,7 @@ pub enum PreparedRustQuery {
 }
 
 impl From<PreparedRustQuery> for TSQuery {
+    #[allow(clippy::too_many_lines)]
     fn from(value: PreparedRustQuery) -> Self {
         Self::new(
             &Rust::lang(),
@@ -113,6 +124,28 @@ impl From<PreparedRustQuery> for TSQuery {
                     r"(struct_item
                         (visibility_modifier (super))
                     ) @struct_item"
+                }
+                PreparedRustQuery::Enum => "(enum_item) @enum_item",
+                PreparedRustQuery::PubEnum => {
+                    r#"(enum_item
+                        (visibility_modifier) @vis
+                        (#eq? @vis "pub")
+                    ) @enum_item"#
+                }
+                PreparedRustQuery::PubCrateEnum => {
+                    r"(enum_item
+                        (visibility_modifier (crate))
+                    ) @enum_item"
+                }
+                PreparedRustQuery::PubSelfEnum => {
+                    r"(enum_item
+                        (visibility_modifier (self))
+                    ) @enum_item"
+                }
+                PreparedRustQuery::PubSuperEnum => {
+                    r"(enum_item
+                        (visibility_modifier (super))
+                    ) @enum_item"
                 }
                 PreparedRustQuery::Fn => "(function_item) @function_item",
                 PreparedRustQuery::PubFn => {

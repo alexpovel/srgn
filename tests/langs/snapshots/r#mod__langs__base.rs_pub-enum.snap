@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 265
+  l: "pub enum PubEnum {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "

@@ -228,6 +228,31 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperStruct)),
 )]
 #[case(
+    "base.enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Enum)),
+)]
+#[case(
+    "base.rs_pub-enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubEnum)),
+)]
+#[case(
+    "base.rs_pub-crate-enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateEnum)),
+)]
+#[case(
+    "base.rs_pub-self-enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSelfEnum)),
+)]
+#[case(
+    "base.rs_pub-super-enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperEnum)),
+)]
+#[case(
     "base.rs_fn",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Fn)),

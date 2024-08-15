@@ -261,3 +261,8 @@ pub struct PubStruct {}
 pub(crate) struct PubCrateStruct {}
 pub(self) struct PubSelfStruct {}
 pub(super) struct PubSuperStruct {}
+
+pub enum PubEnum {}
+pub(crate) enum PubCrateEnum {}
+pub(self) enum PubSelfEnum {}
+pub(super) enum PubSuperEnum {}
