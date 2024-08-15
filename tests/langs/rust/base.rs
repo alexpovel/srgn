@@ -250,3 +250,9 @@ mod tests {
     #[test]
     fn some_test() {}
 }
+
+pub(crate) fn function_pub_crate() {}
+
+pub(self) fn function_pub_self() {}
+
+pub(super) fn function_pub_super() {}

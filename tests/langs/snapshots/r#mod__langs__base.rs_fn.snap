@@ -509,3 +509,12 @@ expression: inscope_parts
 - n: 251
   l: "    fn some_test() {}\n"
   m: "    ^^^^^^^^^^^^^^^^^  "
+- n: 254
+  l: "pub(crate) fn function_pub_crate() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 256
+  l: "pub(self) fn function_pub_self() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 258
+  l: "pub(super) fn function_pub_super() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

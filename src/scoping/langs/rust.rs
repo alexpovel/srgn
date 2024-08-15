@@ -28,6 +28,12 @@ pub enum PreparedRustQuery {
     Fn,
     /// Function definitions marked `pub`.
     PubFn,
+    /// Function definitions marked `pub(crate)`.
+    PubCrateFn,
+    /// Function definitions marked `pub(self)`.
+    PubSelfFn,
+    /// Function definitions marked `pub(super)`.
+    PubSuperFn,
     /// `mod` blocks.
     Mod,
     /// `mod tests` blocks.
@@ -82,6 +88,21 @@ impl From<PreparedRustQuery> for TSQuery {
                         (visibility_modifier) @vis
                         (#eq? @vis "pub")
                     ) @function_item"#
+                }
+                PreparedRustQuery::PubCrateFn => {
+                    r"(function_item
+                        (visibility_modifier (crate))
+                    ) @function_item"
+                }
+                PreparedRustQuery::PubSelfFn => {
+                    r"(function_item
+                        (visibility_modifier (self))
+                    ) @function_item"
+                }
+                PreparedRustQuery::PubSuperFn => {
+                    r"(function_item
+                        (visibility_modifier (super))
+                    ) @function_item"
                 }
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",
                 PreparedRustQuery::ModTests => {

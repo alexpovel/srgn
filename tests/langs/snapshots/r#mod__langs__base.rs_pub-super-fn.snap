@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 258
+  l: "pub(super) fn function_pub_super() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

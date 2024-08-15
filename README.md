@@ -1476,6 +1476,9 @@ Language scopes:
           - attribute:    Attributes like `#[attr]`
           - fn:           Function definitions
           - pub-fn:       Function definitions marked `pub`
+          - pub-crate-fn: Function definitions marked `pub(crate)`
+          - pub-self-fn:  Function definitions marked `pub(self)`
+          - pub-super-fn: Function definitions marked `pub(super)`
           - mod:          `mod` blocks
           - mod-tests:    `mod tests` blocks
 
