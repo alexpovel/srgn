@@ -26,6 +26,8 @@ pub enum PreparedRustQuery {
     Attribute,
     /// `struct` definitions.
     Struct,
+    /// `struct` definitions not marked `pub`.
+    PrivStruct,
     /// `struct` definitions marked `pub`.
     PubStruct,
     /// `struct` definitions marked `pub(crate)`.
@@ -36,6 +38,8 @@ pub enum PreparedRustQuery {
     PubSuperStruct,
     /// `enum` definitions.
     Enum,
+    /// `enum` definitions not marked `pub`.
+    PrivEnum,
     /// `enum` definitions marked `pub`.
     PubEnum,
     /// `enum` definitions marked `pub(crate)`.
@@ -46,6 +50,8 @@ pub enum PreparedRustQuery {
     PubSuperEnum,
     /// Function definitions.
     Fn,
+    /// Function definitions not marked `pub`.
+    PrivFn,
     /// Function definitions marked `pub`.
     PubFn,
     /// Function definitions marked `pub(crate)`.
@@ -104,6 +110,12 @@ impl From<PreparedRustQuery> for TSQuery {
                 PreparedRustQuery::Strings => "(string_content) @string",
                 PreparedRustQuery::Attribute => "(attribute) @attribute",
                 PreparedRustQuery::Struct => "(struct_item) @struct_item",
+                PreparedRustQuery::PrivStruct => {
+                    r"(struct_item
+                        .
+                        name: (type_identifier)
+                    ) @struct_item_without_visibility_modifier"
+                }
                 PreparedRustQuery::PubStruct => {
                     r#"(struct_item
                         (visibility_modifier) @vis
@@ -126,6 +138,12 @@ impl From<PreparedRustQuery> for TSQuery {
                     ) @struct_item"
                 }
                 PreparedRustQuery::Enum => "(enum_item) @enum_item",
+                PreparedRustQuery::PrivEnum => {
+                    r"(enum_item
+                        .
+                        name: (type_identifier)
+                    ) @enum_item_without_visibility_modifier"
+                }
                 PreparedRustQuery::PubEnum => {
                     r#"(enum_item
                         (visibility_modifier) @vis
@@ -148,6 +166,12 @@ impl From<PreparedRustQuery> for TSQuery {
                     ) @enum_item"
                 }
                 PreparedRustQuery::Fn => "(function_item) @function_item",
+                PreparedRustQuery::PrivFn => {
+                    r"(function_item
+                        .
+                        name: (identifier)
+                    ) @function_item_without_visibility_modifier"
+                }
                 PreparedRustQuery::PubFn => {
                     r#"(function_item
                         (visibility_modifier) @vis

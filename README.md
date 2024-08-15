@@ -1475,16 +1475,19 @@ Language scopes:
             format strings!)
           - attribute:        Attributes like `#[attr]`
           - struct:           `struct` definitions
+          - priv-struct:      `struct` definitions not marked `pub`
           - pub-struct:       `struct` definitions marked `pub`
           - pub-crate-struct: `struct` definitions marked `pub(crate)`
           - pub-self-struct:  `struct` definitions marked `pub(self)`
           - pub-super-struct: `struct` definitions marked `pub(super)`
           - enum:             `enum` definitions
+          - priv-enum:        `enum` definitions not marked `pub`
           - pub-enum:         `enum` definitions marked `pub`
           - pub-crate-enum:   `enum` definitions marked `pub(crate)`
           - pub-self-enum:    `enum` definitions marked `pub(self)`
           - pub-super-enum:   `enum` definitions marked `pub(super)`
           - fn:               Function definitions
+          - priv-fn:          Function definitions not marked `pub`
           - pub-fn:           Function definitions marked `pub`
           - pub-crate-fn:     Function definitions marked `pub(crate)`
           - pub-self-fn:      Function definitions marked `pub(self)`

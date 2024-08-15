@@ -213,6 +213,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubStruct)),
 )]
 #[case(
+    "base.rs_pub-priv-struct",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivStruct)),
+)]
+#[case(
     "base.rs_pub-crate-struct",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateStruct)),
@@ -231,6 +236,11 @@ impl InScopeLinePart {
     "base.enum",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Enum)),
+)]
+#[case(
+    "base.rs_pub-priv-enum",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivEnum)),
 )]
 #[case(
     "base.rs_pub-enum",
@@ -256,6 +266,11 @@ impl InScopeLinePart {
     "base.rs_fn",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Fn)),
+)]
+#[case(
+    "base.rs_pub-priv-fn",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivFn)),
 )]
 #[case(
     "base.rs_pub-fn",
