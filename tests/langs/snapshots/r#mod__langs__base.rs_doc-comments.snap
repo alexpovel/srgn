@@ -2,6 +2,9 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
+- n: 1
+  l: "//! Module for testing various Rust grammar elements.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 30
   l: "/// Free function\n"
   m: ^^^^^^^^^^^^^^^^^^^

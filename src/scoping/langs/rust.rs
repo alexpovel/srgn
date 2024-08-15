@@ -43,7 +43,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     r#"
                     (
                         (line_comment)+ @line
-                        (#match? @line "^///")
+                        (#match? @line "^//(/|!)")
                     )
                     "#
                 }
