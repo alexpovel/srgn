@@ -24,9 +24,11 @@ pub enum PreparedRustQuery {
     Strings,
     /// Attributes like `#[attr]`.
     Attribute,
-    /// Anything in `mod` blocks.
+    /// Function definitions.
+    Fn,
+    /// `mod` blocks.
     Mod,
-    /// Anything in `mod tests` blocks.
+    /// `mod tests` blocks.
     ModTests,
 }
 
@@ -72,6 +74,7 @@ impl From<PreparedRustQuery> for TSQuery {
                 }
                 PreparedRustQuery::Strings => "(string_content) @string",
                 PreparedRustQuery::Attribute => "(attribute) @attribute",
+                PreparedRustQuery::Fn => "(function_item) @function_item",
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",
                 PreparedRustQuery::ModTests => {
                     r#"(mod_item
