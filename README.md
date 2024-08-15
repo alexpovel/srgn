@@ -1486,6 +1486,7 @@ Language scopes:
           - pub-crate-enum:   `enum` definitions marked `pub(crate)`
           - pub-self-enum:    `enum` definitions marked `pub(self)`
           - pub-super-enum:   `enum` definitions marked `pub(super)`
+          - enum-variant:     Variant members of `enum` definitions
           - fn:               Function definitions
           - priv-fn:          Function definitions not marked `pub`
           - pub-fn:           Function definitions marked `pub`

@@ -18,11 +18,11 @@ expression: inscope_parts
   l: "    VariantOne,\n"
   m: ^^^^^^^^^^^^^^^^^
 - n: 113
-  l: "    VariantTwo,\n"
-  m: ^^^^^^^^^^^^^^^^^
+  l: "    VariantTwo(String),\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 114
-  l: "    VariantOther,\n"
-  m: ^^^^^^^^^^^^^^^^^^^
+  l: "    VariantThree { a: String, b: u64 },\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 115
   l: "}\n"
   m: "^  "

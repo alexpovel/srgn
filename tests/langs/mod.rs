@@ -263,6 +263,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperEnum)),
 )]
 #[case(
+    "base.rs_enum-variant",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::EnumVariant)),
+)]
+#[case(
     "base.rs_fn",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Fn)),

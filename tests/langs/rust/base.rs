@@ -110,8 +110,8 @@ impl TestStruct {
 // Enum definition
 enum TestEnum {
     VariantOne,
-    VariantTwo,
-    VariantOther,
+    VariantTwo(String),
+    VariantThree { a: String, b: u64 },
 }
 
 impl TestEnum {

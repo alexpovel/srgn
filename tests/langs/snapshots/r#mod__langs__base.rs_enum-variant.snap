@@ -2,18 +2,12 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 111
-  l: "enum TestEnum {\n"
-  m: ^^^^^^^^^^^^^^^^^
 - n: 112
   l: "    VariantOne,\n"
-  m: ^^^^^^^^^^^^^^^^^
+  m: "    ^^^^^^^^^^   "
 - n: 113
   l: "    VariantTwo(String),\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+  m: "    ^^^^^^^^^^^^^^^^^^   "
 - n: 114
   l: "    VariantThree { a: String, b: u64 },\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 115
-  l: "}\n"
-  m: "^  "
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "

@@ -49,6 +49,8 @@ pub enum PreparedRustQuery {
     PubSelfEnum,
     /// `enum` definitions marked `pub(super)`.
     PubSuperEnum,
+    /// Variant members of `enum` definitions
+    EnumVariant,
     /// Function definitions.
     Fn,
     /// Function definitions not marked `pub`.
@@ -177,6 +179,7 @@ impl From<PreparedRustQuery> for TSQuery {
                         (visibility_modifier (super))
                     ) @enum_item"
                 }
+                PreparedRustQuery::EnumVariant => "(enum_variant) @enum_variant",
                 PreparedRustQuery::Fn => "(function_item) @function_item",
                 PreparedRustQuery::PrivFn => {
                     r"(function_item
