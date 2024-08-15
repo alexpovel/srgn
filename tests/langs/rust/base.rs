@@ -272,3 +272,9 @@ union MyUnion {
     f1: u32,
     f2: f32,
 }
+
+const fn const_function() {}
+pub const fn const_function_pub() {}
+pub(crate) const fn const_function_pub_crate() {}
+pub(self) const fn const_function_pub_self() {}
+pub(super) const fn const_function_pub_super() {}

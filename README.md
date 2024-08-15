@@ -1492,6 +1492,7 @@ Language scopes:
           - pub-crate-fn:     Function definitions marked `pub(crate)`
           - pub-self-fn:      Function definitions marked `pub(self)`
           - pub-super-fn:     Function definitions marked `pub(super)`
+          - const-fn:         Function definitions marked `const`
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)

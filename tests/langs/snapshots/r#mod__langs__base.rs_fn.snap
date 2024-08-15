@@ -518,3 +518,18 @@ expression: inscope_parts
 - n: 258
   l: "pub(super) fn function_pub_super() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 276
+  l: "const fn const_function() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 277
+  l: "pub const fn const_function_pub() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 278
+  l: "pub(crate) const fn const_function_pub_crate() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 279
+  l: "pub(self) const fn const_function_pub_self() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 280
+  l: "pub(super) const fn const_function_pub_super() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

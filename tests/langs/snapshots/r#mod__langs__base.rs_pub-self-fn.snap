@@ -5,3 +5,6 @@ expression: inscope_parts
 - n: 256
   l: "pub(self) fn function_pub_self() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 279
+  l: "pub(self) const fn const_function_pub_self() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

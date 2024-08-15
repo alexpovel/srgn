@@ -5,3 +5,6 @@ expression: inscope_parts
 - n: 254
   l: "pub(crate) fn function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 278
+  l: "pub(crate) const fn const_function_pub_crate() {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
