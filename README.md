@@ -1473,6 +1473,7 @@ Language scopes:
           - uses:         Use statements (paths only; excl. `use`/`as`/`*`)
           - strings:      Strings (regular, raw, byte; includes interpolation parts in
             format strings!)
+          - attribute:    Attributes like `#[attr]`
 
       --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.

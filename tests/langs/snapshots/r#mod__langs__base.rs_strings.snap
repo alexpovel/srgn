@@ -125,3 +125,6 @@ expression: inscope_parts
 - n: 230
   l: "    println!(\"{}\", square(5));\n"
   m: "               ^^                 "
+- n: 237
+  l: "#[cfg(feature = \"some-feature\")]\n"
+  m: "                  ^^^^^^^^^^^^      "

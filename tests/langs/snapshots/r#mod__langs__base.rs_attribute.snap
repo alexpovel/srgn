@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 12
+  l: "#[macro_use]\n"
+  m: "  ^^^^^^^^^   "
+- n: 181
+  l: "#[tokio::main]\n"
+  m: "  ^^^^^^^^^^^   "
+- n: 237
+  l: "#[cfg(feature = \"some-feature\")]\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 238
+  l: "#[allow(clippy::single_match_else)]\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 239
+  l: "#[cfg(doc)]\n"
+  m: "  ^^^^^^^^   "

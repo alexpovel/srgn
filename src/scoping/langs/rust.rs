@@ -22,6 +22,8 @@ pub enum PreparedRustQuery {
     /// There is currently no support for an 'interpolation' type node in
     /// tree-sitter-rust (like there is in TypeScript and Python, for example).
     Strings,
+    /// Attributes like `#[attr]`.
+    Attribute,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -65,6 +67,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     "
                 }
                 PreparedRustQuery::Strings => "(string_content) @string",
+                PreparedRustQuery::Attribute => "(attribute) @attribute",
             },
         )
         .expect("Prepared queries to be valid")

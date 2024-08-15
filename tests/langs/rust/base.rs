@@ -233,3 +233,8 @@ This is a raw string with no special treatment for \n
     control_flow();
     TestEnum::match_statement(TestEnum::VariantOne);
 }
+
+#[cfg(feature = "some-feature")]
+#[allow(clippy::single_match_else)]
+#[cfg(doc)]
+fn function_with_attributes() {}
