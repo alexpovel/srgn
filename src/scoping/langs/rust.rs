@@ -62,6 +62,8 @@ pub enum PreparedRustQuery {
     PubSuperFn,
     /// Function definitions marked `const`
     ConstFn,
+    /// Function definitions marked `async`
+    AsyncFn,
     /// `mod` blocks.
     Mod,
     /// `mod tests` blocks.
@@ -201,6 +203,12 @@ impl From<PreparedRustQuery> for TSQuery {
                     r#"(function_item
                         (function_modifiers) @funcmods
                         (#match? @funcmods "const")
+                    ) @function_item"#
+                }
+                PreparedRustQuery::AsyncFn => {
+                    r#"(function_item
+                        (function_modifiers) @funcmods
+                        (#match? @funcmods "async")
                     ) @function_item"#
                 }
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",

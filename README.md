@@ -1493,6 +1493,7 @@ Language scopes:
           - pub-self-fn:      Function definitions marked `pub(self)`
           - pub-super-fn:     Function definitions marked `pub(super)`
           - const-fn:         Function definitions marked `const`
+          - async-fn:         Function definitions marked `async`
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
