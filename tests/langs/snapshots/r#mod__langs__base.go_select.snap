@@ -1,0 +1,40 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 154
+  l: "\tselect {\n"
+  m: "  ^^^^^^^^^^"
+- n: 155
+  l: "\tcase tc := <-testChannel:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 156
+  l: "\t\tt.Logf(\"Received test case: %s\", tc.Name)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 157
+  l: "\tcase <-time.After(1 * time.Second):\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 158
+  l: "\t\tt.Error(\"Timeout waiting for test case\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 159
+  l: "\t}\n"
+  m: "^^^  "
+- n: 237
+  l: "\tselect {\n"
+  m: "  ^^^^^^^^^^"
+- n: 238
+  l: "\tcase <-time.After(5 * time.Second):\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 239
+  l: "\t\treturn nil\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 240
+  l: "\tcase <-ctx.Done():\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 241
+  l: "\t\treturn ctx.Err()\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 242
+  l: "\t}\n"
+  m: "^^^  "

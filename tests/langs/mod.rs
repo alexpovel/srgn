@@ -518,6 +518,11 @@ impl InScopeLinePart {
     Go::new(CodeQuery::Prepared(PreparedGoQuery::Defer)),
 )]
 #[case(
+    "base.go_select",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::Select)),
+)]
+#[case(
     "base.go_struct-tags",
     include_str!("go/base.go"),
     Go::new(CodeQuery::Prepared(PreparedGoQuery::StructTags)),

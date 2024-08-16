@@ -1441,6 +1441,7 @@ Language scopes:
           - free-func:   Free `func` definitions (`func SomeFunc()`)
           - type-params: Type parameters (generics)
           - defer:       `defer` blocks
+          - select:      `select` blocks
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>
