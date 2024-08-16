@@ -76,6 +76,8 @@ pub enum PreparedRustQuery {
     TestFn,
     /// `trait` definitions.
     Trait,
+    /// `impl` blocks.
+    Impl,
     /// `mod` blocks.
     Mod,
     /// `mod tests` blocks.
@@ -255,6 +257,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     )
                 }
                 PreparedRustQuery::Trait => "(trait_item) @trait_item",
+                PreparedRustQuery::Impl => "(impl_item) @impl_item",
                 PreparedRustQuery::Mod => "(mod_item) @mod_item",
                 PreparedRustQuery::ModTests => {
                     r#"(mod_item

@@ -1540,6 +1540,7 @@ Language scopes:
           - test-fn:          Function definitions with attributes containing `test`
             (`#[test]`, `#[rstest]`, ...)
           - trait:            `trait` definitions
+          - impl:             `impl` blocks
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
