@@ -128,3 +128,6 @@ expression: inscope_parts
 - n: 241
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "                  ^^^^^^^^^^^^      "
+- n: 295
+  l: "extern \"C\" fn example_extern() -> i32 {\n"
+  m: "         ^                                 "

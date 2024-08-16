@@ -69,6 +69,8 @@ pub enum PreparedRustQuery {
     AsyncFn,
     /// Function definitions marked `unsafe`
     UnsafeFn,
+    /// Function definitions marked `extern`
+    ExternFn,
     /// Function definitions with attributes containing `test` (`#[test]`, `#[rstest]`,
     /// ...).
     TestFn,
@@ -225,6 +227,11 @@ impl From<PreparedRustQuery> for TSQuery {
                         (function_modifiers) @funcmods
                         (#match? @funcmods "unsafe")
                     ) @function_item"#
+                }
+                PreparedRustQuery::ExternFn => {
+                    r"(function_item
+                        (function_modifiers (extern_modifier))
+                    ) @extern_function"
                 }
                 PreparedRustQuery::TestFn => {
                     // Any attribute which matches aka contains `test`, preceded or

@@ -560,3 +560,12 @@ expression: inscope_parts
 - n: 293
   l: "}\n"
   m: "^  "
+- n: 295
+  l: "extern \"C\" fn example_extern() -> i32 {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 296
+  l: "    42\n"
+  m: ^^^^^^^^
+- n: 297
+  l: "}\n"
+  m: "^  "

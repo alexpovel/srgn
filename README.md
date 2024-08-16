@@ -1496,6 +1496,7 @@ Language scopes:
           - const-fn:         Function definitions marked `const`
           - async-fn:         Function definitions marked `async`
           - unsafe-fn:        Function definitions marked `unsafe`
+          - extern-fn:        Function definitions marked `extern`
           - test-fn:          Function definitions with attributes containing `test`
             (`#[test]`, `#[rstest]`, ...)
           - mod:              `mod` blocks

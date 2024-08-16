@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 295
+  l: "extern \"C\" fn example_extern() -> i32 {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 296
+  l: "    42\n"
+  m: ^^^^^^^^
+- n: 297
+  l: "}\n"
+  m: "^  "

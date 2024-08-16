@@ -291,3 +291,7 @@ unsafe fn perform_unsafe_operation() {
     let ptr = 0x1234 as *mut i32;
     *ptr = 42;
 }
+
+extern "C" fn example_extern() -> i32 {
+    42
+}
