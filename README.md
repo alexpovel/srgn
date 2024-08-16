@@ -1447,6 +1447,7 @@ Language scopes:
           - select:      `select` blocks
           - go:          `go` blocks
           - switch:      `switch` blocks
+          - labeled:     Labeled statements
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>

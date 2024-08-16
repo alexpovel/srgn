@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 289
+  l: "Loop:\n"
+  m: ^^^^^^^
+- n: 290
+  l: "\tif i < 5 {\n"
+  m: ^^^^^^^^^^^^^^
+- n: 291
+  l: "\t\ti++\n"
+  m: ^^^^^^^^^
+- n: 292
+  l: "\t\tgoto Loop\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 293
+  l: "\t}\n"
+  m: "^^^  "
