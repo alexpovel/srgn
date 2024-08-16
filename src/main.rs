@@ -9,6 +9,7 @@ use colored::Colorize;
 use colored::Styles;
 use ignore::WalkBuilder;
 use ignore::WalkState;
+use itertools::Itertools;
 use log::error;
 use log::trace;
 use log::{debug, info, LevelFilter};
@@ -78,13 +79,11 @@ fn main() -> Result<()> {
     info!("Launching app with args: {:?}", args);
 
     debug!("Assembling scopers.");
-    let (language_scoper, language_scoper_as_scoper) = get_language_scoper(&args).unzip();
     let general_scoper = get_general_scoper(&args)?;
-    let all_scopers = if let Some(ls) = language_scoper_as_scoper {
-        vec![ls, general_scoper]
-    } else {
-        vec![general_scoper]
-    };
+    // Will be sent across threads and might (the borrow checker is convinced at least)
+    // outlive the main one. Scoped threads would work here, `ignore` uses them
+    // internally even, but we have no access here.
+    let language_scopers = Arc::new(get_language_scopers(&args));
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
@@ -94,7 +93,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && language_scoper.is_some();
+    let search_mode = actions.is_empty() && !language_scopers.is_empty();
 
     let is_readable_stdin = grep_cli::is_readable_stdin();
     info!("Detected stdin as readable: {is_readable_stdin}.");
@@ -103,12 +102,12 @@ fn main() -> Result<()> {
     let input = match (
         args.options.stdin_override_to.unwrap_or(is_readable_stdin),
         args.options.glob.clone(),
-        language_scoper,
+        &language_scopers.is_empty(),
     ) {
         // stdin considered viable: always use it.
         (true, None, _)
         // Nothing explicitly available: this should open an interactive stdin prompt.
-        | (false, None, None) => Input::Stdin,
+        | (false, None, true) => Input::Stdin,
         (true, Some(..), _) => {
             // Usage error... warn loudly, the user is likely interested.
             error!("Detected stdin, and request for files: will use stdin and ignore files.");
@@ -124,15 +123,25 @@ fn main() -> Result<()> {
 
         // If pattern wasn't manually overridden, consult the language scoper itself, if
         // any.
-        (false, None, Some(language_scoper)) => Input::WalkOn(Box::new(move |path| {
-            let res = language_scoper.is_valid_path(path);
-            trace!(
-                "Language scoper considers path '{}' valid: {}",
-                path.display(),
+        (false, None, false) => {
+            let language_scopers = Arc::clone(&language_scopers);
+            Input::WalkOn(Box::new(move |path| {
+                // TODO: perform this work only once (it's super fast but in the hot
+                // path).
+                let res = language_scopers
+                    .iter()
+                    .map(|s| s.is_valid_path(path))
+                    .all_equal_value()
+                    .expect("all language scopers to agree on path validity");
+
+                trace!(
+                    "Language scoper considers path '{}' valid: {}",
+                    path.display(),
+                    res
+                );
                 res
-            );
-            res
-        })),
+            }))
+        },
     };
 
     if search_mode {
@@ -161,13 +170,14 @@ fn main() -> Result<()> {
     match (input, args.options.sorted) {
         (Input::Stdin, _ /* no effect */) => {
             info!("Will read from stdin and write to stdout, applying actions.");
-            handle_actions_on_stdin(&all_scopers, &actions, &args)?;
+            handle_actions_on_stdin(&general_scoper, &language_scopers, &actions, &args)?;
         }
         (Input::WalkOn(validator), false) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_threaded(
                 &validator,
-                &all_scopers,
+                &general_scoper,
+                &language_scopers,
                 &actions,
                 &args,
                 search_mode,
@@ -181,7 +191,8 @@ fn main() -> Result<()> {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_sorted(
                 &validator,
-                &all_scopers,
+                &general_scoper,
+                &language_scopers,
                 &actions,
                 &args,
                 search_mode,
@@ -208,8 +219,10 @@ enum Input {
 }
 
 /// Main entrypoint for simple `stdin` -> `stdout` processing.
+#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_stdin(
-    scopers: &[Box<dyn Scoper>],
+    general_scoper: &Box<dyn Scoper>,
+    language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
 ) -> Result<(), ProgramError> {
@@ -221,7 +234,8 @@ fn handle_actions_on_stdin(
     apply(
         &source,
         &mut destination,
-        scopers,
+        general_scoper,
+        language_scopers,
         actions,
         args.options.fail_none,
         args.options.fail_any,
@@ -243,9 +257,11 @@ fn handle_actions_on_stdin(
 ///
 /// [ripgrep]:
 ///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
+#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_many_files_sorted(
     validator: &Validator,
-    scopers: &[Box<dyn Scoper>],
+    general_scoper: &Box<dyn Scoper>,
+    language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
@@ -267,7 +283,16 @@ fn handle_actions_on_many_files_sorted(
         match entry {
             Ok(entry) => {
                 let path = entry.path();
-                let res = process_path(path, &root, validator, scopers, actions, args, search_mode);
+                let res = process_path(
+                    path,
+                    &root,
+                    validator,
+                    general_scoper,
+                    language_scopers,
+                    actions,
+                    args,
+                    search_mode,
+                );
 
                 n_files_seen += match res {
                     Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => 0,
@@ -329,9 +354,11 @@ fn handle_actions_on_many_files_sorted(
 }
 
 /// Main entrypoint for processing using at least 1 thread.
+#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_many_files_threaded(
     validator: &Validator,
-    scopers: &[Box<dyn Scoper>],
+    general_scoper: &Box<dyn Scoper>,
+    language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
@@ -360,8 +387,16 @@ fn handle_actions_on_many_files_threaded(
             Box::new(|entry| match entry {
                 Ok(entry) => {
                     let path = entry.path();
-                    let res =
-                        process_path(path, &root, validator, scopers, actions, args, search_mode);
+                    let res = process_path(
+                        path,
+                        &root,
+                        validator,
+                        general_scoper,
+                        language_scopers,
+                        actions,
+                        args,
+                        search_mode,
+                    );
 
                     match res {
                         Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => (),
@@ -438,11 +473,14 @@ fn handle_actions_on_many_files_threaded(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn process_path(
     path: &Path,
     root: &Path,
     validator: &Validator,
-    scopers: &[Box<dyn Scoper>],
+    general_scoper: &Box<dyn Scoper>,
+    language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
     args: &cli::Cli,
     search_mode: bool,
@@ -473,7 +511,8 @@ fn process_path(
         let changed = apply(
             &source,
             &mut destination,
-            scopers,
+            general_scoper,
+            language_scopers,
             actions,
             args.options.fail_none,
             args.options.fail_any,
@@ -540,12 +579,14 @@ fn process_path(
 /// compared to the input.
 #[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
 #[allow(clippy::fn_params_excessive_bools)] // TODO: use an options struct
+#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn apply(
     source: &str,
     // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
     // corresponding checks.
     destination: &mut String,
-    scopers: &[Box<dyn Scoper>],
+    general_scoper: &Box<dyn Scoper>,
+    language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
     fail_none: bool,
     fail_any: bool,
@@ -555,9 +596,8 @@ fn apply(
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
-    for scoper in scopers {
-        builder.explode(scoper);
-    }
+    builder.explode(&language_scopers);
+    builder.explode(general_scoper);
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
 
@@ -765,30 +805,37 @@ impl fmt::Display for ScoperBuildError {
 
 impl Error for ScoperBuildError {}
 
-fn get_language_scoper(args: &cli::Cli) -> Option<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> {
+#[allow(clippy::cognitive_complexity)] // 🤷‍♀️ macros
+fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
     // We have `LanguageScoper: Scoper`, but we cannot upcast
     // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
     // by providing both.
-    let mut scopers: Vec<(Box<dyn LanguageScoper>, Box<dyn Scoper>)> = Vec::new();
+    let mut scopers: Vec<Box<dyn LanguageScoper>> = Vec::new();
 
     macro_rules! handle_language_scope {
         ($lang:ident, $lang_query:ident, $query_type:ident, $lang_type:ident) => {
             if let Some(lang_scope) = &args.languages_scopes.$lang {
-                if let Some(prepared) = lang_scope.$lang {
-                    let query = $query_type::Prepared(prepared);
-                    scopers.push((
-                        Box::new($lang_type::new(query.clone())),
-                        Box::new($lang_type::new(query)),
-                    ));
-                } else if let Some(custom) = &lang_scope.$lang_query {
-                    let query = $query_type::Custom(custom.clone());
-                    scopers.push((
-                        Box::new($lang_type::new(query.clone())),
-                        Box::new($lang_type::new(query)),
-                    ));
-                } else {
-                    unreachable!("Language specified, but no scope.");
-                };
+                if !scopers.is_empty() {
+                    let mut cmd = cli::Cli::command();
+                    cmd.error(
+                        clap::error::ErrorKind::ArgumentConflict,
+                        "Can only use one language at a time.",
+                    )
+                    .exit();
+                }
+                assert!(scopers.is_empty());
+
+                for query in &lang_scope.$lang {
+                    let query = $query_type::Prepared(query.clone());
+                    scopers.push(Box::new($lang_type::new(query.clone())));
+                }
+
+                for query in &lang_scope.$lang_query {
+                    let query = $query_type::Custom(query.clone());
+                    scopers.push(Box::new($lang_type::new(query.clone())));
+                }
+
+                assert!(!scopers.is_empty(), "Language specified, but no scope."); // Internal bug
             };
         };
     }
@@ -800,14 +847,7 @@ fn get_language_scoper(args: &cli::Cli) -> Option<(Box<dyn LanguageScoper>, Box<
     handle_language_scope!(rust, rust_query, RustQuery, Rust);
     handle_language_scope!(typescript, typescript_query, TypeScriptQuery, TypeScript);
 
-    // We could just `return` after the first found, but then we wouldn't know whether
-    // we had a bug. So collect, then assert we only found one max.
-    assert!(
-        scopers.len() <= 1,
-        "clap limits to single value (`multiple = false`)"
-    );
-
-    scopers.into_iter().next()
+    scopers
 }
 
 fn get_general_scoper(args: &cli::Cli) -> Result<Box<dyn Scoper>> {
@@ -1189,11 +1229,11 @@ mod cli {
     pub struct CSharpScope {
         /// Scope C# code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub csharp: Option<PreparedCSharpQuery>,
+        pub csharp: Vec<PreparedCSharpQuery>,
 
         /// Scope C# code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub csharp_query: Option<CustomCSharpQuery>,
+        pub csharp_query: Vec<CustomCSharpQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1202,12 +1242,12 @@ mod cli {
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub hcl: Option<PreparedHclQuery>,
+        pub hcl: Vec<PreparedHclQuery>,
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub hcl_query: Option<CustomHclQuery>,
+        pub hcl_query: Vec<CustomHclQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1215,11 +1255,11 @@ mod cli {
     pub struct GoScope {
         /// Scope Go code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub go: Option<PreparedGoQuery>,
+        pub go: Vec<PreparedGoQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub go_query: Option<CustomGoQuery>,
+        pub go_query: Vec<CustomGoQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1227,11 +1267,11 @@ mod cli {
     pub struct PythonScope {
         /// Scope Python code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub python: Option<PreparedPythonQuery>,
+        pub python: Vec<PreparedPythonQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub python_query: Option<CustomPythonQuery>,
+        pub python_query: Vec<CustomPythonQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1239,11 +1279,11 @@ mod cli {
     pub struct RustScope {
         /// Scope Rust code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub rust: Option<PreparedRustQuery>,
+        pub rust: Vec<PreparedRustQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub rust_query: Option<CustomRustQuery>,
+        pub rust_query: Vec<CustomRustQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1251,11 +1291,11 @@ mod cli {
     pub struct TypeScriptScope {
         /// Scope TypeScript code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub typescript: Option<PreparedTypeScriptQuery>,
+        pub typescript: Vec<PreparedTypeScriptQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub typescript_query: Option<CustomTypeScriptQuery>,
+        pub typescript_query: Vec<CustomTypeScriptQuery>,
     }
 
     #[cfg(feature = "german")]

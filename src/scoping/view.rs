@@ -347,7 +347,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     ///
     /// Panics if the [`Scoper`] scopes such that the view is no longer consistent, i.e.
     /// gaps were created and the original input can no longer be reconstructed from the
-    /// new view.
+    /// new view. This would be an internal bug.
     pub fn explode(&mut self, scoper: &impl Scoper) -> &mut Self {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.0.len());

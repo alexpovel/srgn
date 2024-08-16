@@ -111,6 +111,46 @@ $ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this
 Note how this does not surface either `from_egg` (has a docstring) or `register_bird`
 (not a method, *`def` outside `class`*).
 
+#### Multiple language scopes
+
+Language scopes themselves can be specified multiple times as well. For example, in the
+Rust snippet
+
+```rust file=music.rs
+pub enum Genre {
+    Rock,
+    Jazz,
+}
+
+struct Instrument {
+    name: String,
+}
+
+pub struct Musician {
+    name: String,
+    primary_instrument: Instrument,
+    genres: Vec<Genre>,
+}
+```
+
+we can query multiple items of interest at once as:
+
+```console
+$ cat music.rs | srgn --rust 'pub-enum' --rust 'pub-struct' # OR'd together
+1:pub enum Genre {
+2:    Rock,
+3:    Jazz,
+4:}
+10:pub struct Musician {
+11:    name: String,
+12:    primary_instrument: Instrument,
+13:    genres: Vec<Genre>,
+14:}
+
+```
+
+where both `pub enum` and `pub struct`, but not the private `struct` were found.
+
 #### Working recursively
 
 If standard input is not given, `srgn` knows how to find relevant source files

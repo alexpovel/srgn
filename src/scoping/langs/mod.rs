@@ -1,8 +1,11 @@
-use super::Scoper;
+use super::{scope::RangesWithContext, Scoper};
 #[cfg(doc)]
-use crate::scoping::scope::Scope::{In, Out};
+use crate::scoping::{
+    scope::Scope::{In, Out},
+    view::ScopedViewBuilder,
+};
 use crate::{find::Find, ranges::Ranges};
-use log::{debug, trace};
+use log::{debug, info, trace};
 use std::{marker::PhantomData, str::FromStr};
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
@@ -120,7 +123,7 @@ pub(super) const IGNORE: &str = "_SRGN_IGNORE";
 /// A scoper for a language.
 ///
 /// Functions much the same, but provides specific language-related functionality.
-pub trait LanguageScoper: Find + Send + Sync {
+pub trait LanguageScoper: Scoper + Find + Send + Sync {
     /// The language's tree-sitter language.
     fn lang() -> TSLanguage
     where
@@ -209,7 +212,49 @@ impl<T> Scoper for T
 where
     T: LanguageScoper,
 {
-    fn scope_raw<'viewee>(&self, input: &'viewee str) -> super::scope::RangesWithContext<'viewee> {
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
         self.scope_via_query(input).into()
+    }
+}
+
+impl Scoper for Box<dyn LanguageScoper> {
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        self.as_ref().scope_raw(input)
+    }
+}
+
+impl Scoper for &[Box<dyn LanguageScoper>] {
+    /// Allows *multiple* scopers to be applied all at once.
+    ///
+    /// They are OR'd together in the sense that if *any* of the scopers hit, a
+    /// position/range is considered in scope. In some sense, this is the opposite of
+    /// [`ScopedViewBuilder::explode`], which is subtractive.
+    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
+        trace!("Scoping many scopes: {:?}", input);
+
+        if self.is_empty() {
+            trace!("Short-circuiting: self is empty, nothing to scope.");
+            return vec![(0..input.len(), None)].into_iter().collect();
+        }
+
+        // This is slightly leaky in that it drops down to a more 'primitive' layer and
+        // uses `Ranges`.
+        let mut ranges: Ranges<usize> = self
+            .iter()
+            .flat_map(|s| s.scope_raw(input))
+            .map(|(range, ctx)| {
+                assert!(
+                    ctx.is_none(),
+                    "When language scoping runs, no contexts exist yet."
+                );
+                range
+            })
+            .collect();
+        ranges.merge();
+        info!("New ranges after scoping many: {ranges:?}");
+
+        let ranges: RangesWithContext<'_> = ranges.into_iter().map(|r| (r, None)).collect();
+
+        ranges
     }
 }

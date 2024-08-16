@@ -213,6 +213,18 @@ Heizoelrueckstossabdaempfung.
         ],
         Some(include_str!("langs/python/base.py")),
     )]
+    #[case(
+        "python-multiple-scopes",
+        false,
+        &[
+            "--python",
+            "comments",
+            "--python",
+            "strings",
+            "A",
+        ],
+        Some("# A comment\nx = \"A string\"\ndef A(): pass\nclass A: pass"),
+    )]
     fn test_cli(
         #[case] mut snapshot_name: String,
         #[case] os_dependent: bool,
@@ -606,6 +618,20 @@ Heizoelrueckstossabdaempfung.
             "--glob",
             "**/*.there-is-no-such-suffix",
             r".",
+        ],
+        None,
+    )]
+    //
+    //
+    #[case(
+        "fail-multiple-languages",
+        None,
+        &[
+            // This should be stopped very early on, in CLI entry
+            "--python",
+            "strings",
+            "--go",
+            "strings",
         ],
         None,
     )]

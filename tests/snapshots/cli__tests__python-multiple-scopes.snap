@@ -1,0 +1,21 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: stdin.map(|s|\n            s.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec()),\n    stdout: stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: []
+---
+args:
+  - "--python"
+  - comments
+  - "--python"
+  - strings
+  - A
+stdin:
+  - "# A comment\n"
+  - "x = \"A string\"\n"
+  - "def A(): pass\n"
+  - "class A: pass"
+stdout:
+  - "1:# A comment\n"
+  - "2:x = \"A string\"\n"
+exit_code: 0

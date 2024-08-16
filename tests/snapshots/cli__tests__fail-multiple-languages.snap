@@ -1,0 +1,19 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap {\n    args,\n    stdin: None,\n    stdout: stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr:
+    - "error: Can only use one language at a time."
+    - ""
+    - "Usage: srgn [OPTIONS] [SCOPE] [REPLACEMENT]"
+    - ""
+    - "For more information, try '--help'."
+---
+args:
+  - "--python"
+  - strings
+  - "--go"
+  - strings
+stdin: ~
+stdout: []
+exit_code: 2
