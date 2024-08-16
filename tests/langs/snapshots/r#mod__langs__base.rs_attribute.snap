@@ -8,30 +8,30 @@ expression: inscope_parts
 - n: 181
   l: "#[tokio::main]\n"
   m: "  ^^^^^^^^^^^   "
-- n: 241
+- n: 243
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 242
+- n: 244
   l: "#[allow(clippy::single_match_else)]\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 243
+- n: 245
   l: "#[cfg(doc)]\n"
   m: "  ^^^^^^^^   "
-- n: 246
+- n: 248
   l: "#[cfg(test)]\n"
   m: "  ^^^^^^^^^   "
-- n: 250
+- n: 252
   l: "    #[test]\n"
   m: "      ^^^^   "
-- n: 255
+- n: 257
   l: "    #[rstest]\n"
   m: "      ^^^^^^   "
-- n: 256
+- n: 258
   l: "    #[case(3)]\n"
   m: "      ^^^^^^^   "
-- n: 257
+- n: 259
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                          ^^^^             "
-- n: 278
+- n: 280
   l: "#[repr(C)]\n"
   m: "  ^^^^^^^   "

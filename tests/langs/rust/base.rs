@@ -224,6 +224,8 @@ This is a raw string with no special treatment for \n
     let bytes_string = b"This is a bytes string";
     let raw_f_string = format!(r"This is a raw f-string with {}", raw_string);
 
+    let check = |s: &str| s.ends_with("something");
+
     free_func();
     func_decorator(decorated_func);
     let mut instance = TestStruct {

@@ -11,15 +11,15 @@ expression: inscope_parts
 - n: 72
   l: "}\n"
   m: "^  "
-- n: 268
+- n: 270
   l: "pub struct PubStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 269
+- n: 271
   l: "pub(crate) struct PubCrateStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 270
+- n: 272
   l: "pub(self) struct PubSelfStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 271
+- n: 273
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

@@ -90,6 +90,8 @@ pub enum PreparedRustQuery {
     TypeDef,
     /// Identifiers.
     Identifier,
+    /// Closure definitions.
+    Closure,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -296,6 +298,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     "
                 }
                 PreparedRustQuery::Identifier => "(identifier) @identifier",
+                PreparedRustQuery::Closure => "(closure_expression) @closure",
             },
         )
         .expect("Prepared queries to be valid")

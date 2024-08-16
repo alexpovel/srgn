@@ -17,15 +17,15 @@ expression: inscope_parts
 - n: 115
   l: "}\n"
   m: "^  "
-- n: 273
+- n: 275
   l: "pub enum PubEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 274
+- n: 276
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 275
+- n: 277
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 276
+- n: 278
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

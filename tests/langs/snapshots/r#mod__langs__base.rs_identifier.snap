@@ -504,176 +504,185 @@ expression: inscope_parts
   l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
   m: "                                                                    ^^^^^^^^^^    "
 - n: 227
+  l: "    let check = |s: &str| s.ends_with(\"something\");\n"
+  m: "        ^^^^^                                          "
+- n: 227
+  l: "    let check = |s: &str| s.ends_with(\"something\");\n"
+  m: "                 ^                                     "
+- n: 227
+  l: "    let check = |s: &str| s.ends_with(\"something\");\n"
+  m: "                          ^                            "
+- n: 229
   l: "    free_func();\n"
   m: "    ^^^^^^^^^     "
-- n: 228
+- n: 230
   l: "    func_decorator(decorated_func);\n"
   m: "    ^^^^^^^^^^^^^^                   "
-- n: 228
+- n: 230
   l: "    func_decorator(decorated_func);\n"
   m: "                   ^^^^^^^^^^^^^^    "
-- n: 229
+- n: 231
   l: "    let mut instance = TestStruct {\n"
   m: "            ^^^^^^^^                 "
-- n: 230
+- n: 232
   l: "        instance_var: String::new(),\n"
   m: "                      ^^^^^^          "
-- n: 230
+- n: 232
   l: "        instance_var: String::new(),\n"
   m: "                              ^^^     "
-- n: 232
+- n: 234
   l: "    instance.instance_method();\n"
   m: "    ^^^^^^^^                     "
-- n: 233
+- n: 235
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "    ^^^^^^^^^^                                                  "
-- n: 233
+- n: 235
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                ^^^^^^^^^^^^^^^^                                "
-- n: 233
+- n: 235
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                                 ^^^^^^^^^^                     "
-- n: 233
+- n: 235
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                                             ^^^^^^^^^^^^^      "
-- n: 234
+- n: 236
   l: "    println!(\"{}\", square(5));\n"
   m: "    ^^^^^^^                       "
-- n: 234
+- n: 236
   l: "    println!(\"{}\", square(5));\n"
   m: "                     ^^^^^^       "
-- n: 235
+- n: 237
   l: "    modify_nonlocal();\n"
   m: "    ^^^^^^^^^^^^^^^     "
-- n: 236
+- n: 238
   l: "    inplace_operations();\n"
   m: "    ^^^^^^^^^^^^^^^^^^     "
-- n: 237
+- n: 239
   l: "    control_flow();\n"
   m: "    ^^^^^^^^^^^^     "
-- n: 238
+- n: 240
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "    ^^^^^^^^                                          "
-- n: 238
+- n: 240
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "              ^^^^^^^^^^^^^^^                         "
-- n: 238
+- n: 240
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "                              ^^^^^^^^                "
-- n: 238
+- n: 240
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "                                        ^^^^^^^^^^    "
-- n: 241
+- n: 243
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "  ^^^                               "
-- n: 241
+- n: 243
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "      ^^^^^^^                       "
-- n: 242
+- n: 244
   l: "#[allow(clippy::single_match_else)]\n"
   m: "  ^^^^^                              "
-- n: 242
+- n: 244
   l: "#[allow(clippy::single_match_else)]\n"
   m: "        ^^^^^^                       "
-- n: 242
+- n: 244
   l: "#[allow(clippy::single_match_else)]\n"
   m: "                ^^^^^^^^^^^^^^^^^    "
-- n: 243
+- n: 245
   l: "#[cfg(doc)]\n"
   m: "  ^^^        "
-- n: 243
+- n: 245
   l: "#[cfg(doc)]\n"
   m: "      ^^^    "
-- n: 244
+- n: 246
   l: "fn function_with_attributes() {}\n"
   m: "   ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 246
+- n: 248
   l: "#[cfg(test)]\n"
   m: "  ^^^         "
-- n: 246
+- n: 248
   l: "#[cfg(test)]\n"
   m: "      ^^^^    "
-- n: 247
+- n: 249
   l: "mod tests {\n"
   m: "    ^^^^^    "
-- n: 250
+- n: 252
   l: "    #[test]\n"
   m: "      ^^^^   "
-- n: 251
+- n: 253
   l: "    fn some_test() {\n"
   m: "       ^^^^^^^^^      "
-- n: 252
+- n: 254
   l: "        assert_eq!(3, 3);\n"
   m: "        ^^^^^^^^^          "
-- n: 255
+- n: 257
   l: "    #[rstest]\n"
   m: "      ^^^^^^   "
-- n: 256
+- n: 258
   l: "    #[case(3)]\n"
   m: "      ^^^^      "
-- n: 257
+- n: 259
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "       ^^^^^^^^^^^^^^^^                    "
-- n: 257
+- n: 259
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                          ^^^^             "
-- n: 257
+- n: 259
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                                ^          "
-- n: 258
+- n: 260
   l: "        assert_eq!(1337, 1337);\n"
   m: "        ^^^^^^^^^                "
-- n: 262
+- n: 264
   l: "pub(crate) fn function_pub_crate() {}\n"
   m: "              ^^^^^^^^^^^^^^^^^^       "
-- n: 264
+- n: 266
   l: "pub(self) fn function_pub_self() {}\n"
   m: "             ^^^^^^^^^^^^^^^^^       "
-- n: 266
+- n: 268
   l: "pub(super) fn function_pub_super() {}\n"
   m: "              ^^^^^^^^^^^^^^^^^^       "
-- n: 278
+- n: 280
   l: "#[repr(C)]\n"
   m: "  ^^^^      "
-- n: 278
+- n: 280
   l: "#[repr(C)]\n"
   m: "       ^    "
-- n: 284
+- n: 286
   l: "const fn const_function() {}\n"
   m: "         ^^^^^^^^^^^^^^       "
-- n: 285
+- n: 287
   l: "pub const fn const_function_pub() {}\n"
   m: "             ^^^^^^^^^^^^^^^^^^       "
-- n: 286
+- n: 288
   l: "pub(crate) const fn const_function_pub_crate() {}\n"
   m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 287
+- n: 289
   l: "pub(self) const fn const_function_pub_self() {}\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 288
+- n: 290
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 290
+- n: 292
   l: "unsafe fn perform_unsafe_operation() {\n"
   m: "          ^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 291
+- n: 293
   l: "    let ptr = 0x1234 as *mut i32;\n"
   m: "        ^^^                        "
-- n: 292
+- n: 294
   l: "    *ptr = 42;\n"
   m: "     ^^^        "
-- n: 295
+- n: 297
   l: "extern \"C\" fn example_extern() -> i32 {\n"
   m: "                ^^^^^^^^^^^^^^             "
-- n: 303
+- n: 305
   l: "    fn convert(&self) -> T;\n"
   m: "       ^^^^^^^               "
-- n: 311
+- n: 313
   l: "    fn convert(&self) -> U {\n"
   m: "       ^^^^^^^                "
-- n: 312
+- n: 314
   l: "        U::from(self.as_ref().to_owned())\n"
   m: "        ^                                  "
-- n: 312
+- n: 314
   l: "        U::from(self.as_ref().to_owned())\n"
   m: "           ^^^^                            "

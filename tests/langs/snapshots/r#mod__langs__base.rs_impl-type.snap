@@ -137,9 +137,9 @@ expression: inscope_parts
 - n: 126
   l: "}\n"
   m: "^  "
-- n: 299
+- n: 301
   l: "impl Y {}\n"
   m: "^^^^^^^^^  "
-- n: 300
+- n: 302
   l: "impl<T> Y<T> {}\n"
   m: "^^^^^^^^^^^^^^^  "
