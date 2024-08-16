@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 106
+  l: "\tdefer func() {\n"
+  m: "  ^^^^^^^^^^^^^^^^"
+- n: 107
+  l: "\t\t// Defer statement\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "\t\tfmt.Println(\"Cleanup after tests\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 109
+  l: "\t}()\n"
+  m: "^^^^^  "
+- n: 162
+  l: "\tdefer func() {\n"
+  m: "  ^^^^^^^^^^^^^^^^"
+- n: 163
+  l: "\t\tif r := recover(); r != nil {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 164
+  l: "\t\t\tt.Log(\"Recovered from panic:\", r)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 165
+  l: "\t\t}\n"
+  m: ^^^^^^^
+- n: 166
+  l: "\t}()\n"
+  m: "^^^^^  "
