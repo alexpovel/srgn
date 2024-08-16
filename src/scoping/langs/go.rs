@@ -37,6 +37,8 @@ pub enum PreparedGoQuery {
     Method,
     /// Free `func` definitions (`func SomeFunc()`).
     FreeFunc,
+    /// Type parameters (generics).
+    TypeParams,
     /// Struct tags.
     StructTags,
 }
@@ -83,6 +85,7 @@ impl From<PreparedGoQuery> for TSQuery {
                 }
                 PreparedGoQuery::Method => "(method_declaration) @method",
                 PreparedGoQuery::FreeFunc => "(function_declaration) @free_func",
+                PreparedGoQuery::TypeParams => "(type_parameter_declaration) @type_params",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )

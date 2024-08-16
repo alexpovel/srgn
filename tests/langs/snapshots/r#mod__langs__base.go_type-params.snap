@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 78
+  l: "type GenericPair[T any] struct {\n"
+  m: "                 ^^^^^            "
+- n: 84
+  l: "func Max[T int | float64](a, b T) T {\n"
+  m: "         ^^^^^^^^^^^^^^^               "

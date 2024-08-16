@@ -1439,6 +1439,7 @@ Language scopes:
           - func:        `func` definitions
           - method:      Method `func` definitions (`func (recv Recv) SomeFunc()`)
           - free-func:   Free `func` definitions (`func SomeFunc()`)
+          - type-params: Type parameters (generics)
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>
