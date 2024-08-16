@@ -368,6 +368,11 @@ impl InScopeLinePart {
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Identifier)),
 )]
 #[case(
+    "base.rs_type-identifier",
+    include_str!("rust/base.rs"),
+    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TypeIdentifier)),
+)]
+#[case(
     "base.rs_closure",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Closure)),

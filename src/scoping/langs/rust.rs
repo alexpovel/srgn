@@ -92,6 +92,8 @@ pub enum PreparedRustQuery {
     TypeDef,
     /// Identifiers.
     Identifier,
+    /// Identifiers for types.
+    TypeIdentifier,
     /// Closure definitions.
     Closure,
 }
@@ -305,6 +307,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     "
                 }
                 PreparedRustQuery::Identifier => "(identifier) @identifier",
+                PreparedRustQuery::TypeIdentifier => "(type_identifier) @identifier",
                 PreparedRustQuery::Closure => "(closure_expression) @closure",
             },
         )

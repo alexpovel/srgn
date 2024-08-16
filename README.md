@@ -1564,6 +1564,7 @@ Language scopes:
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
           - identifier:       Identifiers
+          - type-identifier:  Identifiers for types
           - closure:          Closure definitions
 
       --rust-query <TREE-SITTER-QUERY>
