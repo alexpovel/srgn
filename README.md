@@ -1433,6 +1433,7 @@ Language scopes:
           - type-def:    Type definitions
           - struct:      `struct` type definitions
           - interface:   `interface` type definitions
+          - const:       `const` specifications
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>

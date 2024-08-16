@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 19
+  l: "\tpi        = 3.14159\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^  "
+- n: 20
+  l: "\te         = 2.71828\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^  "
+- n: 21
+  l: "\tdebugMode = true\n"
+  m: "  ^^^^^^^^^^^^^^^^  "
+- n: 26
+  l: "\tlow = iota\n"
+  m: "  ^^^^^^^^^^  "
+- n: 27
+  l: "\tmedium\n"
+  m: "  ^^^^^^  "
+- n: 28
+  l: "\thigh\n"
+  m: "  ^^^^  "
+- n: 224
+  l: "\tread = 1 << iota\n"
+  m: "  ^^^^^^^^^^^^^^^^  "
+- n: 225
+  l: "\twrite\n"
+  m: "  ^^^^^  "
+- n: 226
+  l: "\texecute\n"
+  m: "  ^^^^^^^  "

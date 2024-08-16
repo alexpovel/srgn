@@ -25,6 +25,8 @@ pub enum PreparedGoQuery {
     Struct,
     /// `interface` type definitions.
     Interface,
+    /// `const` specifications.
+    Const,
     /// Struct tags.
     StructTags,
 }
@@ -58,6 +60,7 @@ impl From<PreparedGoQuery> for TSQuery {
                 PreparedGoQuery::Interface => {
                     r"(type_declaration (type_spec type: (interface_type))) @interface"
                 }
+                PreparedGoQuery::Const => "(const_spec) @const",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )
