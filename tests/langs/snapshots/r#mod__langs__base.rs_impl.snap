@@ -179,3 +179,12 @@ expression: inscope_parts
 - n: 320
   l: "impl<T> X<T> for Y {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 322
+  l: "impl PubStruct {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 323
+  l: "    const PANIC: () = panic!(\"bam!\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 324
+  l: "}\n"
+  m: "^  "

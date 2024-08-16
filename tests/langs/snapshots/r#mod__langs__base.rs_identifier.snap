@@ -686,3 +686,9 @@ expression: inscope_parts
 - n: 314
   l: "        U::from(self.as_ref().to_owned())\n"
   m: "           ^^^^                            "
+- n: 323
+  l: "    const PANIC: () = panic!(\"bam!\");\n"
+  m: "          ^^^^^                          "
+- n: 323
+  l: "    const PANIC: () = panic!(\"bam!\");\n"
+  m: "                      ^^^^^              "

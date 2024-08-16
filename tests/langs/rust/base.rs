@@ -318,3 +318,7 @@ where
 impl X for Y {}
 impl<T> X for Y<T> {}
 impl<T> X<T> for Y {}
+
+impl PubStruct {
+    const PANIC: () = panic!("bam!");
+}

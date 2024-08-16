@@ -134,3 +134,6 @@ expression: inscope_parts
 - n: 297
   l: "extern \"C\" fn example_extern() -> i32 {\n"
   m: "         ^                                 "
+- n: 323
+  l: "    const PANIC: () = panic!(\"bam!\");\n"
+  m: "                               ^^^^      "

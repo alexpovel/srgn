@@ -1528,6 +1528,8 @@ Language scopes:
           - pub-super-enum:   `enum` definitions marked `pub(super)`
           - enum-variant:     Variant members of `enum` definitions
           - fn:               Function definitions
+          - impl-fn:          Function definitions inside `impl` blocks (associated
+            functions/methods)
           - priv-fn:          Function definitions not marked `pub`
           - pub-fn:           Function definitions marked `pub`
           - pub-crate-fn:     Function definitions marked `pub(crate)`

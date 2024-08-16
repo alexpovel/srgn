@@ -53,6 +53,8 @@ pub enum PreparedRustQuery {
     EnumVariant,
     /// Function definitions.
     Fn,
+    /// Function definitions inside `impl` blocks (associated functions/methods).
+    ImplFn,
     /// Function definitions not marked `pub`.
     PrivFn,
     /// Function definitions marked `pub`.
@@ -195,6 +197,11 @@ impl From<PreparedRustQuery> for TSQuery {
                 }
                 PreparedRustQuery::EnumVariant => "(enum_variant) @enum_variant",
                 PreparedRustQuery::Fn => "(function_item) @function_item",
+                PreparedRustQuery::ImplFn => {
+                    r"(impl_item
+                        body: (_ (function_item) @function)
+                    )"
+                }
                 PreparedRustQuery::PrivFn => {
                     r"(function_item
                         .
