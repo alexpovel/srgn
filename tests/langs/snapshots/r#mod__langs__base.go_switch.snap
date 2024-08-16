@@ -1,0 +1,58 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 128
+  l: "\tswitch {\n"
+  m: "  ^^^^^^^^^^"
+- n: 129
+  l: "\tcase x < 0:\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 130
+  l: "\t\tt.Error(\"Negative number\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 131
+  l: "\tcase x == 0:\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 132
+  l: "\t\tt.Error(\"Zero\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 133
+  l: "\tdefault:\n"
+  m: ^^^^^^^^^^^^
+- n: 134
+  l: "\t\tt.Log(\"Positive number\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 135
+  l: "\t}\n"
+  m: "^^^  "
+- n: 274
+  l: "\tswitch x {\n"
+  m: "  ^^^^^^^^^^^^"
+- n: 275
+  l: "\tcase 0:\n"
+  m: ^^^^^^^^^^^
+- n: 276
+  l: "\t\tfallthrough\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 277
+  l: "\tcase 1:\n"
+  m: ^^^^^^^^^^^
+- n: 278
+  l: "\t\treturn \"Low\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 279
+  l: "\tcase 2:\n"
+  m: ^^^^^^^^^^^
+- n: 280
+  l: "\t\treturn \"Medium\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 281
+  l: "\tdefault:\n"
+  m: ^^^^^^^^^^^^
+- n: 282
+  l: "\t\treturn \"High\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 283
+  l: "\t}\n"
+  m: "^^^  "

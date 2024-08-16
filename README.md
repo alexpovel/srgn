@@ -1443,6 +1443,7 @@ Language scopes:
           - defer:       `defer` blocks
           - select:      `select` blocks
           - go:          `go` blocks
+          - switch:      `switch` blocks
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>
