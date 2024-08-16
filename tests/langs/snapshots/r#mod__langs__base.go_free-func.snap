@@ -477,8 +477,8 @@ expression: inscope_parts
   l: "}\n"
   m: "^  "
 - n: 343
-  l: "func higher_order(f func(int) int, x int) int {\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  l: "func higherOrder(f func(int) int, x int) int {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 344
   l: "\treturn f(x)\n"
   m: ^^^^^^^^^^^^^^^

@@ -340,7 +340,7 @@ func variadic(nums ...int) int {
 	return total
 }
 
-func higher_order(f func(int) int, x int) int {
+func higherOrder(f func(int) int, x int) int {
 	return f(x)
 }
 
