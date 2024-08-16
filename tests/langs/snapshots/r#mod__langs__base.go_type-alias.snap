@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 360
+  l: "\trectangles = []*Rectangle\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 361
+  l: "\tPolar      = polar\n"
+  m: "  ^^^^^^^^^^^^^^^^^^  "

@@ -21,6 +21,8 @@ pub enum PreparedGoQuery {
     Imports,
     /// Type definitions.
     TypeDef,
+    /// Type alias assignments.
+    TypeAlias,
     /// `struct` type definitions.
     Struct,
     /// `interface` type definitions.
@@ -62,6 +64,7 @@ impl From<PreparedGoQuery> for TSQuery {
                     r"(import_spec path: (interpreted_string_literal) @path)"
                 }
                 PreparedGoQuery::TypeDef => r"(type_declaration) @type_decl",
+                PreparedGoQuery::TypeAlias => r"(type_alias) @type_alias",
                 PreparedGoQuery::Struct => {
                     r"(type_declaration (type_spec type: (struct_type))) @struct"
                 }

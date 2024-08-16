@@ -116,3 +116,15 @@ expression: inscope_parts
 - n: 325
   l: "}\n"
   m: "^  "
+- n: 359
+  l: "type (\n"
+  m: ^^^^^^^^
+- n: 360
+  l: "\trectangles = []*Rectangle\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 361
+  l: "\tPolar      = polar\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 362
+  l: ")\n"
+  m: "^  "

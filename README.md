@@ -1431,6 +1431,7 @@ Language scopes:
           - strings:     Strings (interpreted and raw; excluding struct tags)
           - imports:     Imports
           - type-def:    Type definitions
+          - type-alias:  Type alias assignments
           - struct:      `struct` type definitions
           - interface:   `interface` type definitions
           - const:       `const` specifications
