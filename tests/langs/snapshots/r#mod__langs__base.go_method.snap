@@ -1,0 +1,43 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 36
+  l: "func (e *TestError) Error() string {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 37
+  l: "\treturn e.message\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 38
+  l: "}\n"
+  m: "^  "
+- n: 92
+  l: "func (tc *TestCase) Run(t *testing.T) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 93
+  l: "\t// Method implementation\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 94
+  l: "}\n"
+  m: "^  "
+- n: 327
+  l: "func (r Rectangle) Area() float64 {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 328
+  l: "\tmul := func(a, b float64) float64 {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 329
+  l: "\t\treturn a * b\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 330
+  l: "\t}\n"
+  m: ^^^^^
+- n: 331
+  l: "\n"
+  m: ^^
+- n: 332
+  l: "\treturn mul(r.width, r.height)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 333
+  l: "}\n"
+  m: "^  "

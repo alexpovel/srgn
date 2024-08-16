@@ -315,3 +315,43 @@ type Block interface {
 	Encrypt(src, dst []byte)
 	Decrypt(src, dst []byte)
 }
+
+func add(a, b int) int {
+	return a + b
+}
+
+type Rectangle struct {
+	width, height float64
+}
+
+func (r Rectangle) Area() float64 {
+	mul := func(a, b float64) float64 {
+		return a * b
+	}
+
+	return mul(r.width, r.height)
+}
+
+func variadic(nums ...int) int {
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	return total
+}
+
+func higher_order(f func(int) int, x int) int {
+	return f(x)
+}
+
+func closure() func() int {
+	count := 0
+	return func() int {
+		count++
+		return count
+	}
+}
+
+func init() {
+	// Initialization code here
+}

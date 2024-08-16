@@ -188,3 +188,6 @@ expression: inscope_parts
 - n: 301
   l: "*/\n"
   m: "^^  "
+- n: 356
+  l: "\t// Initialization code here\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

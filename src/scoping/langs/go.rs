@@ -27,6 +27,12 @@ pub enum PreparedGoQuery {
     Interface,
     /// `const` specifications.
     Const,
+    /// `func` definitions.
+    Func,
+    /// Method `func` definitions (`func (recv Recv) SomeFunc()`).
+    Method,
+    /// Free `func` definitions (`func SomeFunc()`).
+    FreeFunc,
     /// Struct tags.
     StructTags,
 }
@@ -61,6 +67,16 @@ impl From<PreparedGoQuery> for TSQuery {
                     r"(type_declaration (type_spec type: (interface_type))) @interface"
                 }
                 PreparedGoQuery::Const => "(const_spec) @const",
+                PreparedGoQuery::Func => {
+                    r"
+                    [
+                        (method_declaration)
+                        (function_declaration)
+                        (func_literal)
+                    ] @func"
+                }
+                PreparedGoQuery::Method => "(method_declaration) @method",
+                PreparedGoQuery::FreeFunc => "(function_declaration) @free_func",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )

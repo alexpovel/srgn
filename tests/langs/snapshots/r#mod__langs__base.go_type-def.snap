@@ -107,3 +107,12 @@ expression: inscope_parts
 - n: 317
   l: "}\n"
   m: "^  "
+- n: 323
+  l: "type Rectangle struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 324
+  l: "\twidth, height float64\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 325
+  l: "}\n"
+  m: "^  "

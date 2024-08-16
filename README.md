@@ -1434,6 +1434,9 @@ Language scopes:
           - struct:      `struct` type definitions
           - interface:   `interface` type definitions
           - const:       `const` specifications
+          - func:        `func` definitions
+          - method:      Method `func` definitions (`func (recv Recv) SomeFunc()`)
+          - free-func:   Free `func` definitions (`func SomeFunc()`)
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>
