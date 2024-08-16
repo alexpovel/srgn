@@ -23,9 +23,20 @@ pub trait Find {
         None
     }
 
+    /// Paths matching the criteria will not be considered valid.
+    ///
+    /// Can be used to override based on arbitrary characteristics of the [`Path`].
+    fn is_path_invalid(&self, _path: &Path) -> bool {
+        false
+    }
+
     /// According to the hints and metadata provided by this trait, is the provided
     /// `path` valid?
     fn is_valid_path(&self, path: &Path) -> bool {
+        if self.is_path_invalid(path) {
+            return false;
+        }
+
         match (path.extension(), self.interpreters()) {
             (Some(ext), _) => ext
                 .to_str()

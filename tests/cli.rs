@@ -635,6 +635,15 @@ Heizoelrueckstossabdaempfung.
         ],
         None,
     )]
+    #[case(
+        "go-ignores-vendor-directory",
+        None,
+        &[
+            "--go",
+            "comments",
+        ],
+        Some(Path::new("tests/langs/go/vendor-dir-test/")), // Contains vendor dir
+    )]
     fn test_cli_failure_modes(
         #[case] snapshot_name: String,
         #[case] stdin: Option<&str>,

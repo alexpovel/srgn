@@ -2,7 +2,11 @@ use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::{find::Find, scoping::langs::IGNORE};
 use clap::ValueEnum;
 use const_format::formatcp;
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::Debug,
+    path::{Component, Path},
+    str::FromStr,
+};
 use tree_sitter::QueryError;
 
 /// The Go language.
@@ -132,5 +136,18 @@ impl LanguageScoper for Go {
 impl Find for Go {
     fn extensions(&self) -> &'static [&'static str] {
         &["go"]
+    }
+
+    fn is_path_invalid(&self, path: &Path) -> bool {
+        for component in path.components() {
+            if let Component::Normal(item) = component {
+                // https://go.dev/ref/mod#vendoring
+                if item.as_encoded_bytes() == b"vendor" {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 }
