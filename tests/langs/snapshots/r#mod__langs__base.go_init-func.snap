@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 259
+  l: "func init() {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 260
+  l: "\tfmt.Println(\"Initializing package\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 261
+  l: "}\n"
+  m: "^  "

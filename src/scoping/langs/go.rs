@@ -41,6 +41,8 @@ pub enum PreparedGoQuery {
     Method,
     /// Free `func` definitions (`func SomeFunc()`).
     FreeFunc,
+    /// `func init()` definitions.
+    InitFunc,
     /// Type parameters (generics).
     TypeParams,
     /// `defer` blocks.
@@ -101,6 +103,11 @@ impl From<PreparedGoQuery> for TSQuery {
                 }
                 PreparedGoQuery::Method => "(method_declaration) @method",
                 PreparedGoQuery::FreeFunc => "(function_declaration) @free_func",
+                PreparedGoQuery::InitFunc => {
+                    r#"(function_declaration
+                        name: (identifier) @id (#eq? @id "init")
+                    ) @init_func"#
+                }
                 PreparedGoQuery::TypeParams => "(type_parameter_declaration) @type_params",
                 PreparedGoQuery::Defer => "(defer_statement) @defer",
                 PreparedGoQuery::Select => "(select_statement) @select",

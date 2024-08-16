@@ -1442,6 +1442,7 @@ Language scopes:
           - func:        `func` definitions
           - method:      Method `func` definitions (`func (recv Recv) SomeFunc()`)
           - free-func:   Free `func` definitions (`func SomeFunc()`)
+          - init-func:   `func init()` definitions
           - type-params: Type parameters (generics)
           - defer:       `defer` blocks
           - select:      `select` blocks

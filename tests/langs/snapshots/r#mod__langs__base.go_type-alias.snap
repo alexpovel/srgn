@@ -2,9 +2,9 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 360
+- n: 356
   l: "\trectangles = []*Rectangle\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 361
+- n: 357
   l: "\tPolar      = polar\n"
   m: "  ^^^^^^^^^^^^^^^^^^  "

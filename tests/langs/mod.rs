@@ -513,6 +513,11 @@ impl InScopeLinePart {
     Go::new(CodeQuery::Prepared(PreparedGoQuery::FreeFunc)),
 )]
 #[case(
+    "base.go_init-func",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::InitFunc)),
+)]
+#[case(
     "base.go_type-params",
     include_str!("go/base.go"),
     Go::new(CodeQuery::Prepared(PreparedGoQuery::TypeParams)),

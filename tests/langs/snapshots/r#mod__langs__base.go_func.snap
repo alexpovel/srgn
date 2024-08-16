@@ -545,12 +545,3 @@ expression: inscope_parts
 - n: 353
   l: "}\n"
   m: "^  "
-- n: 355
-  l: "func init() {\n"
-  m: ^^^^^^^^^^^^^^^
-- n: 356
-  l: "\t// Initialization code here\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 357
-  l: "}\n"
-  m: "^  "

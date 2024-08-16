@@ -352,10 +352,6 @@ func closure() func() int {
 	}
 }
 
-func init() {
-	// Initialization code here
-}
-
 type (
 	rectangles = []*Rectangle
 	Polar      = polar
