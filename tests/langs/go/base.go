@@ -299,3 +299,19 @@ Loop:
 	A multi-line comment
 	spanning multiple lines.
 */
+
+type (
+	Point struct{ x, y float64 }
+	polar Point
+)
+
+type TreeNode struct {
+	left, right *TreeNode
+	value       any
+}
+
+type Block interface {
+	BlockSize() int
+	Encrypt(src, dst []byte)
+	Decrypt(src, dst []byte)
+}

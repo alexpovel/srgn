@@ -19,6 +19,8 @@ pub enum PreparedGoQuery {
     Strings,
     /// Imports.
     Imports,
+    /// Type definitions.
+    TypeDef,
     /// Struct tags.
     StructTags,
 }
@@ -45,6 +47,7 @@ impl From<PreparedGoQuery> for TSQuery {
                 PreparedGoQuery::Imports => {
                     r"(import_spec path: (interpreted_string_literal) @path)"
                 }
+                PreparedGoQuery::TypeDef => r"(type_declaration) @type_decl",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )

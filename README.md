@@ -1430,6 +1430,7 @@ Language scopes:
           - comments:    Comments (single- and multi-line)
           - strings:     Strings (interpreted and raw; excluding struct tags)
           - imports:     Imports
+          - type-def:    Type definitions
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>
