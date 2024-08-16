@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 292
+  l: "\t\tgoto Loop\n"
+  m: "    ^^^^^^^^^  "

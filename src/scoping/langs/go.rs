@@ -53,6 +53,8 @@ pub enum PreparedGoQuery {
     Switch,
     /// Labeled statements.
     Labeled,
+    /// `goto` statements.
+    Goto,
     /// Struct tags.
     StructTags,
 }
@@ -105,6 +107,7 @@ impl From<PreparedGoQuery> for TSQuery {
                 PreparedGoQuery::Go => "(go_statement) @go",
                 PreparedGoQuery::Switch => "(expression_switch_statement) @switch",
                 PreparedGoQuery::Labeled => "(labeled_statement) @labeled",
+                PreparedGoQuery::Goto => "(goto_statement) @goto",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )
