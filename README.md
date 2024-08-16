@@ -1431,6 +1431,8 @@ Language scopes:
           - strings:     Strings (interpreted and raw; excluding struct tags)
           - imports:     Imports
           - type-def:    Type definitions
+          - struct:      `struct` type definitions
+          - interface:   `interface` type definitions
           - struct-tags: Struct tags
 
       --go-query <TREE-SITTER-QUERY>

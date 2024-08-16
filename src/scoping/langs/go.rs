@@ -21,6 +21,10 @@ pub enum PreparedGoQuery {
     Imports,
     /// Type definitions.
     TypeDef,
+    /// `struct` type definitions.
+    Struct,
+    /// `interface` type definitions.
+    Interface,
     /// Struct tags.
     StructTags,
 }
@@ -48,6 +52,12 @@ impl From<PreparedGoQuery> for TSQuery {
                     r"(import_spec path: (interpreted_string_literal) @path)"
                 }
                 PreparedGoQuery::TypeDef => r"(type_declaration) @type_decl",
+                PreparedGoQuery::Struct => {
+                    r"(type_declaration (type_spec type: (struct_type))) @struct"
+                }
+                PreparedGoQuery::Interface => {
+                    r"(type_declaration (type_spec type: (interface_type))) @interface"
+                }
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )

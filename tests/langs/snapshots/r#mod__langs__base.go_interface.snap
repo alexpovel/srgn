@@ -1,0 +1,28 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 41
+  l: "type Testable interface {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 42
+  l: "\tTest() bool\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 43
+  l: "}\n"
+  m: "^  "
+- n: 313
+  l: "type Block interface {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 314
+  l: "\tBlockSize() int\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 315
+  l: "\tEncrypt(src, dst []byte)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 316
+  l: "\tDecrypt(src, dst []byte)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 317
+  l: "}\n"
+  m: "^  "

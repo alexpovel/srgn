@@ -1,0 +1,79 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 32
+  l: "type TestError struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 33
+  l: "\tmessage string\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "}\n"
+  m: "^  "
+- n: 46
+  l: "type TestCase struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 47
+  l: "\tName     string      `json:\"name,omitempty\" db:\"name\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 48
+  l: "\tInput    interface{} `json:\"input\" db:\"input\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 49
+  l: "\tExpected interface{} `json:\"expected\" db:\"expected\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 50
+  l: "\tunequal  bool        // Unexported field\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 51
+  l: "}\n"
+  m: "^  "
+- n: 54
+  l: "type ExtendedTestCase struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 55
+  l: "\tTestCase\n"
+  m: ^^^^^^^^^^^^
+- n: 56
+  l: "\ttimeout time.Duration\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 57
+  l: "}\n"
+  m: "^  "
+- n: 78
+  l: "type GenericPair[T any] struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 79
+  l: "\tFirst  T\n"
+  m: ^^^^^^^^^^^^
+- n: 80
+  l: "\tSecond T\n"
+  m: ^^^^^^^^^^^^
+- n: 81
+  l: "}\n"
+  m: "^  "
+- n: 303
+  l: "type (\n"
+  m: ^^^^^^^^
+- n: 304
+  l: "\tPoint struct{ x, y float64 }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 305
+  l: "\tpolar Point\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 306
+  l: ")\n"
+  m: "^  "
+- n: 308
+  l: "type TreeNode struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 309
+  l: "\tleft, right *TreeNode\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 310
+  l: "\tvalue       any\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 311
+  l: "}\n"
+  m: "^  "
