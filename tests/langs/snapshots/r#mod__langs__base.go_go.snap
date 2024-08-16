@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 149
+  l: "\tgo func() {\n"
+  m: "  ^^^^^^^^^^^^^"
+- n: 150
+  l: "\t\ttestChannel <- TestCase{Name: \"async test\", Input: 1, Expected: 1}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 151
+  l: "\t}()\n"
+  m: "^^^^^  "

@@ -47,6 +47,8 @@ pub enum PreparedGoQuery {
     Defer,
     /// `select` blocks.
     Select,
+    /// `go` blocks.
+    Go,
     /// Struct tags.
     StructTags,
 }
@@ -96,6 +98,7 @@ impl From<PreparedGoQuery> for TSQuery {
                 PreparedGoQuery::TypeParams => "(type_parameter_declaration) @type_params",
                 PreparedGoQuery::Defer => "(defer_statement) @defer",
                 PreparedGoQuery::Select => "(select_statement) @select",
+                PreparedGoQuery::Go => "(go_statement) @go",
                 PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
             },
         )
