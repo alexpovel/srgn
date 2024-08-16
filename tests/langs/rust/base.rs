@@ -296,6 +296,9 @@ extern "C" fn example_extern() -> i32 {
     42
 }
 
+impl Y {}
+impl<T> Y<T> {}
+
 trait Convertible<T> {
     fn convert(&self) -> T;
 }
@@ -309,3 +312,7 @@ where
         U::from(self.as_ref().to_owned())
     }
 }
+
+impl X for Y {}
+impl<T> X for Y<T> {}
+impl<T> X<T> for Y {}

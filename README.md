@@ -1541,6 +1541,9 @@ Language scopes:
             (`#[test]`, `#[rstest]`, ...)
           - trait:            `trait` definitions
           - impl:             `impl` blocks
+          - impl-type:        `impl` blocks for types (`impl SomeType {}`)
+          - impl-trait:       `impl` blocks for traits on types (`impl SomeTrait for
+            SomeType {}`)
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
