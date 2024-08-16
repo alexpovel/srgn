@@ -218,12 +218,12 @@ Heizoelrueckstossabdaempfung.
         false,
         &[
             "--python",
-            "comments",
+            "def",
             "--python",
             "strings",
             "A",
         ],
-        Some("# A comment\nx = \"A string\"\ndef A(): pass\nclass A: pass"),
+        Some("# A comment\nx = \"A string\"\ndef A(): return \"A string in a func\"\nclass A: pass"),
     )]
     fn test_cli(
         #[case] mut snapshot_name: String,

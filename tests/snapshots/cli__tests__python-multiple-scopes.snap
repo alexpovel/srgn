@@ -6,16 +6,15 @@ info:
 ---
 args:
   - "--python"
-  - comments
+  - def
   - "--python"
   - strings
   - A
 stdin:
   - "# A comment\n"
   - "x = \"A string\"\n"
-  - "def A(): pass\n"
+  - "def A(): return \"A string in a func\"\n"
   - "class A: pass"
 stdout:
-  - "1:# A comment\n"
-  - "2:x = \"A string\"\n"
+  - "3:def A(): return \"A string in a func\"\n"
 exit_code: 0

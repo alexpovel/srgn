@@ -62,6 +62,8 @@ from dataclasses import dataclass
 
 @dataclass
 class Bird:
+    """A bird!"""
+
     name: str
     age: int
 
@@ -76,6 +78,8 @@ class Bird:
 
 
 def register_bird(bird: Bird, db: Db) -> None:
+    """Registers a bird."""
+
     assert bird.age >= 0
     with db.tx() as tx:
         tx.insert(bird)
@@ -85,8 +89,8 @@ which can be searched using:
 
 ```console
 $ cat birds.py | srgn --python 'class' 'age'
-9:    age: int
-13:        self.age += 1
+11:    age: int
+15:        self.age += 1
 
 ```
 
@@ -103,8 +107,8 @@ find methods (aka *`def` within `class`*) lacking docstrings:
 
 ```console
 $ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
-11:    def celebrate_birthday(self):
-12:        print("🎉")
+13:    def celebrate_birthday(self):
+14:        print("🎉")
 
 ```
 
@@ -118,38 +122,37 @@ Rust snippet
 
 ```rust file=music.rs
 pub enum Genre {
-    Rock,
+    Rock(Subgenre),
     Jazz,
 }
 
-struct Instrument {
-    name: String,
-}
+const MOST_POPULAR_SUBGENRE: Subgenre = Subgenre::Something;
 
 pub struct Musician {
     name: String,
-    primary_instrument: Instrument,
-    genres: Vec<Genre>,
+    genres: Vec<Subgenre>,
 }
 ```
 
-we can query multiple items of interest at once as:
+multiple items can be surgically drilled down into as
 
 ```console
-$ cat music.rs | srgn --rust 'pub-enum' --rust 'pub-struct' # OR'd together
-1:pub enum Genre {
-2:    Rock,
-3:    Jazz,
-4:}
-10:pub struct Musician {
-11:    name: String,
-12:    primary_instrument: Instrument,
-13:    genres: Vec<Genre>,
-14:}
+$ cat music.rs | srgn --rust 'pub-enum' --rust 'type-identifier' 'Subgenre' # AND'ed together
+2:    Rock(Subgenre),
 
 ```
 
-where both `pub enum` and `pub struct`, but not the private `struct` were found.
+where only lines matching *all* criteria are returned, acting like a logical *and*
+between all conditions. Note that conditions are evaluated left-to-right, precluding
+some combinations from making sense: for example, searching for a `class` body inside a
+`comment` usually returns nothing. The inverse works as expected however:
+
+```console
+$ cat birds.py | srgn --python 'class' --python 'doc-strings' # Earlier example
+8:    """A bird!"""
+19:        """Create a bird from an egg."""
+
+```
 
 #### Working recursively
 

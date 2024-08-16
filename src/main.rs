@@ -596,7 +596,9 @@ fn apply(
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
-    builder.explode(&language_scopers);
+    for scoper in language_scopers {
+        builder.explode(scoper);
+    }
     builder.explode(general_scoper);
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
