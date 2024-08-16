@@ -1539,6 +1539,7 @@ Language scopes:
           - extern-fn:        Function definitions marked `extern`
           - test-fn:          Function definitions with attributes containing `test`
             (`#[test]`, `#[rstest]`, ...)
+          - trait:            `trait` definitions
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)

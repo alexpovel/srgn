@@ -569,3 +569,12 @@ expression: inscope_parts
 - n: 297
   l: "}\n"
   m: "^  "
+- n: 308
+  l: "    fn convert(&self) -> U {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 309
+  l: "        U::from(self.as_ref().to_owned())\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 310
+  l: "    }\n"
+  m: "^^^^^  "

@@ -295,3 +295,17 @@ unsafe fn perform_unsafe_operation() {
 extern "C" fn example_extern() -> i32 {
     42
 }
+
+trait Convertible<T> {
+    fn convert(&self) -> T;
+}
+
+impl<T, U> Convertible<U> for T
+where
+    T: AsRef<str>,
+    U: From<String>,
+{
+    fn convert(&self) -> U {
+        U::from(self.as_ref().to_owned())
+    }
+}

@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 299
+  l: "trait Convertible<T> {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 300
+  l: "    fn convert(&self) -> T;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 301
+  l: "}\n"
+  m: "^  "
