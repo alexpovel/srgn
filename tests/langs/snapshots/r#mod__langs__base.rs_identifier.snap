@@ -1,0 +1,679 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "    ^                             "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "       ^                          "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "           ^                      "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "              ^                   "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "                 ^                "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "                    ^             "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "                       ^          "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "                          ^       "
+- n: 3
+  l: "use a::b::{c, d, e::f, g::h::i};\n"
+  m: "                             ^    "
+- n: 4
+  l: "use a::item as b_item;\n"
+  m: "    ^                   "
+- n: 4
+  l: "use a::item as b_item;\n"
+  m: "       ^^^^             "
+- n: 4
+  l: "use a::item as b_item;\n"
+  m: "               ^^^^^^   "
+- n: 5
+  l: "use something::prelude::*;\n"
+  m: "    ^^^^^^^^^               "
+- n: 5
+  l: "use something::prelude::*;\n"
+  m: "               ^^^^^^^      "
+- n: 6
+  l: "use std::collections::HashMap;\n"
+  m: "    ^^^                         "
+- n: 6
+  l: "use std::collections::HashMap;\n"
+  m: "         ^^^^^^^^^^^            "
+- n: 6
+  l: "use std::collections::HashMap;\n"
+  m: "                      ^^^^^^^   "
+- n: 7
+  l: "use std::collections::HashSet;\n"
+  m: "    ^^^                         "
+- n: 7
+  l: "use std::collections::HashSet;\n"
+  m: "         ^^^^^^^^^^^            "
+- n: 7
+  l: "use std::collections::HashSet;\n"
+  m: "                      ^^^^^^^   "
+- n: 8
+  l: "use std::fs::File;\n"
+  m: "    ^^^             "
+- n: 8
+  l: "use std::fs::File;\n"
+  m: "         ^^         "
+- n: 8
+  l: "use std::fs::File;\n"
+  m: "             ^^^^   "
+- n: 9
+  l: "use std::io::{self, BufRead, BufReader, Write};\n"
+  m: "    ^^^                                          "
+- n: 9
+  l: "use std::io::{self, BufRead, BufReader, Write};\n"
+  m: "         ^^                                      "
+- n: 9
+  l: "use std::io::{self, BufRead, BufReader, Write};\n"
+  m: "                    ^^^^^^^                      "
+- n: 9
+  l: "use std::io::{self, BufRead, BufReader, Write};\n"
+  m: "                             ^^^^^^^^^           "
+- n: 9
+  l: "use std::io::{self, BufRead, BufReader, Write};\n"
+  m: "                                        ^^^^^    "
+- n: 10
+  l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
+  m: "    ^^^                                        "
+- n: 10
+  l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
+  m: "         ^^^^                                  "
+- n: 10
+  l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
+  m: "               ^^^^^^                          "
+- n: 10
+  l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
+  m: "                        ^^^^^^^^^              "
+- n: 10
+  l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
+  m: "                                   ^^^^^^^^    "
+- n: 12
+  l: "#[macro_use]\n"
+  m: "  ^^^^^^^^^   "
+- n: 13
+  l: "extern crate lazy_static;\n"
+  m: "             ^^^^^^^^^^^   "
+- n: 15
+  l: "mod parent {\n"
+  m: "    ^^^^^^    "
+- n: 16
+  l: "    pub fn x() {\n"
+  m: "           ^      "
+- n: 17
+  l: "        println!(\"Function x from parent module\");\n"
+  m: "        ^^^^^^^                                       "
+- n: 21
+  l: "mod sibling {\n"
+  m: "    ^^^^^^^    "
+- n: 22
+  l: "    pub fn y() {\n"
+  m: "           ^      "
+- n: 23
+  l: "        println!(\"Function y from sibling module\");\n"
+  m: "        ^^^^^^^                                        "
+- n: 28
+  l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
+  m: "       ^^^^^^^^                                   "
+- n: 28
+  l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
+  m: "                             ^^^^^^^^^            "
+- n: 28
+  l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
+  m: "                                        ^^^       "
+- n: 33
+  l: "fn free_func() {\n"
+  m: "   ^^^^^^^^^      "
+- n: 35
+  l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
+  m: "            ^^^^^^^^                                     "
+- n: 35
+  l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
+  m: "                       ^^^^^^^^                          "
+- n: 35
+  l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
+  m: "                                     ^^^^^^^^            "
+- n: 35
+  l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
+  m: "                                               ^^^^^^    "
+- n: 36
+  l: "    test_var += 1;\n"
+  m: "    ^^^^^^^^        "
+- n: 37
+  l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
+  m: "    ^^^^^^^^                                     "
+- n: 37
+  l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
+  m: "                   ^^^^^^^^                      "
+- n: 37
+  l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
+  m: "                             ^^^^^^^^            "
+- n: 37
+  l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
+  m: "                                       ^^^^^^    "
+- n: 38
+  l: "    println!(\"Global test_var is now {}\", test_var);\n"
+  m: "    ^^^^^^^                                             "
+- n: 38
+  l: "    println!(\"Global test_var is now {}\", test_var);\n"
+  m: "                                            ^^^^^^^^    "
+- n: 42
+  l: "fn func_decorator<F>(func: F)\n"
+  m: "   ^^^^^^^^^^^^^^              "
+- n: 42
+  l: "fn func_decorator<F>(func: F)\n"
+  m: "                     ^^^^      "
+- n: 44
+  l: "    F: Fn() + 'static,\n"
+  m: "                ^^^^^^   "
+- n: 47
+  l: "    fn wrapper<F>(func: F)\n"
+  m: "       ^^^^^^^              "
+- n: 47
+  l: "    fn wrapper<F>(func: F)\n"
+  m: "                  ^^^^      "
+- n: 51
+  l: "        println!(\"Function decorator called\");\n"
+  m: "        ^^^^^^^                                   "
+- n: 52
+  l: "        func();\n"
+  m: "        ^^^^     "
+- n: 55
+  l: "    wrapper(func);\n"
+  m: "    ^^^^^^^         "
+- n: 55
+  l: "    wrapper(func);\n"
+  m: "            ^^^^    "
+- n: 58
+  l: "fn decorated_func() {\n"
+  m: "   ^^^^^^^^^^^^^^      "
+- n: 60
+  l: "    println!(\"Inside decorated function\");\n"
+  m: "    ^^^^^^^                                   "
+- n: 75
+  l: "    fn new() -> Self {\n"
+  m: "       ^^^              "
+- n: 77
+  l: "            instance_var: String::from(\"hello\"),\n"
+  m: "                          ^^^^^^                    "
+- n: 77
+  l: "            instance_var: String::from(\"hello\"),\n"
+  m: "                                  ^^^^              "
+- n: 86
+  l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
+  m: "       ^^^^^^^^^^^^^^^^                           "
+- n: 86
+  l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
+  m: "                           ^^^^                   "
+- n: 92
+  l: "            println!(\"Static method decorator called\");\n"
+  m: "            ^^^^^^^                                        "
+- n: 93
+  l: "            func();\n"
+  m: "            ^^^^     "
+- n: 98
+  l: "    fn instance_method(&mut self) {\n"
+  m: "       ^^^^^^^^^^^^^^^               "
+- n: 101
+  l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
+  m: "        ^^^^^^^                                                    "
+- n: 101
+  l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
+  m: "                                                   ^^^^^^^^^^^^    "
+- n: 104
+  l: "    fn static_method() {\n"
+  m: "       ^^^^^^^^^^^^^      "
+- n: 106
+  l: "        println!(\"Inside static method\");\n"
+  m: "        ^^^^^^^                              "
+- n: 112
+  l: "    VariantOne,\n"
+  m: "    ^^^^^^^^^^   "
+- n: 113
+  l: "    VariantTwo(String),\n"
+  m: "    ^^^^^^^^^^           "
+- n: 114
+  l: "    VariantThree { a: String, b: u64 },\n"
+  m: "    ^^^^^^^^^^^^                         "
+- n: 118
+  l: "    fn match_statement(x: TestEnum) {\n"
+  m: "       ^^^^^^^^^^^^^^^                 "
+- n: 118
+  l: "    fn match_statement(x: TestEnum) {\n"
+  m: "                       ^               "
+- n: 120
+  l: "        match x {\n"
+  m: "              ^    "
+- n: 121
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "            ^^^^^^^^                                    "
+- n: 121
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "                      ^^^^^^^^^^                        "
+- n: 121
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "                                    ^^^^^^^             "
+- n: 122
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "            ^^^^^^^^                                    "
+- n: 122
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "                      ^^^^^^^^^^                        "
+- n: 122
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "                                    ^^^^^^^             "
+- n: 123
+  l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
+  m: "            ^^^^^^^^                                        "
+- n: 123
+  l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
+  m: "                      ^^^^^^^^^^^^                          "
+- n: 123
+  l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
+  m: "                                      ^^^^^^^               "
+- n: 129
+  l: "fn modify_nonlocal() {\n"
+  m: "   ^^^^^^^^^^^^^^^      "
+- n: 130
+  l: "    let mut nonlocal_var = \"Initial value\".to_string();\n"
+  m: "            ^^^^^^^^^^^^                                   "
+- n: 133
+  l: "        let mut inner = || {\n"
+  m: "                ^^^^^         "
+- n: 134
+  l: "            nonlocal_var = \"Modified value\".to_string();\n"
+  m: "            ^^^^^^^^^^^^                                    "
+- n: 136
+  l: "        inner();\n"
+  m: "        ^^^^^     "
+- n: 138
+  l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
+  m: "    ^^^^^^^                                               "
+- n: 138
+  l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
+  m: "                                          ^^^^^^^^^^^^    "
+- n: 141
+  l: "fn inplace_operations() {\n"
+  m: "   ^^^^^^^^^^^^^^^^^^      "
+- n: 143
+  l: "    let mut x = 10;\n"
+  m: "            ^        "
+- n: 144
+  l: "    x += 5;\n"
+  m: "    ^        "
+- n: 145
+  l: "    x -= 3;\n"
+  m: "    ^        "
+- n: 146
+  l: "    x *= 2;\n"
+  m: "    ^        "
+- n: 147
+  l: "    x /= 4;\n"
+  m: "    ^        "
+- n: 148
+  l: "    println!(\"Inplace operations result: {}\", x);\n"
+  m: "    ^^^^^^^                                          "
+- n: 148
+  l: "    println!(\"Inplace operations result: {}\", x);\n"
+  m: "                                                ^    "
+- n: 152
+  l: "fn control_flow() {\n"
+  m: "   ^^^^^^^^^^^^      "
+- n: 155
+  l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
+  m: "       ^^^^^^^^                               "
+- n: 155
+  l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
+  m: "                     ^^^^^^^^                 "
+- n: 155
+  l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
+  m: "                               ^^^^^^         "
+- n: 156
+  l: "        println!(\"test_var is greater than 5\");\n"
+  m: "        ^^^^^^^                                    "
+- n: 158
+  l: "        println!(\"test_var is 5 or less\");\n"
+  m: "        ^^^^^^^                               "
+- n: 162
+  l: "    let mut counter = 0;\n"
+  m: "            ^^^^^^^       "
+- n: 163
+  l: "    while counter < 3 {\n"
+  m: "          ^^^^^^^        "
+- n: 164
+  l: "        println!(\"Counter is {}\", counter);\n"
+  m: "        ^^^^^^^                                "
+- n: 164
+  l: "        println!(\"Counter is {}\", counter);\n"
+  m: "                                    ^^^^^^^    "
+- n: 165
+  l: "        counter += 1;\n"
+  m: "        ^^^^^^^        "
+- n: 169
+  l: "    for i in 0..3 {\n"
+  m: "        ^            "
+- n: 170
+  l: "        println!(\"Loop iteration {}\", i);\n"
+  m: "        ^^^^^^^                              "
+- n: 170
+  l: "        println!(\"Loop iteration {}\", i);\n"
+  m: "                                        ^    "
+- n: 174
+  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
+  m: "        ^^^^                                                      "
+- n: 174
+  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
+  m: "               ^^^^                                               "
+- n: 174
+  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
+  m: "                     ^^^^                                         "
+- n: 174
+  l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
+  m: "                          ^^^^                                    "
+- n: 175
+  l: "    let reader = BufReader::new(file);\n"
+  m: "        ^^^^^^                          "
+- n: 175
+  l: "    let reader = BufReader::new(file);\n"
+  m: "                 ^^^^^^^^^              "
+- n: 175
+  l: "    let reader = BufReader::new(file);\n"
+  m: "                            ^^^         "
+- n: 175
+  l: "    let reader = BufReader::new(file);\n"
+  m: "                                ^^^^    "
+- n: 176
+  l: "    if let Some(line) = reader.lines().next() {\n"
+  m: "           ^^^^                                  "
+- n: 176
+  l: "    if let Some(line) = reader.lines().next() {\n"
+  m: "                ^^^^                             "
+- n: 176
+  l: "    if let Some(line) = reader.lines().next() {\n"
+  m: "                        ^^^^^^                   "
+- n: 177
+  l: "        println!(\"Read from file: {:?}\", line);\n"
+  m: "        ^^^^^^^                                    "
+- n: 177
+  l: "        println!(\"Read from file: {:?}\", line);\n"
+  m: "                                           ^^^^    "
+- n: 181
+  l: "#[tokio::main]\n"
+  m: "  ^^^^^         "
+- n: 181
+  l: "#[tokio::main]\n"
+  m: "         ^^^^   "
+- n: 182
+  l: "async fn async_main() -> Result<(), ()> {\n"
+  m: "         ^^^^^^^^^^                        "
+- n: 184
+  l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
+  m: "            ^^^^^^                                                "
+- n: 184
+  l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
+  m: "                     ^^^^^^                                       "
+- n: 184
+  l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
+  m: "                             ^^^^^^^                              "
+- n: 187
+  l: "    client.set(\"hello\", \"world\".into()).await?;\n"
+  m: "    ^^^^^^                                           "
+- n: 190
+  l: "    let result = client.get(\"hello\").await?;\n"
+  m: "        ^^^^^^                                  "
+- n: 190
+  l: "    let result = client.get(\"hello\").await?;\n"
+  m: "                 ^^^^^^                         "
+- n: 192
+  l: "    println!(\"got value from the server; result={:?}\", result);\n"
+  m: "    ^^^^^^^                                                        "
+- n: 192
+  l: "    println!(\"got value from the server; result={:?}\", result);\n"
+  m: "                                                         ^^^^^^    "
+- n: 194
+  l: "    Ok(())\n"
+  m: "    ^^      "
+- n: 197
+  l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
+  m: "             ^^^^^^^^^^^^                        "
+- n: 198
+  l: "    Ok(())\n"
+  m: "    ^^      "
+- n: 202
+  l: "fn main() {\n"
+  m: "   ^^^^      "
+- n: 203
+  l: "    use std::fs::read_to_string;\n"
+  m: "        ^^^                       "
+- n: 203
+  l: "    use std::fs::read_to_string;\n"
+  m: "             ^^                   "
+- n: 203
+  l: "    use std::fs::read_to_string;\n"
+  m: "                 ^^^^^^^^^^^^^^   "
+- n: 206
+  l: "    let square = |x: i32| -> i32 { x * x };\n"
+  m: "        ^^^^^^                               "
+- n: 206
+  l: "    let square = |x: i32| -> i32 { x * x };\n"
+  m: "                  ^                          "
+- n: 206
+  l: "    let square = |x: i32| -> i32 { x * x };\n"
+  m: "                                   ^         "
+- n: 206
+  l: "    let square = |x: i32| -> i32 { x * x };\n"
+  m: "                                       ^     "
+- n: 209
+  l: "    let multi_line_str = \"\n"
+  m: "        ^^^^^^^^^^^^^^       "
+- n: 215
+  l: "    let multiline_f_string = format!(\n"
+  m: "        ^^^^^^^^^^^^^^^^^^             "
+- n: 215
+  l: "    let multiline_f_string = format!(\n"
+  m: "                             ^^^^^^    "
+- n: 220
+  l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
+  m: "        ^^^^^^^^^^                                                                 "
+- n: 221
+  l: "    let raw_multiline_string = r#\"\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^         "
+- n: 224
+  l: "    let bytes_string = b\"This is a bytes string\";\n"
+  m: "        ^^^^^^^^^^^^                                 "
+- n: 225
+  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
+  m: "        ^^^^^^^^^^^^                                                              "
+- n: 225
+  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
+  m: "                       ^^^^^^                                                     "
+- n: 225
+  l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
+  m: "                                                                    ^^^^^^^^^^    "
+- n: 227
+  l: "    free_func();\n"
+  m: "    ^^^^^^^^^     "
+- n: 228
+  l: "    func_decorator(decorated_func);\n"
+  m: "    ^^^^^^^^^^^^^^                   "
+- n: 228
+  l: "    func_decorator(decorated_func);\n"
+  m: "                   ^^^^^^^^^^^^^^    "
+- n: 229
+  l: "    let mut instance = TestStruct {\n"
+  m: "            ^^^^^^^^                 "
+- n: 230
+  l: "        instance_var: String::new(),\n"
+  m: "                      ^^^^^^          "
+- n: 230
+  l: "        instance_var: String::new(),\n"
+  m: "                              ^^^     "
+- n: 232
+  l: "    instance.instance_method();\n"
+  m: "    ^^^^^^^^                     "
+- n: 233
+  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
+  m: "    ^^^^^^^^^^                                                  "
+- n: 233
+  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
+  m: "                ^^^^^^^^^^^^^^^^                                "
+- n: 233
+  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
+  m: "                                 ^^^^^^^^^^                     "
+- n: 233
+  l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
+  m: "                                             ^^^^^^^^^^^^^      "
+- n: 234
+  l: "    println!(\"{}\", square(5));\n"
+  m: "    ^^^^^^^                       "
+- n: 234
+  l: "    println!(\"{}\", square(5));\n"
+  m: "                     ^^^^^^       "
+- n: 235
+  l: "    modify_nonlocal();\n"
+  m: "    ^^^^^^^^^^^^^^^     "
+- n: 236
+  l: "    inplace_operations();\n"
+  m: "    ^^^^^^^^^^^^^^^^^^     "
+- n: 237
+  l: "    control_flow();\n"
+  m: "    ^^^^^^^^^^^^     "
+- n: 238
+  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
+  m: "    ^^^^^^^^                                          "
+- n: 238
+  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
+  m: "              ^^^^^^^^^^^^^^^                         "
+- n: 238
+  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
+  m: "                              ^^^^^^^^                "
+- n: 238
+  l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
+  m: "                                        ^^^^^^^^^^    "
+- n: 241
+  l: "#[cfg(feature = \"some-feature\")]\n"
+  m: "  ^^^                               "
+- n: 241
+  l: "#[cfg(feature = \"some-feature\")]\n"
+  m: "      ^^^^^^^                       "
+- n: 242
+  l: "#[allow(clippy::single_match_else)]\n"
+  m: "  ^^^^^                              "
+- n: 242
+  l: "#[allow(clippy::single_match_else)]\n"
+  m: "        ^^^^^^                       "
+- n: 242
+  l: "#[allow(clippy::single_match_else)]\n"
+  m: "                ^^^^^^^^^^^^^^^^^    "
+- n: 243
+  l: "#[cfg(doc)]\n"
+  m: "  ^^^        "
+- n: 243
+  l: "#[cfg(doc)]\n"
+  m: "      ^^^    "
+- n: 244
+  l: "fn function_with_attributes() {}\n"
+  m: "   ^^^^^^^^^^^^^^^^^^^^^^^^       "
+- n: 246
+  l: "#[cfg(test)]\n"
+  m: "  ^^^         "
+- n: 246
+  l: "#[cfg(test)]\n"
+  m: "      ^^^^    "
+- n: 247
+  l: "mod tests {\n"
+  m: "    ^^^^^    "
+- n: 250
+  l: "    #[test]\n"
+  m: "      ^^^^   "
+- n: 251
+  l: "    fn some_test() {\n"
+  m: "       ^^^^^^^^^      "
+- n: 252
+  l: "        assert_eq!(3, 3);\n"
+  m: "        ^^^^^^^^^          "
+- n: 255
+  l: "    #[rstest]\n"
+  m: "      ^^^^^^   "
+- n: 256
+  l: "    #[case(3)]\n"
+  m: "      ^^^^      "
+- n: 257
+  l: "    fn test_with_rstest(#[case] i: u64) {\n"
+  m: "       ^^^^^^^^^^^^^^^^                    "
+- n: 257
+  l: "    fn test_with_rstest(#[case] i: u64) {\n"
+  m: "                          ^^^^             "
+- n: 257
+  l: "    fn test_with_rstest(#[case] i: u64) {\n"
+  m: "                                ^          "
+- n: 258
+  l: "        assert_eq!(1337, 1337);\n"
+  m: "        ^^^^^^^^^                "
+- n: 262
+  l: "pub(crate) fn function_pub_crate() {}\n"
+  m: "              ^^^^^^^^^^^^^^^^^^       "
+- n: 264
+  l: "pub(self) fn function_pub_self() {}\n"
+  m: "             ^^^^^^^^^^^^^^^^^       "
+- n: 266
+  l: "pub(super) fn function_pub_super() {}\n"
+  m: "              ^^^^^^^^^^^^^^^^^^       "
+- n: 278
+  l: "#[repr(C)]\n"
+  m: "  ^^^^      "
+- n: 278
+  l: "#[repr(C)]\n"
+  m: "       ^    "
+- n: 284
+  l: "const fn const_function() {}\n"
+  m: "         ^^^^^^^^^^^^^^       "
+- n: 285
+  l: "pub const fn const_function_pub() {}\n"
+  m: "             ^^^^^^^^^^^^^^^^^^       "
+- n: 286
+  l: "pub(crate) const fn const_function_pub_crate() {}\n"
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
+- n: 287
+  l: "pub(self) const fn const_function_pub_self() {}\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^^^       "
+- n: 288
+  l: "pub(super) const fn const_function_pub_super() {}\n"
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
+- n: 290
+  l: "unsafe fn perform_unsafe_operation() {\n"
+  m: "          ^^^^^^^^^^^^^^^^^^^^^^^^      "
+- n: 291
+  l: "    let ptr = 0x1234 as *mut i32;\n"
+  m: "        ^^^                        "
+- n: 292
+  l: "    *ptr = 42;\n"
+  m: "     ^^^        "
+- n: 295
+  l: "extern \"C\" fn example_extern() -> i32 {\n"
+  m: "                ^^^^^^^^^^^^^^             "
+- n: 303
+  l: "    fn convert(&self) -> T;\n"
+  m: "       ^^^^^^^               "
+- n: 311
+  l: "    fn convert(&self) -> U {\n"
+  m: "       ^^^^^^^                "
+- n: 312
+  l: "        U::from(self.as_ref().to_owned())\n"
+  m: "        ^                                  "
+- n: 312
+  l: "        U::from(self.as_ref().to_owned())\n"
+  m: "           ^^^^                            "

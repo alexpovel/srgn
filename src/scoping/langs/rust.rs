@@ -88,6 +88,8 @@ pub enum PreparedRustQuery {
     ModTests,
     /// Type definitions (`struct`, `enum`, `union`).
     TypeDef,
+    /// Identifiers.
+    Identifier,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -293,6 +295,7 @@ impl From<PreparedRustQuery> for TSQuery {
                     @typedef
                     "
                 }
+                PreparedRustQuery::Identifier => "(identifier) @identifier",
             },
         )
         .expect("Prepared queries to be valid")

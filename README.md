@@ -1547,6 +1547,7 @@ Language scopes:
           - mod:              `mod` blocks
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
+          - identifier:       Identifiers
 
       --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.
