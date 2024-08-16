@@ -483,6 +483,11 @@ impl InScopeLinePart {
     Go::new(CodeQuery::Prepared(PreparedGoQuery::Const)),
 )]
 #[case(
+    "base.go_var",
+    include_str!("go/base.go"),
+    Go::new(CodeQuery::Prepared(PreparedGoQuery::Var)),
+)]
+#[case(
     "base.go_func",
     include_str!("go/base.go"),
     Go::new(CodeQuery::Prepared(PreparedGoQuery::Func)),

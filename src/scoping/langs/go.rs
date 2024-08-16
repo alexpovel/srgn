@@ -27,6 +27,8 @@ pub enum PreparedGoQuery {
     Interface,
     /// `const` specifications.
     Const,
+    /// `var` specifications.
+    Var,
     /// `func` definitions.
     Func,
     /// Method `func` definitions (`func (recv Recv) SomeFunc()`).
@@ -67,6 +69,7 @@ impl From<PreparedGoQuery> for TSQuery {
                     r"(type_declaration (type_spec type: (interface_type))) @interface"
                 }
                 PreparedGoQuery::Const => "(const_spec) @const",
+                PreparedGoQuery::Var => "(var_spec) @var",
                 PreparedGoQuery::Func => {
                     r"
                     [

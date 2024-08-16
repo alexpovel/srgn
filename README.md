@@ -1434,6 +1434,7 @@ Language scopes:
           - struct:      `struct` type definitions
           - interface:   `interface` type definitions
           - const:       `const` specifications
+          - var:         `var` specifications
           - func:        `func` definitions
           - method:      Method `func` definitions (`func (recv Recv) SomeFunc()`)
           - free-func:   Free `func` definitions (`func SomeFunc()`)

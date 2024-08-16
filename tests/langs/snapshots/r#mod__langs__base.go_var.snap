@@ -1,0 +1,34 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 63
+  l: "var testResults = make(map[string]bool)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 66
+  l: "var testChannel = make(chan TestCase, 10)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 69
+  l: "var testCases []TestCase\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^  "
+- n: 72
+  l: "var fixedTestCases [5]TestCase\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 213
+  l: "var complexNumber = 3 + 4i\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 217
+  l: "\truneValue    = '世'\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 218
+  l: "\trawString    = `This is a \"raw\" string`\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 219
+  l: "\tinterpString = \"Interpolated \\n string\"\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 231
+  l: "\tmu             sync.Mutex\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 232
+  l: "\tsharedResource int\n"
+  m: "  ^^^^^^^^^^^^^^^^^^  "
