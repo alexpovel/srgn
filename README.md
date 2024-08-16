@@ -144,11 +144,11 @@ $ cat music.rs | srgn --rust 'pub-enum' --rust 'type-identifier' 'Subgenre' # AN
 
 where only lines matching *all* criteria are returned, acting like a logical *and*
 between all conditions. Note that conditions are evaluated left-to-right, precluding
-some combinations from making sense: for example, searching for a `class` body inside a
-`comment` usually returns nothing. The inverse works as expected however:
+some combinations from making sense: for example, searching for a `class` body *inside*
+of `doc-strings` usually returns nothing. The inverse works as expected however:
 
 ```console
-$ cat birds.py | srgn --python 'class' --python 'doc-strings' # Earlier example
+$ cat birds.py | srgn --python 'class' --python 'doc-strings' # From earlier example
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 
