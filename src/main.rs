@@ -90,11 +90,6 @@ fn main() -> Result<()> {
     let mut actions = assemble_actions(&args)?;
     debug!("Done assembling actions.");
 
-    // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
-    // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
-    // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && !language_scopers.is_empty();
-
     let is_readable_stdin = grep_cli::is_readable_stdin();
     info!("Detected stdin as readable: {is_readable_stdin}.");
 
@@ -143,6 +138,11 @@ fn main() -> Result<()> {
             }))
         },
     };
+
+    // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
+    // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
+    // setting it apart from other utilities.
+    let search_mode = actions.is_empty() && !language_scopers.is_empty();
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
