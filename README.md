@@ -74,7 +74,7 @@ class Bird:
     @classmethod
     def from_egg(egg):
         """Create a bird from an egg."""
-        pass
+        pass  # No bird here yet!
 
 
 def register_bird(bird: Bird, db: Db) -> None:
@@ -151,6 +151,21 @@ of `doc-strings` usually returns nothing. The inverse works as expected however:
 $ cat birds.py | srgn --python 'class' --python 'doc-strings' # From earlier example
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
+
+```
+
+No docstrings outside `class` bodies are surfaced!
+
+The [`-j` flag](#help-output) changes this behavior: from intersecting left-to-right, to
+running all queries independently and joining their results, allowing you to search
+multiple ways at once:
+
+```console
+$ cat birds.py | srgn -j --python 'comments' --python 'doc-strings' 'bird[^s]'
+8:    """A bird!"""
+19:        """Create a bird from an egg."""
+20:        pass  # No bird here yet!
+24:    """Registers a bird."""
 
 ```
 
@@ -1353,6 +1368,19 @@ Options (global):
           If nothing is found to be in scope, fail.
           
           The default is to return the input unchanged (without failure).
+
+  -j, --join-language-scopes
+          Join (logical 'OR') multiple language scopes, instead of intersecting them.
+          
+          The default when multiple language scopes are given is to intersect their
+          scopes, left to right. For example, `--go func --go strings` will first
+          scope down to `func` bodies, then look for strings only within those. This
+          flag instead joins (in the set logic sense) all scopes. The example would
+          then scope any `func` bodies, and any strings, anywhere. Language scopers
+          can then also be given in any order.
+          
+          No effect if only a single language scope is given. Also does not affect
+          non-language scopers (regex pattern etc.), which always intersect.
 
       --line-numbers
           Prepend line numbers to output.

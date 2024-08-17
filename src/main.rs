@@ -582,9 +582,17 @@ fn apply(
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
-    for scoper in language_scopers {
-        builder.explode(scoper);
+
+    if args.options.join_language_scopes {
+        // All at once, as a slice: hits a specific, 'joining' `impl`
+        builder.explode(&language_scopers);
+    } else {
+        // One by one: hits a different, 'intersecting' `impl`
+        for scoper in language_scopers {
+            builder.explode(scoper);
+        }
     }
+
     builder.explode(general_scoper);
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
@@ -1064,6 +1072,19 @@ mod cli {
         /// The default is to return the input unchanged (without failure).
         #[arg(long, verbatim_doc_comment)]
         pub fail_none: bool,
+        /// Join (logical 'OR') multiple language scopes, instead of intersecting them.
+        ///
+        /// The default when multiple language scopes are given is to intersect their
+        /// scopes, left to right. For example, `--go func --go strings` will first
+        /// scope down to `func` bodies, then look for strings only within those. This
+        /// flag instead joins (in the set logic sense) all scopes. The example would
+        /// then scope any `func` bodies, and any strings, anywhere. Language scopers
+        /// can then also be given in any order.
+        ///
+        /// No effect if only a single language scope is given. Also does not affect
+        /// non-language scopers (regex pattern etc.), which always intersect.
+        #[arg(short('j'), long, verbatim_doc_comment)]
+        pub join_language_scopes: bool,
         /// Prepend line numbers to output.
         #[arg(long, verbatim_doc_comment)]
         pub line_numbers: bool,
