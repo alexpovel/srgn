@@ -193,6 +193,11 @@ impl InScopeLinePart {
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::SyncFunction)),
 )]
 #[case(
+    "base.ts_enum",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Enum)),
+)]
+#[case(
     "base.rs_strings",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Strings)),

@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "enum Color {Red, Green, Blue}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 237
+  l: "enum ShapeKind {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 238
+  l: "    Circle,\n"
+  m: ^^^^^^^^^^^^^
+- n: 239
+  l: "    Square,\n"
+  m: ^^^^^^^^^^^^^
+- n: 240
+  l: "}\n"
+  m: "^  "

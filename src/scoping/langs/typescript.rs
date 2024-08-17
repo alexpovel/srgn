@@ -22,6 +22,8 @@ pub enum PreparedTypeScriptQuery {
     AsyncFunction,
     /// Non-`async function` definitions.
     SyncFunction,
+    /// `enum` definitions.
+    Enum,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -45,6 +47,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                         (function_declaration) @func (#not-match? @func "^async")
                     )"#
                 }
+                PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
             },
         )
         .expect("Prepared queries to be valid")
