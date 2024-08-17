@@ -1,0 +1,151 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 57
+  l: "interface LabelledValue {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 58
+  l: "    label: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 59
+  l: "    optional?: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 60
+  l: "    readonly x: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 61
+  l: "}\n"
+  m: "^  "
+- n: 64
+  l: "interface SearchFunc {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 65
+  l: "    (source: string, subString: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "}\n"
+  m: "^  "
+- n: 69
+  l: "interface StringArray {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 70
+  l: "    [index: number]: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "}\n"
+  m: "^  "
+- n: 74
+  l: "interface ClockInterface {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 75
+  l: "    currentTime: Date;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 76
+  l: "    setTime(d: Date): void;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 77
+  l: "}\n"
+  m: "^  "
+- n: 88
+  l: "interface Shape {\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 89
+  l: "    color: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 90
+  l: "}\n"
+  m: "^  "
+- n: 92
+  l: "interface Square extends Shape {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 93
+  l: "    sideLength: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 94
+  l: "}\n"
+  m: "^  "
+- n: 97
+  l: "interface Counter {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 98
+  l: "    (start: number): string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 99
+  l: "    interval: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 100
+  l: "    reset(): void;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 101
+  l: "}\n"
+  m: "^  "
+- n: 198
+  l: "interface Lengthwise {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 199
+  l: "    length: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 200
+  l: "}\n"
+  m: "^  "
+- n: 243
+  l: "interface Square {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 244
+  l: "    kind: \"square\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 245
+  l: "    size: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 246
+  l: "}\n"
+  m: "^  "
+- n: 247
+  l: "interface Rectangle {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 248
+  l: "    kind: \"rectangle\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 249
+  l: "    width: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 250
+  l: "    height: number;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 251
+  l: "}\n"
+  m: "^  "
+- n: 291
+  l: "export interface StringValidator {\n"
+  m: "       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 292
+  l: "    isAcceptable(s: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 293
+  l: "}\n"
+  m: "^  "
+- n: 297
+  l: "    export interface StringValidator {\n"
+  m: "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 298
+  l: "        isAcceptable(s: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 299
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 304
+  l: "    interface ElementClass {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 305
+  l: "        render: any;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 306
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 348
+  l: "interface JsonObject { [key: string]: JsonValue }\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 349
+  l: "interface JsonArray extends Array<JsonValue> {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

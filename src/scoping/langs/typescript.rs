@@ -24,6 +24,8 @@ pub enum PreparedTypeScriptQuery {
     SyncFunction,
     /// `enum` definitions.
     Enum,
+    /// `interface` definitions.
+    Interface,
     /// `try`/`catch`/`finally` blocks.
     TryCatch,
     /// Variable declarations (`let`, `const`, `var`).
@@ -58,6 +60,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     )"#
                 }
                 PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
+                PreparedTypeScriptQuery::Interface => "(interface_declaration) @interface",
                 PreparedTypeScriptQuery::TryCatch => "(try_statement) @try",
                 PreparedTypeScriptQuery::VarDecl => "(variable_declarator) @var_decl",
                 PreparedTypeScriptQuery::Let => {

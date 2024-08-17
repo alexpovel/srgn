@@ -1619,6 +1619,7 @@ Language scopes:
           - async-function: `async function` definitions
           - sync-function:  Non-`async function` definitions
           - enum:           `enum` definitions
+          - interface:      `interface` definitions
           - try-catch:      `try`/`catch`/`finally` blocks
           - var-decl:       Variable declarations (`let`, `const`, `var`)
           - let:            `let` variable declarations
