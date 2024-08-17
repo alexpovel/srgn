@@ -3,110 +3,113 @@ source: tests/langs/mod.rs
 expression: inscope_parts
 ---
 - n: 2
-  l: "import * as fs from \"fs\";\n"
-  m: "                      ^^     "
-- n: 3
   l: "import 'some/package';\n"
   m: "         ^^^^^^^^^^^^     "
-- n: 4
-  l: "import { promisify } from \"util\";\n"
+- n: 3
+  l: "import { promisify } from 'util';\n"
   m: "                            ^^^^     "
-- n: 18
-  l: "    console.log(`Global testVar is now ${testVar}`);\n"
-  m: "                 ^^^^^^^^^^^^^^^^^^^^^^               "
-- n: 24
-  l: "        console.log(\"Function decorator called\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 31
-  l: "    console.log(\"Inside decorated function\");\n"
-  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 36
-  l: "    static classVar: string = \"Class variable\";\n"
-  m: "                                ^^^^^^^^^^^^^^     "
-- n: 41
-  l: "        this.classVar += \" updated\";\n"
-  m: "                           ^^^^^^^^     "
-- n: 42
-  l: "        console.log(`Class variable is now ${this.classVar}`);\n"
-  m: "                     ^^^^^^^^^^^^^^^^^^^^^^                     "
-- n: 46
-  l: "        this.instanceVar = 'Instance variable'; // Single quotes\n"
-  m: "                             ^^^^^^^^^^^^^^^^^                      "
-- n: 47
-  l: "        console.log(`Instance variable is ${this.instanceVar}`);\n"
-  m: "                     ^^^^^^^^^^^^^^^^^^^^^                        "
-- n: 51
-  l: "        console.log(\"Inside static method\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^      "
-- n: 80
-  l: "const multiLineStr: string = `\n"
-  m: "                              ^^"
-- n: 81
-  l: "This is a\n"
-  m: ^^^^^^^^^^^
-- n: 82
-  l: "multi-line string\n"
-  m: ^^^^^^^^^^^^^^^^^^^
-- n: 83
-  l: "for testing purposes.\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 86
-  l: "const multilineFString: string = `This is a\n"
-  m: "                                  ^^^^^^^^^^^"
-- n: 87
-  l: "multiline ${multiLineStr} string\n"
-  m: "^^^^^^^^^^                        "
-- n: 87
-  l: "multiline ${multiLineStr} string\n"
-  m: "                         ^^^^^^^^^"
-- n: 88
-  l: "spanning several lines\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 91
-  l: "const rawString: string = `This is a raw string with no special treatment for \\\\n`;\n"
-  m: "                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
-- n: 91
-  l: "const rawString: string = `This is a raw string with no special treatment for \\\\n`;\n"
-  m: "                                                                                  ^    "
-- n: 94
-  l: "const squaredNumbers: string[] = Array.from(Array(10).keys()).map(x => \"x\" + square(x));\n"
-  m: "                                                                         ^                  "
-- n: 104
-  l: "            throw new Error(\"Negative value\");\n"
-  m: "                              ^^^^^^^^^^^^^^      "
-- n: 106
-  l: "            throw new Error(\"Division by zero\");\n"
-  m: "                              ^^^^^^^^^^^^^^^^      "
+- n: 11
+  l: "let color: string = \"blue\";\n"
+  m: "                      ^^^^     "
+- n: 13
+  l: "let x: [string, number] = [\"hello\", 10];\n"
+  m: "                             ^^^^^          "
+- n: 21
+  l: "notSure = \"maybe a string instead\";\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^     "
+- n: 26
+  l: "    console.log(\"This is my warning message\");\n"
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^^^^      "
+- n: 29
+  l: "        throw new Error('This is an error');\n"
+  m: "                          ^^^^^^^^^^^^^^^^      "
+- n: 33
+  l: "        console.log('finally');\n"
+  m: "                      ^^^^^^^      "
+- n: 52
+  l: "let someValue: any = \"this is a string\";\n"
+  m: "                       ^^^^^^^^^^^^^^^^     "
 - n: 110
-  l: "        console.error(`Caught an exception: ${e.message}`);\n"
-  m: "                       ^^^^^^^^^^^^^^^^^^^^^                 "
-- n: 112
-  l: "        console.log(\"This will always be printed\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 123
-  l: "    console.log(`Inplace operations result: ${x}`);\n"
-  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
-- n: 129
-  l: "        console.log(\"testVar is greater than 5\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 131
-  l: "        console.log(\"testVar is 5 or less\");\n"
-  m: "                      ^^^^^^^^^^^^^^^^^^^^      "
-- n: 136
-  l: "        console.log(`Counter is ${counter}`);\n"
-  m: "                     ^^^^^^^^^^^               "
-- n: 141
-  l: "        console.log(`Loop iteration ${i}`);\n"
-  m: "                     ^^^^^^^^^^^^^^^         "
-- n: 146
-  l: "        const content = fs.readFileSync(__filename, 'utf8');\n"
-  m: "                                                      ^^^^      "
-- n: 147
-  l: "        console.log(\"Read from file:\", content.split('\\n')[0]);\n"
-  m: "                      ^^^^^^^^^^^^^^^                                 "
-- n: 149
-  l: "        console.error(\"Failed to read file\");\n"
-  m: "                        ^^^^^^^^^^^^^^^^^^^      "
-- n: 156
-  l: "    console.log(\"Async function executed\");\n"
-  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^      "
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: "                 ^^^^^^^                     "
+- n: 119
+  l: "        console.log(`${this.name} moved ${distanceInMeters}m.`);\n"
+  m: "                                 ^^^^^^^                          "
+- n: 119
+  l: "        console.log(`${this.name} moved ${distanceInMeters}m.`);\n"
+  m: "                                                           ^^     "
+- n: 126
+  l: "        console.log(\"Slithering...\");\n"
+  m: "                      ^^^^^^^^^^^^^      "
+- n: 134
+  l: "        console.log(\"Swimming...\");\n"
+  m: "                      ^^^^^^^^^^^      "
+- n: 139
+  l: "        console.log('swimming');\n"
+  m: "                      ^^^^^^^^      "
+- n: 181
+  l: "        console.log(\"Department name: \" + this.name);\n"
+  m: "                      ^^^^^^^^^^^^^^^^^                  "
+- n: 228
+  l: "type Easing = \"ease-in\" | \"ease-out\" | \"ease-in-out\";\n"
+  m: "                ^^^^^^^                                      "
+- n: 228
+  l: "type Easing = \"ease-in\" | \"ease-out\" | \"ease-in-out\";\n"
+  m: "                              ^^^^^^^^                       "
+- n: 228
+  l: "type Easing = \"ease-in\" | \"ease-out\" | \"ease-in-out\";\n"
+  m: "                                             ^^^^^^^^^^^     "
+- n: 244
+  l: "    kind: \"square\";\n"
+  m: "            ^^^^^^     "
+- n: 248
+  l: "    kind: \"rectangle\";\n"
+  m: "            ^^^^^^^^^     "
+- n: 266
+  l: "    T extends string ? \"string\" :\n"
+  m: "                         ^^^^^^      "
+- n: 267
+  l: "    T extends number ? \"number\" :\n"
+  m: "                         ^^^^^^      "
+- n: 268
+  l: "    T extends boolean ? \"boolean\" :\n"
+  m: "                          ^^^^^^^      "
+- n: 269
+  l: "    T extends undefined ? \"undefined\" :\n"
+  m: "                            ^^^^^^^^^      "
+- n: 270
+  l: "    T extends Function ? \"function\" :\n"
+  m: "                           ^^^^^^^^      "
+- n: 271
+  l: "    \"object\";\n"
+  m: "      ^^^^^^     "
+- n: 286
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: "                 ^^^^^^^                     "
+- n: 311
+  l: "    const result = await fetch('https://api.example.com/food');\n"
+  m: "                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
+- n: 327
+  l: "let x4 = \"hello\" as const;\n"
+  m: "           ^^^^^              "
+- n: 330
+  l: "type World = \"world\";\n"
+  m: "               ^^^^^     "
+- n: 331
+  l: "type Greeting = `hello ${World}`;\n"
+  m: "                 ^^^^^^            "
+- n: 334
+  l: "String.raw`Hi\\n${2+3}!`;\n"
+  m: "           ^^              "
+- n: 334
+  l: "String.raw`Hi\\n${2+3}!`;\n"
+  m: "                      ^    "
+- n: 337
+  l: "let multiline = `This is a\n"
+  m: "                 ^^^^^^^^^^^"
+- n: 338
+  l: "multiline\n"
+  m: ^^^^^^^^^^^
+- n: 339
+  l: "string`;\n"
+  m: "^^^^^^    "

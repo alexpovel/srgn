@@ -3,11 +3,8 @@ source: tests/langs/mod.rs
 expression: inscope_parts
 ---
 - n: 2
-  l: "import * as fs from \"fs\";\n"
-  m: "                      ^^     "
-- n: 3
   l: "import 'some/package';\n"
   m: "         ^^^^^^^^^^^^     "
-- n: 4
-  l: "import { promisify } from \"util\";\n"
+- n: 3
+  l: "import { promisify } from 'util';\n"
   m: "                            ^^^^     "

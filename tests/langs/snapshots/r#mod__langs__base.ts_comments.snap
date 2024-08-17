@@ -5,96 +5,168 @@ expression: inscope_parts
 - n: 1
   l: "// Import necessary modules\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 7
-  l: "// Global variable\n"
-  m: "^^^^^^^^^^^^^^^^^^  "
-- n: 10
-  l: "/**\n"
-  m: ^^^^^
-- n: 11
-  l: " * Proper function documentation.\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 12
-  l: " * @param a Bla\n"
-  m: ^^^^^^^^^^^^^^^^^
-- n: 13
-  l: " * @param b Bla.\n"
-  m: ^^^^^^^^^^^^^^^^^^
-- n: 14
-  l: " * @return Does not exist.\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 6
+  l: "// TypeScript Syntax Showcase\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 8
+  l: "// Basic Types\n"
+  m: "^^^^^^^^^^^^^^  "
 - n: 15
-  l: "*/\n"
-  m: "^^  "
-- n: 21
-  l: "// Decorator for functions\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 29
-  l: "// Function with a decorator\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 34
-  l: "// Class definition\n"
-  m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 46
-  l: "        this.instanceVar = 'Instance variable'; // Single quotes\n"
-  m: "                                                  ^^^^^^^^^^^^^^^^  "
+  l: "// Enum\n"
+  m: "^^^^^^^  "
+- n: 19
+  l: "// Any\n"
+  m: "^^^^^^  "
+- n: 24
+  l: "// Void\n"
+  m: "^^^^^^^  "
+- n: 37
+  l: "// Null and Undefined\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 39
+  l: "let n: null = null; // Some comment\n"
+  m: "                    ^^^^^^^^^^^^^^^  "
+- n: 41
+  l: "/* Some comment using different syntax */\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 43
+  l: "// Never\n"
+  m: "^^^^^^^^  "
+- n: 48
+  l: "// Object\n"
+  m: "^^^^^^^^^  "
+- n: 51
+  l: "// Type assertions\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
 - n: 56
-  l: "    readonly suiteId: number;    // Readonly property\n"
-  m: "                                 ^^^^^^^^^^^^^^^^^^^^  "
-- n: 58
-  l: "    testsCount?: number;         // Optional property\n"
-  m: "                                 ^^^^^^^^^^^^^^^^^^^^  "
-- n: 59
-  l: "    [propName: string]: any;     // Index signature for additional properties\n"
-  m: "                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 61
-  l: "    // Method to describe the test suite\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 64
-  l: "    // Method to execute the test suite\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+  l: "// Interface\n"
+  m: "^^^^^^^^^^^^  "
+- n: 63
+  l: "// Function Types\n"
+  m: "^^^^^^^^^^^^^^^^^  "
 - n: 68
-  l: "/*\n"
-  m: ^^^^
-- n: 69
-  l: "   This is a multi-line comment\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 70
-  l: "   It can span multiple lines\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 71
-  l: "*/\n"
-  m: "^^  "
+  l: "// Indexable Types\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
 - n: 73
-  l: "// Static method decorator\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 76
-  l: "// Lambda expression\n"
-  m: "^^^^^^^^^^^^^^^^^^^^  "
-- n: 79
-  l: "// Multiline string\n"
-  m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 93
-  l: "// List comprehension\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^  "
+  l: "// Class Types\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 87
+  l: "// Extending Interfaces\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
 - n: 96
-  l: "// Set and Dictionary comprehension\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 100
-  l: "// Exception handling\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^  "
-- n: 116
-  l: "// Inplace operations\n"
-  m: "^^^^^^^^^^^^^^^^^^^^^  "
-- n: 126
-  l: "// Control flow\n"
+  l: "// Hybrid Types\n"
   m: "^^^^^^^^^^^^^^^  "
-- n: 144
-  l: "    // with statement equivalent in TypeScript\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 153
-  l: "// Async function\n"
-  m: "^^^^^^^^^^^^^^^^^  "
-- n: 159
-  l: "// Main execution\n"
-  m: "^^^^^^^^^^^^^^^^^  "
+- n: 103
+  l: "// Class\n"
+  m: "^^^^^^^^  "
+- n: 114
+  l: "// Inheritance\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 143
+  l: "// Public, private, and protected modifiers\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 149
+  l: "// Readonly modifier\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 158
+  l: "// Accessors\n"
+  m: "^^^^^^^^^^^^  "
+- n: 171
+  l: "// Static Properties\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 176
+  l: "// Abstract Classes\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 186
+  l: "// Generics\n"
+  m: "^^^^^^^^^^^  "
+- n: 191
+  l: "// Generic Classes\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 197
+  l: "// Generic Constraints\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 207
+  l: "// Using Type Parameters in Generic Constraints\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 212
+  l: "// Union Types\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 214
+  l: "    // ...\n"
+  m: "    ^^^^^^  "
+- n: 217
+  l: "// Type Guards\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 222
+  l: "// Type Aliases\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 227
+  l: "// String Literal Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 230
+  l: "// Numeric Literal Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 232
+  l: "    // ...\n"
+  m: "    ^^^^^^  "
+- n: 236
+  l: "// Enum Member Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 242
+  l: "// Discriminated Unions\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 254
+  l: "// Index types\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 259
+  l: "// Mapped types\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 264
+  l: "// Conditional Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 273
+  l: "// Decorators\n"
+  m: "^^^^^^^^^^^^^  "
+- n: 290
+  l: "// Modules\n"
+  m: "^^^^^^^^^^  "
+- n: 295
+  l: "// Namespaces\n"
+  m: "^^^^^^^^^^^^^  "
+- n: 302
+  l: "// JSX\n"
+  m: "^^^^^^  "
+- n: 309
+  l: "// Async/Await\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 317
+  l: "// Optional Chaining\n"
+  m: "^^^^^^^^^^^^^^^^^^^^  "
+- n: 320
+  l: "// Nullish Coalescing\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 323
+  l: "// BigInt\n"
+  m: "^^^^^^^^^  "
+- n: 326
+  l: "// const assertions\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 329
+  l: "// Template Literal Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 333
+  l: "// Raw string\n"
+  m: "^^^^^^^^^^^^^  "
+- n: 336
+  l: "// Multi-line strings\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 341
+  l: "// Key Remapping in Mapped Types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 346
+  l: "// Recursive Type Aliases\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 351
+  l: "// Unknown\n"
+  m: "^^^^^^^^^^  "
