@@ -225,6 +225,58 @@ Heizoelrueckstossabdaempfung.
         ],
         Some("# A comment\nx = \"A string\"\ndef A(): return \"A string in a func\"\nclass A: pass"),
     )]
+    //
+    // Set up baseline for subsequent tests
+    #[case(
+        "only-matching-baseline-outside-search-mode",
+        false,
+        &[
+            "A",
+            "X",
+        ],
+        Some("A\nB"),
+    )]
+    #[case(
+        "only-matching-outside-search-mode",
+        false,
+        &[
+            "--only-matching",
+            "A",
+            "X",
+        ],
+        Some("A\nB"),
+    )]
+    #[case(
+        "line-numbers-outside-search-mode",
+        false,
+        &[
+            "--line-numbers",
+            "A",
+            "X",
+        ],
+        Some("A\nB"),
+    )]
+    #[case(
+        "only-matching-and-line-numbers-outside-search-mode",
+        false,
+        &[
+            "--only-matching",
+            "--line-numbers",
+            "A",
+            "X",
+        ],
+        Some("A\nB"),
+    )]
+    // Taking no action etc., but sure enough prints line numbers...
+    #[case(
+        "only-matching-and-line-numbers-no-actions-outside-search-mode",
+        false,
+        &[
+            "--only-matching",
+            "--line-numbers",
+        ],
+        Some("A\nB"),
+    )]
     fn test_cli(
         #[case] mut snapshot_name: String,
         #[case] os_dependent: bool,
