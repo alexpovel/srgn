@@ -1,9 +1,12 @@
-use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::scoping::langs::IGNORE;
+use std::fmt::Debug;
+use std::str::FromStr;
+
 use clap::ValueEnum;
 use const_format::formatcp;
-use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
+
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use crate::scoping::langs::IGNORE;
 
 /// The Python language.
 pub type Python = Language<PythonQuery>;

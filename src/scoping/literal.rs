@@ -1,8 +1,13 @@
-use super::{scope::RangesWithContext, Scoper};
-use crate::ranges::Ranges;
+use std::error::Error;
+use std::fmt;
+use std::ops::Range;
+
 use log::trace;
-use std::{error::Error, fmt, ops::Range};
 use unescape::unescape;
+
+use super::scope::RangesWithContext;
+use super::Scoper;
+use crate::ranges::Ranges;
 
 /// A literal string for querying.
 #[derive(Debug)]
@@ -62,16 +67,14 @@ impl Scoper for Literal {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::scoping::{
-        scope::{
-            RWScope, RWScopes,
-            Scope::{In, Out},
-        },
-        view::ScopedView,
-    };
-    use rstest::rstest;
     use std::borrow::Cow::Borrowed;
+
+    use rstest::rstest;
+
+    use super::*;
+    use crate::scoping::scope::Scope::{In, Out};
+    use crate::scoping::scope::{RWScope, RWScopes};
+    use crate::scoping::view::ScopedView;
 
     #[rstest]
     #[case(

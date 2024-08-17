@@ -1,19 +1,16 @@
+use std::ops::Range;
+
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
-use srgn::scoping::{
-    langs::{
-        csharp::{CSharp, PreparedCSharpQuery},
-        go::{Go, PreparedGoQuery},
-        hcl::{Hcl, PreparedHclQuery},
-        python::{PreparedPythonQuery, Python},
-        rust::{PreparedRustQuery, Rust},
-        typescript::{PreparedTypeScriptQuery, TypeScript},
-        CodeQuery, LanguageScoper,
-    },
-    scope::Scope,
-    view::ScopedViewBuilder,
-};
-use std::ops::Range;
+use srgn::scoping::langs::csharp::{CSharp, PreparedCSharpQuery};
+use srgn::scoping::langs::go::{Go, PreparedGoQuery};
+use srgn::scoping::langs::hcl::{Hcl, PreparedHclQuery};
+use srgn::scoping::langs::python::{PreparedPythonQuery, Python};
+use srgn::scoping::langs::rust::{PreparedRustQuery, Rust};
+use srgn::scoping::langs::typescript::{PreparedTypeScriptQuery, TypeScript};
+use srgn::scoping::langs::{CodeQuery, LanguageScoper};
+use srgn::scoping::scope::Scope;
+use srgn::scoping::view::ScopedViewBuilder;
 
 /// A type that when serialized, will visually highlight the portions of a line which
 /// were matched.

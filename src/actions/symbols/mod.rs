@@ -1,9 +1,11 @@
+use std::collections::VecDeque;
+
+#[cfg(test)]
+use enum_iterator::{all, Sequence};
+
 #[cfg(all(doc, feature = "german"))]
 use super::German;
 use crate::actions::Action;
-#[cfg(test)]
-use enum_iterator::{all, Sequence};
-use std::collections::VecDeque;
 
 pub mod inversion;
 
@@ -223,8 +225,9 @@ fn replace(stack: &mut Vec<char>, symbol: Symbol) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rstest::rstest;
+
+    use super::*;
 
     #[rstest]
     #[case("", "")]

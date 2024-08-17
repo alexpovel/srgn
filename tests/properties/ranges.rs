@@ -1,7 +1,9 @@
-use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
+use std::ops::Range;
+
 use proptest::prelude::*;
 use srgn::ranges::Ranges;
-use std::ops::Range;
+
+use crate::properties::DEFAULT_NUMBER_OF_TEST_CASES;
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(DEFAULT_NUMBER_OF_TEST_CASES))]

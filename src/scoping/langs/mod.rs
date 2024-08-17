@@ -1,14 +1,19 @@
-use super::{scope::RangesWithContext, Scoper};
+use std::marker::PhantomData;
+use std::str::FromStr;
+
+use log::{debug, info, trace};
+pub use tree_sitter::{
+    Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
+};
+
+use super::scope::RangesWithContext;
+use super::Scoper;
+use crate::find::Find;
+use crate::ranges::Ranges;
 #[cfg(doc)]
 use crate::scoping::{
     scope::Scope::{In, Out},
     view::ScopedViewBuilder,
-};
-use crate::{find::Find, ranges::Ranges};
-use log::{debug, info, trace};
-use std::{marker::PhantomData, str::FromStr};
-pub use tree_sitter::{
-    Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
 };
 
 /// C#.

@@ -11,19 +11,22 @@ mod symbols;
 mod titlecase;
 mod upper;
 
-use crate::scoping::scope::ScopeContext;
+use std::error::Error;
+use std::fmt;
+
 pub use deletion::Deletion;
 #[cfg(feature = "german")]
 pub use german::German;
 pub use lower::Lower;
 pub use normalization::Normalization;
 pub use replace::{Replacement, ReplacementError};
-use std::{error::Error, fmt};
 pub use style::Style;
 #[cfg(feature = "symbols")]
 pub use symbols::{inversion::Symbols as SymbolsInversion, Symbols};
 pub use titlecase::Titlecase;
 pub use upper::Upper;
+
+use crate::scoping::scope::ScopeContext;
 
 /// An action in the processing pipeline.
 ///

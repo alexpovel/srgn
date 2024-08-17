@@ -1,4 +1,6 @@
-use std::{fs::File, io::Read, path::Path};
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 
 /// A trait to facilitate finding corresponding, in one sense or another, files.
 ///
@@ -93,9 +95,11 @@ pub(crate) fn find_interpreter(source: &mut impl Read) -> Option<String> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use rstest::rstest;
     use std::io::Cursor;
+
+    use rstest::rstest;
+
+    use super::*;
 
     #[rstest]
     #[case("", None)]

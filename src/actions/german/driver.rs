@@ -1,18 +1,16 @@
-use crate::actions::{
-    german::{
-        machine::{StateMachine, Transition},
-        words::{Replace, Replacement, WordCasing},
-    },
-    Action,
-};
+use std::sync::LazyLock;
+
 use cached::proc_macro::cached;
 use cached::SizedCache;
 use decompound::{decompound, DecompositionOptions};
 use itertools::Itertools;
 use itertools::MinMaxResult::{MinMax, NoElements, OneElement};
 use log::{debug, trace};
-use std::sync::LazyLock;
 use unicode_titlecase::StrTitleCase;
+
+use crate::actions::german::machine::{StateMachine, Transition};
+use crate::actions::german::words::{Replace, Replacement, WordCasing};
+use crate::actions::Action;
 
 /// German language action, responsible for Umlauts and Eszett.
 ///
@@ -558,8 +556,9 @@ fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rstest::rstest;
+
+    use super::*;
 
     #[test]
     fn test_word_list_is_not_filtered() {

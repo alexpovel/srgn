@@ -4,13 +4,14 @@
 #[cfg(test)]
 #[cfg(feature = "all")]
 mod tests {
+    use std::path::{Path, PathBuf};
+
     use anyhow::Context;
     use assert_cmd::Command;
     use insta::with_settings;
     use itertools::Itertools;
     use rstest::rstest;
     use serde::Serialize;
-    use std::path::{Path, PathBuf};
     use tempfile::TempDir;
 
     #[derive(Debug, Serialize)]

@@ -1,0 +1,2 @@
+group_imports = "StdExternalCrate" # Unstable
+imports_granularity = "Module"     # Unstable

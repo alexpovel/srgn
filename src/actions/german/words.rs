@@ -1,5 +1,7 @@
+use std::fmt::Display;
+use std::ops::Range;
+
 use itertools::Itertools;
-use std::{fmt::Display, ops::Range};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum WordCasing {
@@ -216,10 +218,11 @@ impl Replace for String {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::WordCasing::*;
     use super::WordCasingError::*;
     use super::*;
-    use rstest::rstest;
 
     #[rstest]
     // Lowercase
@@ -253,8 +256,9 @@ mod tests {
 #[cfg(test)]
 #[allow(clippy::ignored_unit_patterns)] // in `proptest` macro, cannot be avoided
 mod properties {
-    use super::*;
     use proptest::prelude::*;
+
+    use super::*;
 
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(10_000))]

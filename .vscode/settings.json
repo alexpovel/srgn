@@ -2,5 +2,8 @@
     "[markdown]": {
         // README.md has tests which are sensitive to all whitespace being present
         "files.trimTrailingWhitespace": false,
-    }
+    },
+    "rust-analyzer.rustfmt.extraArgs": [
+        "+nightly", // Relying on some unstable features, see `rustfmt.toml`
+    ],
 }

@@ -1,5 +1,6 @@
-use super::Action;
 use titlecase::titlecase;
+
+use super::Action;
 
 /// Renders in titlecase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

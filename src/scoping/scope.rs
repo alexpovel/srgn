@@ -1,11 +1,13 @@
-use super::regex::CaptureGroup;
-use crate::{
-    ranges::Ranges,
-    scoping::scope::Scope::{In, Out},
-};
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::ops::Range;
+
 use itertools::Itertools;
 use log::{debug, trace};
-use std::{borrow::Cow, collections::HashMap, ops::Range};
+
+use super::regex::CaptureGroup;
+use crate::ranges::Ranges;
+use crate::scoping::scope::Scope::{In, Out};
 
 /// Indicates whether a given string part is in scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -216,8 +218,9 @@ pub enum ScopeContext<'viewee> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rstest::rstest;
+
+    use super::*;
 
     #[rstest]
     // Base cases

@@ -1,6 +1,7 @@
-use super::Action;
 use unicode_categories::UnicodeCategories;
 use unicode_normalization::UnicodeNormalization;
+
+use super::Action;
 
 /// Performs Unicode normalization.
 ///

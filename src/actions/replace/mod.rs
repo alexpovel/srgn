@@ -1,9 +1,12 @@
-use super::{Action, ActionError};
-use crate::scoping::scope::ScopeContext;
+use std::error::Error;
+use std::fmt;
+
 use log::{debug, info};
-use std::{error::Error, fmt};
 use unescape::unescape;
 use variables::{inject_variables, VariableExpressionError};
+
+use super::{Action, ActionError};
+use crate::scoping::scope::ScopeContext;
 
 /// Items for dealing with variables in replacement values.
 pub mod variables;

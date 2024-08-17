@@ -1,10 +1,9 @@
+use std::fmt::Debug;
+use std::ops::{Range, Sub};
+use std::slice::{Iter, IterMut};
+
 use itertools::Itertools;
 use log::{debug, trace};
-use std::{
-    fmt::Debug,
-    ops::{Range, Sub},
-    slice::{Iter, IterMut},
-};
 
 /// A collection of [`Range`]s.
 ///
@@ -301,9 +300,10 @@ impl<Idx: Ord + Copy + Debug> Sub for Ranges<Idx> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use proptest::prelude::*;
     use rstest::rstest;
+
+    use super::*;
 
     #[rstest]
     // For a fixed-size `left` interval, watch as the `right` interval slides past,

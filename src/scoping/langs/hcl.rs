@@ -1,9 +1,13 @@
-use super::{tree_sitter_hcl, CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
-use crate::{find::Find, scoping::langs::IGNORE};
+use std::fmt::Debug;
+use std::str::FromStr;
+
 use clap::ValueEnum;
 use const_format::formatcp;
-use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
+
+use super::{tree_sitter_hcl, CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use crate::find::Find;
+use crate::scoping::langs::IGNORE;
 
 /// The Hashicorp Configuration Language.
 pub type Hcl = Language<HclQuery>;

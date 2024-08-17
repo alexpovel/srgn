@@ -12,35 +12,30 @@
 
 #[cfg(all(test, feature = "all"))]
 mod tests {
-    use assert_cmd::Command;
-    use comrak::{
-        nodes::{NodeCodeBlock, NodeValue},
-        parse_document, Arena, ComrakOptions,
-    };
     use core::{fmt, panic};
+    use std::cell::RefCell;
+    use std::collections::{HashMap, VecDeque};
+    use std::io::Write;
+    use std::mem::ManuallyDrop;
+    use std::rc::Rc;
+
+    use assert_cmd::Command;
+    use comrak::nodes::{NodeCodeBlock, NodeValue};
+    use comrak::{parse_document, Arena, ComrakOptions};
     use fancy_regex::Regex;
     use itertools::Itertools;
-    use nom::{
-        branch::alt,
-        bytes::complete::{escaped, is_not, tag, take_until, take_while1},
-        character::complete::{
-            alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending,
-            none_of, space0, space1,
-        },
-        combinator::{cut, map, opt},
-        error::ParseError,
-        multi::{many0, many1, separated_list1},
-        sequence::{delimited, preceded, tuple},
-        Finish, IResult,
+    use nom::branch::alt;
+    use nom::bytes::complete::{escaped, is_not, tag, take_until, take_while1};
+    use nom::character::complete::{
+        alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending, none_of,
+        space0, space1,
     };
+    use nom::combinator::{cut, map, opt};
+    use nom::error::ParseError;
+    use nom::multi::{many0, many1, separated_list1};
+    use nom::sequence::{delimited, preceded, tuple};
+    use nom::{Finish, IResult};
     use pretty_assertions::assert_eq;
-    use std::{
-        cell::RefCell,
-        collections::{HashMap, VecDeque},
-        io::Write,
-        mem::ManuallyDrop,
-        rc::Rc,
-    };
     use tempfile::NamedTempFile;
     use unescape::unescape;
 

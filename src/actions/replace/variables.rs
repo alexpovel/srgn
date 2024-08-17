@@ -1,6 +1,10 @@
-use crate::scoping::regex::CaptureGroup;
+use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
+
 use log::trace;
-use std::{collections::HashMap, error::Error, fmt};
+
+use crate::scoping::regex::CaptureGroup;
 
 type Variables<'a> = HashMap<CaptureGroup, &'a str>;
 
@@ -282,8 +286,9 @@ impl Error for VariableExpressionError {}
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use rstest::*;
+
+    use super::*;
 
     #[fixture]
     fn variables() -> Variables<'static> {

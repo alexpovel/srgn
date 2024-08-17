@@ -1,11 +1,10 @@
-use super::scope::RangesWithContext;
-use super::scope::ScopeContext;
-use super::Scoper;
-use crate::RegexPattern;
-use crate::GLOBAL_SCOPE;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
+
+use super::scope::{RangesWithContext, ScopeContext};
+use super::Scoper;
+use crate::{RegexPattern, GLOBAL_SCOPE};
 
 /// A regular expression for querying.
 #[derive(Debug)]
@@ -131,16 +130,14 @@ impl Scoper for Regex {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::scoping::{
-        scope::{
-            RWScope, RWScopes,
-            Scope::{In, Out},
-        },
-        view::{ScopedView, ScopedViewBuilder},
-    };
-    use rstest::rstest;
     use std::borrow::Cow::Borrowed as B;
+
+    use rstest::rstest;
+
+    use super::*;
+    use crate::scoping::scope::Scope::{In, Out};
+    use crate::scoping::scope::{RWScope, RWScopes};
+    use crate::scoping::view::{ScopedView, ScopedViewBuilder};
 
     /// Get 'Capture Group 0', the default which is always present.
     #[allow(clippy::unnecessary_wraps)]
@@ -467,14 +464,13 @@ mod tests {
     mod fuzzyish {
         use std::time::{Duration, Instant};
 
-        use crate::scoping::scope::ROScope;
-
-        use super::*;
-
         use log::info;
         use rand;
         use rand::seq::SliceRandom;
         use rand::Rng;
+
+        use super::*;
+        use crate::scoping::scope::ROScope;
 
         fn generate_random_regex(mut rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
             let atoms: [&str; 7] = [".", "\\d", "\\D", "\\w", "\\W", "\\s", "\\S"];

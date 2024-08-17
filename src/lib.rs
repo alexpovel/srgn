@@ -141,6 +141,9 @@
 //! ```
 
 #[cfg(doc)]
+use std::ops::Range;
+
+#[cfg(doc)]
 use crate::{
     actions::Action,
     scoping::{
@@ -149,8 +152,6 @@ use crate::{
         Scoper,
     },
 };
-#[cfg(doc)]
-use std::ops::Range;
 
 /// Main components around [`Action`]s.
 pub mod actions;

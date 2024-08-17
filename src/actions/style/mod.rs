@@ -1,5 +1,6 @@
-use super::Action;
 pub use colored::{Color, ColoredString, Colorize, Styles};
+
+use super::Action;
 
 /// Renders in the given style.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

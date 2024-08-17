@@ -1,9 +1,9 @@
-use super::{
-    LetterCasing::Lower, LetterCasing::Upper, SpecialCharacter, SpecialCharacter::Eszett,
-    SpecialCharacter::Umlaut, Umlaut::Ae, Umlaut::Oe, Umlaut::Ue, Word,
-};
-
 use log::trace;
+
+use super::LetterCasing::{Lower, Upper};
+use super::SpecialCharacter::{Eszett, Umlaut};
+use super::Umlaut::{Ae, Oe, Ue};
+use super::{SpecialCharacter, Word};
 
 #[derive(Default, Debug)]
 enum State {

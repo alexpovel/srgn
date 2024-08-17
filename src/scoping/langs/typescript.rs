@@ -1,7 +1,10 @@
-use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use std::fmt::Debug;
+use std::str::FromStr;
+
 use clap::ValueEnum;
-use std::{fmt::Debug, str::FromStr};
 use tree_sitter::QueryError;
+
+use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
 
 /// The TypeScript language.
 pub type TypeScript = Language<TypeScriptQuery>;

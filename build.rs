@@ -39,12 +39,10 @@ mod hcl {
 #[cfg(feature = "german")]
 #[allow(unreachable_pub)] // Cannot get this to play nice with clippy
 mod natural_languages {
+    use std::env;
+    use std::fs::{self, File};
     use std::io::{BufReader, BufWriter};
-    use std::{
-        env,
-        fs::{self, File},
-        path::Path,
-    };
+    use std::path::Path;
 
     pub fn generate_word_lists() {
         let base_source_path = Path::new("data/word-lists");
@@ -80,12 +78,13 @@ mod natural_languages {
 
     #[cfg(feature = "german")]
     mod german {
-        use decompound::{decompound, DecompositionOptions};
-        use rayon::prelude::*;
         use std::collections::HashSet;
         use std::env;
         use std::io::{BufReader, BufWriter, Read, Write};
         use std::sync::Mutex;
+
+        use decompound::{decompound, DecompositionOptions};
+        use rayon::prelude::*;
 
         macro_rules! time_it {
             ($name:expr, $e:expr) => {{

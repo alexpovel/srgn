@@ -1,5 +1,6 @@
-use super::Action;
 use log::info;
+
+use super::Action;
 
 /// Deletes everything in the input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

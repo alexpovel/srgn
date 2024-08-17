@@ -1,11 +1,13 @@
+use log::trace;
+
 use super::scope::RangesWithContext;
-use crate::scoping::{literal::Literal, ROScopes, Scoper};
+use crate::scoping::literal::Literal;
+use crate::scoping::{ROScopes, Scoper};
 #[cfg(doc)]
 use crate::{
     actions::Deletion,
     scoping::scope::Scope::{In, Out},
 };
-use log::trace;
 
 /// Fixes `\r` being [`In`] scope while `\n` is actually [`Out`].
 ///
@@ -57,16 +59,14 @@ impl Scoper for DosFix {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::scoping::{
-        scope::{
-            RWScope, RWScopes,
-            Scope::{In, Out},
-        },
-        view::ScopedView,
-    };
-    use rstest::rstest;
     use std::borrow::Cow::Borrowed;
+
+    use rstest::rstest;
+
+    use super::*;
+    use crate::scoping::scope::Scope::{In, Out};
+    use crate::scoping::scope::{RWScope, RWScopes};
+    use crate::scoping::view::ScopedView;
 
     #[rstest]
     #[case("a", ScopedView::new(RWScopes(vec![RWScope(In(Borrowed("a"), None))])))]

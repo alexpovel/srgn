@@ -3,60 +3,37 @@
 //! It mainly draws from `srgn`, the library, for actual implementations. This file then
 //! deals with CLI argument handling, I/O, threading, and more.
 
+use std::error::Error;
+use std::fs::File;
+use std::io::{self, stdout, Read, Write};
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::{env, fmt};
+
 use anyhow::{Context, Result};
-use colored::Color;
-use colored::Colorize;
-use colored::Styles;
-use ignore::WalkBuilder;
-use ignore::WalkState;
+use colored::{Color, Colorize, Styles};
+use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
-use log::error;
-use log::trace;
-use log::{debug, info, LevelFilter};
+use log::{debug, error, info, trace, LevelFilter};
 use pathdiff::diff_paths;
-use srgn::actions::ActionError;
-use srgn::actions::Deletion;
 #[cfg(feature = "german")]
 use srgn::actions::German;
-use srgn::actions::Lower;
-use srgn::actions::Normalization;
-use srgn::actions::Replacement;
-use srgn::actions::Style;
-use srgn::actions::Titlecase;
-use srgn::actions::Upper;
+use srgn::actions::{
+    Action, ActionError, Deletion, Lower, Normalization, Replacement, Style, Titlecase, Upper,
+};
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::scoping::langs::csharp::{CSharp, CSharpQuery};
+use srgn::scoping::langs::go::{Go, GoQuery};
+use srgn::scoping::langs::hcl::{Hcl, HclQuery};
+use srgn::scoping::langs::python::{Python, PythonQuery};
+use srgn::scoping::langs::rust::{Rust, RustQuery};
+use srgn::scoping::langs::typescript::{TypeScript, TypeScriptQuery};
 use srgn::scoping::langs::LanguageScoper;
-use srgn::scoping::literal::LiteralError;
-use srgn::scoping::regex::RegexError;
-use srgn::{
-    actions::Action,
-    scoping::{
-        langs::{
-            csharp::{CSharp, CSharpQuery},
-            go::{Go, GoQuery},
-            hcl::{Hcl, HclQuery},
-            python::{Python, PythonQuery},
-            rust::{Rust, RustQuery},
-            typescript::{TypeScript, TypeScriptQuery},
-        },
-        literal::Literal,
-        regex::Regex,
-        view::ScopedViewBuilder,
-        Scoper,
-    },
-};
-use std::io::Read;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::{
-    env,
-    error::Error,
-    fmt,
-    fs::File,
-    io::{self, stdout, Write},
-};
+use srgn::scoping::literal::{Literal, LiteralError};
+use srgn::scoping::regex::{Regex, RegexError};
+use srgn::scoping::view::ScopedViewBuilder;
+use srgn::scoping::Scoper;
 
 #[allow(clippy::too_many_lines)] // Only slightly above.
 fn main() -> Result<()> {
@@ -940,20 +917,18 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
-    use clap::{builder::ArgPredicate, ArgAction, Command, CommandFactory, Parser};
-    use clap_complete::{generate, Generator, Shell};
-    use srgn::{
-        scoping::langs::{
-            csharp::{CustomCSharpQuery, PreparedCSharpQuery},
-            go::{CustomGoQuery, PreparedGoQuery},
-            hcl::{CustomHclQuery, PreparedHclQuery},
-            python::{CustomPythonQuery, PreparedPythonQuery},
-            rust::{CustomRustQuery, PreparedRustQuery},
-            typescript::{CustomTypeScriptQuery, PreparedTypeScriptQuery},
-        },
-        GLOBAL_SCOPE,
-    };
     use std::num::NonZero;
+
+    use clap::builder::ArgPredicate;
+    use clap::{ArgAction, Command, CommandFactory, Parser};
+    use clap_complete::{generate, Generator, Shell};
+    use srgn::scoping::langs::csharp::{CustomCSharpQuery, PreparedCSharpQuery};
+    use srgn::scoping::langs::go::{CustomGoQuery, PreparedGoQuery};
+    use srgn::scoping::langs::hcl::{CustomHclQuery, PreparedHclQuery};
+    use srgn::scoping::langs::python::{CustomPythonQuery, PreparedPythonQuery};
+    use srgn::scoping::langs::rust::{CustomRustQuery, PreparedRustQuery};
+    use srgn::scoping::langs::typescript::{CustomTypeScriptQuery, PreparedTypeScriptQuery};
+    use srgn::GLOBAL_SCOPE;
 
     /// Main CLI entrypoint.
     ///
@@ -1346,10 +1321,12 @@ mod cli {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::env;
+
     use env_logger::DEFAULT_FILTER_ENV;
     use log::LevelFilter;
-    use std::env;
+
+    use super::*;
 
     /// This test has to run **sequentially**, as env variable access and manipulation
     /// is *not* thread-safe.
