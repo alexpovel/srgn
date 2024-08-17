@@ -1,0 +1,3 @@
+This project includes a fork of software developed by the [Tree-sitter Grammars]
+(https://github.com/tree-sitter-grammars) organization. See
+[tree-sitter-hcl](src/scoping/langs/tree_sitter_hcl/README.md) for more.

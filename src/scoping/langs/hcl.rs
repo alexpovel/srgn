@@ -1,4 +1,4 @@
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{tree_sitter_hcl, CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::{find::Find, scoping::langs::IGNORE};
 use clap::ValueEnum;
 use const_format::formatcp;

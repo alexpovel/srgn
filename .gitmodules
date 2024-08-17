@@ -7,3 +7,7 @@
 [submodule "benches/pydantic"]
 	path = benches/pydantic
 	url = git@github.com:pydantic/pydantic.git
+[submodule "tree_sitter_hcl"]
+	path = src/scoping/langs/tree_sitter_hcl/upstream
+	# Need https for GitHub runners etc. (no ssh keys) to clone
+	url = https://github.com/alexpovel/tree-sitter-hcl.git
