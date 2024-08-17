@@ -1320,7 +1320,7 @@ Standalone Actions (only usable alone):
           [aliases: squeeze-repeats]
 
 Options (global):
-      --glob <GLOB>
+  -G, --glob <GLOB>
           Glob of files to work on (instead of reading stdin).
           
           If processing occurs, it is done in-place, overwriting originals.
@@ -1388,7 +1388,7 @@ Options (global):
       --only-matching
           Print only matching lines.
 
-      --hidden
+  -H, --hidden
           Do not ignore hidden files and directories.
 
       --gitignored

@@ -1034,7 +1034,7 @@ mod cli {
         /// <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
         ///
         /// Names of processed files are written to stdout.
-        #[arg(long, verbatim_doc_comment, alias = "files")]
+        #[arg(short('G'), long, verbatim_doc_comment, alias = "files")]
         pub glob: Option<glob::Pattern>,
         /// Fail if working on files (e.g. globbing is requested) but none are found.
         #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
@@ -1092,7 +1092,7 @@ mod cli {
         #[arg(long, verbatim_doc_comment)]
         pub only_matching: bool,
         /// Do not ignore hidden files and directories.
-        #[arg(long, verbatim_doc_comment)]
+        #[arg(short('H'), long, verbatim_doc_comment)]
         pub hidden: bool,
         /// Do not ignore `.gitignore`d files and directories.
         #[arg(long, verbatim_doc_comment)]
