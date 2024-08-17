@@ -1,0 +1,148 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 81
+  l: "    setTime(d: Date) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^"
+- n: 82
+  l: "        this.currentTime = d;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 83
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 84
+  l: "    constructor(h: number, m: number) { }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 106
+  l: "    constructor(message: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 107
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 109
+  l: "    greet() {\n"
+  m: "    ^^^^^^^^^^^"
+- n: 110
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 111
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 117
+  l: "    constructor(theName: string) { this.name = theName; }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 118
+  l: "    move(distanceInMeters: number = 0) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 119
+  l: "        console.log(`${this.name} moved ${distanceInMeters}m.`);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 120
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 124
+  l: "    constructor(name: string) { super(name); }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 125
+  l: "    move(distanceInMeters = 5) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 126
+  l: "        console.log(\"Slithering...\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 127
+  l: "        super.move(distanceInMeters);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 128
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 132
+  l: "    constructor(name: string) { super(name); }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 133
+  l: "    move(distanceInMeters = 5) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 134
+  l: "        console.log(\"Swimming...\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 135
+  l: "        super.move(distanceInMeters);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 136
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 138
+  l: "    swim() {\n"
+  m: "    ^^^^^^^^^^"
+- n: 139
+  l: "        console.log('swimming');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 140
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 146
+  l: "    constructor(name: string) { this.name = name; }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 153
+  l: "    constructor (theName: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 154
+  l: "        this.name = theName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 155
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 162
+  l: "    get fullName(): string {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 163
+  l: "        return this._fullName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 164
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 166
+  l: "    set fullName(newName: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 167
+  l: "        this._fullName = newName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 168
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 178
+  l: "    constructor(public name: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 179
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 180
+  l: "    printName(): void {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^"
+- n: 181
+  l: "        console.log(\"Department name: \" + this.name);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 182
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 282
+  l: "    constructor(message: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 283
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 284
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 285
+  l: "    greet() {\n"
+  m: "    ^^^^^^^^^^^"
+- n: 286
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 287
+  l: "    }\n"
+  m: "^^^^^  "

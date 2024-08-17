@@ -1618,6 +1618,7 @@ Language scopes:
           - function:       Any `function` definitions
           - async-function: `async function` definitions
           - sync-function:  Non-`async function` definitions
+          - method:         Method definitions
           - class:          `class` definitions
           - enum:           `enum` definitions
           - interface:      `interface` definitions
