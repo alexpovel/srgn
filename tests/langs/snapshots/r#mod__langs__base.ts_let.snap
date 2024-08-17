@@ -1,0 +1,67 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 9
+  l: "let isDone: boolean = false;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 10
+  l: "let decimal: number = 6;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 11
+  l: "let color: string = \"blue\";\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 12
+  l: "let list: number[] = [1, 2, 3];\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 13
+  l: "let x: [string, number] = [\"hello\", 10];\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 17
+  l: "let c: Color = Color.Green;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 20
+  l: "let notSure: any = 4;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 38
+  l: "let u: undefined = undefined;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 39
+  l: "let n: null = null; // Some comment\n"
+  m: "^^^^^^^^^^^^^^^^^^^                  "
+- n: 52
+  l: "let someValue: any = \"this is a string\";\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 53
+  l: "let strLength: number = (<string>someValue).length;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 54
+  l: "let strLength2: number = (someValue as string).length;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 315
+  l: "let foo = { bar: { baz: () => 42 } };\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 318
+  l: "let x2 = foo?.bar.baz();\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 321
+  l: "let x3 = foo ?? getFoodItem();\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 324
+  l: "let big: bigint = 100n;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 327
+  l: "let x4 = \"hello\" as const;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 337
+  l: "let multiline = `This is a\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 338
+  l: "multiline\n"
+  m: ^^^^^^^^^^^
+- n: 339
+  l: "string`;\n"
+  m: "^^^^^^^^  "
+- n: 352
+  l: "let notKnown: unknown = 4;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "

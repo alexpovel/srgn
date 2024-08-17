@@ -1621,6 +1621,9 @@ Language scopes:
           - enum:           `enum` definitions
           - try-catch:      `try`/`catch`/`finally` blocks
           - var-decl:       Variable declarations (`let`, `const`, `var`)
+          - let:            `let` variable declarations
+          - const:          `const` variable declarations
+          - var:            `var` variable declarations
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

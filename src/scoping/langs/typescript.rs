@@ -28,6 +28,12 @@ pub enum PreparedTypeScriptQuery {
     TryCatch,
     /// Variable declarations (`let`, `const`, `var`).
     VarDecl,
+    /// `let` variable declarations.
+    Let,
+    /// `const` variable declarations.
+    Const,
+    /// `var` variable declarations.
+    Var,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -54,6 +60,21 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                 PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
                 PreparedTypeScriptQuery::TryCatch => "(try_statement) @try",
                 PreparedTypeScriptQuery::VarDecl => "(variable_declarator) @var_decl",
+                PreparedTypeScriptQuery::Let => {
+                    r#"(
+                        (lexical_declaration) @let_decl (#match? @let_decl "^let ")
+                    )"#
+                }
+                PreparedTypeScriptQuery::Const => {
+                    r#"(
+                        (lexical_declaration) @const_decl (#match? @const_decl "^const ")
+                    )"#
+                }
+                PreparedTypeScriptQuery::Var => {
+                    r#"(
+                        (variable_declaration) @var_decl (#match? @var_decl "^var ")
+                    )"#
+                }
             },
         )
         .expect("Prepared queries to be valid")
