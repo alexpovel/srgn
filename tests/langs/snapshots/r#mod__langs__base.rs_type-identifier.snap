@@ -2,198 +2,198 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 28
+- n: 30
   l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
   m: "                 ^^^^^^^^^                        "
-- n: 42
+- n: 44
   l: "fn func_decorator<F>(func: F)\n"
   m: "                  ^            "
-- n: 42
+- n: 44
   l: "fn func_decorator<F>(func: F)\n"
   m: "                           ^   "
-- n: 44
+- n: 46
   l: "    F: Fn() + 'static,\n"
   m: "    ^                    "
-- n: 44
+- n: 46
   l: "    F: Fn() + 'static,\n"
   m: "       ^^                "
-- n: 47
+- n: 49
   l: "    fn wrapper<F>(func: F)\n"
   m: "               ^            "
-- n: 47
+- n: 49
   l: "    fn wrapper<F>(func: F)\n"
   m: "                        ^   "
-- n: 49
+- n: 51
   l: "        F: Fn(),\n"
   m: "        ^         "
-- n: 49
+- n: 51
   l: "        F: Fn(),\n"
   m: "           ^^     "
-- n: 70
+- n: 72
   l: "struct TestStruct {\n"
   m: "       ^^^^^^^^^^    "
-- n: 71
+- n: 73
   l: "    instance_var: String,\n"
   m: "                  ^^^^^^   "
-- n: 74
+- n: 76
   l: "impl TestStruct {\n"
   m: "     ^^^^^^^^^^    "
-- n: 75
+- n: 77
   l: "    fn new() -> Self {\n"
   m: "                ^^^^    "
-- n: 76
+- n: 78
   l: "        TestStruct {\n"
   m: "        ^^^^^^^^^^    "
-- n: 86
+- n: 88
   l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
   m: "                        ^                         "
-- n: 86
+- n: 88
   l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
   m: "                                 ^                "
-- n: 86
+- n: 88
   l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
   m: "                                            ^^    "
-- n: 88
+- n: 90
   l: "        F: Fn(),\n"
   m: "        ^         "
-- n: 88
+- n: 90
   l: "        F: Fn(),\n"
   m: "           ^^     "
-- n: 111
+- n: 113
   l: "enum TestEnum {\n"
   m: "     ^^^^^^^^    "
-- n: 113
+- n: 115
   l: "    VariantTwo(String),\n"
   m: "               ^^^^^^    "
-- n: 114
+- n: 116
   l: "    VariantThree { a: String, b: u64 },\n"
   m: "                      ^^^^^^             "
-- n: 117
+- n: 119
   l: "impl TestEnum {\n"
   m: "     ^^^^^^^^    "
-- n: 118
+- n: 120
   l: "    fn match_statement(x: TestEnum) {\n"
   m: "                          ^^^^^^^^     "
-- n: 182
+- n: 184
   l: "async fn async_main() -> Result<(), ()> {\n"
   m: "                         ^^^^^^            "
-- n: 197
+- n: 199
   l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
   m: "                               ^^^^^^            "
-- n: 231
+- n: 233
   l: "    let mut instance = TestStruct {\n"
   m: "                       ^^^^^^^^^^    "
-- n: 270
+- n: 272
   l: "pub struct PubStruct {}\n"
   m: "           ^^^^^^^^^     "
-- n: 271
+- n: 273
   l: "pub(crate) struct PubCrateStruct {}\n"
   m: "                  ^^^^^^^^^^^^^^     "
-- n: 272
+- n: 274
   l: "pub(self) struct PubSelfStruct {}\n"
   m: "                 ^^^^^^^^^^^^^     "
-- n: 273
+- n: 275
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "                  ^^^^^^^^^^^^^^     "
-- n: 275
+- n: 277
   l: "pub enum PubEnum {}\n"
   m: "         ^^^^^^^     "
-- n: 276
+- n: 278
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "                ^^^^^^^^^^^^     "
-- n: 277
+- n: 279
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "               ^^^^^^^^^^^     "
-- n: 278
+- n: 280
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "                ^^^^^^^^^^^^     "
-- n: 281
+- n: 283
   l: "union MyUnion {\n"
   m: "      ^^^^^^^    "
-- n: 301
+- n: 303
   l: "impl Y {}\n"
   m: "     ^     "
-- n: 302
+- n: 304
   l: "impl<T> Y<T> {}\n"
   m: "     ^           "
-- n: 302
+- n: 304
   l: "impl<T> Y<T> {}\n"
   m: "        ^        "
-- n: 302
+- n: 304
   l: "impl<T> Y<T> {}\n"
   m: "          ^      "
-- n: 304
+- n: 306
   l: "trait Convertible<T> {\n"
   m: "      ^^^^^^^^^^^       "
-- n: 304
+- n: 306
   l: "trait Convertible<T> {\n"
   m: "                  ^     "
-- n: 305
+- n: 307
   l: "    fn convert(&self) -> T;\n"
   m: "                         ^   "
-- n: 308
+- n: 310
   l: "impl<T, U> Convertible<U> for T\n"
   m: "     ^                           "
-- n: 308
+- n: 310
   l: "impl<T, U> Convertible<U> for T\n"
   m: "        ^                        "
-- n: 308
+- n: 310
   l: "impl<T, U> Convertible<U> for T\n"
   m: "           ^^^^^^^^^^^           "
-- n: 308
+- n: 310
   l: "impl<T, U> Convertible<U> for T\n"
   m: "                       ^         "
-- n: 308
+- n: 310
   l: "impl<T, U> Convertible<U> for T\n"
   m: "                              ^  "
-- n: 310
+- n: 312
   l: "    T: AsRef<str>,\n"
   m: "    ^               "
-- n: 310
+- n: 312
   l: "    T: AsRef<str>,\n"
   m: "       ^^^^^        "
-- n: 311
+- n: 313
   l: "    U: From<String>,\n"
   m: "    ^                 "
-- n: 311
+- n: 313
   l: "    U: From<String>,\n"
   m: "       ^^^^           "
-- n: 311
+- n: 313
   l: "    U: From<String>,\n"
   m: "            ^^^^^^    "
-- n: 313
+- n: 315
   l: "    fn convert(&self) -> U {\n"
   m: "                         ^    "
-- n: 318
+- n: 320
   l: "impl X for Y {}\n"
   m: "     ^           "
-- n: 318
+- n: 320
   l: "impl X for Y {}\n"
   m: "           ^     "
-- n: 319
+- n: 321
   l: "impl<T> X for Y<T> {}\n"
   m: "     ^                 "
-- n: 319
+- n: 321
   l: "impl<T> X for Y<T> {}\n"
   m: "        ^              "
-- n: 319
+- n: 321
   l: "impl<T> X for Y<T> {}\n"
   m: "              ^        "
-- n: 319
+- n: 321
   l: "impl<T> X for Y<T> {}\n"
   m: "                ^      "
-- n: 320
+- n: 322
   l: "impl<T> X<T> for Y {}\n"
   m: "     ^                 "
-- n: 320
+- n: 322
   l: "impl<T> X<T> for Y {}\n"
   m: "        ^              "
-- n: 320
+- n: 322
   l: "impl<T> X<T> for Y {}\n"
   m: "          ^            "
-- n: 320
+- n: 322
   l: "impl<T> X<T> for Y {}\n"
   m: "                 ^     "
-- n: 322
+- n: 324
   l: "impl PubStruct {\n"
   m: "     ^^^^^^^^^    "

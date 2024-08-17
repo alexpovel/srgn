@@ -2,9 +2,9 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 264
+- n: 266
   l: "pub(crate) fn function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 288
+- n: 290
   l: "pub(crate) const fn const_function_pub_crate() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

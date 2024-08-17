@@ -2,15 +2,15 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 292
+- n: 294
   l: "unsafe fn perform_unsafe_operation() {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 293
+- n: 295
   l: "    let ptr = 0x1234 as *mut i32;\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 294
+- n: 296
   l: "    *ptr = 42;\n"
   m: ^^^^^^^^^^^^^^^^
-- n: 295
+- n: 297
   l: "}\n"
   m: "^  "

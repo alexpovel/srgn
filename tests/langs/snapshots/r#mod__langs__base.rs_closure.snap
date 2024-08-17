@@ -2,30 +2,30 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 91
+- n: 93
   l: "        move || {\n"
   m: "        ^^^^^^^^^^^"
-- n: 92
+- n: 94
   l: "            println!(\"Static method decorator called\");\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 93
+- n: 95
   l: "            func();\n"
   m: ^^^^^^^^^^^^^^^^^^^^^
-- n: 94
+- n: 96
   l: "        }\n"
   m: "^^^^^^^^^  "
-- n: 133
+- n: 135
   l: "        let mut inner = || {\n"
   m: "                        ^^^^^^"
-- n: 134
+- n: 136
   l: "            nonlocal_var = \"Modified value\".to_string();\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 135
+- n: 137
   l: "        };\n"
   m: "^^^^^^^^^   "
-- n: 206
+- n: 208
   l: "    let square = |x: i32| -> i32 { x * x };\n"
   m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 227
+- n: 229
   l: "    let check = |s: &str| s.ends_with(\"something\");\n"
   m: "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "

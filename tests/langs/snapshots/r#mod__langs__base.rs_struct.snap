@@ -2,24 +2,24 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 70
+- n: 72
   l: "struct TestStruct {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^
-- n: 71
+- n: 73
   l: "    instance_var: String,\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 72
+- n: 74
   l: "}\n"
   m: "^  "
-- n: 270
+- n: 272
   l: "pub struct PubStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 271
+- n: 273
   l: "pub(crate) struct PubCrateStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 272
+- n: 274
   l: "pub(self) struct PubSelfStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 273
+- n: 275
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

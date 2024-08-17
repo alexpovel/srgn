@@ -2,12 +2,12 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 304
+- n: 306
   l: "trait Convertible<T> {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 305
+- n: 307
   l: "    fn convert(&self) -> T;\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 306
+- n: 308
   l: "}\n"
   m: "^  "

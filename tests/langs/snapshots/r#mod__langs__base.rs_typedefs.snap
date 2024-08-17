@@ -2,63 +2,63 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 70
+- n: 72
   l: "struct TestStruct {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^
-- n: 71
+- n: 73
   l: "    instance_var: String,\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 72
+- n: 74
   l: "}\n"
   m: "^  "
-- n: 111
+- n: 113
   l: "enum TestEnum {\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 112
+- n: 114
   l: "    VariantOne,\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 113
+- n: 115
   l: "    VariantTwo(String),\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 114
+- n: 116
   l: "    VariantThree { a: String, b: u64 },\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 115
+- n: 117
   l: "}\n"
   m: "^  "
-- n: 270
+- n: 272
   l: "pub struct PubStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 271
+- n: 273
   l: "pub(crate) struct PubCrateStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 272
+- n: 274
   l: "pub(self) struct PubSelfStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 273
+- n: 275
   l: "pub(super) struct PubSuperStruct {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 275
+- n: 277
   l: "pub enum PubEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 276
+- n: 278
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 277
+- n: 279
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 278
+- n: 280
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 281
+- n: 283
   l: "union MyUnion {\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 282
+- n: 284
   l: "    f1: u32,\n"
   m: ^^^^^^^^^^^^^^
-- n: 283
+- n: 285
   l: "    f2: f32,\n"
   m: ^^^^^^^^^^^^^^
-- n: 284
+- n: 286
   l: "}\n"
   m: "^  "

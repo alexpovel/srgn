@@ -3,32 +3,35 @@ source: tests/langs/mod.rs
 expression: inscope_parts
 ---
 - n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+  l: "use std::collections::{HashMap, HashSet};\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
 - n: 4
-  l: "use a::item as b_item;\n"
-  m: "    ^^^^^^^^^^^^^^^^^   "
-- n: 5
-  l: "use something::prelude::*;\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^   "
-- n: 6
-  l: "use std::collections::HashMap;\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 7
-  l: "use std::collections::HashSet;\n"
-  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 8
   l: "use std::fs::File;\n"
   m: "    ^^^^^^^^^^^^^   "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 203
+- n: 8
+  l: "use a::b::e::f;\n"
+  m: "    ^^^^^^^^^^   "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "    ^^^^^^^^^^^^^   "
+- n: 10
+  l: "use a::b::{c, d};\n"
+  m: "    ^^^^^^^^^^^^   "
+- n: 11
+  l: "use a::item as b_item;\n"
+  m: "    ^^^^^^^^^^^^^^^^^   "
+- n: 12
+  l: "use something::prelude::*;\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^   "
+- n: 205
   l: "    use std::fs::read_to_string;\n"
   m: "        ^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 250
+- n: 252
   l: "    use super::*;\n"
   m: "        ^^^^^^^^   "

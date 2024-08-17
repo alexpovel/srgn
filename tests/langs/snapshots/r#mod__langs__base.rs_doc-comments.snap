@@ -5,33 +5,33 @@ expression: inscope_parts
 - n: 1
   l: "//! Module for testing various Rust grammar elements.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 30
+- n: 32
   l: "/// Free function\n"
   m: ^^^^^^^^^^^^^^^^^^^
-- n: 31
+- n: 33
   l: "///\n"
   m: ^^^^^
-- n: 32
+- n: 34
   l: "/// With a docstring.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 63
+- n: 65
   l: "/// Struct definition\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 64
-  l: "///\n"
-  m: ^^^^^
-- n: 65
-  l: "/// Also has a docstring. With code:\n"
-  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 66
   l: "///\n"
   m: ^^^^^
 - n: 67
+  l: "/// Also has a docstring. With code:\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 68
+  l: "///\n"
+  m: ^^^^^
+- n: 69
   l: "/// ```\n"
   m: ^^^^^^^^^
-- n: 68
+- n: 70
   l: "/// let x = 3;\n"
   m: ^^^^^^^^^^^^^^^^
-- n: 69
+- n: 71
   l: "/// ```\n"
   m: ^^^^^^^^^

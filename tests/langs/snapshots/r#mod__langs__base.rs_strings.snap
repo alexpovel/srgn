@@ -2,138 +2,138 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 17
+- n: 19
   l: "        println!(\"Function x from parent module\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 23
+- n: 25
   l: "        println!(\"Function y from sibling module\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 38
+- n: 40
   l: "    println!(\"Global test_var is now {}\", test_var);\n"
   m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^                "
-- n: 51
+- n: 53
   l: "        println!(\"Function decorator called\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 60
+- n: 62
   l: "    println!(\"Inside decorated function\");\n"
   m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 77
+- n: 79
   l: "            instance_var: String::from(\"hello\"),\n"
   m: "                                         ^^^^^      "
-- n: 92
+- n: 94
   l: "            println!(\"Static method decorator called\");\n"
   m: "                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 100
+- n: 102
   l: "        self.instance_var = \"Instance variable\".to_string();\n"
   m: "                              ^^^^^^^^^^^^^^^^^                 "
-- n: 101
+- n: 103
   l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^                         "
-- n: 106
+- n: 108
   l: "        println!(\"Inside static method\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^      "
-- n: 121
+- n: 123
   l: "            TestEnum::VariantOne => println!(\"One\"),\n"
   m: "                                               ^^^      "
-- n: 122
+- n: 124
   l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
   m: "                                               ^^^      "
-- n: 123
+- n: 125
   l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
   m: "                                                 ^^^^^      "
-- n: 130
+- n: 132
   l: "    let mut nonlocal_var = \"Initial value\".to_string();\n"
   m: "                             ^^^^^^^^^^^^^                 "
-- n: 134
+- n: 136
   l: "            nonlocal_var = \"Modified value\".to_string();\n"
   m: "                             ^^^^^^^^^^^^^^                 "
-- n: 138
+- n: 140
   l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
   m: "               ^^^^^^^^^^^^^^^^^^^^^^^                    "
-- n: 148
+- n: 150
   l: "    println!(\"Inplace operations result: {}\", x);\n"
   m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         "
-- n: 156
+- n: 158
   l: "        println!(\"test_var is greater than 5\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 158
+- n: 160
   l: "        println!(\"test_var is 5 or less\");\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^      "
-- n: 164
+- n: 166
   l: "        println!(\"Counter is {}\", counter);\n"
   m: "                   ^^^^^^^^^^^^^               "
-- n: 170
+- n: 172
   l: "        println!(\"Loop iteration {}\", i);\n"
   m: "                   ^^^^^^^^^^^^^^^^^         "
-- n: 174
+- n: 176
   l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
   m: "                                            ^^^^^^^^^^^^^^^^      "
-- n: 177
+- n: 179
   l: "        println!(\"Read from file: {:?}\", line);\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^            "
-- n: 184
+- n: 186
   l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
   m: "                                       ^^^^^^^^^^^^^^             "
-- n: 187
+- n: 189
   l: "    client.set(\"hello\", \"world\".into()).await?;\n"
   m: "                 ^^^^^                               "
-- n: 187
+- n: 189
   l: "    client.set(\"hello\", \"world\".into()).await?;\n"
   m: "                            ^^^^^                    "
-- n: 190
+- n: 192
   l: "    let result = client.get(\"hello\").await?;\n"
   m: "                              ^^^^^             "
-- n: 192
+- n: 194
   l: "    println!(\"got value from the server; result={:?}\", result);\n"
   m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              "
-- n: 209
+- n: 211
   l: "    let multi_line_str = \"\n"
   m: "                           ^^"
-- n: 210
+- n: 212
   l: "This is a\n"
   m: ^^^^^^^^^^^
-- n: 211
+- n: 213
   l: "multi-line string\n"
   m: ^^^^^^^^^^^^^^^^^^^
-- n: 212
+- n: 214
   l: "for testing purposes.\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 216
+- n: 218
   l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
   m: "          ^^^^^^^^^                                                   "
-- n: 216
+- n: 218
   l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
   m: "                      ^^^^^^^^^^^^^^^^^^                              "
-- n: 216
+- n: 218
   l: "        \"This is a\\nmultiline{} string\\nspanning several lines\",\n"
   m: "                                           ^^^^^^^^^^^^^^^^^^^^^^     "
-- n: 217
+- n: 219
   l: "        \"{f_string}\"\n"
   m: "          ^^^^^^^^^^    "
-- n: 220
+- n: 222
   l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
   m: "                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     "
-- n: 222
+- n: 224
   l: "This is a raw string with no special treatment for \\n\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 224
+- n: 226
   l: "    let bytes_string = b\"This is a bytes string\";\n"
   m: "                          ^^^^^^^^^^^^^^^^^^^^^^     "
-- n: 225
+- n: 227
   l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
   m: "                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                  "
-- n: 227
+- n: 229
   l: "    let check = |s: &str| s.ends_with(\"something\");\n"
   m: "                                        ^^^^^^^^^      "
-- n: 236
+- n: 238
   l: "    println!(\"{}\", square(5));\n"
   m: "               ^^                 "
-- n: 243
+- n: 245
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "                  ^^^^^^^^^^^^      "
-- n: 297
+- n: 299
   l: "extern \"C\" fn example_extern() -> i32 {\n"
   m: "         ^                                 "
-- n: 323
+- n: 325
   l: "    const PANIC: () = panic!(\"bam!\");\n"
   m: "                               ^^^^      "

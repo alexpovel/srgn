@@ -2,36 +2,36 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 12
+- n: 14
   l: "#[macro_use]\n"
   m: "  ^^^^^^^^^   "
-- n: 181
+- n: 183
   l: "#[tokio::main]\n"
   m: "  ^^^^^^^^^^^   "
-- n: 243
+- n: 245
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 244
+- n: 246
   l: "#[allow(clippy::single_match_else)]\n"
   m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
-- n: 245
+- n: 247
   l: "#[cfg(doc)]\n"
   m: "  ^^^^^^^^   "
-- n: 248
+- n: 250
   l: "#[cfg(test)]\n"
   m: "  ^^^^^^^^^   "
-- n: 252
+- n: 254
   l: "    #[test]\n"
   m: "      ^^^^   "
-- n: 257
+- n: 259
   l: "    #[rstest]\n"
   m: "      ^^^^^^   "
-- n: 258
+- n: 260
   l: "    #[case(3)]\n"
   m: "      ^^^^^^^   "
-- n: 259
+- n: 261
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                          ^^^^             "
-- n: 280
+- n: 282
   l: "#[repr(C)]\n"
   m: "  ^^^^^^^   "

@@ -3,692 +3,698 @@ source: tests/langs/mod.rs
 expression: inscope_parts
 ---
 - n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "    ^                             "
+  l: "use std::collections::{HashMap, HashSet};\n"
+  m: "    ^^^                                    "
 - n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "       ^                          "
+  l: "use std::collections::{HashMap, HashSet};\n"
+  m: "         ^^^^^^^^^^^                       "
 - n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "           ^                      "
+  l: "use std::collections::{HashMap, HashSet};\n"
+  m: "                       ^^^^^^^             "
 - n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "              ^                   "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                 ^                "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                    ^             "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                       ^          "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                          ^       "
-- n: 3
-  l: "use a::b::{c, d, e::f, g::h::i};\n"
-  m: "                             ^    "
+  l: "use std::collections::{HashMap, HashSet};\n"
+  m: "                                ^^^^^^^    "
 - n: 4
-  l: "use a::item as b_item;\n"
-  m: "    ^                   "
-- n: 4
-  l: "use a::item as b_item;\n"
-  m: "       ^^^^             "
-- n: 4
-  l: "use a::item as b_item;\n"
-  m: "               ^^^^^^   "
-- n: 5
-  l: "use something::prelude::*;\n"
-  m: "    ^^^^^^^^^               "
-- n: 5
-  l: "use something::prelude::*;\n"
-  m: "               ^^^^^^^      "
-- n: 6
-  l: "use std::collections::HashMap;\n"
-  m: "    ^^^                         "
-- n: 6
-  l: "use std::collections::HashMap;\n"
-  m: "         ^^^^^^^^^^^            "
-- n: 6
-  l: "use std::collections::HashMap;\n"
-  m: "                      ^^^^^^^   "
-- n: 7
-  l: "use std::collections::HashSet;\n"
-  m: "    ^^^                         "
-- n: 7
-  l: "use std::collections::HashSet;\n"
-  m: "         ^^^^^^^^^^^            "
-- n: 7
-  l: "use std::collections::HashSet;\n"
-  m: "                      ^^^^^^^   "
-- n: 8
   l: "use std::fs::File;\n"
   m: "    ^^^             "
-- n: 8
+- n: 4
   l: "use std::fs::File;\n"
   m: "         ^^         "
-- n: 8
+- n: 4
   l: "use std::fs::File;\n"
   m: "             ^^^^   "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "    ^^^                                          "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "         ^^                                      "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "                    ^^^^^^^                      "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "                             ^^^^^^^^^           "
-- n: 9
+- n: 5
   l: "use std::io::{self, BufRead, BufReader, Write};\n"
   m: "                                        ^^^^^    "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "    ^^^                                        "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "         ^^^^                                  "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "               ^^^^^^                          "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "                        ^^^^^^^^^              "
-- n: 10
+- n: 6
   l: "use std::sync::atomic::{AtomicI32, Ordering};\n"
   m: "                                   ^^^^^^^^    "
+- n: 8
+  l: "use a::b::e::f;\n"
+  m: "    ^            "
+- n: 8
+  l: "use a::b::e::f;\n"
+  m: "       ^         "
+- n: 8
+  l: "use a::b::e::f;\n"
+  m: "          ^      "
+- n: 8
+  l: "use a::b::e::f;\n"
+  m: "             ^   "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "    ^               "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "       ^            "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "          ^         "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "             ^      "
+- n: 9
+  l: "use a::b::g::h::i;\n"
+  m: "                ^   "
+- n: 10
+  l: "use a::b::{c, d};\n"
+  m: "    ^              "
+- n: 10
+  l: "use a::b::{c, d};\n"
+  m: "       ^           "
+- n: 10
+  l: "use a::b::{c, d};\n"
+  m: "           ^       "
+- n: 10
+  l: "use a::b::{c, d};\n"
+  m: "              ^    "
+- n: 11
+  l: "use a::item as b_item;\n"
+  m: "    ^                   "
+- n: 11
+  l: "use a::item as b_item;\n"
+  m: "       ^^^^             "
+- n: 11
+  l: "use a::item as b_item;\n"
+  m: "               ^^^^^^   "
 - n: 12
+  l: "use something::prelude::*;\n"
+  m: "    ^^^^^^^^^               "
+- n: 12
+  l: "use something::prelude::*;\n"
+  m: "               ^^^^^^^      "
+- n: 14
   l: "#[macro_use]\n"
   m: "  ^^^^^^^^^   "
-- n: 13
+- n: 15
   l: "extern crate lazy_static;\n"
   m: "             ^^^^^^^^^^^   "
-- n: 15
+- n: 17
   l: "mod parent {\n"
   m: "    ^^^^^^    "
-- n: 16
+- n: 18
   l: "    pub fn x() {\n"
   m: "           ^      "
-- n: 17
+- n: 19
   l: "        println!(\"Function x from parent module\");\n"
   m: "        ^^^^^^^                                       "
-- n: 21
+- n: 23
   l: "mod sibling {\n"
   m: "    ^^^^^^^    "
-- n: 22
+- n: 24
   l: "    pub fn y() {\n"
   m: "           ^      "
-- n: 23
+- n: 25
   l: "        println!(\"Function y from sibling module\");\n"
   m: "        ^^^^^^^                                        "
-- n: 28
+- n: 30
   l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
   m: "       ^^^^^^^^                                   "
-- n: 28
+- n: 30
   l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
   m: "                             ^^^^^^^^^            "
-- n: 28
+- n: 30
   l: "static TEST_VAR: AtomicI32 = AtomicI32::new(10);\n"
   m: "                                        ^^^       "
-- n: 33
+- n: 35
   l: "fn free_func() {\n"
   m: "   ^^^^^^^^^      "
-- n: 35
+- n: 37
   l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
   m: "            ^^^^^^^^                                     "
-- n: 35
+- n: 37
   l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
   m: "                       ^^^^^^^^                          "
-- n: 35
+- n: 37
   l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
   m: "                                     ^^^^^^^^            "
-- n: 35
+- n: 37
   l: "    let mut test_var = TEST_VAR.load(Ordering::SeqCst);\n"
   m: "                                               ^^^^^^    "
-- n: 36
+- n: 38
   l: "    test_var += 1;\n"
   m: "    ^^^^^^^^        "
-- n: 37
+- n: 39
   l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
   m: "    ^^^^^^^^                                     "
-- n: 37
+- n: 39
   l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
   m: "                   ^^^^^^^^                      "
-- n: 37
+- n: 39
   l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
   m: "                             ^^^^^^^^            "
-- n: 37
+- n: 39
   l: "    TEST_VAR.store(test_var, Ordering::SeqCst);\n"
   m: "                                       ^^^^^^    "
-- n: 38
+- n: 40
   l: "    println!(\"Global test_var is now {}\", test_var);\n"
   m: "    ^^^^^^^                                             "
-- n: 38
+- n: 40
   l: "    println!(\"Global test_var is now {}\", test_var);\n"
   m: "                                            ^^^^^^^^    "
-- n: 42
+- n: 44
   l: "fn func_decorator<F>(func: F)\n"
   m: "   ^^^^^^^^^^^^^^              "
-- n: 42
+- n: 44
   l: "fn func_decorator<F>(func: F)\n"
   m: "                     ^^^^      "
-- n: 44
+- n: 46
   l: "    F: Fn() + 'static,\n"
   m: "                ^^^^^^   "
-- n: 47
+- n: 49
   l: "    fn wrapper<F>(func: F)\n"
   m: "       ^^^^^^^              "
-- n: 47
+- n: 49
   l: "    fn wrapper<F>(func: F)\n"
   m: "                  ^^^^      "
-- n: 51
+- n: 53
   l: "        println!(\"Function decorator called\");\n"
   m: "        ^^^^^^^                                   "
-- n: 52
+- n: 54
   l: "        func();\n"
   m: "        ^^^^     "
-- n: 55
+- n: 57
   l: "    wrapper(func);\n"
   m: "    ^^^^^^^         "
-- n: 55
+- n: 57
   l: "    wrapper(func);\n"
   m: "            ^^^^    "
-- n: 58
+- n: 60
   l: "fn decorated_func() {\n"
   m: "   ^^^^^^^^^^^^^^      "
-- n: 60
+- n: 62
   l: "    println!(\"Inside decorated function\");\n"
   m: "    ^^^^^^^                                   "
-- n: 75
+- n: 77
   l: "    fn new() -> Self {\n"
   m: "       ^^^              "
-- n: 77
+- n: 79
   l: "            instance_var: String::from(\"hello\"),\n"
   m: "                          ^^^^^^                    "
-- n: 77
+- n: 79
   l: "            instance_var: String::from(\"hello\"),\n"
   m: "                                  ^^^^              "
-- n: 86
+- n: 88
   l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
   m: "       ^^^^^^^^^^^^^^^^                           "
-- n: 86
+- n: 88
   l: "    fn static_decorator<F>(func: F) -> impl Fn()\n"
   m: "                           ^^^^                   "
-- n: 92
+- n: 94
   l: "            println!(\"Static method decorator called\");\n"
   m: "            ^^^^^^^                                        "
-- n: 93
+- n: 95
   l: "            func();\n"
   m: "            ^^^^     "
-- n: 98
+- n: 100
   l: "    fn instance_method(&mut self) {\n"
   m: "       ^^^^^^^^^^^^^^^               "
-- n: 101
+- n: 103
   l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
   m: "        ^^^^^^^                                                    "
-- n: 101
+- n: 103
   l: "        println!(\"Instance variable is {}\", self.instance_var);\n"
   m: "                                                   ^^^^^^^^^^^^    "
-- n: 104
+- n: 106
   l: "    fn static_method() {\n"
   m: "       ^^^^^^^^^^^^^      "
-- n: 106
+- n: 108
   l: "        println!(\"Inside static method\");\n"
   m: "        ^^^^^^^                              "
-- n: 112
+- n: 114
   l: "    VariantOne,\n"
   m: "    ^^^^^^^^^^   "
-- n: 113
+- n: 115
   l: "    VariantTwo(String),\n"
   m: "    ^^^^^^^^^^           "
-- n: 114
+- n: 116
   l: "    VariantThree { a: String, b: u64 },\n"
   m: "    ^^^^^^^^^^^^                         "
-- n: 118
+- n: 120
   l: "    fn match_statement(x: TestEnum) {\n"
   m: "       ^^^^^^^^^^^^^^^                 "
-- n: 118
+- n: 120
   l: "    fn match_statement(x: TestEnum) {\n"
   m: "                       ^               "
-- n: 120
+- n: 122
   l: "        match x {\n"
   m: "              ^    "
-- n: 121
-  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
-  m: "            ^^^^^^^^                                    "
-- n: 121
-  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
-  m: "                      ^^^^^^^^^^                        "
-- n: 121
-  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
-  m: "                                    ^^^^^^^             "
-- n: 122
-  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
-  m: "            ^^^^^^^^                                    "
-- n: 122
-  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
-  m: "                      ^^^^^^^^^^                        "
-- n: 122
-  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
-  m: "                                    ^^^^^^^             "
 - n: 123
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "            ^^^^^^^^                                    "
+- n: 123
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "                      ^^^^^^^^^^                        "
+- n: 123
+  l: "            TestEnum::VariantOne => println!(\"One\"),\n"
+  m: "                                    ^^^^^^^             "
+- n: 124
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "            ^^^^^^^^                                    "
+- n: 124
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "                      ^^^^^^^^^^                        "
+- n: 124
+  l: "            TestEnum::VariantTwo => println!(\"Two\"),\n"
+  m: "                                    ^^^^^^^             "
+- n: 125
   l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
   m: "            ^^^^^^^^                                        "
-- n: 123
+- n: 125
   l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
   m: "                      ^^^^^^^^^^^^                          "
-- n: 123
+- n: 125
   l: "            TestEnum::VariantOther => println!(\"Other\"),\n"
   m: "                                      ^^^^^^^               "
-- n: 129
+- n: 131
   l: "fn modify_nonlocal() {\n"
   m: "   ^^^^^^^^^^^^^^^      "
-- n: 130
+- n: 132
   l: "    let mut nonlocal_var = \"Initial value\".to_string();\n"
   m: "            ^^^^^^^^^^^^                                   "
-- n: 133
+- n: 135
   l: "        let mut inner = || {\n"
   m: "                ^^^^^         "
-- n: 134
+- n: 136
   l: "            nonlocal_var = \"Modified value\".to_string();\n"
   m: "            ^^^^^^^^^^^^                                    "
-- n: 136
+- n: 138
   l: "        inner();\n"
   m: "        ^^^^^     "
-- n: 138
+- n: 140
   l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
   m: "    ^^^^^^^                                               "
-- n: 138
+- n: 140
   l: "    println!(\"Nonlocal variable is {}\", nonlocal_var);\n"
   m: "                                          ^^^^^^^^^^^^    "
-- n: 141
+- n: 143
   l: "fn inplace_operations() {\n"
   m: "   ^^^^^^^^^^^^^^^^^^      "
-- n: 143
+- n: 145
   l: "    let mut x = 10;\n"
   m: "            ^        "
-- n: 144
+- n: 146
   l: "    x += 5;\n"
   m: "    ^        "
-- n: 145
+- n: 147
   l: "    x -= 3;\n"
   m: "    ^        "
-- n: 146
+- n: 148
   l: "    x *= 2;\n"
   m: "    ^        "
-- n: 147
+- n: 149
   l: "    x /= 4;\n"
   m: "    ^        "
-- n: 148
+- n: 150
   l: "    println!(\"Inplace operations result: {}\", x);\n"
   m: "    ^^^^^^^                                          "
-- n: 148
+- n: 150
   l: "    println!(\"Inplace operations result: {}\", x);\n"
   m: "                                                ^    "
-- n: 152
+- n: 154
   l: "fn control_flow() {\n"
   m: "   ^^^^^^^^^^^^      "
-- n: 155
+- n: 157
   l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
   m: "       ^^^^^^^^                               "
-- n: 155
+- n: 157
   l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
   m: "                     ^^^^^^^^                 "
-- n: 155
+- n: 157
   l: "    if TEST_VAR.load(Ordering::SeqCst) > 5 {\n"
   m: "                               ^^^^^^         "
-- n: 156
+- n: 158
   l: "        println!(\"test_var is greater than 5\");\n"
   m: "        ^^^^^^^                                    "
-- n: 158
+- n: 160
   l: "        println!(\"test_var is 5 or less\");\n"
   m: "        ^^^^^^^                               "
-- n: 162
+- n: 164
   l: "    let mut counter = 0;\n"
   m: "            ^^^^^^^       "
-- n: 163
+- n: 165
   l: "    while counter < 3 {\n"
   m: "          ^^^^^^^        "
-- n: 164
+- n: 166
   l: "        println!(\"Counter is {}\", counter);\n"
   m: "        ^^^^^^^                                "
-- n: 164
+- n: 166
   l: "        println!(\"Counter is {}\", counter);\n"
   m: "                                    ^^^^^^^    "
-- n: 165
+- n: 167
   l: "        counter += 1;\n"
   m: "        ^^^^^^^        "
-- n: 169
+- n: 171
   l: "    for i in 0..3 {\n"
   m: "        ^            "
-- n: 170
+- n: 172
   l: "        println!(\"Loop iteration {}\", i);\n"
   m: "        ^^^^^^^                              "
-- n: 170
+- n: 172
   l: "        println!(\"Loop iteration {}\", i);\n"
   m: "                                        ^    "
-- n: 174
+- n: 176
   l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
   m: "        ^^^^                                                      "
-- n: 174
+- n: 176
   l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
   m: "               ^^^^                                               "
-- n: 174
+- n: 176
   l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
   m: "                     ^^^^                                         "
-- n: 174
+- n: 176
   l: "    let file = File::open(file!()).expect(\"Cannot open file\");\n"
   m: "                          ^^^^                                    "
-- n: 175
+- n: 177
   l: "    let reader = BufReader::new(file);\n"
   m: "        ^^^^^^                          "
-- n: 175
+- n: 177
   l: "    let reader = BufReader::new(file);\n"
   m: "                 ^^^^^^^^^              "
-- n: 175
+- n: 177
   l: "    let reader = BufReader::new(file);\n"
   m: "                            ^^^         "
-- n: 175
+- n: 177
   l: "    let reader = BufReader::new(file);\n"
   m: "                                ^^^^    "
-- n: 176
+- n: 178
   l: "    if let Some(line) = reader.lines().next() {\n"
   m: "           ^^^^                                  "
-- n: 176
+- n: 178
   l: "    if let Some(line) = reader.lines().next() {\n"
   m: "                ^^^^                             "
-- n: 176
+- n: 178
   l: "    if let Some(line) = reader.lines().next() {\n"
   m: "                        ^^^^^^                   "
-- n: 177
+- n: 179
   l: "        println!(\"Read from file: {:?}\", line);\n"
   m: "        ^^^^^^^                                    "
-- n: 177
+- n: 179
   l: "        println!(\"Read from file: {:?}\", line);\n"
   m: "                                           ^^^^    "
-- n: 181
+- n: 183
   l: "#[tokio::main]\n"
   m: "  ^^^^^         "
-- n: 181
+- n: 183
   l: "#[tokio::main]\n"
   m: "         ^^^^   "
-- n: 182
+- n: 184
   l: "async fn async_main() -> Result<(), ()> {\n"
   m: "         ^^^^^^^^^^                        "
-- n: 184
+- n: 186
   l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
   m: "            ^^^^^^                                                "
-- n: 184
+- n: 186
   l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
   m: "                     ^^^^^^                                       "
-- n: 184
+- n: 186
   l: "    let mut client = client::connect(\"127.0.0.1:6379\").await?;\n"
   m: "                             ^^^^^^^                              "
-- n: 187
+- n: 189
   l: "    client.set(\"hello\", \"world\".into()).await?;\n"
   m: "    ^^^^^^                                           "
-- n: 190
+- n: 192
   l: "    let result = client.get(\"hello\").await?;\n"
   m: "        ^^^^^^                                  "
-- n: 190
+- n: 192
   l: "    let result = client.get(\"hello\").await?;\n"
   m: "                 ^^^^^^                         "
-- n: 192
+- n: 194
   l: "    println!(\"got value from the server; result={:?}\", result);\n"
   m: "    ^^^^^^^                                                        "
-- n: 192
+- n: 194
   l: "    println!(\"got value from the server; result={:?}\", result);\n"
   m: "                                                         ^^^^^^    "
-- n: 194
+- n: 196
   l: "    Ok(())\n"
   m: "    ^^      "
-- n: 197
+- n: 199
   l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
   m: "             ^^^^^^^^^^^^                        "
-- n: 198
+- n: 200
   l: "    Ok(())\n"
   m: "    ^^      "
-- n: 202
+- n: 204
   l: "fn main() {\n"
   m: "   ^^^^      "
-- n: 203
+- n: 205
   l: "    use std::fs::read_to_string;\n"
   m: "        ^^^                       "
-- n: 203
+- n: 205
   l: "    use std::fs::read_to_string;\n"
   m: "             ^^                   "
-- n: 203
+- n: 205
   l: "    use std::fs::read_to_string;\n"
   m: "                 ^^^^^^^^^^^^^^   "
-- n: 206
+- n: 208
   l: "    let square = |x: i32| -> i32 { x * x };\n"
   m: "        ^^^^^^                               "
-- n: 206
+- n: 208
   l: "    let square = |x: i32| -> i32 { x * x };\n"
   m: "                  ^                          "
-- n: 206
+- n: 208
   l: "    let square = |x: i32| -> i32 { x * x };\n"
   m: "                                   ^         "
-- n: 206
+- n: 208
   l: "    let square = |x: i32| -> i32 { x * x };\n"
   m: "                                       ^     "
-- n: 209
+- n: 211
   l: "    let multi_line_str = \"\n"
   m: "        ^^^^^^^^^^^^^^       "
-- n: 215
+- n: 217
   l: "    let multiline_f_string = format!(\n"
   m: "        ^^^^^^^^^^^^^^^^^^             "
-- n: 215
+- n: 217
   l: "    let multiline_f_string = format!(\n"
   m: "                             ^^^^^^    "
-- n: 220
+- n: 222
   l: "    let raw_string = r\"This is a raw string with no special treatment for \\n\";\n"
   m: "        ^^^^^^^^^^                                                                 "
-- n: 221
+- n: 223
   l: "    let raw_multiline_string = r#\"\n"
   m: "        ^^^^^^^^^^^^^^^^^^^^         "
-- n: 224
+- n: 226
   l: "    let bytes_string = b\"This is a bytes string\";\n"
   m: "        ^^^^^^^^^^^^                                 "
-- n: 225
+- n: 227
   l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
   m: "        ^^^^^^^^^^^^                                                              "
-- n: 225
+- n: 227
   l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
   m: "                       ^^^^^^                                                     "
-- n: 225
+- n: 227
   l: "    let raw_f_string = format!(r\"This is a raw f-string with {}\", raw_string);\n"
   m: "                                                                    ^^^^^^^^^^    "
-- n: 227
+- n: 229
   l: "    let check = |s: &str| s.ends_with(\"something\");\n"
   m: "        ^^^^^                                          "
-- n: 227
+- n: 229
   l: "    let check = |s: &str| s.ends_with(\"something\");\n"
   m: "                 ^                                     "
-- n: 227
+- n: 229
   l: "    let check = |s: &str| s.ends_with(\"something\");\n"
   m: "                          ^                            "
-- n: 229
+- n: 231
   l: "    free_func();\n"
   m: "    ^^^^^^^^^     "
-- n: 230
+- n: 232
   l: "    func_decorator(decorated_func);\n"
   m: "    ^^^^^^^^^^^^^^                   "
-- n: 230
+- n: 232
   l: "    func_decorator(decorated_func);\n"
   m: "                   ^^^^^^^^^^^^^^    "
-- n: 231
+- n: 233
   l: "    let mut instance = TestStruct {\n"
   m: "            ^^^^^^^^                 "
-- n: 232
+- n: 234
   l: "        instance_var: String::new(),\n"
   m: "                      ^^^^^^          "
-- n: 232
+- n: 234
   l: "        instance_var: String::new(),\n"
   m: "                              ^^^     "
-- n: 234
+- n: 236
   l: "    instance.instance_method();\n"
   m: "    ^^^^^^^^                     "
-- n: 235
+- n: 237
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "    ^^^^^^^^^^                                                  "
-- n: 235
+- n: 237
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                ^^^^^^^^^^^^^^^^                                "
-- n: 235
+- n: 237
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                                 ^^^^^^^^^^                     "
-- n: 235
+- n: 237
   l: "    TestStruct::static_decorator(TestStruct::static_method)();\n"
   m: "                                             ^^^^^^^^^^^^^      "
-- n: 236
+- n: 238
   l: "    println!(\"{}\", square(5));\n"
   m: "    ^^^^^^^                       "
-- n: 236
+- n: 238
   l: "    println!(\"{}\", square(5));\n"
   m: "                     ^^^^^^       "
-- n: 237
+- n: 239
   l: "    modify_nonlocal();\n"
   m: "    ^^^^^^^^^^^^^^^     "
-- n: 238
+- n: 240
   l: "    inplace_operations();\n"
   m: "    ^^^^^^^^^^^^^^^^^^     "
-- n: 239
+- n: 241
   l: "    control_flow();\n"
   m: "    ^^^^^^^^^^^^     "
-- n: 240
+- n: 242
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "    ^^^^^^^^                                          "
-- n: 240
+- n: 242
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "              ^^^^^^^^^^^^^^^                         "
-- n: 240
+- n: 242
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "                              ^^^^^^^^                "
-- n: 240
+- n: 242
   l: "    TestEnum::match_statement(TestEnum::VariantOne);\n"
   m: "                                        ^^^^^^^^^^    "
-- n: 243
+- n: 245
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "  ^^^                               "
-- n: 243
+- n: 245
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "      ^^^^^^^                       "
-- n: 244
+- n: 246
   l: "#[allow(clippy::single_match_else)]\n"
   m: "  ^^^^^                              "
-- n: 244
+- n: 246
   l: "#[allow(clippy::single_match_else)]\n"
   m: "        ^^^^^^                       "
-- n: 244
+- n: 246
   l: "#[allow(clippy::single_match_else)]\n"
   m: "                ^^^^^^^^^^^^^^^^^    "
-- n: 245
+- n: 247
   l: "#[cfg(doc)]\n"
   m: "  ^^^        "
-- n: 245
+- n: 247
   l: "#[cfg(doc)]\n"
   m: "      ^^^    "
-- n: 246
+- n: 248
   l: "fn function_with_attributes() {}\n"
   m: "   ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 248
+- n: 250
   l: "#[cfg(test)]\n"
   m: "  ^^^         "
-- n: 248
+- n: 250
   l: "#[cfg(test)]\n"
   m: "      ^^^^    "
-- n: 249
+- n: 251
   l: "mod tests {\n"
   m: "    ^^^^^    "
-- n: 252
+- n: 254
   l: "    #[test]\n"
   m: "      ^^^^   "
-- n: 253
+- n: 255
   l: "    fn some_test() {\n"
   m: "       ^^^^^^^^^      "
-- n: 254
+- n: 256
   l: "        assert_eq!(3, 3);\n"
   m: "        ^^^^^^^^^          "
-- n: 257
+- n: 259
   l: "    #[rstest]\n"
   m: "      ^^^^^^   "
-- n: 258
+- n: 260
   l: "    #[case(3)]\n"
   m: "      ^^^^      "
-- n: 259
+- n: 261
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "       ^^^^^^^^^^^^^^^^                    "
-- n: 259
+- n: 261
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                          ^^^^             "
-- n: 259
+- n: 261
   l: "    fn test_with_rstest(#[case] i: u64) {\n"
   m: "                                ^          "
-- n: 260
+- n: 262
   l: "        assert_eq!(1337, 1337);\n"
   m: "        ^^^^^^^^^                "
-- n: 264
+- n: 266
   l: "pub(crate) fn function_pub_crate() {}\n"
   m: "              ^^^^^^^^^^^^^^^^^^       "
-- n: 266
+- n: 268
   l: "pub(self) fn function_pub_self() {}\n"
   m: "             ^^^^^^^^^^^^^^^^^       "
-- n: 268
+- n: 270
   l: "pub(super) fn function_pub_super() {}\n"
   m: "              ^^^^^^^^^^^^^^^^^^       "
-- n: 280
+- n: 282
   l: "#[repr(C)]\n"
   m: "  ^^^^      "
-- n: 280
+- n: 282
   l: "#[repr(C)]\n"
   m: "       ^    "
-- n: 286
+- n: 288
   l: "const fn const_function() {}\n"
   m: "         ^^^^^^^^^^^^^^       "
-- n: 287
+- n: 289
   l: "pub const fn const_function_pub() {}\n"
   m: "             ^^^^^^^^^^^^^^^^^^       "
-- n: 288
+- n: 290
   l: "pub(crate) const fn const_function_pub_crate() {}\n"
   m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 289
+- n: 291
   l: "pub(self) const fn const_function_pub_self() {}\n"
   m: "                   ^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 290
+- n: 292
   l: "pub(super) const fn const_function_pub_super() {}\n"
   m: "                    ^^^^^^^^^^^^^^^^^^^^^^^^       "
-- n: 292
+- n: 294
   l: "unsafe fn perform_unsafe_operation() {\n"
   m: "          ^^^^^^^^^^^^^^^^^^^^^^^^      "
-- n: 293
+- n: 295
   l: "    let ptr = 0x1234 as *mut i32;\n"
   m: "        ^^^                        "
-- n: 294
+- n: 296
   l: "    *ptr = 42;\n"
   m: "     ^^^        "
-- n: 297
+- n: 299
   l: "extern \"C\" fn example_extern() -> i32 {\n"
   m: "                ^^^^^^^^^^^^^^             "
-- n: 305
+- n: 307
   l: "    fn convert(&self) -> T;\n"
   m: "       ^^^^^^^               "
-- n: 313
+- n: 315
   l: "    fn convert(&self) -> U {\n"
   m: "       ^^^^^^^                "
-- n: 314
+- n: 316
   l: "        U::from(self.as_ref().to_owned())\n"
   m: "        ^                                  "
-- n: 314
+- n: 316
   l: "        U::from(self.as_ref().to_owned())\n"
   m: "           ^^^^                            "
-- n: 323
+- n: 325
   l: "    const PANIC: () = panic!(\"bam!\");\n"
   m: "          ^^^^^                          "
-- n: 323
+- n: 325
   l: "    const PANIC: () = panic!(\"bam!\");\n"
   m: "                      ^^^^^              "

@@ -2,30 +2,30 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 111
+- n: 113
   l: "enum TestEnum {\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 112
+- n: 114
   l: "    VariantOne,\n"
   m: ^^^^^^^^^^^^^^^^^
-- n: 113
+- n: 115
   l: "    VariantTwo(String),\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 114
+- n: 116
   l: "    VariantThree { a: String, b: u64 },\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 115
+- n: 117
   l: "}\n"
   m: "^  "
-- n: 275
+- n: 277
   l: "pub enum PubEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 276
+- n: 278
   l: "pub(crate) enum PubCrateEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 277
+- n: 279
   l: "pub(self) enum PubSelfEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 278
+- n: 280
   l: "pub(super) enum PubSuperEnum {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

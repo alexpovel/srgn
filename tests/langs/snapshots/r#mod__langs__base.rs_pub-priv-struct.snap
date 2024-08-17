@@ -2,12 +2,12 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 70
+- n: 72
   l: "struct TestStruct {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^
-- n: 71
+- n: 73
   l: "    instance_var: String,\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 72
+- n: 74
   l: "}\n"
   m: "^  "

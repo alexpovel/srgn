@@ -1,13 +1,15 @@
 //! Module for testing various Rust grammar elements.
 
-use a::b::{c, d, e::f, g::h::i};
-use a::item as b_item;
-use something::prelude::*;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::sync::atomic::{AtomicI32, Ordering};
+
+use a::b::e::f;
+use a::b::g::h::i;
+use a::b::{c, d};
+use a::item as b_item;
+use something::prelude::*;
 
 #[macro_use]
 extern crate lazy_static;

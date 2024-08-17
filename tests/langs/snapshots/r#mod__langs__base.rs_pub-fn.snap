@@ -2,33 +2,33 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 16
+- n: 18
   l: "    pub fn x() {\n"
   m: "    ^^^^^^^^^^^^^^"
-- n: 17
+- n: 19
   l: "        println!(\"Function x from parent module\");\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 18
+- n: 20
   l: "    }\n"
   m: "^^^^^  "
-- n: 22
+- n: 24
   l: "    pub fn y() {\n"
   m: "    ^^^^^^^^^^^^^^"
-- n: 23
+- n: 25
   l: "        println!(\"Function y from sibling module\");\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 24
+- n: 26
   l: "    }\n"
   m: "^^^^^  "
-- n: 197
+- n: 199
   l: "pub async fn async_pub_fn() -> Result<(), ()> {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 198
+- n: 200
   l: "    Ok(())\n"
   m: ^^^^^^^^^^^^
-- n: 199
+- n: 201
   l: "}\n"
   m: "^  "
-- n: 287
+- n: 289
   l: "pub const fn const_function_pub() {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
