@@ -569,6 +569,9 @@ fn process_path(
 
 /// Runs the actual core processing, returning whether anything changed in the output
 /// compared to the input.
+///
+/// TODO: The way this interacts with [`process_path`] etc. is just **awful** spaghetti
+/// of the most imperative, procedural kind. Refactor needed.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn apply(
     source: &str,
