@@ -1,0 +1,52 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 84
+  l: "    constructor(h: number, m: number) { }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 106
+  l: "    constructor(message: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 107
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 117
+  l: "    constructor(theName: string) { this.name = theName; }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 124
+  l: "    constructor(name: string) { super(name); }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 132
+  l: "    constructor(name: string) { super(name); }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 146
+  l: "    constructor(name: string) { this.name = name; }\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 153
+  l: "    constructor (theName: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 154
+  l: "        this.name = theName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 155
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 178
+  l: "    constructor(public name: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 179
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 282
+  l: "    constructor(message: string) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 283
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 284
+  l: "    }\n"
+  m: "^^^^^  "

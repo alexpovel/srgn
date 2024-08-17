@@ -24,6 +24,8 @@ pub enum PreparedTypeScriptQuery {
     SyncFunction,
     /// Method definitions.
     Method,
+    /// `constructor` method definitions.
+    Constructor,
     /// `class` definitions.
     Class,
     /// `enum` definitions.
@@ -68,6 +70,11 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     )"#
                 }
                 PreparedTypeScriptQuery::Method => "(method_definition) @method",
+                PreparedTypeScriptQuery::Constructor => {
+                    r#"(method_definition
+                        name: (_) @name (#eq? @name "constructor")
+                    ) @constructor"#
+                }
                 PreparedTypeScriptQuery::Class => "(class_declaration) @class",
                 PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
                 PreparedTypeScriptQuery::Interface => "(interface_declaration) @interface",
