@@ -31,6 +31,7 @@ mod hcl {
         c_config.file(&scanner_path);
         println!("cargo:rerun-if-changed={}", scanner_path.to_str().unwrap());
 
+        c_config.warnings(false);
         c_config.compile("parser");
     }
 }
