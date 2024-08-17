@@ -237,11 +237,7 @@ fn handle_actions_on_stdin(
         general_scoper,
         language_scopers,
         actions,
-        args.options.fail_none,
-        args.options.fail_any,
-        args.standalone_actions.squeeze,
-        args.options.only_matching,
-        args.options.line_numbers,
+        args,
     )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
@@ -514,11 +510,7 @@ fn process_path(
             general_scoper,
             language_scopers,
             actions,
-            args.options.fail_none,
-            args.options.fail_any,
-            args.standalone_actions.squeeze,
-            args.options.only_matching,
-            args.options.line_numbers,
+            args,
         )?;
 
         (destination, filesize, changed)
@@ -577,8 +569,6 @@ fn process_path(
 
 /// Runs the actual core processing, returning whether anything changed in the output
 /// compared to the input.
-#[allow(clippy::too_many_arguments)] // Our de-facto filthy main function which does too much. Sue me
-#[allow(clippy::fn_params_excessive_bools)] // TODO: use an options struct
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn apply(
     source: &str,
@@ -588,11 +578,7 @@ fn apply(
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    fail_none: bool,
-    fail_any: bool,
-    squeeze: bool,
-    only_matching: bool,
-    line_numbers: bool,
+    args: &cli::Cli,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -603,16 +589,16 @@ fn apply(
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
 
-    if fail_none && !view.has_any_in_scope() {
+    if args.options.fail_none && !view.has_any_in_scope() {
         return Err(ApplicationError::NoneInScope);
     }
 
-    if fail_any && view.has_any_in_scope() {
+    if args.options.fail_any && view.has_any_in_scope() {
         return Err(ApplicationError::SomeInScope);
     };
 
     debug!("Applying actions to view.");
-    if squeeze {
+    if args.standalone_actions.squeeze {
         view.squeeze();
     }
 
@@ -621,12 +607,12 @@ fn apply(
     }
 
     debug!("Writing to destination.");
-    let line_based = only_matching || line_numbers;
+    let line_based = args.options.only_matching || args.options.line_numbers;
     if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
             let i = i + 1;
-            if !only_matching || line.has_any_in_scope() {
-                if line_numbers {
+            if !args.options.only_matching || line.has_any_in_scope() {
+                if args.options.line_numbers {
                     // `ColoredString` needs to be 'evaluated' to do anything; make sure
                     // to not forget even if this is moved outside of `format!`.
                     #[allow(clippy::to_string_in_format_args)]
