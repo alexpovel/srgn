@@ -1,0 +1,67 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 223
+  l: "type Name = string;\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 224
+  l: "type NameResolver = () => string;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 225
+  l: "type NameOrResolver = Name | NameResolver;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 228
+  l: "type Easing = \"ease-in\" | \"ease-out\" | \"ease-in-out\";\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 252
+  l: "type OtherShape = Square | Rectangle;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 260
+  l: "type Readonly<T> = {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 261
+  l: "    readonly [P in keyof T]: T[P];\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 262
+  l: "}\n"
+  m: "^  "
+- n: 265
+  l: "type TypeName<T> =\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 266
+  l: "    T extends string ? \"string\" :\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 267
+  l: "    T extends number ? \"number\" :\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 268
+  l: "    T extends boolean ? \"boolean\" :\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 269
+  l: "    T extends undefined ? \"undefined\" :\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 270
+  l: "    T extends Function ? \"function\" :\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 271
+  l: "    \"object\";\n"
+  m: "^^^^^^^^^^^^^^^  "
+- n: 330
+  l: "type World = \"world\";\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 331
+  l: "type Greeting = `hello ${World}`;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 342
+  l: "type MappedTypeWithNewKeys<T> = {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 343
+  l: "    [K in keyof T as KeyType]: T[K]\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 344
+  l: "};\n"
+  m: "^^  "
+- n: 347
+  l: "type JsonValue = string | number | boolean | null | JsonObject | JsonArray;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

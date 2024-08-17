@@ -40,6 +40,8 @@ pub enum PreparedTypeScriptQuery {
     Var,
     /// Type (generic) parameters.
     TypeParams,
+    /// Type alias declarations.
+    TypeAlias,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -84,6 +86,9 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     )"#
                 }
                 PreparedTypeScriptQuery::TypeParams => "(type_parameters) @type_parameters",
+                PreparedTypeScriptQuery::TypeAlias => {
+                    "(type_alias_declaration) @type_alias_declaration"
+                }
             },
         )
         .expect("Prepared queries to be valid")
