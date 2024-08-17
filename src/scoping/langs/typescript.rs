@@ -16,6 +16,12 @@ pub enum PreparedTypeScriptQuery {
     Strings,
     /// Imports (module specifiers).
     Imports,
+    /// Any `function` definitions.
+    Function,
+    /// `async function` definitions.
+    AsyncFunction,
+    /// Non-`async function` definitions.
+    SyncFunction,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -28,6 +34,17 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     r"(import_statement source: (string (string_fragment) @sf))"
                 }
                 PreparedTypeScriptQuery::Strings => "(string_fragment) @string",
+                PreparedTypeScriptQuery::Function => "(function_declaration) @func",
+                PreparedTypeScriptQuery::AsyncFunction => {
+                    r#"(
+                        (function_declaration) @func (#match? @func "^async")
+                    )"#
+                }
+                PreparedTypeScriptQuery::SyncFunction => {
+                    r#"(
+                        (function_declaration) @func (#not-match? @func "^async")
+                    )"#
+                }
             },
         )
         .expect("Prepared queries to be valid")

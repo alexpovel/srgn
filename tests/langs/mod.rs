@@ -178,6 +178,21 @@ impl InScopeLinePart {
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Imports)),
 )]
 #[case(
+    "base.ts_function",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Function)),
+)]
+#[case(
+    "base.ts_async-function",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::AsyncFunction)),
+)]
+#[case(
+    "base.ts_sync-function",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::SyncFunction)),
+)]
+#[case(
     "base.rs_strings",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Strings)),

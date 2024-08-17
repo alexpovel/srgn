@@ -1,0 +1,127 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 25
+  l: "function warnUser(): void {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 26
+  l: "    console.log(\"This is my warning message\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 27
+  l: "\n"
+  m: ^^
+- n: 28
+  l: "    try {\n"
+  m: ^^^^^^^^^^^
+- n: 29
+  l: "        throw new Error('This is an error');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "    } catch (e) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 31
+  l: "        console.error(e);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 32
+  l: "    } finally {\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 33
+  l: "        console.log('finally');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 35
+  l: "}\n"
+  m: "^  "
+- n: 44
+  l: "function error(message: string): never {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 45
+  l: "    throw new Error(message);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 46
+  l: "}\n"
+  m: "^  "
+- n: 187
+  l: "function identity<T>(arg: T): T {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 188
+  l: "    return arg;\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 189
+  l: "}\n"
+  m: "^  "
+- n: 202
+  l: "function loggingIdentity<T extends Lengthwise>(arg: T): T {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 203
+  l: "    console.log(arg.length);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 204
+  l: "    return arg;\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 205
+  l: "}\n"
+  m: "^  "
+- n: 208
+  l: "function getProperty<T, K extends keyof T>(obj: T, key: K) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 209
+  l: "    return obj[key];\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 210
+  l: "}\n"
+  m: "^  "
+- n: 213
+  l: "function padLeft(value: string, padding: string | number) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 214
+  l: "    // ...\n"
+  m: ^^^^^^^^^^^^
+- n: 215
+  l: "}\n"
+  m: "^  "
+- n: 218
+  l: "function isFish(pet: Fish | Snake): pet is Fish {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 219
+  l: "    return (<Fish>pet).swim !== undefined;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 220
+  l: "}\n"
+  m: "^  "
+- n: 231
+  l: "function rollDice(): 1 | 2 | 3 | 4 | 5 | 6 {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 232
+  l: "    // ...\n"
+  m: ^^^^^^^^^^^^
+- n: 233
+  l: "    return 1;\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 234
+  l: "}\n"
+  m: "^  "
+- n: 255
+  l: "function pluck<T, K extends keyof T>(o: T, names: K[]): T[K][] {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 256
+  l: "  return names.map(n => o[n]);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 257
+  l: "}\n"
+  m: "^  "
+- n: 274
+  l: "function sealed(constructor: Function) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 275
+  l: "    Object.seal(constructor);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 276
+  l: "    Object.seal(constructor.prototype);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 277
+  l: "}\n"
+  m: "^  "

@@ -1612,9 +1612,12 @@ Language scopes:
           [env: TYPESCRIPT=]
 
           Possible values:
-          - comments: Comments
-          - strings:  Strings (literal, template)
-          - imports:  Imports (module specifiers)
+          - comments:       Comments
+          - strings:        Strings (literal, template)
+          - imports:        Imports (module specifiers)
+          - function:       Any `function` definitions
+          - async-function: `async function` definitions
+          - sync-function:  Non-`async function` definitions
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

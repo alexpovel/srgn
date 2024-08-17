@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 310
+  l: "async function getFoodItem(): Promise<string> {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 311
+  l: "    const result = await fetch('https://api.example.com/food');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 312
+  l: "    return result.json();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 313
+  l: "}\n"
+  m: "^  "
