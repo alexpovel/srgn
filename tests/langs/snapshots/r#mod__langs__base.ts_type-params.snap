@@ -1,0 +1,28 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 187
+  l: "function identity<T>(arg: T): T {\n"
+  m: "                 ^^^               "
+- n: 192
+  l: "class GenericNumber<T> {\n"
+  m: "                   ^^^    "
+- n: 202
+  l: "function loggingIdentity<T extends Lengthwise>(arg: T): T {\n"
+  m: "                        ^^^^^^^^^^^^^^^^^^^^^^               "
+- n: 208
+  l: "function getProperty<T, K extends keyof T>(obj: T, key: K) {\n"
+  m: "                    ^^^^^^^^^^^^^^^^^^^^^^                    "
+- n: 255
+  l: "function pluck<T, K extends keyof T>(o: T, names: K[]): T[K][] {\n"
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^                              "
+- n: 260
+  l: "type Readonly<T> = {\n"
+  m: "             ^^^      "
+- n: 265
+  l: "type TypeName<T> =\n"
+  m: "             ^^^    "
+- n: 342
+  l: "type MappedTypeWithNewKeys<T> = {\n"
+  m: "                          ^^^      "

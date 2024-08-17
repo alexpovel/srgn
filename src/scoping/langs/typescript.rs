@@ -38,6 +38,8 @@ pub enum PreparedTypeScriptQuery {
     Const,
     /// `var` variable declarations.
     Var,
+    /// Type (generic) parameters.
+    TypeParams,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -81,6 +83,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                         (variable_declaration) @var_decl (#match? @var_decl "^var ")
                     )"#
                 }
+                PreparedTypeScriptQuery::TypeParams => "(type_parameters) @type_parameters",
             },
         )
         .expect("Prepared queries to be valid")

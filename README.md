@@ -1626,6 +1626,7 @@ Language scopes:
           - let:            `let` variable declarations
           - const:          `const` variable declarations
           - var:            `var` variable declarations
+          - type-params:    Type (generic) parameters
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

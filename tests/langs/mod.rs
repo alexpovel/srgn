@@ -233,6 +233,11 @@ impl InScopeLinePart {
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Var)),
 )]
 #[case(
+    "base.ts_type-params",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::TypeParams)),
+)]
+#[case(
     "base.rs_strings",
     include_str!("rust/base.rs"),
     Rust::new(CodeQuery::Prepared(PreparedRustQuery::Strings)),
