@@ -49,6 +49,37 @@ jobs:
           cargo test
           --verbose
 
+  check-clippy-and-format:
+    name: Check clippy and format
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
+      - uses: swatinem/rust-cache@v2
+
+      - name: Set up nightly toolchain
+        # Cannot be `minimal` profile, need `rustfmt` and `clippy`:
+        # https://rust-lang.github.io/rustup/concepts/profiles.html#profiles
+        run: >
+          rustup toolchain install nightly
+          && rustup component add --toolchain nightly rustfmt
+
+      - name: Check formatting
+        run: >
+          cargo +nightly fmt
+          --all
+          -- --check
+
+      - name: Check clippy
+        run: >
+          cargo clippy
+          --workspace
+          --all-targets
+          --all-features
+          -- --deny warnings
+
   check-dependency-changes:
     name: Check for changes in `Cargo.toml` and `Cargo.lock`
 
