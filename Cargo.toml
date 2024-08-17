@@ -16,7 +16,7 @@ categories = [
     "text-editors",
     "text-processing",
 ]
-rust-version = "1.79.0"
+rust-version = "1.80.0"
 
 [dependencies]
 anyhow = { version = "1.0.86", features = ["backtrace"] }
@@ -45,7 +45,6 @@ grep-cli = "0.1.10"
 ignore = "0.4.22"
 itertools = "0.13.0"
 log = "0.4.22"
-once_cell = { version = "1.18.0", optional = true }
 pathdiff = "0.2.1"
 tempfile = "3.10.1"
 titlecase = "3.3.0"
@@ -64,7 +63,7 @@ unicode_titlecase = "2.2.1"
 [features]
 all = ["german", "symbols"]
 default = ["all"]
-german = ["cached", "decompound", "fst", "once_cell"]
+german = ["cached", "decompound", "fst"]
 symbols = []
 
 [dev-dependencies]

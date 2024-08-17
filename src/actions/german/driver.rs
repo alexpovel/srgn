@@ -11,7 +11,7 @@ use decompound::{decompound, DecompositionOptions};
 use itertools::Itertools;
 use itertools::MinMaxResult::{MinMax, NoElements, OneElement};
 use log::{debug, trace};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use unicode_titlecase::StrTitleCase;
 
 /// German language action, responsible for Umlauts and Eszett.
@@ -472,7 +472,7 @@ fn find_valid_replacement(
     None
 }
 
-static SET: Lazy<fst::Set<&[u8]>> = Lazy::new(|| {
+static SET: LazyLock<fst::Set<&[u8]>> = LazyLock::new(|| {
     let bytes: &'static [u8] = include_bytes!(concat!(env!("OUT_DIR"), "/de.fst")); // Generated in `build.rs`.
     trace!("Loading FST.");
     let set = fst::Set::new(bytes).expect("Failed to load FST; FST bytes malformed at build time?");

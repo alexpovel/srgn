@@ -1126,7 +1126,6 @@ dependencies = [
  "itertools",
  "log",
  "nom",
- "once_cell",
  "pathdiff",
  "predicates",
  "pretty_assertions",
