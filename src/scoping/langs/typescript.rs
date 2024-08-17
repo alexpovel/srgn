@@ -24,6 +24,8 @@ pub enum PreparedTypeScriptQuery {
     SyncFunction,
     /// `enum` definitions.
     Enum,
+    /// `try`/`catch`/`finally` blocks.
+    TryCatch,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -48,6 +50,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     )"#
                 }
                 PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
+                PreparedTypeScriptQuery::TryCatch => "(try_statement) @try",
             },
         )
         .expect("Prepared queries to be valid")

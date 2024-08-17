@@ -1619,6 +1619,7 @@ Language scopes:
           - async-function: `async function` definitions
           - sync-function:  Non-`async function` definitions
           - enum:           `enum` definitions
+          - try-catch:      `try`/`catch`/`finally` blocks
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

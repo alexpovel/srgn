@@ -1,0 +1,25 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 28
+  l: "    try {\n"
+  m: "    ^^^^^^^"
+- n: 29
+  l: "        throw new Error('This is an error');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "    } catch (e) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 31
+  l: "        console.error(e);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 32
+  l: "    } finally {\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 33
+  l: "        console.log('finally');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "    }\n"
+  m: "^^^^^  "
