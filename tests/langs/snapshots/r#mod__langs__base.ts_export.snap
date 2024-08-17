@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 291
+  l: "export interface StringValidator {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 292
+  l: "    isAcceptable(s: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 293
+  l: "}\n"
+  m: "^  "
+- n: 297
+  l: "    export interface StringValidator {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 298
+  l: "        isAcceptable(s: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 299
+  l: "    }\n"
+  m: "^^^^^  "

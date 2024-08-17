@@ -48,6 +48,8 @@ pub enum PreparedTypeScriptQuery {
     TypeAlias,
     /// `namespace` blocks.
     Namespace,
+    /// `export` blocks.
+    Export,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -102,6 +104,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                     "(type_alias_declaration) @type_alias_declaration"
                 }
                 PreparedTypeScriptQuery::Namespace => "(internal_module) @internal_module",
+                PreparedTypeScriptQuery::Export => "(export_statement) @export",
             },
         )
         .expect("Prepared queries to be valid")

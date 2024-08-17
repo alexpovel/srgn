@@ -1631,6 +1631,7 @@ Language scopes:
           - type-params:    Type (generic) parameters
           - type-alias:     Type alias declarations
           - namespace:      `namespace` blocks
+          - export:         `export` blocks
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.
