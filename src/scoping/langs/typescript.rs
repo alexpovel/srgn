@@ -22,6 +22,8 @@ pub enum PreparedTypeScriptQuery {
     AsyncFunction,
     /// Non-`async function` definitions.
     SyncFunction,
+    /// `class` definitions.
+    Class,
     /// `enum` definitions.
     Enum,
     /// `interface` definitions.
@@ -59,6 +61,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                         (function_declaration) @func (#not-match? @func "^async")
                     )"#
                 }
+                PreparedTypeScriptQuery::Class => "(class_declaration) @class",
                 PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
                 PreparedTypeScriptQuery::Interface => "(interface_declaration) @interface",
                 PreparedTypeScriptQuery::TryCatch => "(try_statement) @try",

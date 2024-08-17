@@ -1,0 +1,244 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 79
+  l: "class Clock implements ClockInterface {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 80
+  l: "    currentTime: Date = new Date();\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 81
+  l: "    setTime(d: Date) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 82
+  l: "        this.currentTime = d;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 83
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 84
+  l: "    constructor(h: number, m: number) { }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 85
+  l: "}\n"
+  m: "^  "
+- n: 104
+  l: "class Greeter {\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 105
+  l: "    greeting: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 106
+  l: "    constructor(message: string) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 107
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 109
+  l: "    greet() {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 110
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 111
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 112
+  l: "}\n"
+  m: "^  "
+- n: 115
+  l: "class Animal {\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 116
+  l: "    name: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 117
+  l: "    constructor(theName: string) { this.name = theName; }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 118
+  l: "    move(distanceInMeters: number = 0) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 119
+  l: "        console.log(`${this.name} moved ${distanceInMeters}m.`);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 120
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 121
+  l: "}\n"
+  m: "^  "
+- n: 123
+  l: "class Snake extends Animal {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 124
+  l: "    constructor(name: string) { super(name); }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 125
+  l: "    move(distanceInMeters = 5) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 126
+  l: "        console.log(\"Slithering...\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 127
+  l: "        super.move(distanceInMeters);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 128
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 129
+  l: "}\n"
+  m: "^  "
+- n: 131
+  l: "class Fish extends Animal {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 132
+  l: "    constructor(name: string) { super(name); }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 133
+  l: "    move(distanceInMeters = 5) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 134
+  l: "        console.log(\"Swimming...\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 135
+  l: "        super.move(distanceInMeters);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 136
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 137
+  l: "\n"
+  m: ^^
+- n: 138
+  l: "    swim() {\n"
+  m: ^^^^^^^^^^^^^^
+- n: 139
+  l: "        console.log('swimming');\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 140
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 141
+  l: "}\n"
+  m: "^  "
+- n: 144
+  l: "class Person {\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 145
+  l: "    protected name: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 146
+  l: "    constructor(name: string) { this.name = name; }\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 147
+  l: "}\n"
+  m: "^  "
+- n: 150
+  l: "class Octopus {\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 151
+  l: "    readonly name: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 152
+  l: "    readonly numberOfLegs: number = 8;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 153
+  l: "    constructor (theName: string) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 154
+  l: "        this.name = theName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 155
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 156
+  l: "}\n"
+  m: "^  "
+- n: 159
+  l: "class Employee {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 160
+  l: "    private _fullName: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 161
+  l: "\n"
+  m: ^^
+- n: 162
+  l: "    get fullName(): string {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 163
+  l: "        return this._fullName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 164
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 165
+  l: "\n"
+  m: ^^
+- n: 166
+  l: "    set fullName(newName: string) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 167
+  l: "        this._fullName = newName;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 168
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 169
+  l: "}\n"
+  m: "^  "
+- n: 172
+  l: "class Grid {\n"
+  m: ^^^^^^^^^^^^^^
+- n: 173
+  l: "    static origin = {x: 0, y: 0};\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 174
+  l: "}\n"
+  m: "^  "
+- n: 192
+  l: "class GenericNumber<T> {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 193
+  l: "    zeroValue: T;\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 194
+  l: "    add: (x: T, y: T) => T;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 195
+  l: "}\n"
+  m: "^  "
+- n: 279
+  l: "@sealed\n"
+  m: ^^^^^^^^^
+- n: 280
+  l: "class Greeter2 {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 281
+  l: "    greeting: string;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 282
+  l: "    constructor(message: string) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 283
+  l: "        this.greeting = message;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 284
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 285
+  l: "    greet() {\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 286
+  l: "        return \"Hello, \" + this.greeting;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 287
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 288
+  l: "}\n"
+  m: "^  "

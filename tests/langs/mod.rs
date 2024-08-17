@@ -193,6 +193,11 @@ impl InScopeLinePart {
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::SyncFunction)),
 )]
 #[case(
+    "base.ts_class",
+    include_str!("typescript/base.ts"),
+    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Class)),
+)]
+#[case(
     "base.ts_enum",
     include_str!("typescript/base.ts"),
     TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Enum)),
