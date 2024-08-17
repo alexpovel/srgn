@@ -1630,6 +1630,7 @@ Language scopes:
           - var:            `var` variable declarations
           - type-params:    Type (generic) parameters
           - type-alias:     Type alias declarations
+          - namespace:      `namespace` blocks
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

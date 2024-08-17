@@ -46,6 +46,8 @@ pub enum PreparedTypeScriptQuery {
     TypeParams,
     /// Type alias declarations.
     TypeAlias,
+    /// `namespace` blocks.
+    Namespace,
 }
 
 impl From<PreparedTypeScriptQuery> for TSQuery {
@@ -99,6 +101,7 @@ impl From<PreparedTypeScriptQuery> for TSQuery {
                 PreparedTypeScriptQuery::TypeAlias => {
                     "(type_alias_declaration) @type_alias_declaration"
                 }
+                PreparedTypeScriptQuery::Namespace => "(internal_module) @internal_module",
             },
         )
         .expect("Prepared queries to be valid")

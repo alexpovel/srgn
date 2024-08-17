@@ -1,0 +1,34 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 296
+  l: "namespace Validation {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 297
+  l: "    export interface StringValidator {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 298
+  l: "        isAcceptable(s: string): boolean;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 299
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 300
+  l: "}\n"
+  m: "^  "
+- n: 303
+  l: "declare namespace JSX {\n"
+  m: "        ^^^^^^^^^^^^^^^^^"
+- n: 304
+  l: "    interface ElementClass {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 305
+  l: "        render: any;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 306
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 307
+  l: "}\n"
+  m: "^  "
