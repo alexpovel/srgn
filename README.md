@@ -1620,6 +1620,7 @@ Language scopes:
           - sync-function:  Non-`async function` definitions
           - enum:           `enum` definitions
           - try-catch:      `try`/`catch`/`finally` blocks
+          - var-decl:       Variable declarations (`let`, `const`, `var`)
 
       --typescript-query <TREE-SITTER-QUERY>
           Scope TypeScript code using a custom tree-sitter query.

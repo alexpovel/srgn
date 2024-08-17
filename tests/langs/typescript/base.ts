@@ -350,3 +350,5 @@ interface JsonArray extends Array<JsonValue> {}
 
 // Unknown
 let notKnown: unknown = 4;
+
+var isSomething: boolean = true;
