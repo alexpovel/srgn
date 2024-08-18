@@ -286,6 +286,12 @@ fn handle_actions_on_many_files_sorted(
                     Err(PathProcessingError::ApplicationError(
                         ApplicationError::NoneInScope | ApplicationError::SomeInScope,
                     )) => 0,
+                    Err(PathProcessingError::IoError(e, _))
+                        if e.kind() == io::ErrorKind::BrokenPipe && search_mode =>
+                    {
+                        trace!("Detected broken pipe, stopping search.");
+                        break;
+                    }
                     Err(
                         e @ (PathProcessingError::ApplicationError(ApplicationError::ActionError(
                             ..,
@@ -396,6 +402,12 @@ fn handle_actions_on_many_files_threaded(
                         Err(PathProcessingError::ApplicationError(
                             ApplicationError::NoneInScope | ApplicationError::SomeInScope,
                         )) => WalkState::Continue,
+                        Err(PathProcessingError::IoError(e, _))
+                            if e.kind() == io::ErrorKind::BrokenPipe && search_mode =>
+                        {
+                            trace!("Detected broken pipe, stopping search.");
+                            WalkState::Quit
+                        }
                         Err(
                             e @ (PathProcessingError::ApplicationError(..)
                             | PathProcessingError::IoError(..)),
