@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/alexpovel/srgn/compare/srgn-v0.13.0...srgn-v0.13.1) (2024-08-18)
+
+
+### Bug Fixes
+
+* **build:** Vendor `tree-sitter-hcl` properly ([#107](https://github.com/alexpovel/srgn/issues/107)) ([95d346d](https://github.com/alexpovel/srgn/commit/95d346de69397a6a1f759d55ca99e5f0f410ea21))
+
 ## [0.13.0](https://github.com/alexpovel/srgn/compare/srgn-v0.12.0...srgn-v0.13.0) (2024-08-18)
 
 
