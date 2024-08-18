@@ -1,5 +1,131 @@
 # Changelog
 
+## [0.13.0](https://github.com/alexpovel/srgn/compare/srgn-v0.12.0...srgn-v0.13.0) (2024-08-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* `grep`-like, recursive search mode
+* Update `tree-sitter` & bindings
+* Adjust `IGNORE` pattern
+* Variables for replacement action
+* `Ranges`
+
+### Features
+
+* `grep`-like, recursive search mode ([d55b28f](https://github.com/alexpovel/srgn/commit/d55b28fd9e266545d31d679c92b91e28efee4769))
+* `Ranges` ([bd8b0bc](https://github.com/alexpovel/srgn/commit/bd8b0bc0b96afe5ba3e0632c5ff51d0a6842e8aa))
+* **c#:** Scope `class` definitions ([f65137d](https://github.com/alexpovel/srgn/commit/f65137d4779501953ae613ea8626bca797cf6709))
+* **c#:** Scope `enum` definitions ([31dc2cb](https://github.com/alexpovel/srgn/commit/31dc2cb48c6a46b4e1f51a5af87c3b83ebac7299))
+* **c#:** Scope `interface` definitions ([338b5f4](https://github.com/alexpovel/srgn/commit/338b5f47fbe2afc4536a772f9384742dae7e76cb))
+* **c#:** Scope `struct` definitions ([5b53286](https://github.com/alexpovel/srgn/commit/5b5328683596195fefd5a248c65093f2b12e864d))
+* **c#:** Scope attribute names ([c3fe051](https://github.com/alexpovel/srgn/commit/c3fe0518fa3b823ec6a3b9656d791570944688e0))
+* **c#:** Scope constructor definitions ([d8b5e7a](https://github.com/alexpovel/srgn/commit/d8b5e7af6467f9d0eb5e7c9ad20b7ba6de74ff79))
+* **c#:** Scope destructor definitions ([6f9677b](https://github.com/alexpovel/srgn/commit/6f9677b9ba3581665527cfaeb63572d7e701b173))
+* **c#:** Scope field definitions ([3f2d919](https://github.com/alexpovel/srgn/commit/3f2d91933934fb7b78260b3eb3c3381e7954dd39))
+* **c#:** Scope identifier names ([0267196](https://github.com/alexpovel/srgn/commit/02671965d9f46450fcdaa5744ef0cda48559399f))
+* **c#:** Scope method definitions ([5b530a1](https://github.com/alexpovel/srgn/commit/5b530a1bf38fae0fedde0958fbd7bdcc7528a16e))
+* **c#:** Scope property definitions ([769ffef](https://github.com/alexpovel/srgn/commit/769ffef0ec0bc8823135c83fbaa51ffa3b5ed8ce))
+* **c#:** Scope variable declarations ([09879ea](https://github.com/alexpovel/srgn/commit/09879ea4fbdd5f5833f8fd88a910d3a3bf8d049b))
+* **cli:** `-j` aka `--join-language-scopes` flag ([2c1b9e8](https://github.com/alexpovel/srgn/commit/2c1b9e80f680b041cdf08d96be0d56de48758a8d))
+* **go:** Ignore file paths containing `vendor` ([0be56d0](https://github.com/alexpovel/srgn/commit/0be56d0c08d0c33f32d0f6a17965365415bdb5f2))
+* **go:** Scope (any) type definitions ([bf2e90c](https://github.com/alexpovel/srgn/commit/bf2e90c8f5586f97a3a08aeeb47d4cce6c271436))
+* **go:** Scope `const` assignments/specifications ([61232b9](https://github.com/alexpovel/srgn/commit/61232b9ce2d59dfad76bf7a057fcff42071b1172))
+* **go:** Scope `defer` blocks ([76a91b8](https://github.com/alexpovel/srgn/commit/76a91b874ec5ed651b27253951a85151d68cc1ce))
+* **go:** Scope `func init()` definitions ([106c4a6](https://github.com/alexpovel/srgn/commit/106c4a61ff16ade9d3a10a74c41255b541956a37))
+* **go:** Scope `func` definitions (all, free, methods) ([707e95a](https://github.com/alexpovel/srgn/commit/707e95a498f307518777dd3f8c2ee4ce6fc97614))
+* **go:** Scope `go` blocks ([c38c5c3](https://github.com/alexpovel/srgn/commit/c38c5c37a69d94a30c6779aecb1323c3076d071a))
+* **go:** Scope `goto` statements ([4133575](https://github.com/alexpovel/srgn/commit/413357540400e2a6c428cea6665d7a87638e2328))
+* **go:** Scope `select` blocks ([ddbf9d9](https://github.com/alexpovel/srgn/commit/ddbf9d9e84f5cd80b2d23056282a89f84c7b2d7b))
+* **go:** Scope `struct` and `interface` type definitions ([392330f](https://github.com/alexpovel/srgn/commit/392330fbfc3bcd69e0dcda749f091030b4913aa2))
+* **go:** Scope `switch` blocks ([61f5e08](https://github.com/alexpovel/srgn/commit/61f5e085d7bcb32d6aba09355d1c3a09a8418f44))
+* **go:** Scope `type` aliases ([a1d707a](https://github.com/alexpovel/srgn/commit/a1d707a6b809fb9db21ff1997c176cc26e6082d1))
+* **go:** Scope `var` assignments/specifications ([367191d](https://github.com/alexpovel/srgn/commit/367191db427a31a05410f7fb9952c45b302db9f9))
+* **go:** Scope labeled statements ([308e28f](https://github.com/alexpovel/srgn/commit/308e28f1e2f52f6e3557adac449656218f481da0))
+* **go:** Scope type aka generic parameters ([891aa11](https://github.com/alexpovel/srgn/commit/891aa118fafc54070a04ef570d9d1f885c201e19))
+* HCL (HashiCorp Configuration Language) ([814a592](https://github.com/alexpovel/srgn/commit/814a592dbc3e446c6751bc2ab40b9e83337c726b))
+* **hcl:** Scope `data` blocks ([dc38287](https://github.com/alexpovel/srgn/commit/dc3828760e01fb0f258cea393ccb84ba1073cd9e))
+* **hcl:** Scope `locals` blocks ([c22c475](https://github.com/alexpovel/srgn/commit/c22c4757aa113d16453bdc59aed15bfebe3f6d9e))
+* **hcl:** Scope `module` blocks ([84965ed](https://github.com/alexpovel/srgn/commit/84965ed82d7e0133e29bd741311dfe48050a613a))
+* **hcl:** Scope `output` blocks ([9627961](https://github.com/alexpovel/srgn/commit/9627961efc444c1dd3d8bc0c70d68fbeeda5525d))
+* **hcl:** Scope `provider` blocks ([a77e603](https://github.com/alexpovel/srgn/commit/a77e6037bfe6cdf5bbe648652059db7d4549ddd4))
+* **hcl:** Scope `resource` blocks ([963d9a4](https://github.com/alexpovel/srgn/commit/963d9a44721144eae166e9846bda4232f3329cec))
+* **hcl:** Scope `terraform` blocks ([a60a754](https://github.com/alexpovel/srgn/commit/a60a754465462ffb6b9fce5b5adc749357ff547a))
+* **hcl:** Scope `variable` blocks ([6b8dcdc](https://github.com/alexpovel/srgn/commit/6b8dcdc59a438b459623395524a761d56d7e43ac))
+* **language-scoping:** Specify _multiple_ language scopes ([ce0db6f](https://github.com/alexpovel/srgn/commit/ce0db6fec95c6b64e022a2292ba84c976ecf5750)), closes [#104](https://github.com/alexpovel/srgn/issues/104)
+* **python:** Scope `lambda`s ([94894c0](https://github.com/alexpovel/srgn/commit/94894c06993595c6795c7a89622d72197e02aae3))
+* **python:** Scope `try` blocks ([107d87f](https://github.com/alexpovel/srgn/commit/107d87f12103ee429fa05d1bd53e7ddd4b4dfcb8))
+* **python:** Scope `with` blocks ([b0f9825](https://github.com/alexpovel/srgn/commit/b0f9825dcaa5eb288f025cdaa99dd6404695953d))
+* **python:** Scope async function definitions (`async def`) ([4debfff](https://github.com/alexpovel/srgn/commit/4debfff76351dd504750d321861dbed8648f70ec))
+* **python:** Scope classmethods (`[@classmethod](https://github.com/classmethod) def` inside `class`) ([4779d69](https://github.com/alexpovel/srgn/commit/4779d695038059fd9f01bf32e2c8074dd0064ada))
+* **python:** Scope function definitions (`def`) ([10ef4d5](https://github.com/alexpovel/srgn/commit/10ef4d5caddeafe11aa5ed6a1747748bd8444ef2))
+* **python:** Scope global aka module-level variable (assignments) ([fc5c027](https://github.com/alexpovel/srgn/commit/fc5c027fd19537fa45a25ba35ef6e8f3031a0dfe))
+* **python:** Scope methods (`def` inside `class`) ([e151d9a](https://github.com/alexpovel/srgn/commit/e151d9a7a84cdd5248d085969eafe88c45fd55e2))
+* **python:** Scope staticmethods (`[@staticmethod](https://github.com/staticmethod) def` inside `class`) ([8f53aa5](https://github.com/alexpovel/srgn/commit/8f53aa59d025eca863398df34e8031941651105f))
+* **python:** Scope type hints ([5dc106f](https://github.com/alexpovel/srgn/commit/5dc106f5721c8382870744bf1f1a8b8d65e5f3e4))
+* **python:** Scope variable names (from their assignment) ([0fb549c](https://github.com/alexpovel/srgn/commit/0fb549ca64f804cac964df894b852565003a13a1))
+* **rust:** Scope "private" (non-`pub`) function, `struct`, `enum` definitions ([fab1bc3](https://github.com/alexpovel/srgn/commit/fab1bc3820fadd64c73f0b7cf940ce1c128555ce))
+* **rust:** Scope "test" functions (functions with any attribute containing `test`) ([1c264fb](https://github.com/alexpovel/srgn/commit/1c264fb04e85eff4f9973ef36182d9347a578ee2))
+* **rust:** Scope `{,pub({crate,self,super})} enum` definitions ([019bacb](https://github.com/alexpovel/srgn/commit/019bacb607d398c0a0f5ae4db90cc68f59fcff3a))
+* **rust:** Scope `{,pub({crate,self,super})} struct` definitions ([8c922bf](https://github.com/alexpovel/srgn/commit/8c922bfff87850f59bb5314bbd5caee73da15b04))
+* **rust:** Scope `impl` blocks ([f96d0dd](https://github.com/alexpovel/srgn/commit/f96d0ddfddb8638b2b41d94c45d42dc41b8cb2fa))
+* **rust:** Scope `impl` blocks for types and traits specifically ([d51290c](https://github.com/alexpovel/srgn/commit/d51290c1467e044a4abba27a183cefa5d6f08d60))
+* **rust:** Scope `pub({crate,self,super})` function definitions ([0e90ed5](https://github.com/alexpovel/srgn/commit/0e90ed5a11baa817c03d109ed99376a986f2170b))
+* **rust:** Scope `pub` function definitions ([2ebcd15](https://github.com/alexpovel/srgn/commit/2ebcd15718286a693be2218403105393b2a01c8c))
+* **rust:** Scope `trait` definitions ([7a1ad3d](https://github.com/alexpovel/srgn/commit/7a1ad3db95d7e5ef1d39aa972cfd17fb9cf8d219))
+* **rust:** Scope attributes ([b9c03a3](https://github.com/alexpovel/srgn/commit/b9c03a3484c5bd4eaaf27cbc03c75afefcb65ab7))
+* **rust:** Scope closure definitions ([83473c3](https://github.com/alexpovel/srgn/commit/83473c3dcb34c58ebc5823f230b34c611b294410))
+* **rust:** Scope contents of `mod tests` blocks ([fc0a9db](https://github.com/alexpovel/srgn/commit/fc0a9db66895f5796d7589aa4511b6e68e670def))
+* **rust:** Scope contents of `mod` blocks ([08278bc](https://github.com/alexpovel/srgn/commit/08278bc6dce7c0ebe1893aa8d3e3e1e3a7e9c915))
+* **rust:** Scope function definitions ([c2dd0c3](https://github.com/alexpovel/srgn/commit/c2dd0c31324ed6f2c81a72074eb20e9aa57b1e82))
+* **rust:** Scope function definitions marked `async` ([156f34c](https://github.com/alexpovel/srgn/commit/156f34ce03dc963205312a0967b4cfba7bb27c7b))
+* **rust:** Scope function definitions marked `const` ([0cd4ac4](https://github.com/alexpovel/srgn/commit/0cd4ac457c14dbba10e1e198b07696e59e7c8399))
+* **rust:** Scope function definitions marked `extern` ([fd08b7d](https://github.com/alexpovel/srgn/commit/fd08b7d0a927198372d88b3b1f6995ebb5e1d596))
+* **rust:** Scope function definitions marked `unsafe` ([c54fe4d](https://github.com/alexpovel/srgn/commit/c54fe4d920c45a3bb85b6d064235b5bf7bee3413))
+* **rust:** Scope functions inside `impl` blocks ([e9c3c16](https://github.com/alexpovel/srgn/commit/e9c3c16db652777e567bdf644802de7fc329031c))
+* **rust:** Scope identifiers ([007f0be](https://github.com/alexpovel/srgn/commit/007f0be7483eba79716d2a855d16543d49dbd4d5))
+* **rust:** Scope individual variants of enums ([07f4eb9](https://github.com/alexpovel/srgn/commit/07f4eb96f686d785f4c0fa626bcca538985c40d1))
+* **rust:** Scope type definitions (`struct`, `enum`, `union`) ([33fc03b](https://github.com/alexpovel/srgn/commit/33fc03b919d52e80cb45c923fdfb6f2e801559db))
+* **rust:** Scope type identifiers ([4caefdb](https://github.com/alexpovel/srgn/commit/4caefdb3fda70f03c65ef9fff387c4be8df0cbe8))
+* **typescript:** Scope `class` definitions ([f5c3b6f](https://github.com/alexpovel/srgn/commit/f5c3b6f09dae4b5369159b413f6a60241c62ea96))
+* **typescript:** Scope `constructor` method definitions ([afafbbf](https://github.com/alexpovel/srgn/commit/afafbbffc46fcf60c772cc11440b355c039eb794))
+* **typescript:** Scope `enum` definitions ([91afb9f](https://github.com/alexpovel/srgn/commit/91afb9f65a82e6e889137bd6a8f71ad97a99e2d8))
+* **typescript:** Scope `export` blocks ([bb73080](https://github.com/alexpovel/srgn/commit/bb73080feec1e945d2b969783ed9d9408352cc0d))
+* **typescript:** Scope `function` definitions (`async`, sync, or both) ([3edc8f0](https://github.com/alexpovel/srgn/commit/3edc8f027621e2f67234099c576a1e8a39544467))
+* **typescript:** Scope `interface` definitions ([05f3257](https://github.com/alexpovel/srgn/commit/05f3257f8be622b79d7ffe13547eb77b885d7553))
+* **typescript:** Scope `let`, `const`, `var` variable declarations ([9bd04d8](https://github.com/alexpovel/srgn/commit/9bd04d8de0d25baf56e8e7a409ee822a9a561a0c))
+* **typescript:** Scope `namespace` blocks ([aeb5d41](https://github.com/alexpovel/srgn/commit/aeb5d4141e507c77ba9a158b58d3d4a8d96d9790))
+* **typescript:** Scope `try`/`catch`/`finally` blocks ([4c19dd9](https://github.com/alexpovel/srgn/commit/4c19dd9305411e038ffdee51d1efbdf50609faf5))
+* **typescript:** Scope `type` alias declarations ([ba3c726](https://github.com/alexpovel/srgn/commit/ba3c7268cf7c6bc098c9b262dbdde6fbcea02f38))
+* **typescript:** Scope method definitions ([f5ddc52](https://github.com/alexpovel/srgn/commit/f5ddc52805852660e4b5eac4bb7169f860afde5e))
+* **typescript:** Scope type parameters ([449d12e](https://github.com/alexpovel/srgn/commit/449d12ecc09fb7f8d813b42e967ba51ec206c16d))
+* **typescript:** Scope variable declarations ([5be5abc](https://github.com/alexpovel/srgn/commit/5be5abc617b4c3d96fe80ab3db9a2d156042f33e))
+* Variables for replacement action ([7f6cfcb](https://github.com/alexpovel/srgn/commit/7f6cfcbcef8f8d010de5b12df4d3e749b655d128))
+
+
+### Bug Fixes
+
+* `fail-any`, `fail-none` and `fail-empty-glob` flags ([9673678](https://github.com/alexpovel/srgn/commit/9673678e127079c7f49cd57883d9025255cc2906))
+* **cli:** Exit gracefully on broken pipe in search mode ([d47b901](https://github.com/alexpovel/srgn/commit/d47b901bff144482ed19fb44d5906a0c340a3e9b))
+* **go:** String scoping no longer scopes parts of imports/field decl. ([f4796c0](https://github.com/alexpovel/srgn/commit/f4796c0c5beded2de1a3c149afc6d59c9e8844f7))
+* **hcl:** Check blocks for exact `identifier` `eq`uality ([1f26d56](https://github.com/alexpovel/srgn/commit/1f26d5640166b9ca5fdb7a8a33a5c3d6a4d8f8cb))
+* **hcl:** Exclude `count` metavariable from {`resource`,`data`}-names ([6ff7a05](https://github.com/alexpovel/srgn/commit/6ff7a052b592181c3542f57f995366a5d2e5a58c))
+* **hcl:** Scopes exclude quotes ([df30f9e](https://github.com/alexpovel/srgn/commit/df30f9e946f8007d7cb1d0e8dff6797b860db52f))
+* **language-scoping:** Construct `TSQuery` only once ([084df95](https://github.com/alexpovel/srgn/commit/084df951e190a29ac03a6d16704d4fd8c997f1e0)), closes [#76](https://github.com/alexpovel/srgn/issues/76)
+* **logging:** Logs display timestamps again ([70ffd1c](https://github.com/alexpovel/srgn/commit/70ffd1c1615b9db56e9f760d4bfa18ca782f6614))
+* **python:** Scoping docstrings and strings no longer includes quotes ([2a743c8](https://github.com/alexpovel/srgn/commit/2a743c83f5b1a9b6fac4b99832c2d3f476f6569a))
+* **rust:** `uses` scope only scopes things actually behind a `use` ([ea1a734](https://github.com/alexpovel/srgn/commit/ea1a734bd6b5c72115f7dd3aa618e04f8507b5cc))
+* **rust:** `uses` scopes to its entire argument ([0ca45a1](https://github.com/alexpovel/srgn/commit/0ca45a1d323ee1b3522d5caeb5472863844a0446))
+* **rust:** doc comments match `//!`-style ([a910e82](https://github.com/alexpovel/srgn/commit/a910e826d9f0405c367c03c51aef8d01234098fd))
+* **rust:** Scoping strings no longer includes quotes ([8fb5da8](https://github.com/alexpovel/srgn/commit/8fb5da8cc782f30ecd6d412b628a8955edf26deb))
+* **typescript:** Scoping strings no longer includes quotes ([f1626d7](https://github.com/alexpovel/srgn/commit/f1626d7cee8aed4cce47349f741a427bdf37a944))
+
+
+### Miscellaneous Chores
+
+* Adjust `IGNORE` pattern ([96d4d4c](https://github.com/alexpovel/srgn/commit/96d4d4cb4ac3e66eedd668260e5ab16e94dc9ae9))
+* Update `tree-sitter` & bindings ([5debd0e](https://github.com/alexpovel/srgn/commit/5debd0e1f029bd64ff150672ce6c2d7b5952f728))
+
 ## [0.12.0](https://github.com/alexpovel/srgn/compare/srgn-v0.11.0...srgn-v0.12.0) (2024-03-25)
 
 
