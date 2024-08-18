@@ -947,16 +947,16 @@ mod cli {
         term_width = 90,
     )]
     pub struct Cli {
-        /// Scope to apply to, as a regular expression pattern
+        /// Scope to apply to, as a regular expression pattern.
         ///
-        /// If string literal mode is requested, will be interpreted as a literal string.
+        /// If string literal mode is requested, will be interpreted as a literal
+        /// string.
         ///
         /// Actions will apply their transformations within this scope only.
         ///
-        /// The default is the global scope, matching the entire input.
-        ///
-        /// Where that default is meaningless (e.g., deletion), this argument is
-        /// _required_.
+        /// The default is the global scope, matching the entire input. Where that
+        /// default is meaningless or dangerous (e.g., deletion), this argument is
+        /// required.
         #[arg(
             value_name = "SCOPE",
             default_value = GLOBAL_SCOPE,
@@ -965,11 +965,11 @@ mod cli {
         )]
         pub scope: String,
 
-        /// Print shell completions for the given shell
+        /// Print shell completions for the given shell.
+        #[arg(long = "completions", value_enum, verbatim_doc_comment)]
         // This thing needs to live up here to show up within `Options` next to `--help`
         // and `--version`. Further down, it'd show up in the wrong section because we
         // alter `next_help_heading`.
-        #[arg(long = "completions", value_enum, verbatim_doc_comment)]
         pub shell: Option<Shell>,
 
         #[command(flatten)]
@@ -1006,7 +1006,7 @@ mod cli {
     pub struct GlobalOptions {
         /// Glob of files to work on (instead of reading stdin).
         ///
-        /// If processing occurs, it is done in-place, overwriting originals.
+        /// If actions are applied, they overwrite files in-place.
         ///
         /// For supported glob syntax, see:
         /// <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
@@ -1015,12 +1015,15 @@ mod cli {
         #[arg(short('G'), long, verbatim_doc_comment, alias = "files")]
         pub glob: Option<glob::Pattern>,
         /// Fail if working on files (e.g. globbing is requested) but none are found.
+        ///
+        /// Processing no files is not an error condition in itself, but might be an
+        /// unexpected outcome in some contexts. This flag makes the condition explicit.
         #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
         pub fail_no_files: bool,
-        /// Undo the effects of passed actions, where applicable
+        /// Undo the effects of passed actions, where applicable.
         ///
-        /// Requires a 1:1 mapping (bijection) between replacements and original, which
-        /// is currently available for:
+        /// Requires a 1:1 mapping between replacements and original, which is currently
+        /// available only for:
         ///
         /// - symbols: '≠' <-> '!=' etc.
         ///
@@ -1032,7 +1035,7 @@ mod cli {
         ///   lost
         ///
         /// These may still be passed, but will be ignored for inversion and applied
-        /// normally
+        /// normally.
         #[cfg(feature = "symbols")]
         #[arg(short, long, env, requires = "symbols", verbatim_doc_comment)]
         pub invert: bool,
@@ -1064,10 +1067,12 @@ mod cli {
         #[arg(short('j'), long, verbatim_doc_comment)]
         pub join_language_scopes: bool,
         /// Prepend line numbers to output.
-        #[arg(long, verbatim_doc_comment)]
+        #[arg(long, hide(true), verbatim_doc_comment)]
+        // Hidden: internal use. Not really useful to expose.
         pub line_numbers: bool,
         /// Print only matching lines.
-        #[arg(long, verbatim_doc_comment)]
+        #[arg(long, hide(true), verbatim_doc_comment)]
+        // Hidden: internal use. Not really useful to expose.
         pub only_matching: bool,
         /// Do not ignore hidden files and directories.
         #[arg(short('H'), long, verbatim_doc_comment)]
@@ -1080,14 +1085,15 @@ mod cli {
         /// In search mode, this emits results in sorted order. Otherwise, it processes
         /// files in sorted order.
         ///
-        /// Sorted processing *disables all parallelism*.
+        /// Sorted processing disables parallel processing.
         #[arg(long, verbatim_doc_comment)]
         pub sorted: bool,
         /// Override detection heuristics for stdin readability, and force to value.
         ///
         /// `true` will always attempt to read from stdin. `false` will never read from
         /// stdin, even if provided.
-        #[arg(long, verbatim_doc_comment)]
+        #[arg(long, hide(true), verbatim_doc_comment)]
+        // Hidden: internal use for testing, where some forceful overriding is required.
         pub stdin_override_to: Option<bool>,
         /// Number of threads to run processing on, when working with files.
         ///
@@ -1095,11 +1101,11 @@ mod cli {
         /// sequential, deterministic (but not sorted) output.
         #[arg(long, verbatim_doc_comment)]
         pub threads: Option<NonZero<usize>>,
-        /// Increase log verbosity level
+        /// Increase log verbosity level.
         ///
         /// The base log level to use is read from the `RUST_LOG` environment variable
-        /// (if missing, 'error'), and increased according to the number of times this
-        /// flag is given.
+        /// (if unspecified, defaults to 'error'), and increased according to the number
+        /// of times this flag is given, maxing out at 'trace' verbosity.
         #[arg(
             short = 'v',
             long = "verbose",
@@ -1114,27 +1120,33 @@ mod cli {
     #[command(next_help_heading = "Composable Actions")]
     #[allow(clippy::struct_excessive_bools)]
     pub struct ComposableActions {
-        /// Replace scope by this (fixed) value
+        /// Replace anything in scope with this value.
         ///
-        /// Specially treated action for ergonomics and compatibility with `tr`.
+        /// Variables are supported: if a regex pattern was used for scoping and
+        /// captured content in named or numbered capture groups, access these in the
+        /// replacement value using `$1` etc. for numbered, `$NAME` etc. for named
+        /// capture groups.
+        ///
+        /// This action is specially treated as a positional argument for ergonomics and
+        /// compatibility with `tr`.
         ///
         /// If given, will run before any other action.
         #[arg(value_name = "REPLACEMENT", env, verbatim_doc_comment)]
         pub replace: Option<String>,
-        /// Uppercase scope
+        /// Uppercase anything in scope.
         #[arg(short, long, env, verbatim_doc_comment)]
         pub upper: bool,
-        /// Lowercase scope
+        /// Lowercase anything in scope.
         #[arg(short, long, env, verbatim_doc_comment)]
         pub lower: bool,
-        /// Titlecase scope
+        /// Titlecase anything in scope.
         #[arg(short, long, env, verbatim_doc_comment)]
         pub titlecase: bool,
-        /// Normalize (Normalization Form D) scope, and throw away marks
+        /// Normalize (Normalization Form D) anything in scope, and throw away marks.
         #[arg(short, long, env, verbatim_doc_comment)]
         pub normalize: bool,
         /// Perform substitutions on German words, such as 'Abenteuergruesse' to
-        /// 'Abenteuergrüße'
+        /// 'Abenteuergrüße', for anything in scope.
         ///
         /// ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
         /// their respective native Unicode (ä, ö, ü, ß).
@@ -1153,7 +1165,8 @@ mod cli {
             default_value_if("german-opts", ArgPredicate::IsPresent, "true")
         )]
         pub german: bool,
-        /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
+        /// Perform substitutions on symbols, such as '!=' to '≠', '->' to '→', on
+        /// anything in scope.
         ///
         /// Helps translate 'ASCII art' into native Unicode representations.
         #[cfg(feature = "symbols")]
@@ -1165,11 +1178,11 @@ mod cli {
     #[group(required = false, multiple = false)]
     #[command(next_help_heading = "Standalone Actions (only usable alone)")]
     pub struct StandaloneActions {
-        /// Delete scope
+        /// Delete anything in scope.
         ///
-        /// Cannot be used with any other action: no point in deleting and performing any
-        /// other action. Sibling actions would either receive empty input or have their
-        /// work wiped.
+        /// Cannot be used with any other action: there is no point in deleting and
+        /// performing any other processing. Sibling actions would either receive empty
+        /// input or have their work wiped.
         #[arg(
             short,
             long,
@@ -1178,7 +1191,7 @@ mod cli {
             verbatim_doc_comment
         )]
         pub delete: bool,
-        /// Squeeze consecutive occurrences of scope into one
+        /// Squeeze consecutive occurrences of scope into one.
         #[arg(
             short,
             long,
@@ -1295,9 +1308,9 @@ mod cli {
         ///
         /// For example, "Busse" (original) and "Buße" (replacement) are equally legal
         /// words: by default, the tool would prefer the latter.
+        #[arg(long, env, verbatim_doc_comment)]
         // More fine-grained control is not available. We are not in the business of
         // natural language processing or LLMs, so that's all we can offer...
-        #[arg(long, env, verbatim_doc_comment)]
         pub german_prefer_original: bool,
         /// Always perform any possible replacement ('ae' -> 'ä', 'ss' -> 'ß', etc.),
         /// regardless of legality of the resulting word

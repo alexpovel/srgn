@@ -25,14 +25,14 @@ mod tests {
     use fancy_regex::Regex;
     use itertools::Itertools;
     use nom::branch::alt;
-    use nom::bytes::complete::{escaped, is_not, tag, take_until, take_while1};
+    use nom::bytes::complete::{escaped, tag, take_until, take_while1};
     use nom::character::complete::{
-        alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, char, line_ending, none_of,
-        space0, space1,
+        alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, anychar, char, line_ending,
+        none_of, space0, space1,
     };
-    use nom::combinator::{cut, map, opt};
+    use nom::combinator::{cut, eof, map, opt};
     use nom::error::ParseError;
-    use nom::multi::{many0, many1, separated_list1};
+    use nom::multi::{many0, many1, many_till, separated_list1};
     use nom::sequence::{delimited, preceded, tuple};
     use nom::{Finish, IResult};
     use pretty_assertions::assert_eq;
@@ -271,7 +271,7 @@ mod tests {
         /// with some binary under test (`butest`).
         fn assemble(
             chain: impl Iterator<Item = Program>,
-            stdout: Option<&str>,
+            stdout: Option<String>,
             snippets: &Snippets,
             should_fail: bool,
         ) -> Result<Self, &'static str> {
@@ -279,7 +279,7 @@ mod tests {
             eprintln!("Will assemble programs: {programs:?}");
 
             // There's a trailing newline inserted which ruins/fails diffs.
-            let stdout = stdout.map(|s| s.strip_suffix('\n').unwrap().to_string());
+            let stdout = stdout.map(|s| s.trim_end().to_string());
 
             let mut standalone = false;
 
@@ -427,9 +427,25 @@ mod tests {
         let should_fail = tail.contains("will fail");
         let (input, _) = line_ending(input)?;
 
-        // Parse stdout; anything up to the next prompt.
-        let (input, stdout) = opt(is_not(prompt.to_string().as_str()))(input)?;
-        eprintln!("Parsed stdout: {stdout:#?}");
+        // Parse stdout; anything up to the next prompt. Be careful about `$` signs
+        // *inside* of expected stdout: only `\n$` is a new prompt.
+        let (input, (stdout_chars, start_of_next_input)) =
+            many_till(anychar, alt((preceded(line_ending, tag("$")), eof)))(input)?;
+
+        assert!(
+            start_of_next_input == "$" || start_of_next_input.is_empty(),
+            "Unexpected parsing result: {start_of_next_input} (remaining input: {})",
+            input.escape_debug()
+        );
+
+        let stdout = if stdout_chars.is_empty() {
+            None
+        } else {
+            Some(stdout_chars.into_iter().join(""))
+        };
+
+        eprintln!("Remaining input: {input:?}");
+        eprintln!("Parsed stdout: {stdout:?}");
 
         Ok((
             input,
@@ -704,10 +720,10 @@ mod tests {
                 {
                     file_name = if let Some(stripped_file_name) = file_name.strip_prefix("output-")
                     {
-                        snippet.output = Some(ncb.literal);
+                        snippet.output = Some(ncb.literal.trim_end().to_owned());
                         stripped_file_name.to_owned()
                     } else {
-                        snippet.original = Some(ncb.literal);
+                        snippet.original = Some(ncb.literal.trim_end().to_owned());
                         file_name
                     };
 
@@ -813,6 +829,11 @@ mod tests {
 
                 let mut observed_stdout = String::from_utf8(assertion.get_output().stdout.clone())
                     .expect("Stdout should be given as UTF-8");
+                observed_stdout = {
+                    let s = observed_stdout.trim_end();
+                    s.to_owned()
+                };
+
                 if let Some(expected_stdout) = program.stdout().clone() {
                     if cfg!(target_os = "windows") {
                         observed_stdout = fix_windows_output(observed_stdout);

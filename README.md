@@ -91,7 +91,6 @@ which can be searched using:
 $ cat birds.py | srgn --python 'class' 'age'
 11:    age: int
 15:        self.age += 1
-
 ```
 
 The string `age` was sought and found *only* within Python `class` definitions (and not,
@@ -109,7 +108,6 @@ find methods (aka *`def` within `class`*) lacking docstrings:
 $ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
 13:    def celebrate_birthday(self):
 14:        print("🎉")
-
 ```
 
 Note how this does not surface either `from_egg` (has a docstring) or `register_bird`
@@ -139,7 +137,6 @@ multiple items can be surgically drilled down into as
 ```console
 $ cat music.rs | srgn --rust 'pub-enum' --rust 'type-identifier' 'Subgenre' # AND'ed together
 2:    Rock(Subgenre),
-
 ```
 
 where only lines matching *all* criteria are returned, acting like a logical *and*
@@ -151,7 +148,6 @@ of `doc-strings` usually returns nothing. The inverse works as expected however:
 $ cat birds.py | srgn --python 'class' --python 'doc-strings' # From earlier example
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
-
 ```
 
 No docstrings outside `class` bodies are surfaced!
@@ -166,7 +162,6 @@ $ cat birds.py | srgn -j --python 'comments' --python 'doc-strings' 'bird[^s]'
 19:        """Create a bird from an egg."""
 20:        pass  # No bird here yet!
 24:    """Registers a bird."""
-
 ```
 
 #### Working recursively
@@ -183,8 +178,6 @@ docs/samples/birds
 docs/samples/birds.py
 9:    age: int
 13:        self.age += 1
-
-
 ```
 
 It recursively walks its current directory, finding files based on [file
@@ -1149,8 +1142,6 @@ tests/langs/go/fizzbuzz.go
 7:// for multiples of 5, it prints "Buzz", and for multiples of both 3 and 5,
 8:// it prints "FizzBuzz".
 25:	// Run the FizzBuzz function for numbers from 1 to 100
-
-
 ```
 <!-- markdownlint-enable MD010 -->
 
@@ -1221,7 +1212,9 @@ stuff
 
 ### Help output
 
-For reference, the full help output with all available options is:
+For reference, the full help output with all available options is given below. As with
+all other snippets, the output is validated for correctness as part of [unit
+tests](./tests/readme.rs). Checkout git tags to view help output of specific versions.
 
 ```console
 $ srgn --help
@@ -1232,22 +1225,22 @@ Usage: srgn [OPTIONS] [SCOPE] [REPLACEMENT]
 
 Arguments:
   [SCOPE]
-          Scope to apply to, as a regular expression pattern
+          Scope to apply to, as a regular expression pattern.
           
-          If string literal mode is requested, will be interpreted as a literal string.
+          If string literal mode is requested, will be interpreted as a literal
+          string.
           
           Actions will apply their transformations within this scope only.
           
-          The default is the global scope, matching the entire input.
-          
-          Where that default is meaningless (e.g., deletion), this argument is
-          _required_.
+          The default is the global scope, matching the entire input. Where that
+          default is meaningless or dangerous (e.g., deletion), this argument is
+          required.
           
           [default: .*]
 
 Options:
       --completions <SHELL>
-          Print shell completions for the given shell
+          Print shell completions for the given shell.
           
           [possible values: bash, elvish, fish, powershell, zsh]
 
@@ -1259,28 +1252,28 @@ Options:
 
 Composable Actions:
   -u, --upper
-          Uppercase scope
+          Uppercase anything in scope.
           
           [env: UPPER=]
 
   -l, --lower
-          Lowercase scope
+          Lowercase anything in scope.
           
           [env: LOWER=]
 
   -t, --titlecase
-          Titlecase scope
+          Titlecase anything in scope.
           
           [env: TITLECASE=]
 
   -n, --normalize
-          Normalize (Normalization Form D) scope, and throw away marks
+          Normalize (Normalization Form D) anything in scope, and throw away marks.
           
           [env: NORMALIZE=]
 
   -g, --german
           Perform substitutions on German words, such as 'Abenteuergruesse' to
-          'Abenteuergrüße'
+          'Abenteuergrüße', for anything in scope.
           
           ASCII spellings for Umlauts (ae, oe, ue) and Eszett (ss) are replaced by
           their respective native Unicode (ä, ö, ü, ß).
@@ -1292,14 +1285,21 @@ Composable Actions:
           Words require correct spelling to be detected.
 
   -S, --symbols
-          Perform substitutions on symbols, such as '!=' to '≠', '->' to '→'
+          Perform substitutions on symbols, such as '!=' to '≠', '->' to '→', on
+          anything in scope.
           
           Helps translate 'ASCII art' into native Unicode representations.
 
   [REPLACEMENT]
-          Replace scope by this (fixed) value
+          Replace anything in scope with this value.
           
-          Specially treated action for ergonomics and compatibility with `tr`.
+          Variables are supported: if a regex pattern was used for scoping and
+          captured content in named or numbered capture groups, access these in the
+          replacement value using `$1` etc. for numbered, `$NAME` etc. for named
+          capture groups.
+          
+          This action is specially treated as a positional argument for ergonomics and
+          compatibility with `tr`.
           
           If given, will run before any other action.
           
@@ -1307,14 +1307,14 @@ Composable Actions:
 
 Standalone Actions (only usable alone):
   -d, --delete
-          Delete scope
+          Delete anything in scope.
           
-          Cannot be used with any other action: no point in deleting and performing any
-          other action. Sibling actions would either receive empty input or have their
-          work wiped.
+          Cannot be used with any other action: there is no point in deleting and
+          performing any other processing. Sibling actions would either receive empty
+          input or have their work wiped.
 
   -s, --squeeze
-          Squeeze consecutive occurrences of scope into one
+          Squeeze consecutive occurrences of scope into one.
           
           [env: SQUEEZE=]
           [aliases: squeeze-repeats]
@@ -1323,7 +1323,7 @@ Options (global):
   -G, --glob <GLOB>
           Glob of files to work on (instead of reading stdin).
           
-          If processing occurs, it is done in-place, overwriting originals.
+          If actions are applied, they overwrite files in-place.
           
           For supported glob syntax, see:
           <https://docs.rs/glob/0.3.1/glob/struct.Pattern.html>
@@ -1332,12 +1332,15 @@ Options (global):
 
       --fail-no-files
           Fail if working on files (e.g. globbing is requested) but none are found.
+          
+          Processing no files is not an error condition in itself, but might be an
+          unexpected outcome in some contexts. This flag makes the condition explicit.
 
   -i, --invert
-          Undo the effects of passed actions, where applicable
+          Undo the effects of passed actions, where applicable.
           
-          Requires a 1:1 mapping (bijection) between replacements and original, which
-          is currently available for:
+          Requires a 1:1 mapping between replacements and original, which is currently
+          available only for:
           
           - symbols: '≠' <-> '!=' etc.
           
@@ -1349,7 +1352,7 @@ Options (global):
             lost
           
           These may still be passed, but will be ignored for inversion and applied
-          normally
+          normally.
           
           [env: INVERT=]
 
@@ -1382,12 +1385,6 @@ Options (global):
           No effect if only a single language scope is given. Also does not affect
           non-language scopers (regex pattern etc.), which always intersect.
 
-      --line-numbers
-          Prepend line numbers to output.
-
-      --only-matching
-          Print only matching lines.
-
   -H, --hidden
           Do not ignore hidden files and directories.
 
@@ -1400,15 +1397,7 @@ Options (global):
           In search mode, this emits results in sorted order. Otherwise, it processes
           files in sorted order.
           
-          Sorted processing *disables all parallelism*.
-
-      --stdin-override-to <STDIN_OVERRIDE_TO>
-          Override detection heuristics for stdin readability, and force to value.
-          
-          `true` will always attempt to read from stdin. `false` will never read from
-          stdin, even if provided.
-          
-          [possible values: true, false]
+          Sorted processing disables parallel processing.
 
       --threads <THREADS>
           Number of threads to run processing on, when working with files.
@@ -1417,11 +1406,11 @@ Options (global):
           sequential, deterministic (but not sorted) output.
 
   -v, --verbose...
-          Increase log verbosity level
+          Increase log verbosity level.
           
           The base log level to use is read from the `RUST_LOG` environment variable
-          (if missing, 'error'), and increased according to the number of times this
-          flag is given.
+          (if unspecified, defaults to 'error'), and increased according to the number
+          of times this flag is given, maxing out at 'trace' verbosity.
 
 Language scopes:
       --csharp <CSHARP>
@@ -1656,7 +1645,6 @@ Options (german):
           dictionaries. Called 'naive' as this does not perform legal checks.
           
           [env: GERMAN_NAIVE=]
-
 ```
 
 ## Rust library
