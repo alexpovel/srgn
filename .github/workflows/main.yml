@@ -33,7 +33,6 @@ jobs:
         run: |
           git config --global core.autocrlf false
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - name: Check actual EOL on disk
         run: |
           git ls-files --eol
@@ -56,7 +55,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
 
       - name: Set up nightly toolchain
@@ -113,7 +111,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with:
@@ -142,7 +139,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with:
@@ -163,7 +159,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
 
       - name: Install cargo-tarpaulin (for coverage)
@@ -260,7 +255,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
 
       - name: Add rustup target
@@ -314,7 +308,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
 
       - name: Publish
@@ -340,7 +333,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git submodule update --init src/scoping/langs/tree_sitter_hcl/upstream # Only this one!
       - uses: swatinem/rust-cache@v2
 
       - name: Publish
