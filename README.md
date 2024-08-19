@@ -78,8 +78,6 @@ class Bird:
 
 
 def register_bird(bird: Bird, db: Db) -> None:
-    """Registers a bird."""
-
     assert bird.age >= 0
     with db.tx() as tx:
         tx.insert(bird)
@@ -161,7 +159,6 @@ $ cat birds.py | srgn -j --python 'comments' --python 'doc-strings' 'bird[^s]'
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 20:        pass  # No bird here yet!
-24:    """Registers a bird."""
 ```
 
 #### Working recursively
