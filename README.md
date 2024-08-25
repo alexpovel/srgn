@@ -358,7 +358,10 @@ See [here](#rust-library) for more.
 [Various
 shells](https://docs.rs/clap_complete/4.5.1/clap_complete/shells/enum.Shell.html#variants)
 are supported for shell completion scripts. For example, append `eval "$(srgn
---completions zsh)"` to `~/.zshrc` for completions in ZSH.
+--completions zsh)"` to `~/.zshrc` for completions in ZSH. An interactive session can
+then look like:
+
+[![srgn shell completion](https://asciinema.org/a/673473.svg)](https://asciinema.org/a/673473)
 
 ## Walkthrough
 
