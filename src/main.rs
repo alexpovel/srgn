@@ -334,6 +334,7 @@ fn handle_actions_on_many_files_sorted(
 
 /// Main entrypoint for processing using at least 1 thread.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
+#[allow(clippy::too_many_lines)]
 fn handle_actions_on_many_files_threaded(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
@@ -440,7 +441,8 @@ fn handle_actions_on_many_files_threaded(
             })
         });
 
-    if let Some(e) = err.lock().unwrap().take() {
+    let error = err.lock().unwrap().take();
+    if let Some(e) = error {
         return Err(e);
     }
 
