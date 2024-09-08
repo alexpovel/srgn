@@ -324,3 +324,34 @@ impl<T> X<T> for Y {}
 impl PubStruct {
     const PANIC: () = panic!("bam!");
 }
+
+mod unsafe_stuff {
+    const UNSAFE: &str = "unsafe"; // This unsafe mention will not be found.
+
+    unsafe fn unsafe_function() {
+        // Unsafe code here
+    }
+
+    async unsafe fn unsafe_async_function() {
+        // Unsafe code here
+    }
+
+    fn function_with_unsafe_block() {
+        unsafe {
+            // Unsafe code here
+        }
+    }
+
+    unsafe trait UnsafeTrait {
+        // Trait definition
+    }
+
+    unsafe impl UnsafeTrait for SomeType {
+        // Implementation
+    }
+
+    trait SomeTrait {
+        unsafe fn unsafe_method(&self);
+        async unsafe fn async_unsafe_method(&self);
+    }
+}

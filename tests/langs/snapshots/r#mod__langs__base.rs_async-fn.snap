@@ -53,3 +53,12 @@ expression: inscope_parts
 - n: 201
   l: "}\n"
   m: "^  "
+- n: 335
+  l: "    async unsafe fn unsafe_async_function() {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 336
+  l: "        // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 337
+  l: "    }\n"
+  m: "^^^^^  "

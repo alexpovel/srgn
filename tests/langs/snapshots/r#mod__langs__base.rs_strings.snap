@@ -137,3 +137,6 @@ expression: inscope_parts
 - n: 325
   l: "    const PANIC: () = panic!(\"bam!\");\n"
   m: "                               ^^^^      "
+- n: 329
+  l: "    const UNSAFE: &str = \"unsafe\"; // This unsafe mention will not be found.\n"
+  m: "                           ^^^^^^                                               "

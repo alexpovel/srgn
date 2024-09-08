@@ -1589,6 +1589,8 @@ Language scopes:
           - identifier:       Identifiers
           - type-identifier:  Identifiers for types
           - closure:          Closure definitions
+          - unsafe:           `unsafe` keyword usages (`unsafe fn`, `unsafe` blocks,
+            `unsafe Trait`, `unsafe impl Trait`)
 
       --rust-query <TREE-SITTER-QUERY>
           Scope Rust code using a custom tree-sitter query.

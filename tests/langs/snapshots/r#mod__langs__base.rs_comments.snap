@@ -92,3 +92,21 @@ expression: inscope_parts
 - n: 210
   l: "    // Multiline string\n"
   m: "    ^^^^^^^^^^^^^^^^^^^  "
+- n: 329
+  l: "    const UNSAFE: &str = \"unsafe\"; // This unsafe mention will not be found.\n"
+  m: "                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 332
+  l: "        // Unsafe code here\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^  "
+- n: 336
+  l: "        // Unsafe code here\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^  "
+- n: 341
+  l: "            // Unsafe code here\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^  "
+- n: 346
+  l: "        // Trait definition\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^  "
+- n: 350
+  l: "        // Implementation\n"
+  m: "        ^^^^^^^^^^^^^^^^^  "

@@ -99,6 +99,9 @@ pub enum PreparedRustQuery {
     TypeIdentifier,
     /// Closure definitions.
     Closure,
+    /// `unsafe` keyword usages (`unsafe fn`, `unsafe` blocks, `unsafe Trait`, `unsafe
+    /// impl Trait`).
+    Unsafe,
 }
 
 impl From<PreparedRustQuery> for TSQuery {
@@ -312,6 +315,27 @@ impl From<PreparedRustQuery> for TSQuery {
                 PreparedRustQuery::Identifier => "(identifier) @identifier",
                 PreparedRustQuery::TypeIdentifier => "(type_identifier) @identifier",
                 PreparedRustQuery::Closure => "(closure_expression) @closure",
+                PreparedRustQuery::Unsafe => {
+                    r#"
+                        [
+                            (
+                                (trait_item) @ti (#match? @ti "^unsafe")
+                            )
+                            (
+                                (impl_item) @ii (#match? @ii "^unsafe")
+                            )
+                            (function_item
+                                (function_modifiers) @funcmods
+                                (#match? @funcmods "unsafe")
+                            ) @function_item
+                            (function_signature_item
+                                (function_modifiers) @funcmods
+                                (#match? @funcmods "unsafe")
+                            ) @function_signature_item
+                            (unsafe_block) @block
+                        ] @unsafe
+                    "#
+                }
             },
         )
         .expect("Prepared queries to be valid")

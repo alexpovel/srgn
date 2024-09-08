@@ -14,3 +14,21 @@ expression: inscope_parts
 - n: 297
   l: "}\n"
   m: "^  "
+- n: 331
+  l: "    unsafe fn unsafe_function() {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 332
+  l: "        // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 333
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 335
+  l: "    async unsafe fn unsafe_async_function() {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 336
+  l: "        // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 337
+  l: "    }\n"
+  m: "^^^^^  "

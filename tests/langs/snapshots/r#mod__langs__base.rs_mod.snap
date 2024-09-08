@@ -74,3 +74,93 @@ expression: inscope_parts
 - n: 264
   l: "}\n"
   m: "^  "
+- n: 328
+  l: "mod unsafe_stuff {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 329
+  l: "    const UNSAFE: &str = \"unsafe\"; // This unsafe mention will not be found.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 330
+  l: "\n"
+  m: ^^
+- n: 331
+  l: "    unsafe fn unsafe_function() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 332
+  l: "        // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 333
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 334
+  l: "\n"
+  m: ^^
+- n: 335
+  l: "    async unsafe fn unsafe_async_function() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 336
+  l: "        // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 337
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 338
+  l: "\n"
+  m: ^^
+- n: 339
+  l: "    fn function_with_unsafe_block() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 340
+  l: "        unsafe {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 341
+  l: "            // Unsafe code here\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 342
+  l: "        }\n"
+  m: ^^^^^^^^^^^
+- n: 343
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 344
+  l: "\n"
+  m: ^^
+- n: 345
+  l: "    unsafe trait UnsafeTrait {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 346
+  l: "        // Trait definition\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 347
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 348
+  l: "\n"
+  m: ^^
+- n: 349
+  l: "    unsafe impl UnsafeTrait for SomeType {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 350
+  l: "        // Implementation\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 351
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 352
+  l: "\n"
+  m: ^^
+- n: 353
+  l: "    trait SomeTrait {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 354
+  l: "        unsafe fn unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 355
+  l: "        async unsafe fn async_unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 356
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 357
+  l: "}\n"
+  m: "^  "
