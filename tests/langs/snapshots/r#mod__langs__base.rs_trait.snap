@@ -11,3 +11,24 @@ expression: inscope_parts
 - n: 308
   l: "}\n"
   m: "^  "
+- n: 345
+  l: "    unsafe trait UnsafeTrait {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 346
+  l: "        // Trait definition\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 347
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 353
+  l: "    trait SomeTrait {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^"
+- n: 354
+  l: "        unsafe fn unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 355
+  l: "        async unsafe fn async_unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 356
+  l: "    }\n"
+  m: "^^^^^  "

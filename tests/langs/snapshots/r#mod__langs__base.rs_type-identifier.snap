@@ -197,3 +197,15 @@ expression: inscope_parts
 - n: 324
   l: "impl PubStruct {\n"
   m: "     ^^^^^^^^^    "
+- n: 345
+  l: "    unsafe trait UnsafeTrait {\n"
+  m: "                 ^^^^^^^^^^^    "
+- n: 349
+  l: "    unsafe impl UnsafeTrait for SomeType {\n"
+  m: "                ^^^^^^^^^^^                 "
+- n: 349
+  l: "    unsafe impl UnsafeTrait for SomeType {\n"
+  m: "                                ^^^^^^^^    "
+- n: 353
+  l: "    trait SomeTrait {\n"
+  m: "          ^^^^^^^^^    "

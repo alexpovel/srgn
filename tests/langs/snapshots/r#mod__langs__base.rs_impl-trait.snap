@@ -38,3 +38,12 @@ expression: inscope_parts
 - n: 322
   l: "impl<T> X<T> for Y {}\n"
   m: "^^^^^^^^^^^^^^^^^^^^^  "
+- n: 349
+  l: "    unsafe impl UnsafeTrait for SomeType {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 350
+  l: "        // Implementation\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 351
+  l: "    }\n"
+  m: "^^^^^  "
