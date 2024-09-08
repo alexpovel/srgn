@@ -143,7 +143,7 @@ some combinations from making sense: for example, searching for a `class` body *
 of `doc-strings` usually returns nothing. The inverse works as expected however:
 
 ```console
-$ cat birds.py | srgn --python 'class' --python 'doc-strings' # From earlier example
+$ cat birds.py | srgn --py 'class' --py 'doc-strings' # From earlier example; note `--py` is a shorthand for `--python`
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 ```
@@ -1417,6 +1417,7 @@ Language scopes:
           Scope C# code using a prepared query.
           
           [env: CSHARP=]
+          [aliases: cs]
 
           Possible values:
           - comments:             Comments (including XML, inline, doc comments)
@@ -1505,6 +1506,7 @@ Language scopes:
           Scope Python code using a prepared query.
           
           [env: PYTHON=]
+          [aliases: py]
 
           Possible values:
           - comments:             Comments
@@ -1542,6 +1544,7 @@ Language scopes:
           Scope Rust code using a prepared query.
           
           [env: RUST=]
+          [aliases: rs]
 
           Possible values:
           - comments:         Comments (line and block styles; excluding doc comments;
@@ -1601,6 +1604,7 @@ Language scopes:
           Scope TypeScript code using a prepared query.
           
           [env: TYPESCRIPT=]
+          [aliases: ts]
 
           Possible values:
           - comments:       Comments

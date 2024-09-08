@@ -1242,7 +1242,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     pub struct CSharpScope {
         /// Scope C# code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "cs")]
         pub csharp: Vec<PreparedCSharpQuery>,
 
         /// Scope C# code using a custom tree-sitter query.
@@ -1280,7 +1280,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     pub struct PythonScope {
         /// Scope Python code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "py")]
         pub python: Vec<PreparedPythonQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
@@ -1292,7 +1292,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     pub struct RustScope {
         /// Scope Rust code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "rs")]
         pub rust: Vec<PreparedRustQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
@@ -1304,7 +1304,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     pub struct TypeScriptScope {
         /// Scope TypeScript code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "ts")]
         pub typescript: Vec<PreparedTypeScriptQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.

@@ -511,6 +511,14 @@ mod tests {
                                 tag("stdin-override-to"),
                                 tag("threads"),
                                 tag("typescript"),
+                                //
+                                // Shorthands. NOTE: only a limited number of elements
+                                // can go here. `nom` is generic, and this tuple inside
+                                // `alt` is limited to 21 members.
+                                tag("cs"),
+                                tag("py"),
+                                tag("rs"),
+                                tag("ts"),
                             )),
                         ),
                         cut(
