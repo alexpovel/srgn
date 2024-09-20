@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 69
+  l: "    switch (a) {\n"
+  m: "    ^^^^^^^^^^^^^^"
+- n: 70
+  l: "        case 1:\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "            return 0;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 72
+  l: "        default:\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 73
+  l: "            return -1;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 74
+  l: "    }\n"
+  m: "^^^^^  "

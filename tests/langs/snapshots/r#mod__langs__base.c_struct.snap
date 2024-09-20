@@ -1,0 +1,28 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 10
+  l: "struct S {\n"
+  m: ^^^^^^^^^^^^
+- n: 11
+  l: "    int a;\n"
+  m: ^^^^^^^^^^^^
+- n: 12
+  l: "    int b;\n"
+  m: ^^^^^^^^^^^^
+- n: 13
+  l: "    const char *c;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 14
+  l: "    callback cb;\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 15
+  l: "};\n"
+  m: "^   "
+- n: 40
+  l: "    struct S s;\n"
+  m: "    ^^^^^^^^     "
+- n: 41
+  l: "    struct S *sp;\n"
+  m: "    ^^^^^^^^       "

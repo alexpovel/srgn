@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 61
+  l: "    while (a++ < 100) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^"
+- n: 62
+  l: "        printf(\"while\\n\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 63
+  l: "    }\n"
+  m: "^^^^^  "

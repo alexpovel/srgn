@@ -1,0 +1,40 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 7
+  l: "/* Multiline comment.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 8
+  l: " * New line.\n"
+  m: ^^^^^^^^^^^^^^
+- n: 9
+  l: " */\n"
+  m: "^^^  "
+- n: 22
+  l: "/**\n"
+  m: ^^^^^
+- n: 23
+  l: " * Doxygen comment\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 24
+  l: " *\n"
+  m: ^^^^
+- n: 25
+  l: " */\n"
+  m: "^^^  "
+- n: 27
+  l: "    A, ///< Doxygen comment.\n"
+  m: "       ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 28
+  l: "    B, /*< Doxygen comment. */\n"
+  m: "       ^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 37
+  l: "// Main function.\n"
+  m: "^^^^^^^^^^^^^^^^^  "
+- n: 39
+  l: "    int a = 0; /* C Stype comments */\n"
+  m: "               ^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 44
+  l: "    // Call a function.\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^  "

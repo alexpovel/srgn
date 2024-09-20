@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 26
+  l: "enum E {\n"
+  m: ^^^^^^^^^^
+- n: 27
+  l: "    A, ///< Doxygen comment.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 28
+  l: "    B, /*< Doxygen comment. */\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 29
+  l: "    C,\n"
+  m: ^^^^^^^^
+- n: 30
+  l: "};\n"
+  m: "^   "
