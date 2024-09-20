@@ -230,11 +230,12 @@ The anatomy of that invocation is:
   the previous option, and will narrow it down further. It can never extend the previous
   scope. The regular expression scope is applied after any language scope(s).
 
+  <!-- markdownlint-disable MD038 -->
   `(?<!)` is [negative
   lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax) syntax,
   demonstrating how this advanced feature is available. Strings of `GNU` prefixed by
-  <!-- markdownlint-disable-next-line MD038 -->
   `The ` will not be considered.
+  <!-- markdownlint-enable MD038 -->
 - `'$1: GNU 🐂 is not Unix'` (an [action](#replacement)) will *replace* each matched
   occurrence (i.e., each input section found to be in scope) with this string. Matched
   occurrences are patterns of `'(?<!The )GNU ([a-z]+)'` *only within* Python docstrings.
