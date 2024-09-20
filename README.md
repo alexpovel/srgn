@@ -4,19 +4,19 @@ A `grep`-like tool which understands source code syntax and allows for manipulat
 addition to search.
 
 Like `grep`, regular expressions are a core primitive. Unlike `grep`, additional
-capabilities allow for **higher precision**, with options for manipulation. This allows
-`srgn` to operate along dimensions regular expressions and IDE tooling (*Rename all*,
-*Find all references*, ...) alone cannot, thus complementing them.
+capabilities allow for **higher precision**, with **options for manipulation**. This
+allows `srgn` to operate along dimensions regular expressions and IDE tooling (*Rename
+all*, *Find all references*, ...) alone cannot, complementing them.
 
-`srgn` is organized around **actions** to take (if any), acting only within precise,
-optionally language grammar-aware **scopes**. In terms of existing tools, think of it as
-a mix of
+`srgn` is organized around *actions* to take (if any), acting only within precise,
+optionally **language grammar-aware** *scopes*. In terms of existing tools, think of it
+as a mix of
 [`tr`](https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html#tr-invocation),
 [`sed`](https://www.gnu.org/software/sed/),
 [ripgrep](https://github.com/BurntSushi/ripgrep) and
 [`tree-sitter`](https://tree-sitter.github.io/tree-sitter/), with a design goal of
 *simplicity*: if you know regex and the basics of the language you are working with, you
-are ready to go.
+are good to go.
 
 ## Quick walkthrough
 
@@ -25,10 +25,10 @@ are ready to go.
 > All code snippets displayed here are [verified as part of unit tests](tests/readme.rs)
 > using the actual `srgn` binary. What is showcased here is guaranteed to work.
 
-The simplest form works [similar to `tr`](#comparison-with-tr):
+The most simple `srgn` usage works [similar to `tr`](#comparison-with-tr):
 
 ```bash
-$ echo 'Hello World!' | srgn '[wW]orld' 'there'
+$ echo 'Hello World!' | srgn '[wW]orld' 'there' # replacement
 Hello there!
 ```
 
@@ -38,9 +38,12 @@ Matches for the regular expression pattern `'[wW]orld'` (the *scope*) are replac
 ```bash
 $ echo 'Hello World!' | srgn '[wW]orld' # zero actions: input returned unchanged
 Hello World!
-$ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions
+$ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions: replacement, afterwards uppercasing
 Hello YOU!
 ```
+
+Replacement is always performed first and specified positionally. Any [other
+actions](#actions) are applied after and given as command line flags.
 
 ### Multiple scopes
 
@@ -48,9 +51,9 @@ Similarly, more than one scope can be specified: in addition to the regex patter
 [**language grammar-aware**]((https://tree-sitter.github.io/tree-sitter/)) scope can be
 given, which scopes to **syntactical elements of source code** (think, for example, "all
 bodies of `class` definitions in Python"). If both are given, the regular expression
-pattern is then **only applied *within* that first scope**. This enables search and
-manipulation at precision not normally possible using plain regular expressions, and
-serving a dimension different from tools such as *Rename all* in IDEs.
+pattern is then **only applied *within* that first, language scope**. This enables
+search and manipulation at precision not normally possible using plain regular
+expressions, and serving a dimension different from tools such as *Rename all* in IDEs.
 
 For example, consider this (pointless) Python source file:
 
@@ -92,9 +95,10 @@ $ cat birds.py | srgn --python 'class' 'age'
 ```
 
 The string `age` was sought and found *only* within Python `class` definitions (and not,
-for example, in function bodies such as `register_bird`). By default, this 'search mode'
-also prints line numbers. **Search mode is entered if no actions are specified**, and a
-language such as `--python` is given[^3]—think of it like
+for example, in function bodies such as `register_bird`, where `age` also occurs and
+would be nigh impossible to exclude from consideration in vanilla `grep`). By default,
+this 'search mode' also prints line numbers. **Search mode is entered if no actions are
+specified**, and a language such as `--python` is given[^3]—think of it like
 '[ripgrep](https://github.com/BurntSushi/ripgrep) but with syntactical language
 elements'.
 
@@ -139,8 +143,9 @@ $ cat music.rs | srgn --rust 'pub-enum' --rust 'type-identifier' 'Subgenre' # AN
 
 where only lines matching *all* criteria are returned, acting like a logical *and*
 between all conditions. Note that conditions are evaluated left-to-right, precluding
-some combinations from making sense: for example, searching for a `class` body *inside*
-of `doc-strings` usually returns nothing. The inverse works as expected however:
+some combinations from making sense: for example, searching for a Python `class` body
+*inside* of Python `doc-strings` usually returns nothing. The inverse works as expected
+however:
 
 ```console
 $ cat birds.py | srgn --py 'class' --py 'doc-strings' # From earlier example; note `--py` is a shorthand for `--python`
@@ -160,6 +165,9 @@ $ cat birds.py | srgn -j --python 'comments' --python 'doc-strings' 'bird[^s]'
 19:        """Create a bird from an egg."""
 20:        pass  # No bird here yet!
 ```
+
+The pattern `bird[^s]` was found inside of comments *or* docstrings likewise, not just
+"docstrings *within* comments".
 
 #### Working recursively
 
@@ -182,13 +190,15 @@ extensions](docs/samples/birds.py) and [shebang lines](docs/samples/birds), proc
 at very high speed. For example, `srgn --go strings '\d+'` finds and prints all ~140,000
 runs of digits in literal Go strings inside the [Kubernetes
 codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
-of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more, see
-[below](#run-against-multiple-files).
+of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more on working
+with many files, see [below](#run-against-multiple-files).
 
 ### Combining actions and scopes
 
-Scopes and actions can be combined almost arbitrarily. For example, consider this Python
-snippet (more languages are [supported](#prepared-queries-sample-showcases)):
+Scopes and actions can be combined almost arbitrarily (though many combinations are not
+going to be use- or even meaningful). For example, consider this Python snippet (for
+examples using other supported languages see
+[below](#prepared-queries-sample-showcases)):
 
 ```python file=gnu.py
 """GNU module."""
@@ -203,14 +213,40 @@ def GNU_says_moo():
     print(GNU + " says moo")  # ...says moo
 ```
 
-An invocation of
+against which the following command is run:
 
 ```bash
 cat gnu.py | srgn --titlecase --python 'doc-strings' '(?<!The )GNU ([a-z]+)' '$1: GNU 🐂 is not Unix'
 ```
 
-makes use of multiple scopes (language and regex pattern) and multiple actions
-(replacement and titlecasing). The result then reads
+The anatomy of that invocation is:
+
+- `--titlecase` (an [action](#character-casing)) will Titlecase Everything Found In
+  Scope
+- `--python 'doc-strings'` (a [scope](#language-grammar-aware-scopes)) will scope to
+  (i.e., only take into consideration) docstrings according to the Python language
+  grammar
+- `'(?<!The )GNU ([a-z]+)'` (a [scope](#scopes)) sees only what was already scoped by
+  the previous option, and will narrow it down further. It can never extend the previous
+  scope. The regular expression scope is applied after any language scope(s).
+
+  `(?<!)` is [negative
+  lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax) syntax,
+  demonstrating how this advanced feature is available. Strings of `GNU` prefixed by
+  <!-- markdownlint-disable-next-line MD038 -->
+  `The ` will not be considered.
+- `'$1: GNU 🐂 is not Unix'` (an [action](#replacement)) will *replace* each matched
+  occurrence (i.e., each input section found to be in scope) with this string. Matched
+  occurrences are patterns of `'(?<!The )GNU ([a-z]+)'` *only within* Python docstrings.
+  Notably, this replacement string demonstrates:
+
+  - dynamic [variable binding and substitution](#variables) using `$1`, which carries
+  the contents captured by the first capturing regex group. That's `([a-z]+)`, as
+  `(?<!The )` is not capturing.
+  - full Unicode support (🐂).
+
+The command makes use of multiple scopes (language and regex pattern) and multiple
+actions (replacement and titlecasing). The result then reads
 
 ```python file=output-gnu.py
 """Module: GNU 🐂 Is Not Unix."""
@@ -235,20 +271,11 @@ def GNU_says_moo():
     """The GNU -> say moo -> ✅"""
 ```
 
-which additionally demonstrates...
-
-- fully Unicode-capable operation (🐂),
-- advanced regex features ([negative
-lookbehind](https://docs.rs/fancy-regex/latest/fancy_regex/#syntax), excluding matches
-  <!-- markdownlint-disable-next-line MD038 -->
-  not prefixed by `The `), and
-- [variable binding and substitution](#variables) (`$1`, which carries the contents
-  captured by the first capturing regex group).
-
 > [!WARNING]
 >
-> While `srgn` is in beta (major version 0), make sure to only (recursively) process
-> files you can safely [restore](https://git-scm.com/docs/git-restore).
+> While `srgn` is in beta ([major version](https://semver.org/) 0), make sure to only
+> (recursively) process files you can safely
+> [restore](https://git-scm.com/docs/git-restore).
 >
 > Search mode does not overwrite files, so is always safe.
 
