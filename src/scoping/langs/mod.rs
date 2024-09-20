@@ -16,6 +16,8 @@ use crate::scoping::{
     view::ScopedViewBuilder,
 };
 
+/// C.
+pub mod c;
 /// C#.
 pub mod csharp;
 /// Go.

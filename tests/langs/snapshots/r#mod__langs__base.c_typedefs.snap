@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 4
+  l: "typedef unsigned int uint;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 5
+  l: "typedef void (*callback)(void);\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

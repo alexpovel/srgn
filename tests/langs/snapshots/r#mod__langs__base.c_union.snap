@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 17
+  l: "union U {\n"
+  m: ^^^^^^^^^^^
+- n: 18
+  l: "    char test[4];\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 19
+  l: "    int a;\n"
+  m: ^^^^^^^^^^^^
+- n: 20
+  l: "};\n"
+  m: "^   "
+- n: 42
+  l: "    union U u;\n"
+  m: "    ^^^^^^^     "

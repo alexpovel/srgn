@@ -1160,6 +1160,7 @@ dependencies = [
  "tempfile",
  "titlecase",
  "tree-sitter",
+ "tree-sitter-c",
  "tree-sitter-c-sharp",
  "tree-sitter-go",
  "tree-sitter-python",
@@ -1279,6 +1280,16 @@ dependencies = [
  "cc",
  "regex",
  "regex-syntax",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-c"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e795ad541f7ae6a80d22975296340a75a12a29afd3a7089f4368021613728e17"
+dependencies = [
+ "cc",
  "tree-sitter-language",
 ]
 

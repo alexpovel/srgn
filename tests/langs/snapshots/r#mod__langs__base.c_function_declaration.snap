@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 5
+  l: "typedef void (*callback)(void);\n"
+  m: "             ^^^^^^^^^^^^^^^^^   "
+- n: 35
+  l: "const char *external_function_declaration(const void *ptr);\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 38
+  l: "int main(void) {\n"
+  m: "    ^^^^^^^^^^    "

@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "#include <stdio.h>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 2
+  l: "#include \"base.h\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^

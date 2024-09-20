@@ -2,6 +2,7 @@ use std::ops::Range;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
+use srgn::scoping::langs::c::{PreparedCQuery, C};
 use srgn::scoping::langs::csharp::{CSharp, PreparedCSharpQuery};
 use srgn::scoping::langs::go::{Go, PreparedGoQuery};
 use srgn::scoping::langs::hcl::{Hcl, PreparedHclQuery};
@@ -718,6 +719,101 @@ impl InScopeLinePart {
     "base.cs_identifier",
     include_str!("csharp/base.cs"),
     CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Identifier)),
+)]
+#[case(
+    "base.c_comments",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Comments)),
+)]
+#[case(
+    "base.c_strings",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Strings)),
+)]
+#[case(
+    "base.c_includes",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Includes)),
+)]
+#[case(
+    "base.c_typedefs",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::TypeDef)),
+)]
+#[case(
+    "base.c_enum",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Enum)),
+)]
+#[case(
+    "base.c_struct",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Struct)),
+)]
+#[case(
+    "base.c_variable",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Variable)),
+)]
+#[case(
+    "base.c_function",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Function)),
+)]
+#[case(
+    "base.c_function_definition",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::FunctionDef)),
+)]
+#[case(
+    "base.c_function_declaration",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::FunctionDecl)),
+)]
+#[case(
+    "base.c_switch",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Switch)),
+)]
+#[case(
+    "base.c_if",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::If)),
+)]
+#[case(
+    "base.c_for",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::For)),
+)]
+#[case(
+    "base.c_while",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::While)),
+)]
+#[case(
+    "base.c_do",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Do)),
+)]
+#[case(
+    "base.c_union",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Union)),
+)]
+#[case(
+    "base.c_identifier",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Identifier)),
+)]
+#[case(
+    "base.c_declaration",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::Declaration)),
+)]
+#[case(
+    "base.c_callexpr",
+    include_str!("c/base.c"),
+    C::new(CodeQuery::Prepared(PreparedCQuery::CallExpression)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

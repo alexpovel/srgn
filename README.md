@@ -1061,6 +1061,42 @@ resource "aws_instance" "main" {
 }
 ```
 
+###### Rename function (C)
+
+You can rename a functions:
+
+```c file=example.c
+void old_function_name(void) {
+    ///
+    int variable_in_old_function_name;
+    ///
+}
+
+int main(void) {
+    old_function_name();
+}
+```
+
+with, using
+
+```bash
+cat example.c | srgn --c 'function' 'old_function_name' 'new_function_name'
+```
+
+will give
+
+```c file=output-example.c
+void new_function_name(void) {
+    ///
+    int variable_in_old_function_name;
+    ///
+}
+
+int main(void) {
+    new_function_name();
+}
+```
+
 ##### Custom queries
 
 Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to
@@ -1441,6 +1477,37 @@ Options (global):
           of times this flag is given, maxing out at 'trace' verbosity.
 
 Language scopes:
+      --c <C>
+          Scope C code using a prepared query.
+          
+          [env: C=]
+
+          Possible values:
+          - comments:        Comments (single- and multi-line)
+          - strings:         Strings
+          - includes:        Includes
+          - type-def:        Type definitions
+          - enum:            `enum` definitions
+          - struct:          `struct` type definitions
+          - variable:        Variable definitions
+          - function:        All functions usages (declarations and calls)
+          - function-def:    Function definitions
+          - function-decl:   Function declaration
+          - switch:          `switch` blocks
+          - if:              `if` blocks
+          - for:             `for` blocks
+          - while:           `while` blocks
+          - do:              `do` blocks
+          - union:           `union` blocks
+          - identifier:      Identifier
+          - declaration:     Declaration
+          - call-expression: Call expression
+
+      --c-query <TREE-SITTER-QUERY>
+          Scope C code using a custom tree-sitter query.
+          
+          [env: C_QUERY=]
+
       --csharp <CSHARP>
           Scope C# code using a prepared query.
           

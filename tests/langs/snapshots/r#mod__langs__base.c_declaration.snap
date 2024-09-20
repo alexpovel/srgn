@@ -1,0 +1,25 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 33
+  l: "extern int external_var;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 35
+  l: "const char *external_function_declaration(const void *ptr);\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 39
+  l: "    int a = 0; /* C Stype comments */\n"
+  m: "    ^^^^^^^^^^                         "
+- n: 40
+  l: "    struct S s;\n"
+  m: "    ^^^^^^^^^^^  "
+- n: 41
+  l: "    struct S *sp;\n"
+  m: "    ^^^^^^^^^^^^^  "
+- n: 42
+  l: "    union U u;\n"
+  m: "    ^^^^^^^^^^  "
+- n: 57
+  l: "    for (int a = 0; a < 10; a++) {\n"
+  m: "         ^^^^^^^^^^                 "

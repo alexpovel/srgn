@@ -1,0 +1,31 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 35
+  l: "const char *external_function_declaration(const void *ptr);\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 38
+  l: "int main(void) {\n"
+  m: "    ^^^^^^^^^^    "
+- n: 45
+  l: "    printf(\"Hello, World!\\n\");\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 50
+  l: "        printf(\"a\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^   "
+- n: 52
+  l: "        printf(\"b\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^   "
+- n: 54
+  l: "        printf(\"c\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^   "
+- n: 58
+  l: "        printf(\"for\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^^^   "
+- n: 62
+  l: "        printf(\"while\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^   "
+- n: 66
+  l: "        printf(\"do-while\\n\");\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^   "
