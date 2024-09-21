@@ -138,7 +138,7 @@ impl From<CustomTypeScriptQuery> for TSQuery {
 
 impl LanguageScoper for TypeScript {
     fn lang() -> TSLanguage {
-        tree_sitter_typescript::language_typescript()
+        tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
