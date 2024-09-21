@@ -47,7 +47,7 @@ fancy-regex = "0.13.0"
 fst = { version = "0.4.7", optional = true }
 glob = "0.3.1"
 grep-cli = "0.1.11"
-ignore = "0.4.22"
+ignore = "0.4.23"
 itertools = "0.13.0"
 log = "0.4.22"
 pathdiff = "0.2.1"
