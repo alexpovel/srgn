@@ -117,7 +117,7 @@ impl From<CustomCSharpQuery> for TSQuery {
 
 impl LanguageScoper for CSharp {
     fn lang() -> TSLanguage {
-        tree_sitter_c_sharp::language()
+        tree_sitter_c_sharp::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
