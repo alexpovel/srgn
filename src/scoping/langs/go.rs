@@ -147,7 +147,7 @@ impl From<CustomGoQuery> for TSQuery {
 
 impl LanguageScoper for Go {
     fn lang() -> TSLanguage {
-        tree_sitter_go::language()
+        tree_sitter_go::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
