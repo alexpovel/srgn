@@ -366,7 +366,7 @@ impl From<CustomRustQuery> for TSQuery {
 
 impl LanguageScoper for Rust {
     fn lang() -> TSLanguage {
-        tree_sitter_rust::language()
+        tree_sitter_rust::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
