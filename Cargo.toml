@@ -60,7 +60,7 @@ tree-sitter-python = "0.21.0"
 tree-sitter-rust = "0.21.2"
 tree-sitter-typescript = "0.21.2"
 unescape = "0.1.0"
-unicode-normalization = "0.1.22"
+unicode-normalization = "0.1.24"
 unicode_categories = "0.1.1"
 unicode_titlecase = "2.2.1"
 
