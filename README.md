@@ -1732,6 +1732,7 @@ An unordered list of similar tools you might be interested in.
 - [`ripgrep`](https://github.com/BurntSushi/ripgrep)
 - [`ripgrep-structured`](https://github.com/orf/ripgrep-structured)
 - [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter/blob/master/cli/README.md)
+- [`tree-sitter-grep`](https://crates.io/crates/tree-sitter-grep)
 - [`gron`](https://github.com/tomnomnom/gron)
 - [Ruleguard](https://go-ruleguard.github.io/) (quite different, but useful for custom
   linting)
