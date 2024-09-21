@@ -20,11 +20,19 @@
 //! The latter is best constructed through a [`ScopedViewBuilder`]:
 //!
 //! ```rust
+//! use std::borrow::Cow::{Borrowed as B};
 //! use srgn::scoping::view::ScopedViewBuilder;
+//! use srgn::scoping::scope::{Scope::{In}, RWScope, RWScopes};
 //!
 //! let input = "Hello, world!!";
 //! let builder = ScopedViewBuilder::new(input);
 //! let view = builder.build();
+//!
+//! // Everything is `In` scope. This is the starting point.
+//! assert_eq!(
+//!     view.scopes(),
+//!     &RWScopes(vec![RWScope(In(B("Hello, world!!"), None))])
+//! );
 //! ```
 //!
 //! ## Exploding a scoped view
@@ -34,20 +42,35 @@
 //! by, for example:
 //!
 //! ```rust
+//! use std::borrow::Cow::{Borrowed as B};
+//! use std::collections::HashMap;
 //! use srgn::scoping::view::ScopedViewBuilder;
-//! use srgn::scoping::regex::Regex;
+//! use srgn::scoping::scope::{Scope::{In, Out}, RWScope, RWScopes, ScopeContext::CaptureGroups};
+//! use srgn::scoping::regex::{CaptureGroup::Numbered as CGN, Regex};
 //! use srgn::RegexPattern;
 //!
 //! let input = "Hello, world!!";
 //!
 //! let mut builder = ScopedViewBuilder::new(input);
 //!
-//! let pattern = RegexPattern::new(r"[a-z]+").unwrap();
+//! let pattern = RegexPattern::new(r"[a-zA-Z]+").unwrap();
 //! let scoper = Regex::new(pattern);
 //!
 //! builder.explode(&scoper);
 //!
 //! let view = builder.build();
+//!
+//! // Only parts matching the regex are `In` scope, the rest is `Out` of scope.
+//! // These types are laborious to construct; there should be no need to ever do so manually.
+//! assert_eq!(
+//!     view.scopes(),
+//!     &RWScopes(vec![
+//!         RWScope(In(B("Hello"), Some(CaptureGroups(HashMap::from([(CGN(0), "Hello")]))))),
+//!         RWScope(Out(&B(", "))),
+//!         RWScope(In(B("world"), Some(CaptureGroups(HashMap::from([(CGN(0), "world")]))))),
+//!         RWScope(Out(&B("!!"))),
+//!     ])
+//! );
 //! ```
 //!
 //! ### Scoping with a language grammar
