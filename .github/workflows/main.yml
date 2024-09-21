@@ -94,7 +94,6 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
           path: head
       - run: cargo tree | tee tree
         working-directory: head
