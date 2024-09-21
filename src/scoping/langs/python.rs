@@ -198,7 +198,7 @@ impl From<CustomPythonQuery> for TSQuery {
 
 impl LanguageScoper for Python {
     fn lang() -> TSLanguage {
-        tree_sitter_python::language()
+        tree_sitter_python::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
