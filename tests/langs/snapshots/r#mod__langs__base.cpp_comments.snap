@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 16
+  l: "/* Simple struct */\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 21
+  l: "// Class with some members\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "

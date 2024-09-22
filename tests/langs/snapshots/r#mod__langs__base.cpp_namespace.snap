@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 53
+  l: "namespace MyNamespace {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 54
+  l: "    void function() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 55
+  l: "        std::cout << \"Function in namespace\\n\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 56
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 57
+  l: "}\n"
+  m: "^  "

@@ -18,6 +18,8 @@ use crate::scoping::{
 
 /// C.
 pub mod c;
+/// C++.
+pub mod cpp;
 /// C#.
 pub mod csharp;
 /// Go.

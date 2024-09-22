@@ -1154,6 +1154,34 @@ int main(void) {
 }
 ```
 
+###### Rename class fields.
+
+You can remove the unnecessary prefix from structure/class fields:
+
+```cpp file=class.cpp
+class Class {
+    int _field;
+    const char *_value;
+    std::string _string;
+}
+```
+
+with
+
+```bash
+cat class.cpp | srgn --cpp 'field-decl' '\b_' ''
+```
+
+which will give
+
+```cpp file=output-class.cpp
+class Class {
+    int field;
+    const char *value;
+    std::string string;
+}
+```
+
 ##### Custom queries
 
 Custom queries allow you to create ad-hoc scopes. These might be useful, for example, to
@@ -1564,6 +1592,44 @@ Language scopes:
           Scope C code using a custom tree-sitter query.
           
           [env: C_QUERY=]
+
+      --cpp <CPP>
+          Scope C++ code using a prepared query.
+          
+          [env: CPP=]
+
+          Possible values:
+          - comments:        Comments (single- and multi-line)
+          - strings:         Strings
+          - includes:        Includes
+          - type-def:        Type definitions
+          - enum:            `enum` definitions
+          - struct:          `struct` type definitions
+          - class:           `class` definitions
+          - namespace:       `namespace` definitions
+          - using-namespace: `using` namespace declarations
+          - template:        `template` declarations
+          - field-decl:      Field declarations
+          - variable:        Variable definitions
+          - function:        All functions usages (declarations and calls)
+          - function-def:    Function definitions
+          - function-decl:   Function declaration
+          - lambda:          Lambda
+          - switch:          `switch` blocks
+          - if:              `if` blocks
+          - for:             `for` blocks
+          - while:           `while` blocks
+          - do:              `do` blocks
+          - union:           `union` blocks
+          - try:             `try` blocks
+          - identifier:      Identifier
+          - declaration:     Declaration
+          - call-expression: Call expression
+
+      --cpp-query <TREE-SITTER-QUERY>
+          Scope C++ code using a custom tree-sitter query.
+          
+          [env: CPP_QUERY=]
 
       --csharp <CSHARP>
           Scope C# code using a prepared query.

@@ -1,0 +1,46 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 30
+  l: "        return Example(value + other.value);\n"
+  m: "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 73
+  l: "    auto it = std::find(vec.begin(), vec.end(), value);\n"
+  m: "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 74
+  l: "    if (it != vec.end()) {\n"
+  m: "              ^^^^^^^^^     "
+- n: 125
+  l: "    MyNamespace::function();\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 129
+  l: "    variadicFunction(1, 2.5, \"test\");\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 131
+  l: "    int sum = lambda(3, 4);\n"
+  m: "              ^^^^^^^^^^^^   "
+- n: 133
+  l: "    auto value = findValue({1, 2, 3}, 2);\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 138
+  l: "    auto variantValue = getVariant(true);\n"
+  m: "                        ^^^^^^^^^^^^^^^^   "
+- n: 139
+  l: "    if (std::holds_alternative<int>(variantValue)) {\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     "
+- n: 140
+  l: "        std::cout << \"Variant holds int: \" << std::get<int>(variantValue) << \"\\n\";\n"
+  m: "                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^              "
+- n: 143
+  l: "    auto [x, y, z] = createTuple();\n"
+  m: "                     ^^^^^^^^^^^^^   "
+- n: 147
+  l: "    std::unique_ptr<Example> ptr = std::make_unique<Example>(20);\n"
+  m: "                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 150
+  l: "    std::sort(numbers.begin(), numbers.end(), std::greater<>());\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 158
+  l: "        std::cout << \"Exception: \" << e.what() << \"\\n\";\n"
+  m: "                                        ^^^^^^^^              "

@@ -1,0 +1,40 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 37
+  l: "    template<typename T>\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^"
+- n: 38
+  l: "    T add(T a, T b) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 39
+  l: "        return a + b;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 40
+  l: "    }\n"
+  m: "^^^^^  "
+- n: 60
+  l: "template<typename T>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 61
+  l: "struct Wrapper {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 62
+  l: "    T value;\n"
+  m: ^^^^^^^^^^^^^^
+- n: 63
+  l: "};\n"
+  m: "^^  "
+- n: 65
+  l: "template<typename... Args>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "void variadicFunction(Args... args) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 67
+  l: "    (std::cout << ... << args) << '\\n';\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 68
+  l: "}\n"
+  m: "^  "
