@@ -402,3 +402,10 @@ jobs:
         shell: bash
         run: >
           [[ $(srgn --version) == "srgn ${{ needs.release-please.outputs.tag_name_without_v }}" ]]
+      - uses: actions/checkout@v4
+      - name: Perform dummy run
+        # A final sanity check. Can be used to check things which are super annoying to
+        # test, e.g. terminal color output (which should work in GitHub Actions).
+        # Because it's hard to test, this isn't asserted against anything. Just a nice
+        # final check.
+        run: srgn --rust struct
