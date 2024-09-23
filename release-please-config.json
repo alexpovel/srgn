@@ -6,5 +6,6 @@
     "bootstrap-sha": "22c06f621585a3f872e1677c3b5d1238efec05dc",
     "release-type": "rust",
     "bump-minor-pre-major": true,
+    "bump-patch-for-minor-pre-major": true,
     "draft": true
 }
