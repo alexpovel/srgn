@@ -1108,9 +1108,9 @@ resource "aws_instance" "main" {
 
 ###### Rename function (C)
 
-You can rename a functions:
+You can rename a function:
 
-```c file=example.c
+```c file=function.c
 void old_function_name(void) {
     ///
     int variable_in_old_function_name;
@@ -1122,15 +1122,15 @@ int main(void) {
 }
 ```
 
-with, using
+using
 
 ```bash
-cat example.c | srgn --c 'function' 'old_function_name' 'new_function_name'
+cat function.c | srgn --c 'function' 'old_function_name' 'new_function_name'
 ```
 
-will give
+which will give
 
-```c file=output-example.c
+```c file=output-function.c
 void new_function_name(void) {
     ///
     int variable_in_old_function_name;
