@@ -282,6 +282,18 @@ def GNU_says_moo():
 
 See [below](#help-output) for the full help output of the tool.
 
+> [!NOTE]
+>
+> Supported languages are
+>
+> - C
+> - C#
+> - Go
+> - HCL (Terraform)
+> - Python
+> - Rust
+> - TypeScript
+
 ## Installation
 
 ### Prebuilt binaries
