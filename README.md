@@ -389,7 +389,7 @@ are supported for shell completion scripts. For example, append `eval "$(srgn
 --completions zsh)"` to `~/.zshrc` for completions in ZSH. An interactive session can
 then look like:
 
-[![srgn shell completion](https://asciinema.org/a/673473.svg)](https://asciinema.org/a/673473)
+[![srgn shell completion](./docs/images/interactive-use-shell-completion.gif)](https://asciinema.org/a/673473)
 
 ## Walkthrough
 
