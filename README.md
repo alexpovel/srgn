@@ -777,6 +777,51 @@ language such as `python`. See [below](#custom-queries) for more on this advance
 
 This section shows examples for some of the **prepared queries**.
 
+###### Finding all `unsafe` code (Rust)
+
+One advantage of the [`unsafe` keyword in
+Rust](https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html) is its "grepability".
+However, an `rg 'unsafe'` will of course surface *all* string matches (`rg '\bunsafe\b'`
+helps to an extent), not just those in of the actual Rust language keyword. `srgn` helps
+make this more precise. For example:
+
+```rust file=unsafe.rs
+// Oh no, an unsafe module!
+mod scary_unsafe_operations {
+    pub unsafe fn unsafe_array_access(arr: &[i32], index: usize) -> i32 {
+        // UNSAFE: This function performs unsafe array access without bounds checking
+        *arr.get_unchecked(index)
+    }
+
+    pub fn call_unsafe_function() {
+        let unsafe_numbers = vec![1, 2, 3, 4, 5];
+        println!("About to perform an unsafe operation!");
+        let result = unsafe {
+            // Calling an unsafe function
+            unsafe_array_access(&unsafe_numbers, 10)
+        };
+        println!("Result of unsafe operation: {}", result);
+    }
+}
+```
+
+can be searched as
+
+```console
+$ cat unsafe.rs | srgn --rs 'unsafe' # Note: no 2nd argument necessary
+3:    pub unsafe fn unsafe_array_access(arr: &[i32], index: usize) -> i32 {
+4:        // UNSAFE: This function performs unsafe array access without bounds checking
+5:        *arr.get_unchecked(index)
+6:    }
+11:        let result = unsafe {
+12:            // Calling an unsafe function
+13:            unsafe_array_access(&unsafe_numbers, 10)
+14:        };
+```
+
+surfacing only truly `unsafe` items (and not comments, strings etc. merely mentioning
+it).[^4]
+
 ###### Mass import (module) renaming (Python, Rust)
 
 As part of a large refactor (say, after an acquisition), imagine all imports of a
@@ -2158,3 +2203,7 @@ at your option.
 [^3]: With zero actions and no language scoping provided, `srgn` becomes 'useless', and
     other tools such as ripgrep are much more suitable. That's why an error is emitted
     and input is returned unchanged.
+[^4]: Combined with `--fail-any`, the invocation could be used to fail if any `unsafe`
+    code is found, like a low-budget linter. In reality, for this case, just use
+    [`#![forbid(unsafe_code)]`](https://doc.rust-lang.org/nomicon/safe-unsafe-meaning.html)
+    though.
