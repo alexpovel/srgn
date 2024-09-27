@@ -1,0 +1,40 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 5
+  l: "import database\n"
+  m: "       ^^^^^^^^  "
+- n: 6
+  l: "import pytest\n"
+  m: "       ^^^^^^  "
+- n: 9
+  l: "@pytest.fixture()\n"
+  m: " ^^^^^^            "
+- n: 9
+  l: "@pytest.fixture()\n"
+  m: "        ^^^^^^^    "
+- n: 10
+  l: "def test_a(database):\n"
+  m: "    ^^^^^^             "
+- n: 10
+  l: "def test_a(database):\n"
+  m: "           ^^^^^^^^    "
+- n: 11
+  l: "    return database\n"
+  m: "           ^^^^^^^^  "
+- n: 14
+  l: "def test_b(database):\n"
+  m: "    ^^^^^^             "
+- n: 14
+  l: "def test_b(database):\n"
+  m: "           ^^^^^^^^    "
+- n: 15
+  l: "    return database\n"
+  m: "           ^^^^^^^^  "
+- n: 18
+  l: "database = \"database\"\n"
+  m: "^^^^^^^^                 "
+- n: 21
+  l: "class database:\n"
+  m: "      ^^^^^^^^   "

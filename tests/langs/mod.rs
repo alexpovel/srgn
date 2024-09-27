@@ -151,7 +151,7 @@ impl InScopeLinePart {
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::Globals)),
 )]
 #[case(
-    "base.py_identifiers",
+    "base.py_variable_identifiers",
     include_str!("python/base.py"),
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::VariableIdentifiers)),
 )]
@@ -159,6 +159,16 @@ impl InScopeLinePart {
     "base.py_types",
     include_str!("python/base.py"),
     Python::new(CodeQuery::Prepared(PreparedPythonQuery::Types)),
+)]
+#[case(
+    "base.py_identifiers",
+    include_str!("python/base.py"),
+    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Identifiers)),
+)]
+#[case(
+    "identifiers.py_identifiers",
+    include_str!("python/identifiers.py"),
+    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Identifiers)),
 )]
 #[case(
     "base.ts_strings",

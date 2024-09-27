@@ -1686,6 +1686,7 @@ Language scopes:
           - variable-identifiers: Identifiers for variables (left-hand side of
             assignments)
           - types:                Types in type hints
+          - identifiers:          Identifiers (variable names, ...)
 
       --python-query <TREE-SITTER-QUERY>
           Scope Python code using a custom tree-sitter query.

@@ -52,6 +52,8 @@ pub enum PreparedPythonQuery {
     VariableIdentifiers,
     /// Types in type hints.
     Types,
+    /// Identifiers (variable names, ...).
+    Identifiers,
 }
 
 impl From<PreparedPythonQuery> for TSQuery {
@@ -168,6 +170,7 @@ impl From<PreparedPythonQuery> for TSQuery {
                     "(assignment left: (identifier) @identifier)"
                 }
                 PreparedPythonQuery::Types => "(type) @type",
+                PreparedPythonQuery::Identifiers => "(identifier) @identifier",
             },
         )
         .expect("Prepared queries to be valid")
