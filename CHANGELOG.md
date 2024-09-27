@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.13.2](https://github.com/alexpovel/srgn/compare/srgn-v0.13.1...srgn-v0.13.2) (2024-09-27)
+
+
+### Features
+
+* **c:** introduce C parser ([da2580a](https://github.com/alexpovel/srgn/commit/da2580a85c2101e91889519fcba11e876f865249))
+* **cli:** Language shorthands (`--py` for `--python` etc.) ([f93093a](https://github.com/alexpovel/srgn/commit/f93093a7a5cfc214fa1d715d06642780a37f9faa))
+* **rust:** Scope `unsafe` code ([c67ff9e](https://github.com/alexpovel/srgn/commit/c67ff9e2eede9079dcdbe63c6c7ecca91ed9fd5a))
+* Scope Python identifiers ([d5932b8](https://github.com/alexpovel/srgn/commit/d5932b89adf6a49984b65884cc1e848a28154037))
+
 ## [0.13.1](https://github.com/alexpovel/srgn/compare/srgn-v0.13.0...srgn-v0.13.1) (2024-08-18)
 
 
