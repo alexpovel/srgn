@@ -418,4 +418,4 @@ jobs:
         # test, e.g. terminal color output (which should work in GitHub Actions).
         # Because it's hard to test, this isn't asserted against anything. Just a nice
         # final check.
-        run: srgn --rust struct
+        run: srgn -vvvv --rust struct
