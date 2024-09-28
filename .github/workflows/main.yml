@@ -410,12 +410,12 @@ jobs:
         run: >
           [[ $(srgn --version) == "srgn 0.13.2" ]]
       - uses: actions/checkout@v4
-      - run: ls || true
-      - run: tree || true
-      - run: grep -R struct src/ || true
-      - name: Perform dummy run
+      - name: Perform dummy run (full verbosity)
         # A final sanity check. Can be used to check things which are super annoying to
         # test, e.g. terminal color output (which should work in GitHub Actions).
         # Because it's hard to test, this isn't asserted against anything. Just a nice
-        # final check.
+        # final check. Requires overriding stdin as that is unfortunately detected as
+        # present in GitHub Actions. Should not be necessary in normal CLI use.
         run: srgn -vvvv --stdin-override-to false --rust struct
+      - name: Perform dummy run (minimal verbosity)
+        run: srgn --stdin-override-to false --rust struct
