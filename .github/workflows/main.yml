@@ -111,9 +111,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-msrv
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install `cargo-msrv` binary
+        # TODO: move out of beta & back to `taiki-e/install-action` (which we cannot use
+        # because it doesn't support release-candidate version notation) once properly
+        # released. See also https://github.com/foresterre/cargo-msrv/issues/1007
+        run: >
+          cargo binstall
+          --no-confirm
+          cargo-msrv
+          --version 0.16.0-beta.25
       - run: cargo msrv verify
 
   bench-files:
