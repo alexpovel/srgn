@@ -43,3 +43,111 @@ fn test_brew_build() {
         ));
     }
 }
+
+/// Check we don't break what I commented about [on
+/// HN](https://news.ycombinator.com/item?id=41675384):
+///
+/// > These sorts of cases are why I wrote srgn [0]. It's based on tree-sitter too. Calling it as
+/// >      cat file.py | srgn --py def --py identifiers 'database' 'db'
+/// >
+/// > will replace all mentions of `database` inside identifiers inside (only!) function definitions (`def`) with `db`.
+/// >
+/// > An input like
+/// >
+/// >     import database
+/// >     import pytest
+/// >
+/// >
+/// >     @pytest.fixture()
+/// >     def test_a(database):
+/// >         return database
+/// >
+/// >
+/// >     def test_b(database):
+/// >         return database
+/// >
+/// >
+/// >     database = "database"
+/// >
+/// >
+/// >     class database:
+/// >         pass
+/// >
+/// > is turned into
+/// >
+/// >     import database
+/// >     import pytest
+/// >
+/// >
+/// >     @pytest.fixture()
+/// >     def test_a(db):
+/// >         return db
+/// >
+/// >
+/// >     def test_b(db):
+/// >         return db
+/// >
+/// >
+/// >     database = "database"
+/// >
+/// >
+/// >     class database:
+/// >         pass
+/// >
+/// > which seems roughly like what the author is after. Mentions of "database" outside function definitions are not modified. That sort of logic I always found hard to replicate in basic GNU-like tools. If run without stdin, the above command runs recursively, in-place (careful with that one!).
+/// >
+/// > Note: I just wrote this, and version 0.13.2 is required for the above to work.
+/// >
+/// > [0]: https://github.com/alexpovel/srgn
+#[test]
+fn test_hn_41675384() {
+    use assert_cmd::Command;
+
+    let get_cmd = || Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("test binary to be found");
+
+    let input = r#"import database
+import pytest
+
+
+@pytest.fixture()
+def test_a(database):
+    return database
+
+
+def test_b(database):
+    return database
+
+
+database = "database"
+
+
+class database:
+    pass
+"#;
+
+    let expected_output = r#"import database
+import pytest
+
+
+@pytest.fixture()
+def test_a(db):
+    return db
+
+
+def test_b(db):
+    return db
+
+
+database = "database"
+
+
+class database:
+    pass
+"#;
+
+    let mut cmd = get_cmd();
+    cmd.args(["--py", "def", "--py", "identifiers", "database", "db"]);
+    cmd.write_stdin(input);
+    cmd.assert().success();
+    cmd.assert().stdout(expected_output);
+}
