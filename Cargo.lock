@@ -1396,9 +1396,9 @@ checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
 
 [[package]]
 name = "unicode_titlecase"
-version = "2.3.0"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9f865ed539c93628813817ee7076cc4d636081e35c2a9ef70626c1ef853df34"
+checksum = "8f38c16011df3a49175fa6d2aba98ce0de46dc8fbad136a4e34ab02d8613f844"
 
 [[package]]
 name = "utf8parse"
