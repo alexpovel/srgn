@@ -121,6 +121,7 @@ jobs:
           --no-confirm
           cargo-msrv
           --version 0.16.0-beta.25
+          --force
       - run: cargo msrv verify
 
   bench-files:
