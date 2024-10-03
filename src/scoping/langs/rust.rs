@@ -1,5 +1,7 @@
-use std::fmt::Debug;
+use std::borrow::Cow;
+use std::fs;
 use std::str::FromStr;
+use std::{fmt::Debug, path::Path};
 
 use clap::ValueEnum;
 use const_format::formatcp;
@@ -350,7 +352,17 @@ impl FromStr for CustomRustQuery {
     type Err = QueryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&Rust::lang(), s) {
+        let path = Path::new(s);
+
+        let s: Cow<'_, str> = if path.is_file() {
+            fs::read_to_string(path)
+                .expect("How should QueryError be modified?")
+                .into()
+        } else {
+            s.into()
+        };
+
+        match TSQuery::new(&Rust::lang(), &s) {
             Ok(_) => Ok(Self(s.to_string())),
             Err(e) => Err(e),
         }
