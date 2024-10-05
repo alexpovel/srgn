@@ -1,18 +1,25 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use clap::ValueEnum;
 use const_format::formatcp;
-use tree_sitter::QueryError;
 
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{CodeQuery, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
+/// A type used to make the generic `Language` struct specific to the C# language and
+/// provides the appropriate `tree_sitter::Language` object.
+#[derive(Clone, Copy, Debug)]
+pub struct LangKind {}
+
+impl Kind for LangKind {
+    fn ts_lang() -> TSLanguage {
+        tree_sitter_c_sharp::LANGUAGE.into()
+    }
+}
+
 /// The C# language.
-pub type CSharp = Language<CSharpQuery>;
-/// A query for C#.
-pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PreparedCSharpQuery>;
+pub type CSharp = Language<LangKind>;
 
 /// Prepared tree-sitter queries for C#.
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -52,66 +59,42 @@ pub enum PreparedCSharpQuery {
     Identifier,
 }
 
-impl From<PreparedCSharpQuery> for TSQuery {
+impl From<PreparedCSharpQuery> for CodeQuery<'static> {
     fn from(value: PreparedCSharpQuery) -> Self {
-        Self::new(
-            &CSharp::lang(),
-            match value {
-                PreparedCSharpQuery::Comments => "(comment) @comment",
-                PreparedCSharpQuery::Usings => {
-                    r"(using_directive [(identifier) (qualified_name)] @import)"
-                }
-                PreparedCSharpQuery::Strings => {
-                    formatcp!(
-                        r"
-                            [
-                                (interpolated_string_expression (interpolation) @{0})
-                                (string_literal)
-                                (raw_string_literal)
-                                (verbatim_string_literal)
-                            ]
-                            @string
+        let s = match value {
+            PreparedCSharpQuery::Comments => "(comment) @comment",
+            PreparedCSharpQuery::Usings => {
+                r"(using_directive [(identifier) (qualified_name)] @import)"
+            }
+            PreparedCSharpQuery::Strings => {
+                formatcp!(
+                    r"
+                    [
+                        (interpolated_string_expression (interpolation) @{0})
+                        (string_literal)
+                        (raw_string_literal)
+                        (verbatim_string_literal)
+                    ]
+                    @string
                     ",
-                        IGNORE
-                    )
-                }
-                PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
-                PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
-                PreparedCSharpQuery::Interface => "(interface_declaration) @interface",
-                PreparedCSharpQuery::Class => "(class_declaration) @class",
-                PreparedCSharpQuery::Method => "(method_declaration) @method",
-                PreparedCSharpQuery::VariableDeclaration => "(variable_declaration) @variable",
-                PreparedCSharpQuery::Property => "(property_declaration) @property",
-                PreparedCSharpQuery::Constructor => "(constructor_declaration) @constructor",
-                PreparedCSharpQuery::Destructor => "(destructor_declaration) @destructor",
-                PreparedCSharpQuery::Field => "(field_declaration) @field",
-                PreparedCSharpQuery::Attribute => "(attribute) @attribute",
-                PreparedCSharpQuery::Identifier => "(identifier) @identifier",
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
+                    IGNORE
+                )
+            }
+            PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
+            PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
+            PreparedCSharpQuery::Interface => "(interface_declaration) @interface",
+            PreparedCSharpQuery::Class => "(class_declaration) @class",
+            PreparedCSharpQuery::Method => "(method_declaration) @method",
+            PreparedCSharpQuery::VariableDeclaration => "(variable_declaration) @variable",
+            PreparedCSharpQuery::Property => "(property_declaration) @property",
+            PreparedCSharpQuery::Constructor => "(constructor_declaration) @constructor",
+            PreparedCSharpQuery::Destructor => "(destructor_declaration) @destructor",
+            PreparedCSharpQuery::Field => "(field_declaration) @field",
+            PreparedCSharpQuery::Attribute => "(attribute) @attribute",
+            PreparedCSharpQuery::Identifier => "(identifier) @identifier",
+        };
 
-/// A custom tree-sitter query for C#.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomCSharpQuery(String);
-
-impl FromStr for CustomCSharpQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&CSharp::lang(), s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
-        }
-    }
-}
-
-impl From<CustomCSharpQuery> for TSQuery {
-    fn from(value: CustomCSharpQuery) -> Self {
-        Self::new(&CSharp::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
+        s.into()
     }
 }
 

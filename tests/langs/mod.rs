@@ -9,7 +9,7 @@ use srgn::scoping::langs::hcl::{Hcl, PreparedHclQuery};
 use srgn::scoping::langs::python::{PreparedPythonQuery, Python};
 use srgn::scoping::langs::rust::{PreparedRustQuery, Rust};
 use srgn::scoping::langs::typescript::{PreparedTypeScriptQuery, TypeScript};
-use srgn::scoping::langs::{CodeQuery, LanguageScoper};
+use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
 
@@ -73,763 +73,764 @@ impl InScopeLinePart {
 #[case(
     "base.py_comments",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Comments)),
+    Python::new(PreparedPythonQuery::Comments.into()),
 )]
 #[case(
     "base.py_strings",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Strings)),
+    Python::new(PreparedPythonQuery::Strings.into()),
 )]
 #[case(
     "base.py_imports",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Imports)),
+    Python::new(PreparedPythonQuery::Imports.into()),
 )]
 #[case(
     "base.py_docstrings",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::DocStrings)),
+    Python::new(PreparedPythonQuery::DocStrings.into()),
 )]
 #[case(
     "base.py_function-names",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::FunctionNames)),
+    Python::new(PreparedPythonQuery::FunctionNames.into()),
 )]
 #[case(
     "base.py_function-calls",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::FunctionCalls)),
+    Python::new(PreparedPythonQuery::FunctionCalls.into()),
 )]
 #[case(
     "base.py_class",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Class)),
+    Python::new(PreparedPythonQuery::Class.into()),
 )]
 #[case(
     "base.py_def",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Def)),
+    Python::new(PreparedPythonQuery::Def.into()),
 )]
 #[case(
     "base.py_async-def",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::AsyncDef)),
+    Python::new(PreparedPythonQuery::AsyncDef.into()),
 )]
 #[case(
     "base.py_methods",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Methods)),
+    Python::new(PreparedPythonQuery::Methods.into()),
 )]
 #[case(
     "base.py_classmethods",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::ClassMethods)),
+    Python::new(PreparedPythonQuery::ClassMethods.into()),
 )]
 #[case(
     "base.py_staticmethods",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::StaticMethods)),
+    Python::new(PreparedPythonQuery::StaticMethods.into()),
 )]
 #[case(
     "base.py_with",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::With)),
+    Python::new(PreparedPythonQuery::With.into()),
 )]
 #[case(
     "base.py_try",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Try)),
+    Python::new(PreparedPythonQuery::Try.into()),
 )]
 #[case(
     "base.py_lambda",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Lambda)),
+    Python::new(PreparedPythonQuery::Lambda.into()),
 )]
 #[case(
     "base.py_globals",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Globals)),
+    Python::new(PreparedPythonQuery::Globals.into()),
 )]
 #[case(
     "base.py_variable_identifiers",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::VariableIdentifiers)),
+    Python::new(PreparedPythonQuery::VariableIdentifiers.into()),
 )]
 #[case(
     "base.py_types",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Types)),
+    Python::new(PreparedPythonQuery::Types.into()),
 )]
 #[case(
     "base.py_identifiers",
     include_str!("python/base.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Identifiers)),
+    Python::new(PreparedPythonQuery::Identifiers.into()),
 )]
 #[case(
     "identifiers.py_identifiers",
     include_str!("python/identifiers.py"),
-    Python::new(CodeQuery::Prepared(PreparedPythonQuery::Identifiers)),
+    Python::new(PreparedPythonQuery::Identifiers.into()),
 )]
 #[case(
     "base.ts_strings",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Strings)),
+    TypeScript::new(PreparedTypeScriptQuery::Strings.into()),
 )]
 #[case(
     "base.ts_comments",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Comments)),
+    TypeScript::new(PreparedTypeScriptQuery::Comments.into()),
 )]
 #[case(
     "base.ts_imports",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Imports)),
+    TypeScript::new(PreparedTypeScriptQuery::Imports.into()),
 )]
 #[case(
     "base.ts_function",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Function)),
+    TypeScript::new(PreparedTypeScriptQuery::Function.into()),
 )]
 #[case(
     "base.ts_async-function",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::AsyncFunction)),
+    TypeScript::new(PreparedTypeScriptQuery::AsyncFunction.into()),
 )]
 #[case(
     "base.ts_sync-function",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::SyncFunction)),
+    TypeScript::new(PreparedTypeScriptQuery::SyncFunction.into()),
 )]
 #[case(
     "base.ts_method",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Method)),
+    TypeScript::new(PreparedTypeScriptQuery::Method.into()),
 )]
 #[case(
     "base.ts_constructor",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Constructor)),
+    TypeScript::new(PreparedTypeScriptQuery::Constructor.into()),
 )]
 #[case(
     "base.ts_class",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Class)),
+    TypeScript::new(PreparedTypeScriptQuery::Class.into()),
 )]
 #[case(
     "base.ts_enum",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Enum)),
+    TypeScript::new(PreparedTypeScriptQuery::Enum.into()),
 )]
 #[case(
     "base.ts_interface",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Interface)),
+    TypeScript::new(PreparedTypeScriptQuery::Interface.into()),
 )]
 #[case(
     "base.ts_try-block",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::TryCatch)),
+    TypeScript::new(PreparedTypeScriptQuery::TryCatch.into()),
 )]
 #[case(
     "base.ts_var_decl",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::VarDecl)),
+    TypeScript::new(PreparedTypeScriptQuery::VarDecl.into()),
 )]
 #[case(
     "base.ts_let",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Let)),
+    TypeScript::new(PreparedTypeScriptQuery::Let.into()),
 )]
 #[case(
     "base.ts_const",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Const)),
+    TypeScript::new(PreparedTypeScriptQuery::Const.into()),
 )]
 #[case(
     "base.ts_var",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Var)),
+    TypeScript::new(PreparedTypeScriptQuery::Var.into()),
 )]
 #[case(
     "base.ts_type-params",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::TypeParams)),
+    TypeScript::new(PreparedTypeScriptQuery::TypeParams.into()),
 )]
 #[case(
     "base.ts_type-alias",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::TypeAlias)),
+    TypeScript::new(PreparedTypeScriptQuery::TypeAlias.into()),
 )]
 #[case(
     "base.ts_namespace",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Namespace)),
+    TypeScript::new(PreparedTypeScriptQuery::Namespace.into()),
 )]
 #[case(
     "base.ts_export",
     include_str!("typescript/base.ts"),
-    TypeScript::new(CodeQuery::Prepared(PreparedTypeScriptQuery::Export)),
+    TypeScript::new(PreparedTypeScriptQuery::Export.into()),
 )]
 #[case(
     "base.rs_strings",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Strings)),
+    Rust::new(PreparedRustQuery::Strings.into()),
 )]
 #[case(
     "base.rs_comments",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Comments)),
+    Rust::new(PreparedRustQuery::Comments.into()),
 )]
 #[case(
     "base.rs_uses",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Uses)),
+    Rust::new(PreparedRustQuery::Uses.into()),
 )]
 #[case(
     "base.rs_doc-comments",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::DocComments)),
+    Rust::new(PreparedRustQuery::DocComments.into()),
 )]
 #[case(
     "base.rs_attribute",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Attribute)),
+    Rust::new(PreparedRustQuery::Attribute.into()),
 )]
 #[case(
     "base.rs_struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Struct)),
+    Rust::new(PreparedRustQuery::Struct.into()),
 )]
 #[case(
     "base.rs_pub-struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubStruct)),
+    Rust::new(PreparedRustQuery::PubStruct.into()),
 )]
 #[case(
     "base.rs_pub-priv-struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivStruct)),
+    Rust::new(PreparedRustQuery::PrivStruct.into()),
 )]
 #[case(
     "base.rs_pub-crate-struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateStruct)),
+    Rust::new(PreparedRustQuery::PubCrateStruct.into()),
 )]
 #[case(
     "base.rs_pub-self-struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSelfStruct)),
+    Rust::new(PreparedRustQuery::PubSelfStruct.into()),
 )]
 #[case(
     "base.rs_pub-super-struct",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperStruct)),
+    Rust::new(PreparedRustQuery::PubSuperStruct.into()),
 )]
 #[case(
     "base.enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Enum)),
+    Rust::new(PreparedRustQuery::Enum.into()),
 )]
 #[case(
     "base.rs_pub-priv-enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivEnum)),
+    Rust::new(PreparedRustQuery::PrivEnum.into()),
 )]
 #[case(
     "base.rs_pub-enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubEnum)),
+    Rust::new(PreparedRustQuery::PubEnum.into()),
 )]
 #[case(
     "base.rs_pub-crate-enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateEnum)),
+    Rust::new(PreparedRustQuery::PubCrateEnum.into()),
 )]
 #[case(
     "base.rs_pub-self-enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSelfEnum)),
+    Rust::new(PreparedRustQuery::PubSelfEnum.into()),
 )]
 #[case(
     "base.rs_pub-super-enum",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperEnum)),
+    Rust::new(PreparedRustQuery::PubSuperEnum.into()),
 )]
 #[case(
     "base.rs_enum-variant",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::EnumVariant)),
+    Rust::new(PreparedRustQuery::EnumVariant.into()),
 )]
 #[case(
     "base.rs_fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Fn)),
+    Rust::new(PreparedRustQuery::Fn.into()),
 )]
 #[case(
     "base.rs_impl-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ImplFn)),
+    Rust::new(PreparedRustQuery::ImplFn.into()),
 )]
 #[case(
     "base.rs_pub-priv-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PrivFn)),
+    Rust::new(PreparedRustQuery::PrivFn.into()),
 )]
 #[case(
     "base.rs_pub-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubFn)),
+    Rust::new(PreparedRustQuery::PubFn.into()),
 )]
 #[case(
     "base.rs_pub-crate-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubCrateFn)),
+    Rust::new(PreparedRustQuery::PubCrateFn.into()),
 )]
 #[case(
     "base.rs_pub-self-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSelfFn)),
+    Rust::new(PreparedRustQuery::PubSelfFn.into()),
 )]
 #[case(
     "base.rs_pub-super-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::PubSuperFn)),
+    Rust::new(PreparedRustQuery::PubSuperFn.into()),
 )]
 #[case(
     "base.rs_const-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ConstFn)),
+    Rust::new(PreparedRustQuery::ConstFn.into()),
 )]
 #[case(
     "base.rs_async-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::AsyncFn)),
+    Rust::new(PreparedRustQuery::AsyncFn.into()),
 )]
 #[case(
     "base.rs_unsafe-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::UnsafeFn)),
+    Rust::new(PreparedRustQuery::UnsafeFn.into()),
 )]
 #[case(
     "base.rs_extern-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ExternFn)),
+    Rust::new(PreparedRustQuery::ExternFn.into()),
 )]
 #[case(
     "base.rs_test-fn",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TestFn)),
+    Rust::new(PreparedRustQuery::TestFn.into()),
 )]
 #[case(
     "base.rs_trait",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Trait)),
+    Rust::new(PreparedRustQuery::Trait.into()),
 )]
 #[case(
     "base.rs_impl",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Impl)),
+    Rust::new(PreparedRustQuery::Impl.into()),
 )]
 #[case(
     "base.rs_impl-trait",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ImplTrait)),
+    Rust::new(PreparedRustQuery::ImplTrait.into()),
 )]
 #[case(
     "base.rs_impl-type",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ImplType)),
+    Rust::new(PreparedRustQuery::ImplType.into()),
 )]
 #[case(
     "base.rs_mod",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Mod)),
+    Rust::new(PreparedRustQuery::Mod.into()),
 )]
 #[case(
     "base.rs_mod-tests",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::ModTests)),
+    Rust::new(PreparedRustQuery::ModTests.into()),
 )]
 #[case(
     "base.rs_typedefs",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TypeDef)),
+    Rust::new(PreparedRustQuery::TypeDef.into()),
 )]
 #[case(
     "base.rs_identifier",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Identifier)),
+    Rust::new(PreparedRustQuery::Identifier.into()),
 )]
 #[case(
     "base.rs_type-identifier",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::TypeIdentifier)),
+    Rust::new(PreparedRustQuery::TypeIdentifier.into()),
 )]
 #[case(
     "base.rs_closure",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Closure)),
+    Rust::new(PreparedRustQuery::Closure.into()),
 )]
 #[case(
     "base.rs_unsafe",
     include_str!("rust/base.rs"),
-    Rust::new(CodeQuery::Prepared(PreparedRustQuery::Unsafe)),
+    Rust::new(PreparedRustQuery::Unsafe.into()),
 )]
 #[case(
     "base.tf_variable-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variable)),
+    Hcl::new(PreparedHclQuery::Variable.into()),
 )]
 #[case(
     "base.tf_resource-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Resource)),
+    Hcl::new(PreparedHclQuery::Resource.into()),
 )]
 #[case(
     "base.tf_data-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Data)),
+    Hcl::new(PreparedHclQuery::Data.into()),
 )]
 #[case(
     "base.tf_output-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Output)),
+    Hcl::new(PreparedHclQuery::Output.into()),
 )]
 #[case(
     "base.tf_provider-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Provider)),
+    Hcl::new(PreparedHclQuery::Provider.into()),
 )]
 #[case(
     "base.tf_terraform-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Terraform)),
+    Hcl::new(PreparedHclQuery::Terraform.into()),
 )]
 #[case(
     "base.tf_locals-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Locals)),
+    Hcl::new(PreparedHclQuery::Locals.into()),
 )]
 #[case(
     "base.tf_module-block",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Module)),
+    Hcl::new(PreparedHclQuery::Module.into()),
 )]
 #[case(
     "base.tf_variables",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Variables)),
+    Hcl::new(PreparedHclQuery::Variables.into()),
 )]
 #[case(
     "base.tf_resource-types",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::ResourceTypes)),
+    Hcl::new(PreparedHclQuery::ResourceTypes.into()),
 )]
 #[case(
     "base.tf_resource-names",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::ResourceNames)),
+    Hcl::new(PreparedHclQuery::ResourceNames.into()),
 )]
 #[case(
     "base.tf_data-names",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::DataNames)),
+    Hcl::new(PreparedHclQuery::DataNames.into()),
 )]
 #[case(
     "base.tf_data-sources",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::DataSources)),
+    Hcl::new(PreparedHclQuery::DataSources.into()),
 )]
 #[case(
     "base.tf_comments",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Comments)),
+    Hcl::new(PreparedHclQuery::Comments.into()),
 )]
 #[case(
     "base.tf_strings",
     include_str!("hcl/base.tf"),
-    Hcl::new(CodeQuery::Prepared(PreparedHclQuery::Strings)),
+    Hcl::new(PreparedHclQuery::Strings.into()),
 )]
 #[case(
     "base.go_comments",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Comments)),
+    Go::new(PreparedGoQuery::Comments.into()),
 )]
 #[case(
     "base.go_strings",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Strings)),
+    Go::new(PreparedGoQuery::Strings.into()),
 )]
 #[case(
     "base.go_imports",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Imports)),
+    Go::new(PreparedGoQuery::Imports.into()),
 )]
 #[case(
     "base.go_type-def",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::TypeDef)),
+    Go::new(PreparedGoQuery::TypeDef.into()),
 )]
 #[case(
     "base.go_type-alias",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::TypeAlias)),
+    Go::new(PreparedGoQuery::TypeAlias.into()),
 )]
 #[case(
     "base.go_struct",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Struct)),
+    Go::new(PreparedGoQuery::Struct.into()),
 )]
 #[case(
     "base.go_interface",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Interface)),
+    Go::new(PreparedGoQuery::Interface.into()),
 )]
 #[case(
     "base.go_const",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Const)),
+    Go::new(PreparedGoQuery::Const.into()),
 )]
 #[case(
     "base.go_var",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Var)),
+    Go::new(PreparedGoQuery::Var.into()),
 )]
 #[case(
     "base.go_func",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Func)),
+    Go::new(PreparedGoQuery::Func.into()),
 )]
 #[case(
     "base.go_method",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Method)),
+    Go::new(PreparedGoQuery::Method.into()),
 )]
 #[case(
     "base.go_free-func",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::FreeFunc)),
+    Go::new(PreparedGoQuery::FreeFunc.into()),
 )]
 #[case(
     "base.go_init-func",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::InitFunc)),
+    Go::new(PreparedGoQuery::InitFunc.into()),
 )]
 #[case(
     "base.go_type-params",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::TypeParams)),
+    Go::new(PreparedGoQuery::TypeParams.into()),
 )]
 #[case(
     "base.go_defer",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Defer)),
+    Go::new(PreparedGoQuery::Defer.into()),
 )]
 #[case(
     "base.go_select",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Select)),
+    Go::new(PreparedGoQuery::Select.into()),
 )]
 #[case(
     "base.go_go",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Go)),
+    Go::new(PreparedGoQuery::Go.into()),
 )]
 #[case(
     "base.go_switch",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Switch)),
+    Go::new(PreparedGoQuery::Switch.into()),
 )]
 #[case(
     "base.go_labeled",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Labeled)),
+    Go::new(PreparedGoQuery::Labeled.into()),
 )]
 #[case(
     "base.go_goto",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::Goto)),
+    Go::new(PreparedGoQuery::Goto.into()),
 )]
 #[case(
     "base.go_struct-tags",
     include_str!("go/base.go"),
-    Go::new(CodeQuery::Prepared(PreparedGoQuery::StructTags)),
+    Go::new(PreparedGoQuery::StructTags.into()),
 )]
 #[case(
     "base.cs_strings",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Strings)),
+    CSharp::new(PreparedCSharpQuery::Strings.into()),
 )]
 #[case(
     "base.cs_usings",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Usings)),
+    CSharp::new(PreparedCSharpQuery::Usings.into()),
 )]
 #[case(
     "base.cs_comments",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Comments)),
+    CSharp::new(PreparedCSharpQuery::Comments.into()),
 )]
 #[case(
     "base.cs_struct",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Struct)),
+    CSharp::new(PreparedCSharpQuery::Struct.into()),
 )]
 #[case(
     "base.cs_enum",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Enum)),
+    CSharp::new(PreparedCSharpQuery::Enum.into()),
 )]
 #[case(
     "base.cs_field",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Field)),
+    CSharp::new(PreparedCSharpQuery::Field.into()),
 )]
 #[case(
     "base.cs_attribute",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Attribute)),
+    CSharp::new(PreparedCSharpQuery::Attribute.into()),
 )]
 #[case(
     "base.cs_interface",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Interface)),
+    CSharp::new(PreparedCSharpQuery::Interface.into()),
 )]
 #[case(
     "base.cs_class",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Class)),
+    CSharp::new(PreparedCSharpQuery::Class.into()),
 )]
 #[case(
     "base.cs_variable_declaration",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::VariableDeclaration)),
+    CSharp::new(PreparedCSharpQuery::VariableDeclaration.into()),
 )]
 #[case(
     "base.cs_property",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Property)),
+    CSharp::new(PreparedCSharpQuery::Property.into()),
 )]
 #[case(
     "base.cs_constructor",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Constructor)),
+    CSharp::new(PreparedCSharpQuery::Constructor.into()),
 )]
 #[case(
     "base.cs_destructor",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Destructor)),
+    CSharp::new(PreparedCSharpQuery::Destructor.into()),
 )]
 #[case(
     "base.cs_method",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Method)),
+    CSharp::new(PreparedCSharpQuery::Method.into()),
 )]
 #[case(
     "base.cs_identifier",
     include_str!("csharp/base.cs"),
-    CSharp::new(CodeQuery::Prepared(PreparedCSharpQuery::Identifier)),
+    CSharp::new(PreparedCSharpQuery::Identifier.into()),
 )]
 #[case(
     "base.c_comments",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Comments)),
+    C::new(PreparedCQuery::Comments.into()),
 )]
 #[case(
     "base.c_strings",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Strings)),
+    C::new(PreparedCQuery::Strings.into()),
 )]
 #[case(
     "base.c_includes",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Includes)),
+    C::new(PreparedCQuery::Includes.into()),
 )]
 #[case(
     "base.c_typedefs",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::TypeDef)),
+    C::new(PreparedCQuery::TypeDef.into()),
 )]
 #[case(
     "base.c_enum",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Enum)),
+    C::new(PreparedCQuery::Enum.into()),
 )]
 #[case(
     "base.c_struct",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Struct)),
+    C::new(PreparedCQuery::Struct.into()),
 )]
 #[case(
     "base.c_variable",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Variable)),
+    C::new(PreparedCQuery::Variable.into()),
 )]
 #[case(
     "base.c_function",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Function)),
+    C::new(PreparedCQuery::Function.into()),
 )]
 #[case(
     "base.c_function_definition",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::FunctionDef)),
+    C::new(PreparedCQuery::FunctionDef.into()),
 )]
 #[case(
     "base.c_function_declaration",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::FunctionDecl)),
+    C::new(PreparedCQuery::FunctionDecl.into()),
 )]
 #[case(
     "base.c_switch",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Switch)),
+    C::new(PreparedCQuery::Switch.into()),
 )]
 #[case(
     "base.c_if",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::If)),
+    C::new(PreparedCQuery::If.into()),
 )]
 #[case(
     "base.c_for",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::For)),
+    C::new(PreparedCQuery::For.into()),
 )]
 #[case(
     "base.c_while",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::While)),
+    C::new(PreparedCQuery::While.into()),
 )]
 #[case(
     "base.c_do",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Do)),
+    C::new(PreparedCQuery::Do.into()),
 )]
 #[case(
     "base.c_union",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Union)),
+    C::new(PreparedCQuery::Union.into()),
 )]
 #[case(
     "base.c_identifier",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Identifier)),
+    C::new(PreparedCQuery::Identifier.into()),
 )]
 #[case(
     "base.c_declaration",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::Declaration)),
+    C::new(PreparedCQuery::Declaration.into()),
 )]
 #[case(
     "base.c_callexpr",
     include_str!("c/base.c"),
-    C::new(CodeQuery::Prepared(PreparedCQuery::CallExpression)),
+    C::new(PreparedCQuery::CallExpression.into()),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,
     #[case] contents: &str,
-    #[case] lang: impl LanguageScoper,
+    #[case] lang: Result<impl LanguageScoper, tree_sitter::QueryError>,
 ) {
+    let lang = lang.expect("Building a Language for a test should not fail");
     let mut builder = ScopedViewBuilder::new(contents);
     builder.explode(&lang);
     let view = builder.build();
