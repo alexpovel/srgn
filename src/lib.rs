@@ -86,7 +86,7 @@
 //!
 //! let input = "def foo(bar: int) -> int: return bar + 1  # Do a thing";
 //!
-//! let lang = Python::new(CQ::Prepared(PreparedPythonQuery::Comments));
+//! let lang = Python::new(PreparedPythonQuery::Comments.into());
 //!
 //! let mut builder = ScopedViewBuilder::new(input);
 //! builder.explode(&lang);

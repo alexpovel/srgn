@@ -4,7 +4,7 @@
 //! deals with CLI argument handling, I/O, threading, and more.
 
 use std::error::Error;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, stdout, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -23,14 +23,14 @@ use srgn::actions::{
 };
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::scoping::langs::c::{CQuery, C};
-use srgn::scoping::langs::csharp::{CSharp, CSharpQuery};
-use srgn::scoping::langs::go::{Go, GoQuery};
-use srgn::scoping::langs::hcl::{Hcl, HclQuery};
-use srgn::scoping::langs::python::{Python, PythonQuery};
-use srgn::scoping::langs::rust::{Rust, RustQuery};
-use srgn::scoping::langs::typescript::{TypeScript, TypeScriptQuery};
-use srgn::scoping::langs::LanguageScoper;
+use srgn::scoping::langs::c::C;
+use srgn::scoping::langs::csharp::CSharp;
+use srgn::scoping::langs::go::Go;
+use srgn::scoping::langs::hcl::Hcl;
+use srgn::scoping::langs::python::Python;
+use srgn::scoping::langs::rust::Rust;
+use srgn::scoping::langs::typescript::TypeScript;
+use srgn::scoping::langs::{CodeQuery, LanguageScoper};
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
     // Will be sent across threads and might (the borrow checker is convinced at least)
     // outlive the main one. Scoped threads would work here, `ignore` uses them
     // internally even, but we have no access here.
-    let language_scopers = Arc::new(get_language_scopers(&args));
+    let language_scopers = Arc::new(get_language_scopers(&args)?);
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
@@ -651,6 +651,8 @@ enum ProgramError {
     IoError(io::Error),
     /// Error while processing files for walking.
     IgnoreError(ignore::Error),
+    /// The givon query failed to parse
+    QueryError(tree_sitter::QueryError),
 }
 
 impl fmt::Display for ProgramError {
@@ -663,6 +665,9 @@ impl fmt::Display for ProgramError {
             Self::SomethingProcessed => write!(f, "Some input was in scope"),
             Self::IoError(e) => write!(f, "I/O error: {e}"),
             Self::IgnoreError(e) => write!(f, "Error walking files: {e}"),
+            Self::QueryError(e) => {
+                write!(f, "Error occurred while creating a tree-sitter query: {e}")
+            }
         }
     }
 }
@@ -688,6 +693,12 @@ impl From<io::Error> for ProgramError {
 impl From<ignore::Error> for ProgramError {
     fn from(err: ignore::Error) -> Self {
         Self::IgnoreError(err)
+    }
+}
+
+impl From<tree_sitter::QueryError> for ProgramError {
+    fn from(err: tree_sitter::QueryError) -> Self {
+        Self::QueryError(err)
     }
 }
 
@@ -797,15 +808,30 @@ impl fmt::Display for ScoperBuildError {
 impl Error for ScoperBuildError {}
 
 #[allow(clippy::cognitive_complexity)] // 🤷‍♀️ macros
-fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
+fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>, ProgramError> {
+    fn read_query_file(query_or_path: &cli::CodeQuery, buf: &mut String) -> io::Result<Option<()>> {
+        match fs::OpenOptions::new().read(true).open(&**query_or_path) {
+            Ok(mut file) => {
+                file.read_to_string(buf)?;
+                Ok(Some(()))
+            }
+            Err(err) => match err.kind() {
+                io::ErrorKind::NotFound => Ok(None),
+                _ => Err(err),
+            },
+        }
+    }
+
     // We have `LanguageScoper: Scoper`, but we cannot upcast
     // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
     // by providing both.
     let mut scopers: Vec<Box<dyn LanguageScoper>> = Vec::new();
 
     macro_rules! handle_language_scope {
-        ($lang:ident, $lang_query:ident, $query_type:ident, $lang_type:ident) => {
+        ($lang:ident, $lang_query:ident, $lang_type:ident) => {
             if let Some(lang_scope) = &args.languages_scopes.$lang {
+                let mut query_buf = String::with_capacity(1024);
+
                 if !scopers.is_empty() {
                     let mut cmd = cli::Cli::command();
                     cmd.error(
@@ -817,13 +843,21 @@ fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
                 assert!(scopers.is_empty());
 
                 for query in &lang_scope.$lang {
-                    let query = $query_type::Prepared(query.clone());
-                    scopers.push(Box::new($lang_type::new(query.clone())));
+                    let lang_scope = $lang_type::new((*query).into())?;
+                    scopers.push(Box::new(lang_scope));
                 }
 
                 for query in &lang_scope.$lang_query {
-                    let query = $query_type::Custom(query.clone());
-                    scopers.push(Box::new($lang_type::new(query.clone())));
+                    query_buf.clear();
+
+                    let query = if read_query_file(&query, &mut query_buf)?.is_some() {
+                        CodeQuery::from(&*query_buf)
+                    } else {
+                        CodeQuery::from(&**query)
+                    };
+
+                    let lang_scope = $lang_type::new(query)?;
+                    scopers.push(Box::new(lang_scope));
                 }
 
                 assert!(!scopers.is_empty(), "Language specified, but no scope."); // Internal bug
@@ -831,15 +865,15 @@ fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
         };
     }
 
-    handle_language_scope!(c, c_query, CQuery, C);
-    handle_language_scope!(csharp, csharp_query, CSharpQuery, CSharp);
-    handle_language_scope!(hcl, hcl_query, HclQuery, Hcl);
-    handle_language_scope!(go, go_query, GoQuery, Go);
-    handle_language_scope!(python, python_query, PythonQuery, Python);
-    handle_language_scope!(rust, rust_query, RustQuery, Rust);
-    handle_language_scope!(typescript, typescript_query, TypeScriptQuery, TypeScript);
+    handle_language_scope!(c, c_query, C);
+    handle_language_scope!(csharp, csharp_query, CSharp);
+    handle_language_scope!(hcl, hcl_query, Hcl);
+    handle_language_scope!(go, go_query, Go);
+    handle_language_scope!(python, python_query, Python);
+    handle_language_scope!(rust, rust_query, Rust);
+    handle_language_scope!(typescript, typescript_query, TypeScript);
 
-    scopers
+    Ok(scopers)
 }
 
 fn get_general_scoper(args: &cli::Cli) -> Result<Box<dyn Scoper>> {
@@ -934,17 +968,18 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 
 mod cli {
     use std::num::NonZero;
+    use std::ops::Deref;
 
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
-    use srgn::scoping::langs::c::{CustomCQuery, PreparedCQuery};
-    use srgn::scoping::langs::csharp::{CustomCSharpQuery, PreparedCSharpQuery};
-    use srgn::scoping::langs::go::{CustomGoQuery, PreparedGoQuery};
-    use srgn::scoping::langs::hcl::{CustomHclQuery, PreparedHclQuery};
-    use srgn::scoping::langs::python::{CustomPythonQuery, PreparedPythonQuery};
-    use srgn::scoping::langs::rust::{CustomRustQuery, PreparedRustQuery};
-    use srgn::scoping::langs::typescript::{CustomTypeScriptQuery, PreparedTypeScriptQuery};
+    use srgn::scoping::langs::c::PreparedCQuery;
+    use srgn::scoping::langs::csharp::PreparedCSharpQuery;
+    use srgn::scoping::langs::go::PreparedGoQuery;
+    use srgn::scoping::langs::hcl::PreparedHclQuery;
+    use srgn::scoping::langs::python::PreparedPythonQuery;
+    use srgn::scoping::langs::rust::PreparedRustQuery;
+    use srgn::scoping::langs::typescript::PreparedTypeScriptQuery;
     use srgn::GLOBAL_SCOPE;
 
     /// Main CLI entrypoint.
@@ -1252,7 +1287,7 @@ mod cli {
 
         /// Scope C code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub c_query: Vec<CustomCQuery>,
+        pub c_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1264,7 +1299,7 @@ mod cli {
 
         /// Scope C# code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub csharp_query: Vec<CustomCSharpQuery>,
+        pub csharp_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1278,7 +1313,7 @@ mod cli {
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub hcl_query: Vec<CustomHclQuery>,
+        pub hcl_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1290,7 +1325,7 @@ mod cli {
 
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub go_query: Vec<CustomGoQuery>,
+        pub go_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1302,7 +1337,7 @@ mod cli {
 
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub python_query: Vec<CustomPythonQuery>,
+        pub python_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1314,7 +1349,7 @@ mod cli {
 
         /// Scope Rust code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub rust_query: Vec<CustomRustQuery>,
+        pub rust_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1326,7 +1361,7 @@ mod cli {
 
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub typescript_query: Vec<CustomTypeScriptQuery>,
+        pub typescript_query: Vec<CodeQuery>,
     }
 
     #[cfg(feature = "german")]
@@ -1359,6 +1394,25 @@ mod cli {
 
         pub(super) fn command() -> Command {
             <Self as CommandFactory>::command()
+        }
+    }
+
+    /// The given query arg could be a literal tree-sitter query or a path to a file containing
+    /// a tree-sitter query.
+    #[derive(Debug, Clone)]
+    pub struct CodeQuery(String);
+
+    impl Deref for CodeQuery {
+        type Target = str;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl From<String> for CodeQuery {
+        fn from(s: String) -> Self {
+            Self(s)
         }
     }
 }

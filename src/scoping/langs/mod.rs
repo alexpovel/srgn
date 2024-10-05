@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
-use std::str::FromStr;
 
 use log::{debug, info, trace};
 pub use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
+    QueryError as TSQueryError,
 };
 
 use super::scope::RangesWithContext;
@@ -32,9 +32,16 @@ mod tree_sitter_hcl;
 /// TypeScript.
 pub mod typescript;
 
+/// A type used to make the generic `Language` struct specific to a language and
+/// provides the appropriate `tree_sitter::Language` object.
+pub trait Kind {
+    /// Provide the language specific `tree_sitter::Language` object.
+    fn ts_lang() -> TSLanguage;
+}
+
 /// Represents a (programming) language.
 #[derive(Debug)]
-pub struct Language<Q> {
+pub struct Language<T> {
     /// The *positive* query: it will be run against input and its results used for
     /// scoping.
     positive_query: TSQuery,
@@ -48,17 +55,18 @@ pub struct Language<Q> {
     /// type-safe (a [`TSQuery`] is *associated* with a [`TSLanguage`], but that's not
     /// enforced at the type level: a query constructed for Python could accidentally be
     /// passed to Go etc.), so use this field to be more type-safe.
-    _marker: PhantomData<Q>,
+    _marker: PhantomData<T>,
 }
 
-impl<Q> Language<Q>
-where
-    Q: Into<TSQuery> + Clone,
-{
+impl<T: Kind> Language<T> {
     /// Create a new language with the given associated query over it.
-    #[allow(clippy::needless_pass_by_value)] // TODO: refactor later
-    pub fn new(query: Q) -> Self {
-        let positive_query = query.clone().into();
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
+    pub fn new(query: CodeQuery<'_>) -> Result<Self, TSQueryError> {
+        let query = &query.0;
+        let positive_query = TSQuery::new(&T::ts_lang(), query)?;
 
         let is_ignored = |name: &str| name.starts_with(IGNORE);
         let has_ignored_captures = positive_query
@@ -66,59 +74,42 @@ where
             .iter()
             .any(|name| is_ignored(name));
 
-        let negative_query = has_ignored_captures.then(|| {
-            let mut query = query.clone().into();
-            let acknowledged_captures = query
-                .capture_names()
-                .iter()
-                .filter(|name| !is_ignored(name))
-                .map(|s| String::from(*s))
-                .collect::<Vec<_>>();
+        let negative_query = has_ignored_captures
+            .then(|| {
+                let mut query = TSQuery::new(&T::ts_lang(), query)?;
+                let acknowledged_captures = query
+                    .capture_names()
+                    .iter()
+                    .filter(|name| !is_ignored(name))
+                    .map(|s| String::from(*s))
+                    .collect::<Vec<_>>();
 
-            for name in acknowledged_captures {
-                trace!("Disabling capture for: {:?}", name);
-                query.disable_capture(&name);
-            }
+                for name in acknowledged_captures {
+                    trace!("Disabling capture for: {:?}", name);
+                    query.disable_capture(&name);
+                }
 
-            query
-        });
+                Ok(query)
+            })
+            .transpose()?;
 
-        Self {
+        Ok(Self {
             positive_query,
             negative_query,
             _marker: PhantomData,
-        }
+        })
     }
 }
 
 /// A query over a language, for scoping.
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
-#[derive(Debug, Clone)]
-pub enum CodeQuery<C, P>
-where
-    C: FromStr + Into<TSQuery>,
-    P: Into<TSQuery>,
-{
-    /// A custom, user-defined query.
-    Custom(C),
-    /// A prepared query.
-    ///
-    /// Availability depends on the language, respective languages features, and
-    /// implementation in this crate.
-    Prepared(P),
-}
+#[derive(Clone, Copy, Debug)]
+pub struct CodeQuery<'a>(&'a str);
 
-impl<C, P> From<CodeQuery<C, P>> for TSQuery
-where
-    C: FromStr + Into<Self>,
-    P: Into<Self>,
-{
-    fn from(value: CodeQuery<C, P>) -> Self {
-        match value {
-            CodeQuery::Custom(query) => query.into(),
-            CodeQuery::Prepared(query) => query.into(),
-        }
+impl<'a> From<&'a str> for CodeQuery<'a> {
+    fn from(s: &'a str) -> Self {
+        CodeQuery(s)
     }
 }
 

@@ -1,18 +1,23 @@
-use std::borrow::Cow;
-use std::fs;
-use std::str::FromStr;
-use std::{fmt::Debug, path::Path};
+use std::fmt::Debug;
 
 use clap::ValueEnum;
 use const_format::formatcp;
-use tree_sitter::QueryError;
 
-use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
+use super::{CodeQuery, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
+
+/// A type used to make the generic `Language` struct specific to the Rust language and
+/// provides the appropriate `tree_sitter::Language` object.
+#[derive(Clone, Copy, Debug)]
+pub struct LangKind {}
+
+impl Kind for LangKind {
+    fn ts_lang() -> TSLanguage {
+        tree_sitter_rust::LANGUAGE.into()
+    }
+}
 
 /// The Rust language.
-pub type Rust = Language<RustQuery>;
-/// A query for Rust.
-pub type RustQuery = CodeQuery<CustomRustQuery, PreparedRustQuery>;
+pub type Rust = Language<LangKind>;
 
 /// Prepared tree-sitter queries for Rust.
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -106,273 +111,239 @@ pub enum PreparedRustQuery {
     Unsafe,
 }
 
-impl From<PreparedRustQuery> for TSQuery {
+impl From<PreparedRustQuery> for CodeQuery<'static> {
     #[allow(clippy::too_many_lines)]
     fn from(value: PreparedRustQuery) -> Self {
-        Self::new(
-            &Rust::lang(),
-            match value {
-                PreparedRustQuery::Comments => {
-                    r#"
-                    [
-                        (line_comment)+ @line
-                        (block_comment)
-                        (#not-match? @line "^///")
-                    ]
-                    @comment
-                    "#
-                }
-                PreparedRustQuery::DocComments => {
-                    r#"
+        let s = match value {
+            PreparedRustQuery::Comments => {
+                r#"
+                [
+                    (line_comment)+ @line
+                    (block_comment)
+                    (#not-match? @line "^///")
+                ]
+                @comment
+                "#
+            }
+            PreparedRustQuery::DocComments => {
+                r#"
+                (
+                    (line_comment)+ @line
+                    (#match? @line "^//(/|!)")
+                )
+                "#
+            }
+            PreparedRustQuery::Uses => {
+                // Match any (wildcard `_`) `argument`, which includes:
+                //
+                // - `scoped_identifier`
+                // - `scoped_use_list`
+                // - `use_wildcard`
+                // - `use_as_clause`
+                //
+                // all at once.
+                r"
+                [
+                    (use_declaration
+                        argument: (_) @use
+                    )
+                ]
+                "
+            }
+            PreparedRustQuery::Strings => "(string_content) @string",
+            PreparedRustQuery::Attribute => "(attribute) @attribute",
+            PreparedRustQuery::Struct => "(struct_item) @struct_item",
+            PreparedRustQuery::PrivStruct => {
+                r"(struct_item
+                    .
+                    name: (type_identifier)
+                ) @struct_item_without_visibility_modifier"
+            }
+            PreparedRustQuery::PubStruct => {
+                r#"(struct_item
+                    (visibility_modifier) @vis
+                    (#eq? @vis "pub")
+                ) @struct_item"#
+            }
+            PreparedRustQuery::PubCrateStruct => {
+                r"(struct_item
+                    (visibility_modifier (crate))
+                ) @struct_item"
+            }
+            PreparedRustQuery::PubSelfStruct => {
+                r"(struct_item
+                    (visibility_modifier (self))
+                ) @struct_item"
+            }
+            PreparedRustQuery::PubSuperStruct => {
+                r"(struct_item
+                    (visibility_modifier (super))
+                ) @struct_item"
+            }
+            PreparedRustQuery::Enum => "(enum_item) @enum_item",
+            PreparedRustQuery::PrivEnum => {
+                r"(enum_item
+                    .
+                    name: (type_identifier)
+                ) @enum_item_without_visibility_modifier"
+            }
+            PreparedRustQuery::PubEnum => {
+                r#"(enum_item
+                    (visibility_modifier) @vis
+                    (#eq? @vis "pub")
+                ) @enum_item"#
+            }
+            PreparedRustQuery::PubCrateEnum => {
+                r"(enum_item
+                    (visibility_modifier (crate))
+                ) @enum_item"
+            }
+            PreparedRustQuery::PubSelfEnum => {
+                r"(enum_item
+                    (visibility_modifier (self))
+                ) @enum_item"
+            }
+            PreparedRustQuery::PubSuperEnum => {
+                r"(enum_item
+                    (visibility_modifier (super))
+                ) @enum_item"
+            }
+            PreparedRustQuery::EnumVariant => "(enum_variant) @enum_variant",
+            PreparedRustQuery::Fn => "(function_item) @function_item",
+            PreparedRustQuery::ImplFn => {
+                r"(impl_item
+                    body: (_ (function_item) @function)
+                )"
+            }
+            PreparedRustQuery::PrivFn => {
+                r"(function_item
+                    .
+                    name: (identifier)
+                ) @function_item_without_visibility_modifier"
+            }
+            PreparedRustQuery::PubFn => {
+                r#"(function_item
+                    (visibility_modifier) @vis
+                    (#eq? @vis "pub")
+                ) @function_item"#
+            }
+            PreparedRustQuery::PubCrateFn => {
+                r"(function_item
+                    (visibility_modifier (crate))
+                ) @function_item"
+            }
+            PreparedRustQuery::PubSelfFn => {
+                r"(function_item
+                    (visibility_modifier (self))
+                ) @function_item"
+            }
+            PreparedRustQuery::PubSuperFn => {
+                r"(function_item
+                    (visibility_modifier (super))
+                ) @function_item"
+            }
+            PreparedRustQuery::ConstFn => {
+                r#"(function_item
+                    (function_modifiers) @funcmods
+                    (#match? @funcmods "const")
+                ) @function_item"#
+            }
+            PreparedRustQuery::AsyncFn => {
+                r#"(function_item
+                    (function_modifiers) @funcmods
+                    (#match? @funcmods "async")
+                ) @function_item"#
+            }
+            PreparedRustQuery::UnsafeFn => {
+                r#"(function_item
+                    (function_modifiers) @funcmods
+                    (#match? @funcmods "unsafe")
+                ) @function_item"#
+            }
+            PreparedRustQuery::ExternFn => {
+                r"(function_item
+                    (function_modifiers (extern_modifier))
+                ) @extern_function"
+            }
+            PreparedRustQuery::TestFn => {
+                // Any attribute which matches aka contains `test`, preceded or
+                // followed by more attributes, eventually preceded by a function.
+                // The anchors of `.` ensure nothing but the items we're after occur
+                // in between.
+                formatcp!(
+                    "
                     (
-                        (line_comment)+ @line
-                        (#match? @line "^//(/|!)")
-                    )
-                    "#
-                }
-                PreparedRustQuery::Uses => {
-                    // Match any (wildcard `_`) `argument`, which includes:
-                    //
-                    // - `scoped_identifier`
-                    // - `scoped_use_list`
-                    // - `use_wildcard`
-                    // - `use_as_clause`
-                    //
-                    // all at once.
-                    r"
+                        (attribute_item)*
+                        .
+                        (attribute_item (attribute) @{0}.attr (#match? @{0}.attr \"test\"))
+                        .
+                        (attribute_item)*
+                        .
+                        (function_item) @func
+                    )",
+                    IGNORE
+                )
+            }
+            PreparedRustQuery::Trait => "(trait_item) @trait_item",
+            PreparedRustQuery::Impl => "(impl_item) @impl_item",
+            PreparedRustQuery::ImplType => {
+                r"(impl_item
+                    type: (_)
+                    !trait
+                ) @impl_item"
+            }
+            PreparedRustQuery::ImplTrait => {
+                r"(impl_item
+                    trait: (_)
+                    .
+                    type: (_)
+                ) @impl_item"
+            }
+            PreparedRustQuery::Mod => "(mod_item) @mod_item",
+            PreparedRustQuery::ModTests => {
+                r#"(mod_item
+                    name: (identifier) @mod_name
+                    (#eq? @mod_name "tests")
+                ) @mod_tests
+                "#
+            }
+            PreparedRustQuery::TypeDef => {
+                r"
+                [
+                    (struct_item)
+                    (enum_item)
+                    (union_item)
+                ]
+                @typedef
+                "
+            }
+            PreparedRustQuery::Identifier => "(identifier) @identifier",
+            PreparedRustQuery::TypeIdentifier => "(type_identifier) @identifier",
+            PreparedRustQuery::Closure => "(closure_expression) @closure",
+            PreparedRustQuery::Unsafe => {
+                r#"
                     [
-                        (use_declaration
-                            argument: (_) @use
-                        )
-                    ]
-                    "
-                }
-                PreparedRustQuery::Strings => "(string_content) @string",
-                PreparedRustQuery::Attribute => "(attribute) @attribute",
-                PreparedRustQuery::Struct => "(struct_item) @struct_item",
-                PreparedRustQuery::PrivStruct => {
-                    r"(struct_item
-                        .
-                        name: (type_identifier)
-                    ) @struct_item_without_visibility_modifier"
-                }
-                PreparedRustQuery::PubStruct => {
-                    r#"(struct_item
-                        (visibility_modifier) @vis
-                        (#eq? @vis "pub")
-                    ) @struct_item"#
-                }
-                PreparedRustQuery::PubCrateStruct => {
-                    r"(struct_item
-                        (visibility_modifier (crate))
-                    ) @struct_item"
-                }
-                PreparedRustQuery::PubSelfStruct => {
-                    r"(struct_item
-                        (visibility_modifier (self))
-                    ) @struct_item"
-                }
-                PreparedRustQuery::PubSuperStruct => {
-                    r"(struct_item
-                        (visibility_modifier (super))
-                    ) @struct_item"
-                }
-                PreparedRustQuery::Enum => "(enum_item) @enum_item",
-                PreparedRustQuery::PrivEnum => {
-                    r"(enum_item
-                        .
-                        name: (type_identifier)
-                    ) @enum_item_without_visibility_modifier"
-                }
-                PreparedRustQuery::PubEnum => {
-                    r#"(enum_item
-                        (visibility_modifier) @vis
-                        (#eq? @vis "pub")
-                    ) @enum_item"#
-                }
-                PreparedRustQuery::PubCrateEnum => {
-                    r"(enum_item
-                        (visibility_modifier (crate))
-                    ) @enum_item"
-                }
-                PreparedRustQuery::PubSelfEnum => {
-                    r"(enum_item
-                        (visibility_modifier (self))
-                    ) @enum_item"
-                }
-                PreparedRustQuery::PubSuperEnum => {
-                    r"(enum_item
-                        (visibility_modifier (super))
-                    ) @enum_item"
-                }
-                PreparedRustQuery::EnumVariant => "(enum_variant) @enum_variant",
-                PreparedRustQuery::Fn => "(function_item) @function_item",
-                PreparedRustQuery::ImplFn => {
-                    r"(impl_item
-                        body: (_ (function_item) @function)
-                    )"
-                }
-                PreparedRustQuery::PrivFn => {
-                    r"(function_item
-                        .
-                        name: (identifier)
-                    ) @function_item_without_visibility_modifier"
-                }
-                PreparedRustQuery::PubFn => {
-                    r#"(function_item
-                        (visibility_modifier) @vis
-                        (#eq? @vis "pub")
-                    ) @function_item"#
-                }
-                PreparedRustQuery::PubCrateFn => {
-                    r"(function_item
-                        (visibility_modifier (crate))
-                    ) @function_item"
-                }
-                PreparedRustQuery::PubSelfFn => {
-                    r"(function_item
-                        (visibility_modifier (self))
-                    ) @function_item"
-                }
-                PreparedRustQuery::PubSuperFn => {
-                    r"(function_item
-                        (visibility_modifier (super))
-                    ) @function_item"
-                }
-                PreparedRustQuery::ConstFn => {
-                    r#"(function_item
-                        (function_modifiers) @funcmods
-                        (#match? @funcmods "const")
-                    ) @function_item"#
-                }
-                PreparedRustQuery::AsyncFn => {
-                    r#"(function_item
-                        (function_modifiers) @funcmods
-                        (#match? @funcmods "async")
-                    ) @function_item"#
-                }
-                PreparedRustQuery::UnsafeFn => {
-                    r#"(function_item
-                        (function_modifiers) @funcmods
-                        (#match? @funcmods "unsafe")
-                    ) @function_item"#
-                }
-                PreparedRustQuery::ExternFn => {
-                    r"(function_item
-                        (function_modifiers (extern_modifier))
-                    ) @extern_function"
-                }
-                PreparedRustQuery::TestFn => {
-                    // Any attribute which matches aka contains `test`, preceded or
-                    // followed by more attributes, eventually preceded by a function.
-                    // The anchors of `.` ensure nothing but the items we're after occur
-                    // in between.
-                    formatcp!(
-                        "
                         (
-                            (attribute_item)*
-                            .
-                            (attribute_item (attribute) @{0}.attr (#match? @{0}.attr \"test\"))
-                            .
-                            (attribute_item)*
-                            .
-                            (function_item) @func
-                        )",
-                        IGNORE
-                    )
-                }
-                PreparedRustQuery::Trait => "(trait_item) @trait_item",
-                PreparedRustQuery::Impl => "(impl_item) @impl_item",
-                PreparedRustQuery::ImplType => {
-                    r"(impl_item
-                        type: (_)
-                        !trait
-                    ) @impl_item"
-                }
-                PreparedRustQuery::ImplTrait => {
-                    r"(impl_item
-                        trait: (_)
-                        .
-                        type: (_)
-                    ) @impl_item"
-                }
-                PreparedRustQuery::Mod => "(mod_item) @mod_item",
-                PreparedRustQuery::ModTests => {
-                    r#"(mod_item
-                        name: (identifier) @mod_name
-                        (#eq? @mod_name "tests")
-                    ) @mod_tests
-                    "#
-                }
-                PreparedRustQuery::TypeDef => {
-                    r"
-                    [
-                        (struct_item)
-                        (enum_item)
-                        (union_item)
-                    ]
-                    @typedef
-                    "
-                }
-                PreparedRustQuery::Identifier => "(identifier) @identifier",
-                PreparedRustQuery::TypeIdentifier => "(type_identifier) @identifier",
-                PreparedRustQuery::Closure => "(closure_expression) @closure",
-                PreparedRustQuery::Unsafe => {
-                    r#"
-                        [
-                            (
-                                (trait_item) @ti (#match? @ti "^unsafe")
-                            )
-                            (
-                                (impl_item) @ii (#match? @ii "^unsafe")
-                            )
-                            (function_item
-                                (function_modifiers) @funcmods
-                                (#match? @funcmods "unsafe")
-                            ) @function_item
-                            (function_signature_item
-                                (function_modifiers) @funcmods
-                                (#match? @funcmods "unsafe")
-                            ) @function_signature_item
-                            (unsafe_block) @block
-                        ] @unsafe
-                    "#
-                }
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
-
-/// A custom tree-sitter query for Rust.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomRustQuery(String);
-
-impl FromStr for CustomRustQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let path = Path::new(s);
-
-        let s: Cow<'_, str> = if path.is_file() {
-            fs::read_to_string(path)
-                .expect("How should QueryError be modified?")
-                .into()
-        } else {
-            s.into()
+                            (trait_item) @ti (#match? @ti "^unsafe")
+                        )
+                        (
+                            (impl_item) @ii (#match? @ii "^unsafe")
+                        )
+                        (function_item
+                            (function_modifiers) @funcmods
+                            (#match? @funcmods "unsafe")
+                        ) @function_item
+                        (function_signature_item
+                            (function_modifiers) @funcmods
+                            (#match? @funcmods "unsafe")
+                        ) @function_signature_item
+                        (unsafe_block) @block
+                    ] @unsafe
+                "#
+            }
         };
 
-        match TSQuery::new(&Rust::lang(), &s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
-        }
-    }
-}
-
-impl From<CustomRustQuery> for TSQuery {
-    fn from(value: CustomRustQuery) -> Self {
-        Self::new(&Rust::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
+        s.into()
     }
 }
 
