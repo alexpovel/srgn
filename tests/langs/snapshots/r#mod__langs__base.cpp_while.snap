@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 107
+  l: "    while (i < 5) {\n"
+  m: "    ^^^^^^^^^^^^^^^^^"
+- n: 108
+  l: "        std::cout << i++ << \" \";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 109
+  l: "    }\n"
+  m: "^^^^^  "

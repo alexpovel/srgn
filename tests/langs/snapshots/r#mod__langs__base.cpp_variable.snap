@@ -1,0 +1,64 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 70
+  l: "auto lambda = [](int a, int b) { return a + b; };\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 73
+  l: "    auto it = std::find(vec.begin(), vec.end(), value);\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 92
+  l: "    int a = 5;\n"
+  m: "    ^^^^^^^^^^  "
+- n: 101
+  l: "    for (int i = 0; i < 5; ++i) {\n"
+  m: "         ^^^^^^^^^^                "
+- n: 106
+  l: "    int i = 0;\n"
+  m: "    ^^^^^^^^^^  "
+- n: 117
+  l: "    Example ex1;\n"
+  m: "    ^^^^^^^^^^^^  "
+- n: 118
+  l: "    Example ex2(10);\n"
+  m: "    ^^^^^^^^^^^^^^^^  "
+- n: 119
+  l: "    Example ex3 = ex1 + ex2;\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 121
+  l: "    Point p{3, 4};\n"
+  m: "    ^^^^^^^^^^^^^^  "
+- n: 123
+  l: "    Color color = Color::Red;\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 127
+  l: "    Wrapper<int> wrappedValue{10};\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 131
+  l: "    int sum = lambda(3, 4);\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 133
+  l: "    auto value = findValue({1, 2, 3}, 2);\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 138
+  l: "    auto variantValue = getVariant(true);\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 143
+  l: "    auto [x, y, z] = createTuple();\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 145
+  l: "    std::pair<int, std::string> pairValue{1, \"one\"};\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 147
+  l: "    std::unique_ptr<Example> ptr = std::make_unique<Example>(20);\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 149
+  l: "    std::vector<int> numbers = {1, 2, 3, 4, 5};\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 152
+  l: "    std::map<std::string, int> myMap;\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 156
+  l: "        Example ex4(20);\n"
+  m: "        ^^^^^^^^^^^^^^^^  "
