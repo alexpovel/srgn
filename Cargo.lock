@@ -1166,6 +1166,7 @@ dependencies = [
  "tree-sitter-python",
  "tree-sitter-rust",
  "tree-sitter-typescript",
+ "tree-sitter-typst",
  "unescape",
  "unicode-normalization",
  "unicode_categories",
@@ -1344,6 +1345,15 @@ name = "tree-sitter-typescript"
 version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aecf1585ae2a9dddc2b1d4c0e2140b2ec9876e2a25fd79de47fcf7dae0384685"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
+name = "tree-sitter-typst"
+version = "0.23.0"
+source = "git+https://github.com/alexpovel/tree-sitter-typst.git#7c7a553c20fc4ab437c615d3e06634c8b4d6a3f1"
 dependencies = [
  "cc",
  "tree-sitter-language",

@@ -30,6 +30,7 @@ use srgn::scoping::langs::hcl::{Hcl, HclQuery};
 use srgn::scoping::langs::python::{Python, PythonQuery};
 use srgn::scoping::langs::rust::{Rust, RustQuery};
 use srgn::scoping::langs::typescript::{TypeScript, TypeScriptQuery};
+use srgn::scoping::langs::typst::{Typst, TypstQuery};
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
@@ -838,6 +839,7 @@ fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
     handle_language_scope!(python, python_query, PythonQuery, Python);
     handle_language_scope!(rust, rust_query, RustQuery, Rust);
     handle_language_scope!(typescript, typescript_query, TypeScriptQuery, TypeScript);
+    handle_language_scope!(typst, typst_query, TypstQuery, Typst);
 
     scopers
 }
@@ -945,6 +947,7 @@ mod cli {
     use srgn::scoping::langs::python::{CustomPythonQuery, PreparedPythonQuery};
     use srgn::scoping::langs::rust::{CustomRustQuery, PreparedRustQuery};
     use srgn::scoping::langs::typescript::{CustomTypeScriptQuery, PreparedTypeScriptQuery};
+    use srgn::scoping::langs::typst::{CustomTypstQuery, PreparedTypstQuery};
     use srgn::GLOBAL_SCOPE;
 
     /// Main CLI entrypoint.
@@ -1241,6 +1244,8 @@ mod cli {
         pub rust: Option<RustScope>,
         #[command(flatten)]
         pub typescript: Option<TypeScriptScope>,
+        #[command(flatten)]
+        pub typst: Option<TypstScope>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1327,6 +1332,18 @@ mod cli {
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub typescript_query: Vec<CustomTypeScriptQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub struct TypstScope {
+        /// Scope Typst code using a prepared query.
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "typ")]
+        pub typst: Vec<PreparedTypstQuery>,
+
+        /// Scope Typst code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        pub typst_query: Vec<CustomTypstQuery>,
     }
 
     #[cfg(feature = "german")]

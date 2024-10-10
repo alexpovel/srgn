@@ -31,6 +31,8 @@ pub mod rust;
 mod tree_sitter_hcl;
 /// TypeScript.
 pub mod typescript;
+/// Typst.
+pub mod typst;
 
 /// Represents a (programming) language.
 #[derive(Debug)]

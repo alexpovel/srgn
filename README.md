@@ -1786,6 +1786,21 @@ Language scopes:
           
           [env: TYPESCRIPT_QUERY=]
 
+      --typst <TYPST>
+          Scope Typst code using a prepared query.
+          
+          [env: TYPST=]
+          [aliases: typ]
+
+          Possible values:
+          - comments: Comments (single- and multi-line)
+          - strings:  Strings (interpreted and raw; excluding struct tags)
+
+      --typst-query <TREE-SITTER-QUERY>
+          Scope Typst code using a custom tree-sitter query.
+          
+          [env: TYPST_QUERY=]
+
 Options (german):
       --german-prefer-original
           When some original version and its replacement are equally legal, prefer the
