@@ -19,6 +19,10 @@ pub enum PreparedTypstQuery {
     Comments,
     /// Strings (interpreted and raw; excluding struct tags).
     Strings,
+    /// Text
+    Text,
+    /// Content
+    Content,
 }
 
 impl From<PreparedTypstQuery> for TSQuery {
@@ -28,6 +32,8 @@ impl From<PreparedTypstQuery> for TSQuery {
             match value {
                 PreparedTypstQuery::Comments => "(comment) @comment",
                 PreparedTypstQuery::Strings => "(string) @string",
+                PreparedTypstQuery::Text => "(text) @text",
+                PreparedTypstQuery::Content => "(content) @content",
             },
         )
         .expect("Prepared queries to be valid")

@@ -1795,6 +1795,8 @@ Language scopes:
           Possible values:
           - comments: Comments (single- and multi-line)
           - strings:  Strings (interpreted and raw; excluding struct tags)
+          - text:     Text
+          - content:  Content
 
       --typst-query <TREE-SITTER-QUERY>
           Scope Typst code using a custom tree-sitter query.
