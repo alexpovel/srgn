@@ -4,27 +4,29 @@ use std::path::{Component, Path};
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Query, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
-/// A type used to make the generic `Language` struct specific to the Go language and
-/// provides the appropriate `tree_sitter::Language` object.
-#[derive(Clone, Copy, Debug)]
-pub struct LangKind {}
+/// A compiled query for the Go language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
 
-impl Kind for LangKind {
-    fn ts_lang() -> TSLanguage {
-        tree_sitter_go::LANGUAGE.into()
+impl CompiledQuery {
+    /// Create a new compiled query for the Go language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
+    pub fn new(query: &RawQuery<'_>) -> Result<Self, super::TSQueryError> {
+        let q = super::CompiledQuery::new(&tree_sitter_go::LANGUAGE.into(), query)?;
+        Ok(Self(q))
     }
 }
 
-/// The Go language.
-pub type Go = Language<LangKind>;
-
 /// Prepared tree-sitter queries for Go.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedGoQuery {
+pub enum PreparedQuery {
     /// Comments (single- and multi-line).
     Comments,
     /// Strings (interpreted and raw; excluding struct tags).
@@ -69,11 +71,11 @@ pub enum PreparedGoQuery {
     StructTags,
 }
 
-impl From<PreparedGoQuery> for Query<'static> {
-    fn from(value: PreparedGoQuery) -> Self {
+impl From<PreparedQuery> for RawQuery<'static> {
+    fn from(value: PreparedQuery) -> Self {
         let s = match value {
-            PreparedGoQuery::Comments => "(comment) @comment",
-            PreparedGoQuery::Strings => {
+            PreparedQuery::Comments => "(comment) @comment",
+            PreparedQuery::Strings => {
                 formatcp!(
                     r"
                     [
@@ -86,18 +88,16 @@ impl From<PreparedGoQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedGoQuery::Imports => r"(import_spec path: (interpreted_string_literal) @path)",
-            PreparedGoQuery::TypeDef => r"(type_declaration) @type_decl",
-            PreparedGoQuery::TypeAlias => r"(type_alias) @type_alias",
-            PreparedGoQuery::Struct => {
-                r"(type_declaration (type_spec type: (struct_type))) @struct"
-            }
-            PreparedGoQuery::Interface => {
+            PreparedQuery::Imports => r"(import_spec path: (interpreted_string_literal) @path)",
+            PreparedQuery::TypeDef => r"(type_declaration) @type_decl",
+            PreparedQuery::TypeAlias => r"(type_alias) @type_alias",
+            PreparedQuery::Struct => r"(type_declaration (type_spec type: (struct_type))) @struct",
+            PreparedQuery::Interface => {
                 r"(type_declaration (type_spec type: (interface_type))) @interface"
             }
-            PreparedGoQuery::Const => "(const_spec) @const",
-            PreparedGoQuery::Var => "(var_spec) @var",
-            PreparedGoQuery::Func => {
+            PreparedQuery::Const => "(const_spec) @const",
+            PreparedQuery::Var => "(var_spec) @var",
+            PreparedQuery::Func => {
                 r"
                 [
                     (method_declaration)
@@ -105,42 +105,42 @@ impl From<PreparedGoQuery> for Query<'static> {
                     (func_literal)
                 ] @func"
             }
-            PreparedGoQuery::Method => "(method_declaration) @method",
-            PreparedGoQuery::FreeFunc => "(function_declaration) @free_func",
-            PreparedGoQuery::InitFunc => {
+            PreparedQuery::Method => "(method_declaration) @method",
+            PreparedQuery::FreeFunc => "(function_declaration) @free_func",
+            PreparedQuery::InitFunc => {
                 r#"(function_declaration
                     name: (identifier) @id (#eq? @id "init")
                 ) @init_func"#
             }
-            PreparedGoQuery::TypeParams => "(type_parameter_declaration) @type_params",
-            PreparedGoQuery::Defer => "(defer_statement) @defer",
-            PreparedGoQuery::Select => "(select_statement) @select",
-            PreparedGoQuery::Go => "(go_statement) @go",
-            PreparedGoQuery::Switch => "(expression_switch_statement) @switch",
-            PreparedGoQuery::Labeled => "(labeled_statement) @labeled",
-            PreparedGoQuery::Goto => "(goto_statement) @goto",
-            PreparedGoQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
+            PreparedQuery::TypeParams => "(type_parameter_declaration) @type_params",
+            PreparedQuery::Defer => "(defer_statement) @defer",
+            PreparedQuery::Select => "(select_statement) @select",
+            PreparedQuery::Go => "(go_statement) @go",
+            PreparedQuery::Switch => "(expression_switch_statement) @switch",
+            PreparedQuery::Labeled => "(labeled_statement) @labeled",
+            PreparedQuery::Goto => "(goto_statement) @goto",
+            PreparedQuery::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
         };
 
         s.into()
     }
 }
 
-impl LanguageScoper for Go {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_go::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for Go {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["go"]
     }

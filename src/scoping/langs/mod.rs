@@ -1,4 +1,4 @@
-use std::{borrow::Cow, marker::PhantomData};
+use std::borrow::Cow;
 
 use log::{debug, info, trace};
 pub use tree_sitter::{
@@ -32,41 +32,27 @@ mod tree_sitter_hcl;
 /// TypeScript.
 pub mod typescript;
 
-/// A type used to make the generic `Language` struct specific to a language and
-/// provides the appropriate `tree_sitter::Language` object.
-pub trait Kind {
-    /// Provide the language specific `tree_sitter::Language` object.
-    fn ts_lang() -> TSLanguage;
-}
-
-/// Represents a (programming) language.
+/// Represents query compiled for a (programming) language L.
 #[derive(Debug)]
-pub struct Language<T> {
+struct CompiledQuery {
     /// The *positive* query: it will be run against input and its results used for
     /// scoping.
     positive_query: TSQuery,
     /// The *negative* query: if present (if [`IGNORE`] is present) will be run and
     /// *subtracted* from the positive query.
     negative_query: Option<TSQuery>,
-    /// We are generic over this to allow languages to be their own type.
-    ///
-    /// We only store constructed [`TSQuery`]s as those are actually actionable and
-    /// references to them are required. However, [`TSQuery`]s are neither [`Clone`] nor
-    /// type-safe (a [`TSQuery`] is *associated* with a [`TSLanguage`], but that's not
-    /// enforced at the type level: a query constructed for Python could accidentally be
-    /// passed to Go etc.), so use this field to be more type-safe.
-    _marker: PhantomData<T>,
 }
 
-impl<T: Kind> Language<T> {
+impl CompiledQuery {
     /// Create a new language with the given associated query over it.
     ///
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    pub fn new(query: &Query<'_>) -> Result<Self, TSQueryError> {
+    fn new(lang: &TSLanguage, query: &RawQuery<'_>) -> Result<Self, TSQueryError> {
         let query = &query.0;
-        let positive_query = TSQuery::new(&T::ts_lang(), query)?;
+
+        let positive_query = TSQuery::new(lang, query)?;
 
         let is_ignored = |name: &str| name.starts_with(IGNORE);
         let has_ignored_captures = positive_query
@@ -76,7 +62,7 @@ impl<T: Kind> Language<T> {
 
         let negative_query = has_ignored_captures
             .then(|| {
-                let mut query = TSQuery::new(&T::ts_lang(), query)?;
+                let mut query = TSQuery::new(lang, query)?;
                 let acknowledged_captures = query
                     .capture_names()
                     .iter()
@@ -96,7 +82,6 @@ impl<T: Kind> Language<T> {
         Ok(Self {
             positive_query,
             negative_query,
-            _marker: PhantomData,
         })
     }
 }
@@ -105,17 +90,17 @@ impl<T: Kind> Language<T> {
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
 #[derive(Clone, Debug)]
-pub struct Query<'a>(Cow<'a, str>);
+pub struct RawQuery<'a>(Cow<'a, str>);
 
-impl<'a> From<&'a str> for Query<'a> {
+impl<'a> From<&'a str> for RawQuery<'a> {
     fn from(s: &'a str) -> Self {
-        Query(s.into())
+        RawQuery(s.into())
     }
 }
 
-impl From<String> for Query<'static> {
+impl From<String> for RawQuery<'static> {
     fn from(s: String) -> Self {
-        Query(s.into())
+        RawQuery(s.into())
     }
 }
 

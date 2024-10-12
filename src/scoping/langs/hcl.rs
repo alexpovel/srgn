@@ -3,27 +3,29 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{tree_sitter_hcl, Query, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{tree_sitter_hcl, LanguageScoper, RawQuery, TSLanguage, TSQuery};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
-/// A type used to make the generic `Language` struct specific to the HCL language and
-/// provides the appropriate `tree_sitter::Language` object.
-#[derive(Clone, Copy, Debug)]
-pub struct LangKind {}
+/// A compiled query for the Hashicorp Configuration language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
 
-impl Kind for LangKind {
-    fn ts_lang() -> TSLanguage {
-        tree_sitter_hcl::language()
+impl CompiledQuery {
+    /// Create a new compiled query for the Hashicorp Configuration language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
+    pub fn new(query: &RawQuery<'_>) -> Result<Self, super::TSQueryError> {
+        let q = super::CompiledQuery::new(&tree_sitter_hcl::language(), query)?;
+        Ok(Self(q))
     }
 }
 
-/// The Hashicorp Configuration Language.
-pub type Hcl = Language<LangKind>;
-
 /// Prepared tree-sitter queries for Hcl.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedHclQuery {
+pub enum PreparedQuery {
     /// `variable` blocks (in their entirety).
     Variable,
     /// `resource` blocks (in their entirety).
@@ -66,14 +68,14 @@ pub enum PreparedHclQuery {
     Strings,
 }
 
-impl From<PreparedHclQuery> for Query<'static> {
+impl From<PreparedQuery> for RawQuery<'static> {
     #[allow(clippy::too_many_lines)] // No good way to avoid
-    fn from(value: PreparedHclQuery) -> Self {
+    fn from(value: PreparedQuery) -> Self {
         // Seems to not play nice with the macro. Put up here, else interpolation is
         // affected.
         #[allow(clippy::needless_raw_string_hashes)]
         let s = match value {
-            PreparedHclQuery::Variable => {
+            PreparedQuery::Variable => {
                 r#"
                     (block
                         (identifier) @name
@@ -81,7 +83,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Resource => {
+            PreparedQuery::Resource => {
                 r#"
                     (block
                         (identifier) @name
@@ -89,7 +91,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Data => {
+            PreparedQuery::Data => {
                 r#"
                     (block
                         (identifier) @name
@@ -97,7 +99,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Output => {
+            PreparedQuery::Output => {
                 r#"
                     (block
                         (identifier) @name
@@ -105,7 +107,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Provider => {
+            PreparedQuery::Provider => {
                 r#"
                     (block
                         (identifier) @name
@@ -113,7 +115,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Terraform => {
+            PreparedQuery::Terraform => {
                 r#"
                     (block
                         (identifier) @name
@@ -121,7 +123,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Locals => {
+            PreparedQuery::Locals => {
                 r#"
                     (block
                         (identifier) @name
@@ -129,7 +131,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Module => {
+            PreparedQuery::Module => {
                 r#"
                     (block
                         (identifier) @name
@@ -137,7 +139,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     ) @block
                 "#
             }
-            PreparedHclQuery::Variables => {
+            PreparedQuery::Variables => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
@@ -164,7 +166,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedHclQuery::ResourceNames => {
+            PreparedQuery::ResourceNames => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
@@ -198,7 +200,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedHclQuery::ResourceTypes => {
+            PreparedQuery::ResourceTypes => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
@@ -233,7 +235,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedHclQuery::DataNames => {
+            PreparedQuery::DataNames => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
@@ -265,7 +267,7 @@ impl From<PreparedHclQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedHclQuery::DataSources => {
+            PreparedQuery::DataSources => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
@@ -297,8 +299,8 @@ impl From<PreparedHclQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedHclQuery::Comments => "(comment) @comment",
-            PreparedHclQuery::Strings => {
+            PreparedQuery::Comments => "(comment) @comment",
+            PreparedQuery::Strings => {
                 r"
                 [
                     (literal_value
@@ -321,21 +323,21 @@ impl From<PreparedHclQuery> for Query<'static> {
     }
 }
 
-impl LanguageScoper for Hcl {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_hcl::language()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for Hcl {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["hcl", "tf"]
     }

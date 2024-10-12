@@ -3,26 +3,28 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Query, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery};
 use crate::scoping::langs::IGNORE;
 
-/// A type used to make the generic `Language` struct specific to the Python language and
-/// provides the appropriate `tree_sitter::Language` object.
-#[derive(Clone, Copy, Debug)]
-pub struct LangKind {}
+/// A compiled query for the Python language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
 
-impl Kind for LangKind {
-    fn ts_lang() -> TSLanguage {
-        tree_sitter_python::LANGUAGE.into()
+impl CompiledQuery {
+    /// Create a new compiled query for the Python language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
+    pub fn new(query: &RawQuery<'_>) -> Result<Self, super::TSQueryError> {
+        let q = super::CompiledQuery::new(&tree_sitter_python::LANGUAGE.into(), query)?;
+        Ok(Self(q))
     }
 }
 
-/// The Python language.
-pub type Python = Language<LangKind>;
-
 /// Prepared tree-sitter queries for Python.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedPythonQuery {
+pub enum PreparedQuery {
     /// Comments.
     Comments,
     /// Strings (raw, byte, f-strings; interpolation not included).
@@ -63,13 +65,13 @@ pub enum PreparedPythonQuery {
     Identifiers,
 }
 
-impl From<PreparedPythonQuery> for Query<'static> {
+impl From<PreparedQuery> for RawQuery<'static> {
     #[allow(clippy::too_many_lines)]
-    fn from(value: PreparedPythonQuery) -> Self {
+    fn from(value: PreparedQuery) -> Self {
         let s = match value {
-            PreparedPythonQuery::Comments => "(comment) @comment",
-            PreparedPythonQuery::Strings => "(string_content) @string",
-            PreparedPythonQuery::Imports => {
+            PreparedQuery::Comments => "(comment) @comment",
+            PreparedQuery::Strings => "(string_content) @string",
+            PreparedQuery::Imports => {
                 r"[
                     (import_statement
                             name: (dotted_name) @dn)
@@ -85,7 +87,7 @@ impl From<PreparedPythonQuery> for Query<'static> {
                         module_name: (relative_import) @ri)
                 ]"
             }
-            PreparedPythonQuery::DocStrings => {
+            PreparedQuery::DocStrings => {
                 // Triple-quotes are also used for multi-line strings. So look only
                 // for stand-alone expressions, which are not part of some variable
                 // assignment.
@@ -104,26 +106,24 @@ impl From<PreparedPythonQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedPythonQuery::FunctionNames => {
+            PreparedQuery::FunctionNames => {
                 r"
                 (function_definition
                     name: (identifier) @function-name
                 )
                 "
             }
-            PreparedPythonQuery::FunctionCalls => {
+            PreparedQuery::FunctionCalls => {
                 r"
                 (call
                     function: (identifier) @function-name
                 )
                 "
             }
-            PreparedPythonQuery::Class => "(class_definition) @class",
-            PreparedPythonQuery::Def => "(function_definition) @def",
-            PreparedPythonQuery::AsyncDef => {
-                r#"((function_definition) @def (#match? @def "^async "))"#
-            }
-            PreparedPythonQuery::Methods => {
+            PreparedQuery::Class => "(class_definition) @class",
+            PreparedQuery::Def => "(function_definition) @def",
+            PreparedQuery::AsyncDef => r#"((function_definition) @def (#match? @def "^async "))"#,
+            PreparedQuery::Methods => {
                 r"
                 (class_definition
                     body: (block
@@ -135,7 +135,7 @@ impl From<PreparedPythonQuery> for Query<'static> {
                 )
                 "
             }
-            PreparedPythonQuery::ClassMethods => {
+            PreparedQuery::ClassMethods => {
                 formatcp!(
                     "
                     (class_definition
@@ -150,7 +150,7 @@ impl From<PreparedPythonQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedPythonQuery::StaticMethods => {
+            PreparedQuery::StaticMethods => {
                 formatcp!(
                     "
                     (class_definition
@@ -165,38 +165,36 @@ impl From<PreparedPythonQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedPythonQuery::With => "(with_statement) @with",
-            PreparedPythonQuery::Try => "(try_statement) @try",
-            PreparedPythonQuery::Lambda => "(lambda) @lambda",
-            PreparedPythonQuery::Globals => {
+            PreparedQuery::With => "(with_statement) @with",
+            PreparedQuery::Try => "(try_statement) @try",
+            PreparedQuery::Lambda => "(lambda) @lambda",
+            PreparedQuery::Globals => {
                 "(module (expression_statement (assignment left: (identifier) @global)))"
             }
-            PreparedPythonQuery::VariableIdentifiers => {
-                "(assignment left: (identifier) @identifier)"
-            }
-            PreparedPythonQuery::Types => "(type) @type",
-            PreparedPythonQuery::Identifiers => "(identifier) @identifier",
+            PreparedQuery::VariableIdentifiers => "(assignment left: (identifier) @identifier)",
+            PreparedQuery::Types => "(type) @type",
+            PreparedQuery::Identifiers => "(identifier) @identifier",
         };
 
         s.into()
     }
 }
 
-impl LanguageScoper for Python {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_python::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for Python {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["py"]
     }

@@ -3,25 +3,27 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Query, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
+use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery, IGNORE};
 
-/// A type used to make the generic `Language` struct specific to the Rust language and
-/// provides the appropriate `tree_sitter::Language` object.
-#[derive(Clone, Copy, Debug)]
-pub struct LangKind {}
+/// A compiled query for the Rust language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
 
-impl Kind for LangKind {
-    fn ts_lang() -> TSLanguage {
-        tree_sitter_rust::LANGUAGE.into()
+impl CompiledQuery {
+    /// Create a new compiled query for the Rust language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
+    pub fn new(query: &RawQuery<'_>) -> Result<Self, super::TSQueryError> {
+        let q = super::CompiledQuery::new(&tree_sitter_rust::LANGUAGE.into(), query)?;
+        Ok(Self(q))
     }
 }
 
-/// The Rust language.
-pub type Rust = Language<LangKind>;
-
 /// Prepared tree-sitter queries for Rust.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedRustQuery {
+pub enum PreparedQuery {
     /// Comments (line and block styles; excluding doc comments; comment chars incl.).
     Comments,
     /// Doc comments (comment chars included).
@@ -111,11 +113,11 @@ pub enum PreparedRustQuery {
     Unsafe,
 }
 
-impl From<PreparedRustQuery> for Query<'static> {
+impl From<PreparedQuery> for RawQuery<'static> {
     #[allow(clippy::too_many_lines)]
-    fn from(value: PreparedRustQuery) -> Self {
+    fn from(value: PreparedQuery) -> Self {
         let s = match value {
-            PreparedRustQuery::Comments => {
+            PreparedQuery::Comments => {
                 r#"
                 [
                     (line_comment)+ @line
@@ -125,7 +127,7 @@ impl From<PreparedRustQuery> for Query<'static> {
                 @comment
                 "#
             }
-            PreparedRustQuery::DocComments => {
+            PreparedQuery::DocComments => {
                 r#"
                 (
                     (line_comment)+ @line
@@ -133,7 +135,7 @@ impl From<PreparedRustQuery> for Query<'static> {
                 )
                 "#
             }
-            PreparedRustQuery::Uses => {
+            PreparedQuery::Uses => {
                 // Match any (wildcard `_`) `argument`, which includes:
                 //
                 // - `scoped_identifier`
@@ -150,122 +152,122 @@ impl From<PreparedRustQuery> for Query<'static> {
                 ]
                 "
             }
-            PreparedRustQuery::Strings => "(string_content) @string",
-            PreparedRustQuery::Attribute => "(attribute) @attribute",
-            PreparedRustQuery::Struct => "(struct_item) @struct_item",
-            PreparedRustQuery::PrivStruct => {
+            PreparedQuery::Strings => "(string_content) @string",
+            PreparedQuery::Attribute => "(attribute) @attribute",
+            PreparedQuery::Struct => "(struct_item) @struct_item",
+            PreparedQuery::PrivStruct => {
                 r"(struct_item
                     .
                     name: (type_identifier)
                 ) @struct_item_without_visibility_modifier"
             }
-            PreparedRustQuery::PubStruct => {
+            PreparedQuery::PubStruct => {
                 r#"(struct_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @struct_item"#
             }
-            PreparedRustQuery::PubCrateStruct => {
+            PreparedQuery::PubCrateStruct => {
                 r"(struct_item
                     (visibility_modifier (crate))
                 ) @struct_item"
             }
-            PreparedRustQuery::PubSelfStruct => {
+            PreparedQuery::PubSelfStruct => {
                 r"(struct_item
                     (visibility_modifier (self))
                 ) @struct_item"
             }
-            PreparedRustQuery::PubSuperStruct => {
+            PreparedQuery::PubSuperStruct => {
                 r"(struct_item
                     (visibility_modifier (super))
                 ) @struct_item"
             }
-            PreparedRustQuery::Enum => "(enum_item) @enum_item",
-            PreparedRustQuery::PrivEnum => {
+            PreparedQuery::Enum => "(enum_item) @enum_item",
+            PreparedQuery::PrivEnum => {
                 r"(enum_item
                     .
                     name: (type_identifier)
                 ) @enum_item_without_visibility_modifier"
             }
-            PreparedRustQuery::PubEnum => {
+            PreparedQuery::PubEnum => {
                 r#"(enum_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @enum_item"#
             }
-            PreparedRustQuery::PubCrateEnum => {
+            PreparedQuery::PubCrateEnum => {
                 r"(enum_item
                     (visibility_modifier (crate))
                 ) @enum_item"
             }
-            PreparedRustQuery::PubSelfEnum => {
+            PreparedQuery::PubSelfEnum => {
                 r"(enum_item
                     (visibility_modifier (self))
                 ) @enum_item"
             }
-            PreparedRustQuery::PubSuperEnum => {
+            PreparedQuery::PubSuperEnum => {
                 r"(enum_item
                     (visibility_modifier (super))
                 ) @enum_item"
             }
-            PreparedRustQuery::EnumVariant => "(enum_variant) @enum_variant",
-            PreparedRustQuery::Fn => "(function_item) @function_item",
-            PreparedRustQuery::ImplFn => {
+            PreparedQuery::EnumVariant => "(enum_variant) @enum_variant",
+            PreparedQuery::Fn => "(function_item) @function_item",
+            PreparedQuery::ImplFn => {
                 r"(impl_item
                     body: (_ (function_item) @function)
                 )"
             }
-            PreparedRustQuery::PrivFn => {
+            PreparedQuery::PrivFn => {
                 r"(function_item
                     .
                     name: (identifier)
                 ) @function_item_without_visibility_modifier"
             }
-            PreparedRustQuery::PubFn => {
+            PreparedQuery::PubFn => {
                 r#"(function_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @function_item"#
             }
-            PreparedRustQuery::PubCrateFn => {
+            PreparedQuery::PubCrateFn => {
                 r"(function_item
                     (visibility_modifier (crate))
                 ) @function_item"
             }
-            PreparedRustQuery::PubSelfFn => {
+            PreparedQuery::PubSelfFn => {
                 r"(function_item
                     (visibility_modifier (self))
                 ) @function_item"
             }
-            PreparedRustQuery::PubSuperFn => {
+            PreparedQuery::PubSuperFn => {
                 r"(function_item
                     (visibility_modifier (super))
                 ) @function_item"
             }
-            PreparedRustQuery::ConstFn => {
+            PreparedQuery::ConstFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "const")
                 ) @function_item"#
             }
-            PreparedRustQuery::AsyncFn => {
+            PreparedQuery::AsyncFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "async")
                 ) @function_item"#
             }
-            PreparedRustQuery::UnsafeFn => {
+            PreparedQuery::UnsafeFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "unsafe")
                 ) @function_item"#
             }
-            PreparedRustQuery::ExternFn => {
+            PreparedQuery::ExternFn => {
                 r"(function_item
                     (function_modifiers (extern_modifier))
                 ) @extern_function"
             }
-            PreparedRustQuery::TestFn => {
+            PreparedQuery::TestFn => {
                 // Any attribute which matches aka contains `test`, preceded or
                 // followed by more attributes, eventually preceded by a function.
                 // The anchors of `.` ensure nothing but the items we're after occur
@@ -284,30 +286,30 @@ impl From<PreparedRustQuery> for Query<'static> {
                     IGNORE
                 )
             }
-            PreparedRustQuery::Trait => "(trait_item) @trait_item",
-            PreparedRustQuery::Impl => "(impl_item) @impl_item",
-            PreparedRustQuery::ImplType => {
+            PreparedQuery::Trait => "(trait_item) @trait_item",
+            PreparedQuery::Impl => "(impl_item) @impl_item",
+            PreparedQuery::ImplType => {
                 r"(impl_item
                     type: (_)
                     !trait
                 ) @impl_item"
             }
-            PreparedRustQuery::ImplTrait => {
+            PreparedQuery::ImplTrait => {
                 r"(impl_item
                     trait: (_)
                     .
                     type: (_)
                 ) @impl_item"
             }
-            PreparedRustQuery::Mod => "(mod_item) @mod_item",
-            PreparedRustQuery::ModTests => {
+            PreparedQuery::Mod => "(mod_item) @mod_item",
+            PreparedQuery::ModTests => {
                 r#"(mod_item
                     name: (identifier) @mod_name
                     (#eq? @mod_name "tests")
                 ) @mod_tests
                 "#
             }
-            PreparedRustQuery::TypeDef => {
+            PreparedQuery::TypeDef => {
                 r"
                 [
                     (struct_item)
@@ -317,10 +319,10 @@ impl From<PreparedRustQuery> for Query<'static> {
                 @typedef
                 "
             }
-            PreparedRustQuery::Identifier => "(identifier) @identifier",
-            PreparedRustQuery::TypeIdentifier => "(type_identifier) @identifier",
-            PreparedRustQuery::Closure => "(closure_expression) @closure",
-            PreparedRustQuery::Unsafe => {
+            PreparedQuery::Identifier => "(identifier) @identifier",
+            PreparedQuery::TypeIdentifier => "(type_identifier) @identifier",
+            PreparedQuery::Closure => "(closure_expression) @closure",
+            PreparedQuery::Unsafe => {
                 r#"
                     [
                         (
@@ -347,21 +349,21 @@ impl From<PreparedRustQuery> for Query<'static> {
     }
 }
 
-impl LanguageScoper for Rust {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_rust::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for Rust {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["rs"]
     }
