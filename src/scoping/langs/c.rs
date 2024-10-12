@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use clap::ValueEnum;
 
-use super::{CodeQuery, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Query, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::find::Find;
 
 /// A type used to make the generic `Language` struct specific to the C language and
@@ -62,7 +62,7 @@ pub enum PreparedCQuery {
     CallExpression,
 }
 
-impl From<PreparedCQuery> for CodeQuery<'static> {
+impl From<PreparedCQuery> for Query<'static> {
     fn from(value: PreparedCQuery) -> Self {
         let s = match value {
             PreparedCQuery::Comments => "(comment) @comment",

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{CodeQuery, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
+use super::{Query, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery, IGNORE};
 
 /// A type used to make the generic `Language` struct specific to the Rust language and
 /// provides the appropriate `tree_sitter::Language` object.
@@ -111,7 +111,7 @@ pub enum PreparedRustQuery {
     Unsafe,
 }
 
-impl From<PreparedRustQuery> for CodeQuery<'static> {
+impl From<PreparedRustQuery> for Query<'static> {
     #[allow(clippy::too_many_lines)]
     fn from(value: PreparedRustQuery) -> Self {
         let s = match value {

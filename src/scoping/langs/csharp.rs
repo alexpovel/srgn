@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{CodeQuery, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Query, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -59,7 +59,7 @@ pub enum PreparedCSharpQuery {
     Identifier,
 }
 
-impl From<PreparedCSharpQuery> for CodeQuery<'static> {
+impl From<PreparedCSharpQuery> for Query<'static> {
     fn from(value: PreparedCSharpQuery) -> Self {
         let s = match value {
             PreparedCSharpQuery::Comments => "(comment) @comment",

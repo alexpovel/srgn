@@ -4,7 +4,7 @@ use std::path::{Component, Path};
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{CodeQuery, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Query, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -69,7 +69,7 @@ pub enum PreparedGoQuery {
     StructTags,
 }
 
-impl From<PreparedGoQuery> for CodeQuery<'static> {
+impl From<PreparedGoQuery> for Query<'static> {
     fn from(value: PreparedGoQuery) -> Self {
         let s = match value {
             PreparedGoQuery::Comments => "(comment) @comment",

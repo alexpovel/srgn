@@ -30,7 +30,7 @@ use srgn::scoping::langs::hcl::Hcl;
 use srgn::scoping::langs::python::Python;
 use srgn::scoping::langs::rust::Rust;
 use srgn::scoping::langs::typescript::TypeScript;
-use srgn::scoping::langs::{CodeQuery, LanguageScoper};
+use srgn::scoping::langs::{LanguageScoper, Query};
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
@@ -809,7 +809,7 @@ impl Error for ScoperBuildError {}
 
 #[allow(clippy::cognitive_complexity)] // 🤷‍♀️ macros
 fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>, ProgramError> {
-    fn read_query_file(query_or_path: &cli::CodeQuery) -> io::Result<Option<CodeQuery<'static>>> {
+    fn read_query_file(query_or_path: &cli::CodeQuery) -> io::Result<Option<Query<'static>>> {
         match fs::OpenOptions::new()
             .read(true)
             .open(query_or_path.as_str())
@@ -817,7 +817,7 @@ fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>,
             Ok(mut file) => {
                 let mut s = String::new();
                 file.read_to_string(&mut s)?;
-                Ok(Some(CodeQuery::from(s)))
+                Ok(Some(Query::from(s)))
             }
             Err(err) => match err.kind() {
                 io::ErrorKind::NotFound => Ok(None),
@@ -851,7 +851,7 @@ fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>,
 
                 for query in &lang_scope.$lang_query {
                     let query =
-                        read_query_file(&query)?.unwrap_or_else(|| CodeQuery::from(query.as_str()));
+                        read_query_file(&query)?.unwrap_or_else(|| Query::from(query.as_str()));
 
                     let lang_scope = $lang_type::new(&query)?;
                     scopers.push(Box::new(lang_scope));

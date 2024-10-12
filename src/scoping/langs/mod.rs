@@ -64,7 +64,7 @@ impl<T: Kind> Language<T> {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    pub fn new(query: &CodeQuery<'_>) -> Result<Self, TSQueryError> {
+    pub fn new(query: &Query<'_>) -> Result<Self, TSQueryError> {
         let query = &query.0;
         let positive_query = TSQuery::new(&T::ts_lang(), query)?;
 
@@ -105,17 +105,17 @@ impl<T: Kind> Language<T> {
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
 #[derive(Clone, Debug)]
-pub struct CodeQuery<'a>(Cow<'a, str>);
+pub struct Query<'a>(Cow<'a, str>);
 
-impl<'a> From<&'a str> for CodeQuery<'a> {
+impl<'a> From<&'a str> for Query<'a> {
     fn from(s: &'a str) -> Self {
-        CodeQuery(s.into())
+        Query(s.into())
     }
 }
 
-impl From<String> for CodeQuery<'static> {
+impl From<String> for Query<'static> {
     fn from(s: String) -> Self {
-        CodeQuery(s.into())
+        Query(s.into())
     }
 }
 

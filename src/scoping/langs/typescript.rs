@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use clap::ValueEnum;
 
-use super::{CodeQuery, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Query, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 
 /// A type used to make the generic `Language` struct specific to the TypeScript language and
 /// provides the appropriate `tree_sitter::Language` object.
@@ -63,7 +63,7 @@ pub enum PreparedTypeScriptQuery {
     Export,
 }
 
-impl From<PreparedTypeScriptQuery> for CodeQuery<'static> {
+impl From<PreparedTypeScriptQuery> for Query<'static> {
     fn from(value: PreparedTypeScriptQuery) -> Self {
         let s = match value {
             PreparedTypeScriptQuery::Comments => "(comment) @comment",

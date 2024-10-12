@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{CodeQuery, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Query, Find, Kind, Language, LanguageScoper, TSLanguage, TSQuery};
 use crate::scoping::langs::IGNORE;
 
 /// A type used to make the generic `Language` struct specific to the Python language and
@@ -63,7 +63,7 @@ pub enum PreparedPythonQuery {
     Identifiers,
 }
 
-impl From<PreparedPythonQuery> for CodeQuery<'static> {
+impl From<PreparedPythonQuery> for Query<'static> {
     #[allow(clippy::too_many_lines)]
     fn from(value: PreparedPythonQuery) -> Self {
         let s = match value {
