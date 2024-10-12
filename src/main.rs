@@ -809,11 +809,15 @@ impl Error for ScoperBuildError {}
 
 #[allow(clippy::cognitive_complexity)] // 🤷‍♀️ macros
 fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>, ProgramError> {
-    fn read_query_file(query_or_path: &cli::CodeQuery, buf: &mut String) -> io::Result<Option<()>> {
-        match fs::OpenOptions::new().read(true).open(&**query_or_path) {
+    fn read_query_file(query_or_path: &cli::CodeQuery) -> io::Result<Option<CodeQuery<'static>>> {
+        match fs::OpenOptions::new()
+            .read(true)
+            .open(query_or_path.as_str())
+        {
             Ok(mut file) => {
-                file.read_to_string(buf)?;
-                Ok(Some(()))
+                let mut s = String::new();
+                file.read_to_string(&mut s)?;
+                Ok(Some(CodeQuery::from(s)))
             }
             Err(err) => match err.kind() {
                 io::ErrorKind::NotFound => Ok(None),
@@ -830,8 +834,6 @@ fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>,
     macro_rules! handle_language_scope {
         ($lang:ident, $lang_query:ident, $lang_type:ident) => {
             if let Some(lang_scope) = &args.languages_scopes.$lang {
-                let mut query_buf = String::with_capacity(1024);
-
                 if !scopers.is_empty() {
                     let mut cmd = cli::Cli::command();
                     cmd.error(
@@ -843,20 +845,15 @@ fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>,
                 assert!(scopers.is_empty());
 
                 for query in &lang_scope.$lang {
-                    let lang_scope = $lang_type::new((*query).into())?;
+                    let lang_scope = $lang_type::new(&(*query).into())?;
                     scopers.push(Box::new(lang_scope));
                 }
 
                 for query in &lang_scope.$lang_query {
-                    query_buf.clear();
+                    let query =
+                        read_query_file(&query)?.unwrap_or_else(|| CodeQuery::from(query.as_str()));
 
-                    let query = if read_query_file(&query, &mut query_buf)?.is_some() {
-                        CodeQuery::from(&*query_buf)
-                    } else {
-                        CodeQuery::from(&**query)
-                    };
-
-                    let lang_scope = $lang_type::new(query)?;
+                    let lang_scope = $lang_type::new(&query)?;
                     scopers.push(Box::new(lang_scope));
                 }
 
@@ -968,7 +965,6 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 
 mod cli {
     use std::num::NonZero;
-    use std::ops::Deref;
 
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
@@ -1402,10 +1398,8 @@ mod cli {
     #[derive(Debug, Clone)]
     pub struct CodeQuery(String);
 
-    impl Deref for CodeQuery {
-        type Target = str;
-
-        fn deref(&self) -> &Self::Target {
+    impl CodeQuery {
+        pub fn as_str(&self) -> &str {
             &self.0
         }
     }

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{borrow::Cow, marker::PhantomData};
 
 use log::{debug, info, trace};
 pub use tree_sitter::{
@@ -64,7 +64,7 @@ impl<T: Kind> Language<T> {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    pub fn new(query: CodeQuery<'_>) -> Result<Self, TSQueryError> {
+    pub fn new(query: &CodeQuery<'_>) -> Result<Self, TSQueryError> {
         let query = &query.0;
         let positive_query = TSQuery::new(&T::ts_lang(), query)?;
 
@@ -104,12 +104,18 @@ impl<T: Kind> Language<T> {
 /// A query over a language, for scoping.
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
-#[derive(Clone, Copy, Debug)]
-pub struct CodeQuery<'a>(&'a str);
+#[derive(Clone, Debug)]
+pub struct CodeQuery<'a>(Cow<'a, str>);
 
 impl<'a> From<&'a str> for CodeQuery<'a> {
     fn from(s: &'a str) -> Self {
-        CodeQuery(s)
+        CodeQuery(s.into())
+    }
+}
+
+impl From<String> for CodeQuery<'static> {
+    fn from(s: String) -> Self {
+        CodeQuery(s.into())
     }
 }
 
