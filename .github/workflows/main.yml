@@ -196,6 +196,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Only run this on push events: `pull_request` events will not have access to
+    # secrets if coming from forks, and we do not care about release chores there
+    # anyway.
+    if: github.event_name == 'push'
+
     outputs:
       created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
