@@ -24,6 +24,7 @@ use srgn::actions::{
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::scoping::langs::c::{CQuery, C};
+use srgn::scoping::langs::cpp::{Cpp, CppQuery};
 use srgn::scoping::langs::csharp::{CSharp, CSharpQuery};
 use srgn::scoping::langs::go::{Go, GoQuery};
 use srgn::scoping::langs::hcl::{Hcl, HclQuery};
@@ -832,6 +833,7 @@ fn get_language_scopers(args: &cli::Cli) -> Vec<Box<dyn LanguageScoper>> {
     }
 
     handle_language_scope!(c, c_query, CQuery, C);
+    handle_language_scope!(cpp, cpp_query, CppQuery, Cpp);
     handle_language_scope!(csharp, csharp_query, CSharpQuery, CSharp);
     handle_language_scope!(hcl, hcl_query, HclQuery, Hcl);
     handle_language_scope!(go, go_query, GoQuery, Go);
@@ -939,6 +941,7 @@ mod cli {
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
     use srgn::scoping::langs::c::{CustomCQuery, PreparedCQuery};
+    use srgn::scoping::langs::cpp::{CustomCppQuery, PreparedCppQuery};
     use srgn::scoping::langs::csharp::{CustomCSharpQuery, PreparedCSharpQuery};
     use srgn::scoping::langs::go::{CustomGoQuery, PreparedGoQuery};
     use srgn::scoping::langs::hcl::{CustomHclQuery, PreparedHclQuery};
@@ -1230,6 +1233,8 @@ mod cli {
         #[command(flatten)]
         pub c: Option<CScope>,
         #[command(flatten)]
+        pub cpp: Option<CppScope>,
+        #[command(flatten)]
         pub csharp: Option<CSharpScope>,
         #[command(flatten)]
         pub go: Option<GoScope>,
@@ -1253,6 +1258,18 @@ mod cli {
         /// Scope C code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
         pub c_query: Vec<CustomCQuery>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    pub struct CppScope {
+        /// Scope C++ code using a prepared query.
+        #[arg(long, env, verbatim_doc_comment)]
+        pub cpp: Vec<PreparedCppQuery>,
+
+        /// Scope C++ code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        pub cpp_query: Vec<CustomCppQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]

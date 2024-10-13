@@ -1,0 +1,118 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "#include <iostream>\n"
+  m: "         ^^^^^^^^^^  "
+- n: 2
+  l: "#include <vector>\n"
+  m: "         ^^^^^^^^  "
+- n: 3
+  l: "#include <string>\n"
+  m: "         ^^^^^^^^  "
+- n: 4
+  l: "#include <memory>\n"
+  m: "         ^^^^^^^^  "
+- n: 5
+  l: "#include <optional>\n"
+  m: "         ^^^^^^^^^^  "
+- n: 6
+  l: "#include <variant>\n"
+  m: "         ^^^^^^^^^  "
+- n: 7
+  l: "#include <functional>\n"
+  m: "         ^^^^^^^^^^^^  "
+- n: 8
+  l: "#include <algorithm>\n"
+  m: "         ^^^^^^^^^^^  "
+- n: 9
+  l: "#include <initializer_list>\n"
+  m: "         ^^^^^^^^^^^^^^^^^^  "
+- n: 10
+  l: "#include <tuple>\n"
+  m: "         ^^^^^^^  "
+- n: 11
+  l: "#include <map>\n"
+  m: "         ^^^^^  "
+- n: 13
+  l: "#include \"local_include.hpp\"\n"
+  m: "         ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 14
+  l: "#include \"../remote_include.hpp\"\n"
+  m: "         ^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 55
+  l: "        std::cout << \"Function in namespace\\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 84
+  l: "    return \"Hello\";\n"
+  m: "           ^^^^^^^^^   "
+- n: 88
+  l: "    return {1, 2.5, \"example\"};\n"
+  m: "                    ^^^^^^^^^^^    "
+- n: 94
+  l: "        std::cout << \"Positive\\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^   "
+- n: 96
+  l: "        std::cout << \"Negative\\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^   "
+- n: 98
+  l: "        std::cout << \"Zero\\n\";\n"
+  m: "                     ^^^^^^^^^^^   "
+- n: 102
+  l: "        std::cout << i << \" \";\n"
+  m: "                          ^^^^^   "
+- n: 104
+  l: "    std::cout << \"\\n\";\n"
+  m: "                 ^^^^^^^   "
+- n: 108
+  l: "        std::cout << i++ << \" \";\n"
+  m: "                            ^^^^^   "
+- n: 110
+  l: "    std::cout << \"\\n\";\n"
+  m: "                 ^^^^^^^   "
+- n: 113
+  l: "        std::cout << i-- << \" \";\n"
+  m: "                            ^^^^^   "
+- n: 115
+  l: "    std::cout << \"\\n\";\n"
+  m: "                 ^^^^^^^   "
+- n: 129
+  l: "    variadicFunction(1, 2.5, \"test\");\n"
+  m: "                             ^^^^^^^^    "
+- n: 135
+  l: "        std::cout << \"Found: \" << *value << \"\\n\";\n"
+  m: "                     ^^^^^^^^^^^                        "
+- n: 135
+  l: "        std::cout << \"Found: \" << *value << \"\\n\";\n"
+  m: "                                              ^^^^^^^   "
+- n: 140
+  l: "        std::cout << \"Variant holds int: \" << std::get<int>(variantValue) << \"\\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^^^^^^^^^                                             "
+- n: 140
+  l: "        std::cout << \"Variant holds int: \" << std::get<int>(variantValue) << \"\\n\";\n"
+  m: "                                                                               ^^^^^^^   "
+- n: 145
+  l: "    std::pair<int, std::string> pairValue{1, \"one\"};\n"
+  m: "                                             ^^^^^^^    "
+- n: 153
+  l: "    myMap[\"one\"] = 1;\n"
+  m: "          ^^^^^^^        "
+- n: 158
+  l: "        std::cout << \"Exception: \" << e.what() << \"\\n\";\n"
+  m: "                     ^^^^^^^^^^^^^^^                          "
+- n: 158
+  l: "        std::cout << \"Exception: \" << e.what() << \"\\n\";\n"
+  m: "                                                    ^^^^^^^   "
+- n: 163
+  l: "            std::cout << \"Red\\n\";\n"
+  m: "                         ^^^^^^^^^^   "
+- n: 165
+  l: "            std::cout << \"Blue\\n\";\n"
+  m: "                         ^^^^^^^^^^^   "
+- n: 167
+  l: "            std::cout << \"Green\\n\";\n"
+  m: "                         ^^^^^^^^^^^^   "
+- n: 169
+  l: "            std::cout << \"Default\\n\";\n"
+  m: "                         ^^^^^^^^^^^^^^   "

@@ -3,6 +3,7 @@ use std::ops::Range;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::c::{PreparedCQuery, C};
+use srgn::scoping::langs::cpp::{Cpp, PreparedCppQuery};
 use srgn::scoping::langs::csharp::{CSharp, PreparedCSharpQuery};
 use srgn::scoping::langs::go::{Go, PreparedGoQuery};
 use srgn::scoping::langs::hcl::{Hcl, PreparedHclQuery};
@@ -824,6 +825,136 @@ impl InScopeLinePart {
     "base.c_callexpr",
     include_str!("c/base.c"),
     C::new(CodeQuery::Prepared(PreparedCQuery::CallExpression)),
+)]
+#[case(
+    "base.cpp_comments",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Comments)),
+)]
+#[case(
+    "base.cpp_strings",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Strings)),
+)]
+#[case(
+    "base.cpp_includes",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Includes)),
+)]
+#[case(
+    "base.cpp_typedef",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::TypeDef)),
+)]
+#[case(
+    "base.cpp_enum",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Enum)),
+)]
+#[case(
+    "base.cpp_struct",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Struct)),
+)]
+#[case(
+    "base.cpp_class",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Class)),
+)]
+#[case(
+    "base.cpp_namespace",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Namespace)),
+)]
+#[case(
+    "base.cpp_using_namespace",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::UsingNamespace)),
+)]
+#[case(
+    "base.cpp_template",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Template)),
+)]
+#[case(
+    "base.cpp_field_declaration",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::FieldDecl)),
+)]
+#[case(
+    "base.cpp_variable",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Variable)),
+)]
+#[case(
+    "base.cpp_function",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Function)),
+)]
+#[case(
+    "base.cpp_function_definition",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::FunctionDef)),
+)]
+#[case(
+    "base.cpp_function_declaration",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::FunctionDecl)),
+)]
+#[case(
+    "base.cpp_lambda",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Lambda)),
+)]
+#[case(
+    "base.cpp_switch",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Switch)),
+)]
+#[case(
+    "base.cpp_if",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::If)),
+)]
+#[case(
+    "base.cpp_for",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::For)),
+)]
+#[case(
+    "base.cpp_while",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::While)),
+)]
+#[case(
+    "base.cpp_do",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Do)),
+)]
+#[case(
+    "base.cpp_union",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Union)),
+)]
+#[case(
+    "base.cpp_try",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Try)),
+)]
+#[case(
+    "base.cpp_ident",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Identifier)),
+)]
+#[case(
+    "base.cpp_declaration",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::Declaration)),
+)]
+#[case(
+    "base.cpp_call_expr",
+    include_str!("cpp/base.cpp"),
+    Cpp::new(CodeQuery::Prepared(PreparedCppQuery::CallExpression)),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,
