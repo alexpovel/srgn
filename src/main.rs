@@ -28,6 +28,7 @@ use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
 use srgn::scoping::Scoper;
+pub use tree_sitter::QueryError as TSQueryError;
 
 #[allow(clippy::too_many_lines)] // Only slightly above.
 fn main() -> Result<()> {
@@ -644,8 +645,8 @@ enum ProgramError {
     IoError(io::Error),
     /// Error while processing files for walking.
     IgnoreError(ignore::Error),
-    /// The givon query failed to parse
-    QueryError(tree_sitter::QueryError),
+    /// The given query failed to parse
+    QueryError(TSQueryError),
 }
 
 impl fmt::Display for ProgramError {

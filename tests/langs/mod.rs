@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript, LanguageScoper};
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
+pub use tree_sitter::QueryError as TSQueryError;
 
 /// A type that when serialized, will visually highlight the portions of a line which
 /// were matched.
@@ -821,7 +822,7 @@ impl InScopeLinePart {
 fn test_language_scopers(
     #[case] snapshot_name: &str,
     #[case] contents: &str,
-    #[case] lang: Result<impl LanguageScoper, tree_sitter::QueryError>,
+    #[case] lang: Result<impl LanguageScoper, TSQueryError>,
 ) {
     let lang = lang.expect("Building a Language for a test should not fail");
     let mut builder = ScopedViewBuilder::new(contents);
