@@ -4,7 +4,10 @@
 #[cfg(test)]
 #[cfg(feature = "all")]
 mod tests {
-    use std::path::{Path, PathBuf};
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
 
     use anyhow::Context;
     use assert_cmd::Command;
@@ -475,6 +478,63 @@ Heizoelrueckstossabdaempfung.
         Ok(())
     }
 
+    #[rstest]
+    #[case("data/queries/rust", "tests/langs/rust/base.rs")]
+    fn test_queries_from_file(#[case] query_dir: PathBuf, #[case] input_file: PathBuf) {
+        for entry in fs::read_dir(query_dir).unwrap() {
+            let entry = entry.unwrap();
+            let query_path = entry.path();
+            let file_name = query_path.file_name().unwrap().to_str().unwrap();
+            let snapshot_name = file_name;
+
+            // Arrange
+            let mut cmd = get_cmd();
+
+            // cmd.current_dir(&*candidate);
+            let args = vec![
+                "--rust-query",
+                query_path.to_str().unwrap(),
+                "--glob",
+                input_file.to_str().unwrap(),
+                "--stdin-override-to",
+                "false",
+            ];
+            cmd.args(&args);
+
+            // Act
+            let output = cmd.output().expect("failed to execute binary under test");
+
+            let exit_code = output
+                .status
+                .code()
+                .expect("Process unexpectedly terminated via signal, not `exit`.");
+
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            let stderr = String::from_utf8(output.stderr).unwrap();
+
+            // For debugging, include this, but do not rely on it for snapshot
+            // validity/correctness. We do not want changes in error messages etc. break
+            // tests, seems excessive.
+            let info = CommandInfo::new(&stderr);
+
+            let args: Vec<String> = args.iter().map(|&s| s.to_owned()).collect();
+
+            with_settings!({
+                info => &info,
+            }, {
+                insta::assert_yaml_snapshot!(
+                    snapshot_name,
+                    CommandSnap {
+                        args,
+                        stdin: None,
+                        stdout: stdout.split_inclusive('\n').map(ToOwned::to_owned).collect_vec(),
+                        exit_code,
+                    }
+                );
+            });
+        }
+    }
+
     /// Tests various *expected* failure modes.
     #[rstest]
     //
@@ -879,9 +939,9 @@ Heizoelrueckstossabdaempfung.
 
             if metadata.is_file() {
                 // Recursion end
-                let left_contents = std::fs::read(left.path())
+                let left_contents = fs::read(left.path())
                     .with_context(|| format!("Failure reading left file: {:?}", left.path()))?;
-                let right_contents = std::fs::read(&candidate)
+                let right_contents = fs::read(&candidate)
                     .with_context(|| format!("Failure reading right file: {candidate:?}"))?;
 
                 if left_contents != right_contents {
@@ -930,15 +990,15 @@ right contents:
 
     /// Recursively copies a directory tree from `src` to `dst`.
     fn copy_tree(src: &Path, dst: &Path) -> std::io::Result<()> {
-        std::fs::create_dir_all(dst)?;
+        fs::create_dir_all(dst)?;
 
-        for entry in std::fs::read_dir(src)? {
+        for entry in fs::read_dir(src)? {
             let entry = entry?;
 
             if entry.file_type()?.is_dir() {
                 copy_tree(&entry.path(), &dst.join(entry.file_name()))?;
             } else {
-                std::fs::copy(entry.path(), dst.join(entry.file_name()))?;
+                fs::copy(entry.path(), dst.join(entry.file_name()))?;
             }
         }
 
