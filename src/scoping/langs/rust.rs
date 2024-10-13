@@ -124,23 +124,9 @@ impl From<PreparedQuery> for &'static str {
     #[allow(clippy::too_many_lines)]
     fn from(query: PreparedQuery) -> Self {
         match query {
-            PreparedQuery::Comments => {
-                r#"
-                [
-                    (line_comment)+ @line
-                    (block_comment)
-                    (#not-match? @line "^///")
-                ]
-                @comment
-                "#
-            }
+            PreparedQuery::Comments => include_str!("../../../data/queries/rust/comments.scm"),
             PreparedQuery::DocComments => {
-                r#"
-                (
-                    (line_comment)+ @line
-                    (#match? @line "^//(/|!)")
-                )
-                "#
+                include_str!("../../../data/queries/rust/doc_comments.scm")
             }
             PreparedQuery::Uses => {
                 // Match any (wildcard `_`) `argument`, which includes:
