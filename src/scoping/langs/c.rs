@@ -65,8 +65,15 @@ pub enum PreparedQuery {
 }
 
 impl From<PreparedQuery> for RawQuery<'static> {
-    fn from(value: PreparedQuery) -> Self {
-        let s = match value {
+    fn from(query: PreparedQuery) -> Self {
+        let s: &'static str = query.into();
+        s.into()
+    }
+}
+
+impl From<PreparedQuery> for &'static str {
+    fn from(query: PreparedQuery) -> Self {
+        match query {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Strings => "[(string_literal) (system_lib_string)] @string",
             PreparedQuery::Includes => "(preproc_include) @include",
@@ -88,9 +95,7 @@ impl From<PreparedQuery> for RawQuery<'static> {
             PreparedQuery::Identifier => "(identifier) @ident",
             PreparedQuery::Declaration => "(declaration) @decl",
             PreparedQuery::CallExpression => "(call_expression) @call",
-        };
-
-        s.into()
+        }
     }
 }
 

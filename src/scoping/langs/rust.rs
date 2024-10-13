@@ -114,9 +114,16 @@ pub enum PreparedQuery {
 }
 
 impl From<PreparedQuery> for RawQuery<'static> {
+    fn from(query: PreparedQuery) -> Self {
+        let s: &'static str = query.into();
+        s.into()
+    }
+}
+
+impl From<PreparedQuery> for &'static str {
     #[allow(clippy::too_many_lines)]
-    fn from(value: PreparedQuery) -> Self {
-        let s = match value {
+    fn from(query: PreparedQuery) -> Self {
+        match query {
             PreparedQuery::Comments => {
                 r#"
                 [
@@ -343,9 +350,7 @@ impl From<PreparedQuery> for RawQuery<'static> {
                     ] @unsafe
                 "#
             }
-        };
-
-        s.into()
+        }
     }
 }
 

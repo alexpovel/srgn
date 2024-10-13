@@ -69,12 +69,19 @@ pub enum PreparedQuery {
 }
 
 impl From<PreparedQuery> for RawQuery<'static> {
+    fn from(query: PreparedQuery) -> Self {
+        let s: &'static str = query.into();
+        s.into()
+    }
+}
+
+impl From<PreparedQuery> for &'static str {
     #[allow(clippy::too_many_lines)] // No good way to avoid
     fn from(value: PreparedQuery) -> Self {
         // Seems to not play nice with the macro. Put up here, else interpolation is
         // affected.
         #[allow(clippy::needless_raw_string_hashes)]
-        let s = match value {
+        match value {
             PreparedQuery::Variable => {
                 r#"
                     (block
@@ -317,9 +324,7 @@ impl From<PreparedQuery> for RawQuery<'static> {
                 ]
                 "
             }
-        };
-
-        s.into()
+        }
     }
 }
 

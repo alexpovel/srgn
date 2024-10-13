@@ -62,8 +62,15 @@ pub enum PreparedQuery {
 }
 
 impl From<PreparedQuery> for RawQuery<'static> {
+    fn from(query: PreparedQuery) -> Self {
+        let s: &'static str = query.into();
+        s.into()
+    }
+}
+
+impl From<PreparedQuery> for &'static str {
     fn from(value: PreparedQuery) -> Self {
-        let s = match value {
+        match value {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Usings => r"(using_directive [(identifier) (qualified_name)] @import)",
             PreparedQuery::Strings => {
@@ -92,9 +99,7 @@ impl From<PreparedQuery> for RawQuery<'static> {
             PreparedQuery::Field => "(field_declaration) @field",
             PreparedQuery::Attribute => "(attribute) @attribute",
             PreparedQuery::Identifier => "(identifier) @identifier",
-        };
-
-        s.into()
+        }
     }
 }
 
