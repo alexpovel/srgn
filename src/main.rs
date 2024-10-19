@@ -4,7 +4,7 @@
 //! deals with CLI argument handling, I/O, threading, and more.
 
 use std::error::Error;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, stdout, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -535,17 +535,11 @@ fn process_path(
         }
 
         if changed {
-            writeln!(stdout, "{}", path.display())?;
-
             debug!("Got new file contents, writing to file: {:?}", path);
-            let mut file = tempfile::Builder::new()
-                .prefix(env!("CARGO_PKG_NAME"))
-                .tempfile()?;
-            trace!("Writing to temporary file: {:?}", file.path());
-            file.write_all(new_contents.as_bytes())?;
+            fs::write(&path, new_contents.as_bytes())?;
 
-            // Atomically replace so SIGINT etc. do not leave dangling crap.
-            file.persist(&path)?;
+            // Confirm after successful write.
+            writeln!(stdout, "{}", path.display())?;
         } else {
             debug!(
                 "Skipping writing file anew (nothing changed): {}",
@@ -756,12 +750,6 @@ impl From<io::Error> for PathProcessingError {
 impl From<ApplicationError> for PathProcessingError {
     fn from(err: ApplicationError) -> Self {
         Self::ApplicationError(err)
-    }
-}
-
-impl From<tempfile::PersistError> for PathProcessingError {
-    fn from(err: tempfile::PersistError) -> Self {
-        Self::IoError(err.error, Some(err.file.path().to_owned()))
     }
 }
 
