@@ -3,20 +3,22 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery, IGNORE};
+use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError, IGNORE};
 
 /// A compiled query for the Rust language.
 #[derive(Debug)]
 pub struct CompiledQuery(super::CompiledQuery);
 
-impl CompiledQuery {
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
     /// Create a new compiled query for the Rust language.
     ///
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError) variant for when this method errors.
-    pub fn new(query: &RawQuery) -> Result<Self, super::TSQueryError> {
-        let q = super::CompiledQuery::new(&tree_sitter_rust::LANGUAGE.into(), query)?;
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::new(&tree_sitter_rust::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }

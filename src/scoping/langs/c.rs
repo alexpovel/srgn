@@ -2,21 +2,23 @@ use std::fmt::Debug;
 
 use clap::ValueEnum;
 
-use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery};
+use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 
 /// A compiled query for the C language.
 #[derive(Debug)]
 pub struct CompiledQuery(super::CompiledQuery);
 
-impl CompiledQuery {
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
     /// Create a new compiled query for the C language
     ///
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError) variant for when this method errors.
-    pub fn new(query: &RawQuery) -> Result<Self, super::TSQueryError> {
-        let q = super::CompiledQuery::new(&tree_sitter_c::LANGUAGE.into(), query)?;
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::new(&tree_sitter_c::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }

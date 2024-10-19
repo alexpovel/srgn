@@ -961,8 +961,11 @@ mod cli {
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
-    use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript, RawQuery};
+    use srgn::scoping::langs::{
+        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, RawQuery,
+    };
     use srgn::GLOBAL_SCOPE;
+    use tree_sitter::QueryError as TSQueryError;
 
     use crate::{ProgramError, StandaloneAction};
 
@@ -1267,17 +1270,13 @@ mod cli {
             }
 
             impl LanguageScopes {
-                /// Finds the first language field set, if any.
-                //
-                /// Return Some if any language field is set.
-                /// Return None if none of the fields are set.
-                ///
-                /// The `clap::group` attribute is set to `multiple = false` so only one
-                /// or zero fields can be set.
+                /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `LanguageScoper`'s.
                 pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
+                    assert_exclusive_lang_scope(&[$(self.$lang_flag.is_some(),)+]);
+
                     $(
                         if let Some(s) = self.$lang_flag {
-                            let s = s.try_into()?;
+                            let s = accumulate_scopes::<$lang_flag::CompiledQuery, _>(s.$lang_flag, s.$lang_query_flag)?;
                             return Ok(Some(s));
                         }
                     )+
@@ -1285,27 +1284,43 @@ mod cli {
                     Ok(None)
                 }
             }
-
-            $(
-                impl TryFrom<$lang_scope> for crate::ScoperList {
-                    type Error = ProgramError;
-
-                    fn try_from(lang_scope: $lang_scope) -> Result<Self, Self::Error> {
-                        let mut scopers: crate::ScoperList = Vec::new();
-
-                        for raw_query in lang_scope.$lang_flag {
-                            scopers.push(Box::new($lang_flag::CompiledQuery::new(&raw_query.into())?));
-                        }
-
-                        for raw_query in lang_scope.$lang_query_flag {
-                            scopers.push(Box::new($lang_flag::CompiledQuery::new(&raw_query.into())?));
-                        }
-
-                        Ok(scopers)
-                    }
-                }
-            )+
         };
+    }
+
+    fn assert_exclusive_lang_scope(fields_set: &[bool]) {
+        let set_fields_count = fields_set.into_iter().filter(|b| **b).count();
+
+        if set_fields_count > 1 {
+            let mut cmd = Args::command();
+            cmd.error(
+                clap::error::ErrorKind::ArgumentConflict,
+                "Can only use one language at a time.",
+            )
+            .exit();
+        }
+    }
+
+    /// Convert the prepared queries and the literal queries into `CompiledQuery`'s
+    fn accumulate_scopes<C, Q: Into<RawQuery>>(
+        prepared_queries: Vec<Q>,
+        literal_queries: Vec<CodeQuery>,
+    ) -> Result<crate::ScoperList, ProgramError>
+    where
+        C: LanguageScoper + TryFrom<RawQuery, Error = TSQueryError> + 'static,
+    {
+        let mut scopers: crate::ScoperList = Vec::new();
+
+        for query in prepared_queries {
+            let compiled_query = C::try_from(query.into())?;
+            scopers.push(Box::new(compiled_query));
+        }
+
+        for query in literal_queries {
+            let compiled_query = C::try_from(query.into())?;
+            scopers.push(Box::new(compiled_query));
+        }
+
+        Ok(scopers)
     }
 
     impl_lang_scopes!(

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery};
+use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -11,14 +11,16 @@ use crate::scoping::langs::IGNORE;
 #[derive(Debug)]
 pub struct CompiledQuery(super::CompiledQuery);
 
-impl CompiledQuery {
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
     /// Create a new compiled query for the C# language.
     ///
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
-    pub fn new(query: &RawQuery) -> Result<Self, super::TSQueryError> {
-        let q = super::CompiledQuery::new(&tree_sitter_c_sharp::LANGUAGE.into(), query)?;
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::new(&tree_sitter_c_sharp::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }
