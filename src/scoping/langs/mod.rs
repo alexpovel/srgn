@@ -49,7 +49,7 @@ impl CompiledQuery {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    fn new(lang: &TSLanguage, query: &RawQuery<'_>) -> Result<Self, TSQueryError> {
+    fn new(lang: &TSLanguage, query: &RawQuery) -> Result<Self, TSQueryError> {
         let query = &query.0;
 
         let positive_query = TSQuery::new(lang, query)?;
@@ -90,15 +90,9 @@ impl CompiledQuery {
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
 #[derive(Clone, Debug)]
-pub struct RawQuery<'a>(Cow<'a, str>);
+pub struct RawQuery(pub Cow<'static, str>);
 
-impl<'a> From<&'a str> for RawQuery<'a> {
-    fn from(s: &'a str) -> Self {
-        RawQuery(s.into())
-    }
-}
-
-impl From<String> for RawQuery<'static> {
+impl From<String> for RawQuery {
     fn from(s: String) -> Self {
         RawQuery(s.into())
     }

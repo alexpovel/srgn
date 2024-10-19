@@ -23,16 +23,21 @@ use srgn::actions::{
 };
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::scoping::langs::{self, LanguageScoper, RawQuery};
+use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
 use srgn::scoping::Scoper;
 use tree_sitter::QueryError as TSQueryError;
 
+// We have `LanguageScoper: Scoper`, but we cannot upcast
+// (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
+// by providing both.
+type ScoperList = Vec<Box<dyn LanguageScoper>>;
+
 #[allow(clippy::too_many_lines)] // Only slightly above.
 fn main() -> Result<()> {
-    let mut args = cli::Cli::init();
+    let args = cli::Args::init();
 
     let level_filter = level_filter_from_env_and_verbosity(args.options.additional_verbosity);
     env_logger::Builder::new()
@@ -40,26 +45,46 @@ fn main() -> Result<()> {
         .format_timestamp_micros() // High precision is nice for benchmarks
         .init();
 
-    if let Some(shell) = args.shell {
+    info!("Launching app with args: {:?}", args);
+
+    let cli::Args {
+        scope,
+        shell,
+        composable_actions,
+        standalone_actions,
+        mut options,
+        languages_scopes,
+        german_options,
+    } = args;
+
+    if let Some(shell) = shell {
         debug!("Generating completions file for {shell:?}.");
-        cli::print_completions(shell, &mut cli::Cli::command());
+        cli::print_completions(shell, &mut cli::Args::command());
         debug!("Done generating completions file, exiting.");
 
         return Ok(());
     }
 
-    info!("Launching app with args: {:?}", args);
+    let standalone_action = standalone_actions.into();
 
     debug!("Assembling scopers.");
-    let general_scoper = get_general_scoper(&args)?;
+    let general_scoper = get_general_scoper(&options, scope)?;
     // Will be sent across threads and might (the borrow checker is convinced at least)
     // outlive the main one. Scoped threads would work here, `ignore` uses them
     // internally even, but we have no access here.
-    let language_scopers = Arc::new(get_language_scopers(&args)?);
+
+    let language_scopers = languages_scopes
+        .compile_raw_queries_to_scopes()?
+        .map(Arc::new);
     debug!("Done assembling scopers.");
 
     debug!("Assembling actions.");
-    let mut actions = assemble_actions(&args)?;
+    let mut actions = assemble_actions(
+        &options,
+        composable_actions,
+        standalone_action,
+        german_options,
+    )?;
     debug!("Done assembling actions.");
 
     let is_readable_stdin = grep_cli::is_readable_stdin();
@@ -67,14 +92,14 @@ fn main() -> Result<()> {
 
     // See where we're reading from
     let input = match (
-        args.options.stdin_override_to.unwrap_or(is_readable_stdin),
-        args.options.glob.clone(),
-        &language_scopers.is_empty(),
+        options.stdin_override_to.unwrap_or(is_readable_stdin),
+        options.glob.clone(),
+        &language_scopers,
     ) {
         // stdin considered viable: always use it.
         (true, None, _)
         // Nothing explicitly available: this should open an interactive stdin prompt.
-        | (false, None, true) => Input::Stdin,
+        | (false, None, None) => Input::Stdin,
         (true, Some(..), _) => {
             // Usage error... warn loudly, the user is likely interested.
             error!("Detected stdin, and request for files: will use stdin and ignore files.");
@@ -90,7 +115,7 @@ fn main() -> Result<()> {
 
         // If pattern wasn't manually overridden, consult the language scoper itself, if
         // any.
-        (false, None, false) => {
+        (false, None, Some(language_scopers)) => {
             let language_scopers = Arc::clone(&language_scopers);
             Input::WalkOn(Box::new(move |path| {
                 // TODO: perform this work only once (it's super fast but in the hot
@@ -114,7 +139,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && !language_scopers.is_empty();
+    let search_mode = actions.is_empty() && !language_scopers.is_none();
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
@@ -126,9 +151,9 @@ fn main() -> Result<()> {
         };
         actions.push(Box::new(style));
 
-        args.options.only_matching = true;
-        args.options.line_numbers = true;
-        args.options.fail_none = true;
+        options.only_matching = true;
+        options.line_numbers = true;
+        options.fail_none = true;
     }
 
     if actions.is_empty() && !search_mode {
@@ -138,22 +163,31 @@ fn main() -> Result<()> {
         );
     }
 
+    let language_scopers = language_scopers.unwrap_or_default();
+
     // Now write out
-    match (input, args.options.sorted) {
+    match (input, options.sorted) {
         (Input::Stdin, _ /* no effect */) => {
             info!("Will read from stdin and write to stdout, applying actions.");
-            handle_actions_on_stdin(&general_scoper, &language_scopers, &actions, &args)?;
+            handle_actions_on_stdin(
+                &options,
+                standalone_action,
+                &general_scoper,
+                &language_scopers,
+                &actions,
+            )?;
         }
         (Input::WalkOn(validator), false) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_threaded(
+                &options,
+                standalone_action,
                 &validator,
                 &general_scoper,
                 &language_scopers,
                 &actions,
-                &args,
                 search_mode,
-                args.options.threads.map_or(
+                options.threads.map_or(
                     std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
@@ -162,11 +196,12 @@ fn main() -> Result<()> {
         (Input::WalkOn(validator), true) => {
             info!("Will walk file tree, applying actions.");
             handle_actions_on_many_files_sorted(
+                &options,
+                standalone_action,
                 &validator,
                 &general_scoper,
                 &language_scopers,
                 &actions,
-                &args,
                 search_mode,
             )?;
         }
@@ -190,13 +225,29 @@ enum Input {
     WalkOn(Validator),
 }
 
+/// A standalone action to perform on the results of applying a scope.
+#[derive(Clone, Copy, Debug)]
+enum StandaloneAction {
+    /// Delete anything in scope.
+    ///
+    /// Cannot be used with any other action: there is no point in deleting and
+    /// performing any other processing. Sibling actions would either receive empty
+    /// input or have their work wiped.
+    Delete,
+    /// Squeeze consecutive occurrences of scope into one.
+    Squeeze,
+    /// No stand alone action is set.
+    None,
+}
+
 /// Main entrypoint for simple `stdin` -> `stdout` processing.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_stdin(
+    global_options: &cli::GlobalOptions,
+    standalone_action: StandaloneAction,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    args: &cli::Cli,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -204,12 +255,13 @@ fn handle_actions_on_stdin(
     let mut destination = String::new();
 
     apply(
+        global_options,
+        standalone_action,
         &source,
         &mut destination,
         general_scoper,
         language_scopers,
         actions,
-        args,
     )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
@@ -227,11 +279,12 @@ fn handle_actions_on_stdin(
 ///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_many_files_sorted(
+    global_options: &cli::GlobalOptions,
+    standalone_action: StandaloneAction,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    args: &cli::Cli,
     search_mode: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
@@ -243,8 +296,8 @@ fn handle_actions_on_many_files_sorted(
     let mut n_files_processed: usize = 0;
     let mut n_files_seen: usize = 0;
     for entry in WalkBuilder::new(&root)
-        .hidden(!args.options.hidden)
-        .git_ignore(!args.options.gitignored)
+        .hidden(!global_options.hidden)
+        .git_ignore(!global_options.gitignored)
         .sort_by_file_path(Ord::cmp)
         .build()
     {
@@ -252,13 +305,14 @@ fn handle_actions_on_many_files_sorted(
             Ok(entry) => {
                 let path = entry.path();
                 let res = process_path(
+                    global_options,
+                    standalone_action,
                     path,
                     &root,
                     validator,
                     general_scoper,
                     language_scopers,
                     actions,
-                    args,
                     search_mode,
                 );
 
@@ -271,7 +325,7 @@ fn handle_actions_on_many_files_sorted(
                     Ok(()) => 1,
                     Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => 0,
                     Err(PathProcessingError::ApplicationError(ApplicationError::SomeInScope))
-                        if args.options.fail_any =>
+                        if global_options.fail_any =>
                     {
                         // Early-out
                         info!("Match at {}, exiting early", path.display());
@@ -318,9 +372,9 @@ fn handle_actions_on_many_files_sorted(
     info!("Saw {} items", n_files_seen);
     info!("Processed {} files", n_files_processed);
 
-    if n_files_seen == 0 && args.options.fail_no_files {
+    if n_files_seen == 0 && global_options.fail_no_files {
         Err(ProgramError::NoFilesFound)
-    } else if n_files_processed == 0 && args.options.fail_none {
+    } else if n_files_processed == 0 && global_options.fail_none {
         Err(ProgramError::NothingProcessed)
     } else {
         Ok(())
@@ -331,11 +385,12 @@ fn handle_actions_on_many_files_sorted(
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 #[allow(clippy::too_many_lines)]
 fn handle_actions_on_many_files_threaded(
+    global_options: &cli::GlobalOptions,
+    standalone_action: StandaloneAction,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    args: &cli::Cli,
     search_mode: bool,
     n_threads: usize,
 ) -> Result<(), ProgramError> {
@@ -355,21 +410,22 @@ fn handle_actions_on_many_files_threaded(
             // https://github.com/BurntSushi/ripgrep/issues/2854
             n_threads,
         )
-        .hidden(!args.options.hidden)
-        .git_ignore(!args.options.gitignored)
+        .hidden(!global_options.hidden)
+        .git_ignore(!global_options.gitignored)
         .build_parallel()
         .run(|| {
             Box::new(|entry| match entry {
                 Ok(entry) => {
                     let path = entry.path();
                     let res = process_path(
+                        global_options,
+                        standalone_action,
                         path,
                         &root,
                         validator,
                         general_scoper,
                         language_scopers,
                         actions,
-                        args,
                         search_mode,
                     );
 
@@ -389,7 +445,7 @@ fn handle_actions_on_many_files_threaded(
                         Err(
                             e
                             @ PathProcessingError::ApplicationError(ApplicationError::SomeInScope),
-                        ) if args.options.fail_any => {
+                        ) if global_options.fail_any => {
                             // Early-out
                             info!("Match at {}, exiting early", path.display());
                             *err.lock().unwrap() = Some(e.into());
@@ -446,9 +502,9 @@ fn handle_actions_on_many_files_threaded(
     let n_files_processed = *n_files_processed.lock().unwrap();
     info!("Processed {} files", n_files_processed);
 
-    if n_files_seen == 0 && args.options.fail_no_files {
+    if n_files_seen == 0 && global_options.fail_no_files {
         Err(ProgramError::NoFilesFound)
-    } else if n_files_processed == 0 && args.options.fail_none {
+    } else if n_files_processed == 0 && global_options.fail_none {
         Err(ProgramError::NothingProcessed)
     } else {
         Ok(())
@@ -458,13 +514,14 @@ fn handle_actions_on_many_files_threaded(
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn process_path(
+    global_options: &cli::GlobalOptions,
+    standalone_action: StandaloneAction,
     path: &Path,
     root: &Path,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    args: &cli::Cli,
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
@@ -491,12 +548,13 @@ fn process_path(
         file.read_to_string(&mut source)?;
 
         let changed = apply(
+            global_options,
+            standalone_action,
             &source,
             &mut destination,
             general_scoper,
             language_scopers,
             actions,
-            args,
         )?;
 
         (destination, filesize, changed)
@@ -560,6 +618,8 @@ fn process_path(
 /// of the most imperative, procedural kind. Refactor needed.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn apply(
+    global_options: &cli::GlobalOptions,
+    standalone_action: StandaloneAction,
     source: &str,
     // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
     // corresponding checks.
@@ -567,12 +627,11 @@ fn apply(
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     actions: &[Box<dyn Action>],
-    args: &cli::Cli,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
 
-    if args.options.join_language_scopes {
+    if global_options.join_language_scopes {
         // All at once, as a slice: hits a specific, 'joining' `impl`
         builder.explode(&language_scopers);
     } else {
@@ -586,16 +645,16 @@ fn apply(
     let mut view = builder.build();
     debug!("Done building view: {view:?}");
 
-    if args.options.fail_none && !view.has_any_in_scope() {
+    if global_options.fail_none && !view.has_any_in_scope() {
         return Err(ApplicationError::NoneInScope);
     }
 
-    if args.options.fail_any && view.has_any_in_scope() {
+    if global_options.fail_any && view.has_any_in_scope() {
         return Err(ApplicationError::SomeInScope);
     };
 
     debug!("Applying actions to view.");
-    if args.standalone_actions.squeeze {
+    if let StandaloneAction::Squeeze = standalone_action {
         view.squeeze();
     }
 
@@ -604,12 +663,12 @@ fn apply(
     }
 
     debug!("Writing to destination.");
-    let line_based = args.options.only_matching || args.options.line_numbers;
+    let line_based = global_options.only_matching || global_options.line_numbers;
     if line_based {
         for (i, line) in view.lines().into_iter().enumerate() {
             let i = i + 1;
-            if !args.options.only_matching || line.has_any_in_scope() {
-                if args.options.line_numbers {
+            if !global_options.only_matching || line.has_any_in_scope() {
+                if global_options.line_numbers {
                     // `ColoredString` needs to be 'evaluated' to do anything; make sure
                     // to not forget even if this is moved outside of `format!`.
                     #[allow(clippy::to_string_in_format_args)]
@@ -801,66 +860,23 @@ impl fmt::Display for ScoperBuildError {
 
 impl Error for ScoperBuildError {}
 
-#[allow(clippy::cognitive_complexity)] // 🤷‍♀️ macros
-fn get_language_scopers(args: &cli::Cli) -> Result<Vec<Box<dyn LanguageScoper>>, ProgramError> {
-    // We have `LanguageScoper: Scoper`, but we cannot upcast
-    // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
-    // by providing both.
-    let mut scopers: Vec<Box<dyn LanguageScoper>> = Vec::new();
-
-    macro_rules! handle_language_scope {
-        ($lang_flag:ident, $lang_query_flag:ident) => {
-            if let Some(lang_scope) = &args.languages_scopes.$lang_flag {
-                if !scopers.is_empty() {
-                    let mut cmd = cli::Cli::command();
-                    cmd.error(
-                        clap::error::ErrorKind::ArgumentConflict,
-                        "Can only use one language at a time.",
-                    )
-                    .exit();
-                }
-                assert!(scopers.is_empty());
-
-                for query in &lang_scope.$lang_flag {
-                    let lang_scope = langs::$lang_flag::CompiledQuery::new(&(*query).into())?;
-                    scopers.push(Box::new(lang_scope));
-                }
-
-                for query in &lang_scope.$lang_query_flag {
-                    let query = RawQuery::from(query.as_str());
-
-                    let lang_scope = langs::$lang_flag::CompiledQuery::new(&query)?;
-                    scopers.push(Box::new(lang_scope));
-                }
-
-                assert!(!scopers.is_empty(), "Language specified, but no scope."); // Internal bug
-            };
-        };
-    }
-
-    handle_language_scope!(c, c_query);
-    handle_language_scope!(csharp, csharp_query);
-    handle_language_scope!(hcl, hcl_query);
-    handle_language_scope!(go, go_query);
-    handle_language_scope!(python, python_query);
-    handle_language_scope!(rust, rust_query);
-    handle_language_scope!(typescript, typescript_query);
-
-    Ok(scopers)
-}
-
-fn get_general_scoper(args: &cli::Cli) -> Result<Box<dyn Scoper>> {
-    Ok(if args.options.literal_string {
-        Box::new(Literal::try_from(args.scope.clone()).context("Failed building literal string")?)
+fn get_general_scoper(options: &cli::GlobalOptions, scope: String) -> Result<Box<dyn Scoper>> {
+    Ok(if options.literal_string {
+        Box::new(Literal::try_from(scope).context("Failed building literal string")?)
     } else {
-        Box::new(Regex::try_from(args.scope.clone()).context("Failed building regex")?)
+        Box::new(Regex::try_from(scope).context("Failed building regex")?)
     })
 }
 
-fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
+fn assemble_actions(
+    global_options: &cli::GlobalOptions,
+    composable_actions: cli::ComposableActions,
+    standalone_actions: StandaloneAction,
+    german_options: cli::GermanOptions,
+) -> Result<Vec<Box<dyn Action>>> {
     let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
-    if let Some(replacement) = args.composable_actions.replace.clone() {
+    if let Some(replacement) = composable_actions.replace.clone() {
         actions.push(Box::new(
             Replacement::try_from(replacement).context("Failed building replacement string")?,
         ));
@@ -868,18 +884,18 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
     }
 
     #[cfg(feature = "german")]
-    if args.composable_actions.german {
+    if composable_actions.german {
         actions.push(Box::new(German::new(
             // Smell? Bug if bools swapped.
-            args.german_options.german_prefer_original,
-            args.german_options.german_naive,
+            german_options.german_prefer_original,
+            german_options.german_naive,
         )));
         debug!("Loaded action: German");
     }
 
     #[cfg(feature = "symbols")]
-    if args.composable_actions.symbols {
-        if args.options.invert {
+    if composable_actions.symbols {
+        if global_options.invert {
             actions.push(Box::<SymbolsInversion>::default());
             debug!("Loaded action: SymbolsInversion");
         } else {
@@ -888,27 +904,27 @@ fn assemble_actions(args: &cli::Cli) -> Result<Vec<Box<dyn Action>>> {
         }
     }
 
-    if args.standalone_actions.delete {
+    if let StandaloneAction::Delete = standalone_actions {
         actions.push(Box::<Deletion>::default());
         debug!("Loaded action: Deletion");
     }
 
-    if args.composable_actions.upper {
+    if composable_actions.upper {
         actions.push(Box::<Upper>::default());
         debug!("Loaded action: Upper");
     }
 
-    if args.composable_actions.lower {
+    if composable_actions.lower {
         actions.push(Box::<Lower>::default());
         debug!("Loaded action: Lower");
     }
 
-    if args.composable_actions.titlecase {
+    if composable_actions.titlecase {
         actions.push(Box::<Titlecase>::default());
         debug!("Loaded action: Titlecase");
     }
 
-    if args.composable_actions.normalize {
+    if composable_actions.normalize {
         actions.push(Box::<Normalization>::default());
         debug!("Loaded action: Normalization");
     }
@@ -945,8 +961,10 @@ mod cli {
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
-    use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript};
+    use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript, RawQuery};
     use srgn::GLOBAL_SCOPE;
+
+    use crate::{ProgramError, StandaloneAction};
 
     /// Main CLI entrypoint.
     ///
@@ -964,7 +982,7 @@ mod cli {
         // doesn't touch our manually formatted doc strings anymore.
         term_width = 90,
     )]
-    pub struct Cli {
+    pub struct Args {
         /// Scope to apply to, as a regular expression pattern.
         ///
         /// If string literal mode is requested, will be interpreted as a literal
@@ -981,30 +999,30 @@ mod cli {
             verbatim_doc_comment,
             default_value_if("literal_string", ArgPredicate::IsPresent, None)
         )]
-        pub scope: String,
+        pub(super) scope: String,
 
         /// Print shell completions for the given shell.
         #[arg(long = "completions", value_enum, verbatim_doc_comment)]
         // This thing needs to live up here to show up within `Options` next to `--help`
         // and `--version`. Further down, it'd show up in the wrong section because we
         // alter `next_help_heading`.
-        pub shell: Option<Shell>,
+        pub(super) shell: Option<Shell>,
 
         #[command(flatten)]
-        pub composable_actions: ComposableActions,
+        pub(super) composable_actions: ComposableActions,
 
         #[command(flatten)]
-        pub standalone_actions: StandaloneActions,
+        pub(super) standalone_actions: StandaloneActions,
 
         #[command(flatten)]
-        pub options: GlobalOptions,
+        pub(super) options: GlobalOptions,
 
         #[command(flatten)]
-        pub languages_scopes: LanguageScopes,
+        pub(super) languages_scopes: LanguageScopes,
 
         #[cfg(feature = "german")]
         #[command(flatten)]
-        pub german_options: GermanOptions,
+        pub(super) german_options: GermanOptions,
     }
 
     /// <https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69>
@@ -1221,113 +1239,169 @@ mod cli {
         pub squeeze: bool,
     }
 
+    impl From<StandaloneActions> for StandaloneAction {
+        fn from(value: StandaloneActions) -> Self {
+            if value.delete {
+                StandaloneAction::Delete
+            } else if value.squeeze {
+                StandaloneAction::Squeeze
+            } else {
+                StandaloneAction::None
+            }
+        }
+    }
+
     /// For use as <https://docs.rs/clap/latest/clap/struct.Arg.html#method.value_name>
     const TREE_SITTER_QUERY_VALUE_NAME: &str = "TREE-SITTER-QUERY";
 
-    #[derive(Parser, Debug)]
-    #[group(required = false, multiple = false)]
-    #[command(next_help_heading = "Language scopes")]
-    pub struct LanguageScopes {
-        #[command(flatten)]
-        pub c: Option<CScope>,
-        #[command(flatten)]
-        pub csharp: Option<CSharpScope>,
-        #[command(flatten)]
-        pub go: Option<GoScope>,
-        #[command(flatten)]
-        pub hcl: Option<HclScope>,
-        #[command(flatten)]
-        pub python: Option<PythonScope>,
-        #[command(flatten)]
-        pub rust: Option<RustScope>,
-        #[command(flatten)]
-        pub typescript: Option<TypeScriptScope>,
+    macro_rules! impl_lang_scopes {
+        ($(($lang_flag:ident, $lang_query_flag:ident, $lang_scope:ident),)+) => {
+            #[derive(Parser, Debug)]
+            #[group(required = false, multiple = false)]
+            #[command(next_help_heading = "Language scopes")]
+            pub(super) struct LanguageScopes {
+                $(
+                    #[command(flatten)]
+                    $lang_flag: Option<$lang_scope>,
+                )+
+            }
+
+            impl LanguageScopes {
+                /// Finds the first language field set, if any.
+                //
+                /// Return Some if any language field is set.
+                /// Return None if none of the fields are set.
+                ///
+                /// The `clap::group` attribute is set to `multiple = false` so only one
+                /// or zero fields can be set.
+                pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
+                    $(
+                        if let Some(s) = self.$lang_flag {
+                            let s = s.try_into()?;
+                            return Ok(Some(s));
+                        }
+                    )+
+
+                    Ok(None)
+                }
+            }
+
+            $(
+                impl TryFrom<$lang_scope> for crate::ScoperList {
+                    type Error = ProgramError;
+
+                    fn try_from(lang_scope: $lang_scope) -> Result<Self, Self::Error> {
+                        let mut scopers: crate::ScoperList = Vec::new();
+
+                        for raw_query in lang_scope.$lang_flag {
+                            scopers.push(Box::new($lang_flag::CompiledQuery::new(&raw_query.into())?));
+                        }
+
+                        for raw_query in lang_scope.$lang_query_flag {
+                            scopers.push(Box::new($lang_flag::CompiledQuery::new(&raw_query.into())?));
+                        }
+
+                        Ok(scopers)
+                    }
+                }
+            )+
+        };
     }
+
+    impl_lang_scopes!(
+        (c, c_query, CScope),
+        (csharp, csharp_query, CSharpScope),
+        (go, go_query, GoScope),
+        (hcl, hcl_query, HclScope),
+        (python, python_query, PythonScope),
+        (rust, rust_query, RustScope),
+        (typescript, typescript_query, TypeScriptScope),
+    );
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct CScope {
+    struct CScope {
         /// Scope C code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub c: Vec<c::PreparedQuery>,
+        c: Vec<c::PreparedQuery>,
 
         /// Scope C code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub c_query: Vec<CodeQuery>,
+        c_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct CSharpScope {
+    struct CSharpScope {
         /// Scope C# code using a prepared query.
         #[arg(long, env, verbatim_doc_comment, visible_alias = "cs")]
-        pub csharp: Vec<csharp::PreparedQuery>,
+        csharp: Vec<csharp::PreparedQuery>,
 
         /// Scope C# code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub csharp_query: Vec<CodeQuery>,
+        csharp_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct HclScope {
+    struct HclScope {
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub hcl: Vec<hcl::PreparedQuery>,
+        hcl: Vec<hcl::PreparedQuery>,
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub hcl_query: Vec<CodeQuery>,
+        hcl_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct GoScope {
+    struct GoScope {
         /// Scope Go code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
-        pub go: Vec<go::PreparedQuery>,
+        go: Vec<go::PreparedQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub go_query: Vec<CodeQuery>,
+        go_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct PythonScope {
+    struct PythonScope {
         /// Scope Python code using a prepared query.
         #[arg(long, env, verbatim_doc_comment, visible_alias = "py")]
-        pub python: Vec<python::PreparedQuery>,
+        python: Vec<python::PreparedQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub python_query: Vec<CodeQuery>,
+        python_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct RustScope {
+    struct RustScope {
         /// Scope Rust code using a prepared query.
         #[arg(long, env, verbatim_doc_comment, visible_alias = "rs")]
-        pub rust: Vec<rust::PreparedQuery>,
+        rust: Vec<rust::PreparedQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub rust_query: Vec<CodeQuery>,
+        rust_query: Vec<CodeQuery>,
     }
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
-    pub struct TypeScriptScope {
+    struct TypeScriptScope {
         /// Scope TypeScript code using a prepared query.
         #[arg(long, env, verbatim_doc_comment, visible_alias = "ts")]
-        pub typescript: Vec<typescript::PreparedQuery>,
+        typescript: Vec<typescript::PreparedQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        pub typescript_query: Vec<CodeQuery>,
+        typescript_query: Vec<CodeQuery>,
     }
 
     #[cfg(feature = "german")]
@@ -1353,7 +1427,7 @@ mod cli {
         pub german_naive: bool,
     }
 
-    impl Cli {
+    impl Args {
         pub(super) fn init() -> Self {
             Self::parse()
         }
@@ -1363,20 +1437,21 @@ mod cli {
         }
     }
 
-    /// The given query arg could be a literal tree-sitter query or a path to a file containing
-    /// a tree-sitter query.
+    /// A container for a literal tree-sitter query.
+    ///
+    /// This provids basic type protection while parsing args.
     #[derive(Debug, Clone)]
-    pub struct CodeQuery(String);
-
-    impl CodeQuery {
-        pub fn as_str(&self) -> &str {
-            &self.0
-        }
-    }
+    pub(crate) struct CodeQuery(String);
 
     impl From<String> for CodeQuery {
         fn from(s: String) -> Self {
             Self(s)
+        }
+    }
+
+    impl From<CodeQuery> for RawQuery {
+        fn from(q: CodeQuery) -> Self {
+            q.0.into()
         }
     }
 }

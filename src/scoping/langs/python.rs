@@ -16,7 +16,7 @@ impl CompiledQuery {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
-    pub fn new(query: &RawQuery<'_>) -> Result<Self, super::TSQueryError> {
+    pub fn new(query: &RawQuery) -> Result<Self, super::TSQueryError> {
         let q = super::CompiledQuery::new(&tree_sitter_python::LANGUAGE.into(), query)?;
         Ok(Self(q))
     }
@@ -65,10 +65,9 @@ pub enum PreparedQuery {
     Identifiers,
 }
 
-impl From<PreparedQuery> for RawQuery<'static> {
+impl From<PreparedQuery> for RawQuery {
     fn from(query: PreparedQuery) -> Self {
-        let s: &'static str = query.into();
-        s.into()
+        RawQuery(std::borrow::Cow::Borrowed(query.into()))
     }
 }
 
