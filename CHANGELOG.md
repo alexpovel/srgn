@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.3](https://github.com/alexpovel/srgn/compare/srgn-v0.13.2...srgn-v0.13.3) (2024-10-19)
+
+
+### Bug Fixes
+
+* **files:** Writing new files works across devices ([1b27825](https://github.com/alexpovel/srgn/commit/1b278251f3aaa273b221f9520512a55ab04bd6cc)), closes [#145](https://github.com/alexpovel/srgn/issues/145)
+
 ## [0.13.2](https://github.com/alexpovel/srgn/compare/srgn-v0.13.1...srgn-v0.13.2) (2024-09-27)
 
 
