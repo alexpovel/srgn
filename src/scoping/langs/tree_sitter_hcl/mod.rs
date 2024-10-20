@@ -8,8 +8,7 @@
 //! is available on <https://crates.io> and updated to a high enough `tree-sitter`
 //! version**.
 
-#[allow(unsafe_code)]
-unsafe extern "C" {
+extern "C" {
     fn tree_sitter_hcl() -> tree_sitter::Language;
 }
 

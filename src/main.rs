@@ -159,8 +159,8 @@ fn main() -> Result<()> {
                 &actions,
                 &args,
                 search_mode,
-                args.options.threads.map_or_else(
-                    || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
+                args.options.threads.map_or(
+                    std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
             )?;
