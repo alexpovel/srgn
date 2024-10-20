@@ -1272,7 +1272,9 @@ mod cli {
             impl LanguageScopes {
                 /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `LanguageScoper`'s.
                 pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
-                    assert_exclusive_lang_scope(&[$(self.$lang_flag.is_some(),)+]);
+                    assert_exclusive_lang_scope(&[
+                        $(self.$lang_flag.is_some(),)+
+                    ]);
 
                     $(
                         if let Some(s) = self.$lang_flag {
@@ -1287,6 +1289,19 @@ mod cli {
         };
     }
 
+    impl_lang_scopes!(
+        (c, c_query, CScope),
+        (csharp, csharp_query, CSharpScope),
+        (go, go_query, GoScope),
+        (hcl, hcl_query, HclScope),
+        (python, python_query, PythonScope),
+        (rust, rust_query, RustScope),
+        (typescript, typescript_query, TypeScriptScope),
+    );
+
+    /// Assert that either zero or one lang field is set.
+    ///
+    /// If the assertion fails, exit with an error message.
     fn assert_exclusive_lang_scope(fields_set: &[bool]) {
         let set_fields_count = fields_set.into_iter().filter(|b| **b).count();
 
@@ -1301,12 +1316,13 @@ mod cli {
     }
 
     /// Convert the prepared queries and the literal queries into `CompiledQuery`'s
-    fn accumulate_scopes<C, Q: Into<RawQuery>>(
+    fn accumulate_scopes<C, Q>(
         prepared_queries: Vec<Q>,
         literal_queries: Vec<CodeQuery>,
     ) -> Result<crate::ScoperList, ProgramError>
     where
         C: LanguageScoper + TryFrom<RawQuery, Error = TSQueryError> + 'static,
+        Q: Into<RawQuery>,
     {
         let mut scopers: crate::ScoperList = Vec::new();
 
@@ -1322,16 +1338,6 @@ mod cli {
 
         Ok(scopers)
     }
-
-    impl_lang_scopes!(
-        (c, c_query, CScope),
-        (csharp, csharp_query, CSharpScope),
-        (go, go_query, GoScope),
-        (hcl, hcl_query, HclScope),
-        (python, python_query, PythonScope),
-        (rust, rust_query, RustScope),
-        (typescript, typescript_query, TypeScriptScope),
-    );
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
