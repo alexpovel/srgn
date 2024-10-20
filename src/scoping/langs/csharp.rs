@@ -65,7 +65,7 @@ pub enum PreparedQuery {
 
 impl From<PreparedQuery> for RawQuery {
     fn from(query: PreparedQuery) -> Self {
-        RawQuery(std::borrow::Cow::Borrowed(query.into()))
+        Self(std::borrow::Cow::Borrowed(query.into()))
     }
 }
 

@@ -94,7 +94,7 @@ pub struct RawQuery(pub Cow<'static, str>);
 
 impl From<String> for RawQuery {
     fn from(s: String) -> Self {
-        RawQuery(s.into())
+        Self(s.into())
     }
 }
 

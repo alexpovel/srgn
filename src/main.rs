@@ -81,9 +81,9 @@ fn main() -> Result<()> {
     debug!("Assembling actions.");
     let mut actions = assemble_actions(
         &options,
-        composable_actions,
+        &composable_actions,
         standalone_action,
-        german_options,
+        &german_options,
     )?;
     debug!("Done assembling actions.");
 
@@ -116,7 +116,7 @@ fn main() -> Result<()> {
         // If pattern wasn't manually overridden, consult the language scoper itself, if
         // any.
         (false, None, Some(language_scopers)) => {
-            let language_scopers = Arc::clone(&language_scopers);
+            let language_scopers = Arc::clone(language_scopers);
             Input::WalkOn(Box::new(move |path| {
                 // TODO: perform this work only once (it's super fast but in the hot
                 // path).
@@ -139,7 +139,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && !language_scopers.is_none();
+    let search_mode = actions.is_empty() && language_scopers.is_some();
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
@@ -384,6 +384,7 @@ fn handle_actions_on_many_files_sorted(
 /// Main entrypoint for processing using at least 1 thread.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 fn handle_actions_on_many_files_threaded(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
@@ -654,7 +655,7 @@ fn apply(
     };
 
     debug!("Applying actions to view.");
-    if let StandaloneAction::Squeeze = standalone_action {
+    if matches!(standalone_action, StandaloneAction::Squeeze) {
         view.squeeze();
     }
 
@@ -870,9 +871,9 @@ fn get_general_scoper(options: &cli::GlobalOptions, scope: String) -> Result<Box
 
 fn assemble_actions(
     global_options: &cli::GlobalOptions,
-    composable_actions: cli::ComposableActions,
+    composable_actions: &cli::ComposableActions,
     standalone_actions: StandaloneAction,
-    german_options: cli::GermanOptions,
+    german_options: &cli::GermanOptions,
 ) -> Result<Vec<Box<dyn Action>>> {
     let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
@@ -904,7 +905,7 @@ fn assemble_actions(
         }
     }
 
-    if let StandaloneAction::Delete = standalone_actions {
+    if matches!(standalone_actions, StandaloneAction::Delete) {
         actions.push(Box::<Deletion>::default());
         debug!("Loaded action: Deletion");
     }
@@ -1245,11 +1246,11 @@ mod cli {
     impl From<StandaloneActions> for StandaloneAction {
         fn from(value: StandaloneActions) -> Self {
             if value.delete {
-                StandaloneAction::Delete
+                Self::Delete
             } else if value.squeeze {
-                StandaloneAction::Squeeze
+                Self::Squeeze
             } else {
-                StandaloneAction::None
+                Self::None
             }
         }
     }
@@ -1262,7 +1263,7 @@ mod cli {
             #[derive(Parser, Debug)]
             #[group(required = false, multiple = false)]
             #[command(next_help_heading = "Language scopes")]
-            pub(super) struct LanguageScopes {
+            pub struct LanguageScopes {
                 $(
                     #[command(flatten)]
                     $lang_flag: Option<$lang_scope>,
@@ -1303,7 +1304,7 @@ mod cli {
     ///
     /// If the assertion fails, exit with an error message.
     fn assert_exclusive_lang_scope(fields_set: &[bool]) {
-        let set_fields_count = fields_set.into_iter().filter(|b| **b).count();
+        let set_fields_count = fields_set.iter().filter(|b| **b).count();
 
         if set_fields_count > 1 {
             let mut cmd = Args::command();
@@ -1462,7 +1463,7 @@ mod cli {
     ///
     /// This provids basic type protection while parsing args.
     #[derive(Debug, Clone)]
-    pub(crate) struct CodeQuery(String);
+    struct CodeQuery(String);
 
     impl From<String> for CodeQuery {
         fn from(s: String) -> Self {
