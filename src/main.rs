@@ -54,6 +54,7 @@ fn main() -> Result<()> {
         standalone_actions,
         mut options,
         languages_scopes,
+        #[cfg(feature = "german")]
         german_options,
     } = args;
 
@@ -78,14 +79,34 @@ fn main() -> Result<()> {
         .map(Arc::new);
     debug!("Done assembling scopers.");
 
-    debug!("Assembling actions.");
-    let mut actions = assemble_actions(
-        &options,
-        &composable_actions,
-        standalone_action,
-        &german_options,
-    )?;
-    debug!("Done assembling actions.");
+    let mut actions = {
+        debug!("Assembling actions.");
+        let mut actions = assemble_common_actions(&composable_actions, standalone_action)?;
+
+        #[cfg(feature = "symbols")]
+        if composable_actions.symbols {
+            if options.invert {
+                actions.push(Box::<SymbolsInversion>::default());
+                debug!("Loaded action: SymbolsInversion");
+            } else {
+                actions.push(Box::<Symbols>::default());
+                debug!("Loaded action: Symbols");
+            }
+        }
+
+        #[cfg(feature = "german")]
+        if composable_actions.german {
+            actions.push(Box::new(German::new(
+                // Smell? Bug if bools swapped.
+                german_options.german_prefer_original,
+                german_options.german_naive,
+            )));
+            debug!("Loaded action: German");
+        }
+
+        debug!("Done assembling actions.");
+        actions
+    };
 
     let is_readable_stdin = grep_cli::is_readable_stdin();
     info!("Detected stdin as readable: {is_readable_stdin}.");
@@ -869,11 +890,9 @@ fn get_general_scoper(options: &cli::GlobalOptions, scope: String) -> Result<Box
     })
 }
 
-fn assemble_actions(
-    global_options: &cli::GlobalOptions,
+fn assemble_common_actions(
     composable_actions: &cli::ComposableActions,
     standalone_actions: StandaloneAction,
-    german_options: &cli::GermanOptions,
 ) -> Result<Vec<Box<dyn Action>>> {
     let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
@@ -882,27 +901,6 @@ fn assemble_actions(
             Replacement::try_from(replacement).context("Failed building replacement string")?,
         ));
         debug!("Loaded action: Replacement");
-    }
-
-    #[cfg(feature = "german")]
-    if composable_actions.german {
-        actions.push(Box::new(German::new(
-            // Smell? Bug if bools swapped.
-            german_options.german_prefer_original,
-            german_options.german_naive,
-        )));
-        debug!("Loaded action: German");
-    }
-
-    #[cfg(feature = "symbols")]
-    if composable_actions.symbols {
-        if global_options.invert {
-            actions.push(Box::<SymbolsInversion>::default());
-            debug!("Loaded action: SymbolsInversion");
-        } else {
-            actions.push(Box::<Symbols>::default());
-            debug!("Loaded action: Symbols");
-        }
     }
 
     if matches!(standalone_actions, StandaloneAction::Delete) {
