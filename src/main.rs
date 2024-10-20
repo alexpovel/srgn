@@ -209,8 +209,8 @@ fn main() -> Result<()> {
                 &language_scopers,
                 &actions,
                 search_mode,
-                options.threads.map_or(
-                    std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
+                options.threads.map_or_else(
+                    || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
             )?;
