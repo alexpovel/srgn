@@ -104,7 +104,7 @@ module_name_repetitions = { level = "allow", priority = 1 }
 # and made it more strict. Will perhaps get too annoying.
 
 absolute_paths_not_starting_with_crate = "warn"
-deprecated_safe = "warn"
+deprecated_safe_2024 = "warn"
 elided_lifetimes_in_paths = "warn"
 explicit_outlives_requirements = "warn"
 ffi_unwind_calls = "warn"
