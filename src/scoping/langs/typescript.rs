@@ -1,18 +1,33 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use clap::ValueEnum;
-use tree_sitter::QueryError;
 
-use super::{CodeQuery, Find, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 
-/// The TypeScript language.
-pub type TypeScript = Language<TypeScriptQuery>;
-/// A query for TypeScript.
-pub type TypeScriptQuery = CodeQuery<CustomTypeScriptQuery, PreparedTypeScriptQuery>;
+/// A compiled query for the TypeScript language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
+
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
+    /// Create a new compiled query for the TypeScript language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_raw_query(
+            &tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+            query,
+        )?;
+        Ok(Self(q))
+    }
+}
+
 /// Prepared tree-sitter queries for TypeScript.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedTypeScriptQuery {
+pub enum PreparedQuery {
     /// Comments.
     Comments,
     /// Strings (literal, template).
@@ -55,102 +70,82 @@ pub enum PreparedTypeScriptQuery {
     Export,
 }
 
-impl From<PreparedTypeScriptQuery> for TSQuery {
-    fn from(value: PreparedTypeScriptQuery) -> Self {
-        Self::new(
-            &TypeScript::lang(),
-            match value {
-                PreparedTypeScriptQuery::Comments => "(comment) @comment",
-                PreparedTypeScriptQuery::Imports => {
-                    r"(import_statement source: (string (string_fragment) @sf))"
-                }
-                PreparedTypeScriptQuery::Strings => "(string_fragment) @string",
-                PreparedTypeScriptQuery::Function => "(function_declaration) @func",
-                PreparedTypeScriptQuery::AsyncFunction => {
-                    r#"(
-                        (function_declaration) @func (#match? @func "^async")
-                    )"#
-                }
-                PreparedTypeScriptQuery::SyncFunction => {
-                    r#"(
-                        (function_declaration) @func (#not-match? @func "^async")
-                    )"#
-                }
-                PreparedTypeScriptQuery::Method => "(method_definition) @method",
-                PreparedTypeScriptQuery::Constructor => {
-                    r#"(method_definition
-                        name: (_) @name (#eq? @name "constructor")
-                    ) @constructor"#
-                }
-                PreparedTypeScriptQuery::Class => "(class_declaration) @class",
-                PreparedTypeScriptQuery::Enum => "(enum_declaration) @enum",
-                PreparedTypeScriptQuery::Interface => "(interface_declaration) @interface",
-                PreparedTypeScriptQuery::TryCatch => "(try_statement) @try",
-                PreparedTypeScriptQuery::VarDecl => "(variable_declarator) @var_decl",
-                PreparedTypeScriptQuery::Let => {
-                    r#"(
-                        (lexical_declaration) @let_decl (#match? @let_decl "^let ")
-                    )"#
-                }
-                PreparedTypeScriptQuery::Const => {
-                    r#"(
-                        (lexical_declaration) @const_decl (#match? @const_decl "^const ")
-                    )"#
-                }
-                PreparedTypeScriptQuery::Var => {
-                    r#"(
-                        (variable_declaration) @var_decl (#match? @var_decl "^var ")
-                    )"#
-                }
-                PreparedTypeScriptQuery::TypeParams => "(type_parameters) @type_parameters",
-                PreparedTypeScriptQuery::TypeAlias => {
-                    "(type_alias_declaration) @type_alias_declaration"
-                }
-                PreparedTypeScriptQuery::Namespace => "(internal_module) @internal_module",
-                PreparedTypeScriptQuery::Export => "(export_statement) @export",
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-/// A custom tree-sitter query for TypeScript.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomTypeScriptQuery(String);
-
-impl FromStr for CustomTypeScriptQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&TypeScript::lang(), s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
+    fn as_str(self) -> &'static str {
+        match self {
+            PreparedQuery::Comments => "(comment) @comment",
+            PreparedQuery::Imports => r"(import_statement source: (string (string_fragment) @sf))",
+            PreparedQuery::Strings => "(string_fragment) @string",
+            PreparedQuery::Function => "(function_declaration) @func",
+            PreparedQuery::AsyncFunction => {
+                r#"(
+                    (function_declaration) @func (#match? @func "^async")
+                )"#
+            }
+            PreparedQuery::SyncFunction => {
+                r#"(
+                    (function_declaration) @func (#not-match? @func "^async")
+                )"#
+            }
+            PreparedQuery::Method => "(method_definition) @method",
+            PreparedQuery::Constructor => {
+                r#"(method_definition
+                    name: (_) @name (#eq? @name "constructor")
+                ) @constructor"#
+            }
+            PreparedQuery::Class => "(class_declaration) @class",
+            PreparedQuery::Enum => "(enum_declaration) @enum",
+            PreparedQuery::Interface => "(interface_declaration) @interface",
+            PreparedQuery::TryCatch => "(try_statement) @try",
+            PreparedQuery::VarDecl => "(variable_declarator) @var_decl",
+            PreparedQuery::Let => {
+                r#"(
+                    (lexical_declaration) @let_decl (#match? @let_decl "^let ")
+                )"#
+            }
+            PreparedQuery::Const => {
+                r#"(
+                    (lexical_declaration) @const_decl (#match? @const_decl "^const ")
+                )"#
+            }
+            PreparedQuery::Var => {
+                r#"(
+                    (variable_declaration) @var_decl (#match? @var_decl "^var ")
+                )"#
+            }
+            PreparedQuery::TypeParams => "(type_parameters) @type_parameters",
+            PreparedQuery::TypeAlias => "(type_alias_declaration) @type_alias_declaration",
+            PreparedQuery::Namespace => "(internal_module) @internal_module",
+            PreparedQuery::Export => "(export_statement) @export",
         }
     }
-}
 
-impl From<CustomTypeScriptQuery> for TSQuery {
-    fn from(value: CustomTypeScriptQuery) -> Self {
-        Self::new(&TypeScript::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
+    fn into_compiled_query(self) -> Self::Query {
+        let q = super::CompiledQuery::from_preparred_query(
+            &tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+            self,
+        );
+        CompiledQuery(q)
     }
 }
 
-impl LanguageScoper for TypeScript {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for TypeScript {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["ts", "tsx"]
     }

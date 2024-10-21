@@ -1,22 +1,33 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use clap::ValueEnum;
 use const_format::formatcp;
-use tree_sitter::QueryError;
 
-use super::{tree_sitter_hcl, CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{tree_sitter_hcl, LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
-/// The Hashicorp Configuration Language.
-pub type Hcl = Language<HclQuery>;
-/// A query for HCL.
-pub type HclQuery = CodeQuery<CustomHclQuery, PreparedHclQuery>;
+/// A compiled query for the Hashicorp Configuration language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
+
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
+    /// Create a new compiled query for the Hashicorp Configuration language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_hcl::language(), query)?;
+        Ok(Self(q))
+    }
+}
 
 /// Prepared tree-sitter queries for Hcl.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedHclQuery {
+pub enum PreparedQuery {
     /// `variable` blocks (in their entirety).
     Variable,
     /// `resource` blocks (in their entirety).
@@ -59,300 +70,281 @@ pub enum PreparedHclQuery {
     Strings,
 }
 
-impl From<PreparedHclQuery> for TSQuery {
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
+
     #[allow(clippy::too_many_lines)] // No good way to avoid
-    fn from(value: PreparedHclQuery) -> Self {
-        Self::new(
-            &Hcl::lang(),
-            // Seems to not play nice with the macro. Put up here, else interpolation is
-            // affected.
-            #[allow(clippy::needless_raw_string_hashes)]
-            match value {
-                PreparedHclQuery::Variable => {
+    fn as_str(self) -> &'static str {
+        // Seems to not play nice with the macro. Put up here, else interpolation is
+        // affected.
+        #[allow(clippy::needless_raw_string_hashes)]
+        match self {
+            PreparedQuery::Variable => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "variable")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Resource => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "resource")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Data => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "data")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Output => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "output")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Provider => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "provider")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Terraform => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "terraform")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Locals => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "locals")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Module => {
+                r#"
+                    (block
+                        (identifier) @name
+                        (#eq? @name "module")
+                    ) @block
+                "#
+            }
+            PreparedQuery::Variables => {
+                // Capturing nodes with names, such as `@id`, requires names to be
+                // unique across the *entire* query, else things break. Hence, us
+                // `@a.b` syntax (which seems undocumented).
+                formatcp!(
                     r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "variable")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Resource => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "resource")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Data => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "data")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Output => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "output")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Provider => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "provider")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Terraform => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "terraform")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Locals => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "locals")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Module => {
-                    r#"
-                        (block
-                            (identifier) @name
-                            (#eq? @name "module")
-                        ) @block
-                    "#
-                }
-                PreparedHclQuery::Variables => {
-                    // Capturing nodes with names, such as `@id`, requires names to be
-                    // unique across the *entire* query, else things break. Hence, us
-                    // `@a.b` syntax (which seems undocumented).
-                    formatcp!(
-                        r#"
-                            [
-                                (block
-                                    (identifier) @{0}.declaration
-                                    (string_lit (template_literal) @name.declaration)
-                                    (#match? @{0}.declaration "variable")
-                                )
-                                (
-                                    (variable_expr
-                                        (identifier) @{0}.usage
-                                        (#match? @{0}.usage "var")
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier) @name.usage
-                                    )
-                                )
-                            ]
-                        "#,
-                        IGNORE
-                    )
-                }
-                PreparedHclQuery::ResourceNames => {
-                    // Capturing nodes with names, such as `@id`, requires names to be
-                    // unique across the *entire* query, else things break. Hence, us
-                    // `@a.b` syntax (which seems undocumented).
-                    formatcp!(
-                        r#"
-                            [
-                                (block
-                                    (identifier) @{0}.declaration
-                                    (string_lit)
-                                    (string_lit (template_literal) @name.declaration)
-                                    (#match? @{0}.declaration "resource")
-                                )
-                                (
-                                    (variable_expr
-                                        (identifier) @{0}.usage
-                                        (#not-any-of? @{0}.usage
-                                            "var"
-                                            "data"
-                                            "count"
-                                            "module"
-                                            "local"
-                                        )
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier) @name.usage
-                                    )
-                                )
-                            ]
-                        "#,
-                        IGNORE
-                    )
-                }
-                PreparedHclQuery::ResourceTypes => {
-                    // Capturing nodes with names, such as `@id`, requires names to be
-                    // unique across the *entire* query, else things break. Hence, us
-                    // `@a.b` syntax (which seems undocumented).
-                    formatcp!(
-                        r#"
-                            [
-                                (block
-                                    (identifier) @{0}.declaration
-                                    (string_lit (template_literal) @name.type)
-                                    (string_lit)
-                                    (#match? @{0}.declaration "resource")
-                                )
-                                (
-                                    (variable_expr
-                                        .
-                                        (identifier) @name.usage
-                                        (#not-any-of? @name.usage
-                                            "var"
-                                            "data"
-                                            "count"
-                                            "module"
-                                            "local"
-                                        )
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier)
-                                    )
-                                )
-                            ]
-                        "#,
-                        IGNORE
-                    )
-                }
-                PreparedHclQuery::DataNames => {
-                    // Capturing nodes with names, such as `@id`, requires names to be
-                    // unique across the *entire* query, else things break. Hence, us
-                    // `@a.b` syntax (which seems undocumented).
-                    formatcp!(
-                        r#"
-                            [
-                                (block
-                                    (identifier) @{0}.declaration
-                                    (string_lit)
-                                    (string_lit (template_literal) @name.declaration)
-                                    (#match? @{0}.declaration "data")
-                                )
-                                (
-                                    (variable_expr
-                                        (identifier) @{0}.usage
-                                        (#match? @{0}.usage "data")
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier)
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier) @name.usage
-                                    )
-                                )
-                            ]
-                        "#,
-                        IGNORE
-                    )
-                }
-                PreparedHclQuery::DataSources => {
-                    // Capturing nodes with names, such as `@id`, requires names to be
-                    // unique across the *entire* query, else things break. Hence, us
-                    // `@a.b` syntax (which seems undocumented).
-                    formatcp!(
-                        r#"
-                            [
-                                (block
-                                    (identifier) @{0}.declaration
-                                    (string_lit (template_literal) @name.provider)
-                                    (string_lit)
-                                    (#match? @{0}.declaration "data")
-                                )
-                                (
-                                    (variable_expr
-                                        (identifier) @{0}.usage
-                                        (#match? @{0}.usage "data")
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier) @name.provider
-                                    )
-                                    .
-                                    (get_attr
-                                        (identifier)
-                                    )
-                                )
-                            ]
-                        "#,
-                        IGNORE
-                    )
-                }
-                PreparedHclQuery::Comments => "(comment) @comment",
-                PreparedHclQuery::Strings => {
-                    r"
-                    [
-                        (literal_value
-                            (string_lit
-                                (template_literal) @string.literal
+                        [
+                            (block
+                                (identifier) @{0}.declaration
+                                (string_lit (template_literal) @name.declaration)
+                                (#match? @{0}.declaration "variable")
                             )
+                            (
+                                (variable_expr
+                                    (identifier) @{0}.usage
+                                    (#match? @{0}.usage "var")
+                                )
+                                .
+                                (get_attr
+                                    (identifier) @name.usage
+                                )
+                            )
+                        ]
+                    "#,
+                    IGNORE
+                )
+            }
+            PreparedQuery::ResourceNames => {
+                // Capturing nodes with names, such as `@id`, requires names to be
+                // unique across the *entire* query, else things break. Hence, us
+                // `@a.b` syntax (which seems undocumented).
+                formatcp!(
+                    r#"
+                        [
+                            (block
+                                (identifier) @{0}.declaration
+                                (string_lit)
+                                (string_lit (template_literal) @name.declaration)
+                                (#match? @{0}.declaration "resource")
+                            )
+                            (
+                                (variable_expr
+                                    (identifier) @{0}.usage
+                                    (#not-any-of? @{0}.usage
+                                        "var"
+                                        "data"
+                                        "count"
+                                        "module"
+                                        "local"
+                                    )
+                                )
+                                .
+                                (get_attr
+                                    (identifier) @name.usage
+                                )
+                            )
+                        ]
+                    "#,
+                    IGNORE
+                )
+            }
+            PreparedQuery::ResourceTypes => {
+                // Capturing nodes with names, such as `@id`, requires names to be
+                // unique across the *entire* query, else things break. Hence, us
+                // `@a.b` syntax (which seems undocumented).
+                formatcp!(
+                    r#"
+                        [
+                            (block
+                                (identifier) @{0}.declaration
+                                (string_lit (template_literal) @name.type)
+                                (string_lit)
+                                (#match? @{0}.declaration "resource")
+                            )
+                            (
+                                (variable_expr
+                                    .
+                                    (identifier) @name.usage
+                                    (#not-any-of? @name.usage
+                                        "var"
+                                        "data"
+                                        "count"
+                                        "module"
+                                        "local"
+                                    )
+                                )
+                                .
+                                (get_attr
+                                    (identifier)
+                                )
+                            )
+                        ]
+                    "#,
+                    IGNORE
+                )
+            }
+            PreparedQuery::DataNames => {
+                // Capturing nodes with names, such as `@id`, requires names to be
+                // unique across the *entire* query, else things break. Hence, us
+                // `@a.b` syntax (which seems undocumented).
+                formatcp!(
+                    r#"
+                        [
+                            (block
+                                (identifier) @{0}.declaration
+                                (string_lit)
+                                (string_lit (template_literal) @name.declaration)
+                                (#match? @{0}.declaration "data")
+                            )
+                            (
+                                (variable_expr
+                                    (identifier) @{0}.usage
+                                    (#match? @{0}.usage "data")
+                                )
+                                .
+                                (get_attr
+                                    (identifier)
+                                )
+                                .
+                                (get_attr
+                                    (identifier) @name.usage
+                                )
+                            )
+                        ]
+                    "#,
+                    IGNORE
+                )
+            }
+            PreparedQuery::DataSources => {
+                // Capturing nodes with names, such as `@id`, requires names to be
+                // unique across the *entire* query, else things break. Hence, us
+                // `@a.b` syntax (which seems undocumented).
+                formatcp!(
+                    r#"
+                        [
+                            (block
+                                (identifier) @{0}.declaration
+                                (string_lit (template_literal) @name.provider)
+                                (string_lit)
+                                (#match? @{0}.declaration "data")
+                            )
+                            (
+                                (variable_expr
+                                    (identifier) @{0}.usage
+                                    (#match? @{0}.usage "data")
+                                )
+                                .
+                                (get_attr
+                                    (identifier) @name.provider
+                                )
+                                .
+                                (get_attr
+                                    (identifier)
+                                )
+                            )
+                        ]
+                    "#,
+                    IGNORE
+                )
+            }
+            PreparedQuery::Comments => "(comment) @comment",
+            PreparedQuery::Strings => {
+                r"
+                [
+                    (literal_value
+                        (string_lit
+                            (template_literal) @string.literal
                         )
-                        (quoted_template
-                            (template_literal) @string.template_literal
-                        )
-                        (heredoc_template
-                            (template_literal) @string.heredoc_literal
-                        )
-                    ]
-                    "
-                }
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
-
-/// A custom tree-sitter query for HCL.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomHclQuery(String);
-
-impl FromStr for CustomHclQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&Hcl::lang(), s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
+                    )
+                    (quoted_template
+                        (template_literal) @string.template_literal
+                    )
+                    (heredoc_template
+                        (template_literal) @string.heredoc_literal
+                    )
+                ]
+                "
+            }
         }
     }
-}
 
-impl From<CustomHclQuery> for TSQuery {
-    fn from(value: CustomHclQuery) -> Self {
-        Self::new(&Hcl::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
+    fn into_compiled_query(self) -> Self::Query {
+        let q = super::CompiledQuery::from_preparred_query(&tree_sitter_hcl::language(), self);
+        CompiledQuery(q)
     }
 }
 
-impl LanguageScoper for Hcl {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_hcl::language()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for Hcl {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["hcl", "tf"]
     }
