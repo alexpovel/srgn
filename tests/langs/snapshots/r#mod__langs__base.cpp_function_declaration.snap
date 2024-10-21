@@ -1,0 +1,40 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 24
+  l: "    Example() : value(0) {}\n"
+  m: "    ^^^^^^^^^                "
+- n: 25
+  l: "    explicit Example(int val) : value(val) {}\n"
+  m: "             ^^^^^^^^^^^^^^^^                  "
+- n: 27
+  l: "    ~Example() {}\n"
+  m: "    ^^^^^^^^^^     "
+- n: 29
+  l: "    Example operator+(const Example& other) const {\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 33
+  l: "    static int staticMethod() {\n"
+  m: "               ^^^^^^^^^^^^^^    "
+- n: 38
+  l: "    T add(T a, T b) {\n"
+  m: "      ^^^^^^^^^^^^^    "
+- n: 54
+  l: "    void function() {\n"
+  m: "         ^^^^^^^^^^    "
+- n: 66
+  l: "void variadicFunction(Args... args) {\n"
+  m: "     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 72
+  l: "std::optional<int> findValue(const std::vector<int>& vec, int value) {\n"
+  m: "                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    "
+- n: 80
+  l: "std::variant<int, std::string> getVariant(bool flag) {\n"
+  m: "                               ^^^^^^^^^^^^^^^^^^^^^    "
+- n: 87
+  l: "std::tuple<int, double, std::string> createTuple() {\n"
+  m: "                                     ^^^^^^^^^^^^^    "
+- n: 91
+  l: "int main() {\n"
+  m: "    ^^^^^^    "

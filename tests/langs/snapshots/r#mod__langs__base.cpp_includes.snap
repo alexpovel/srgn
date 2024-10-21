@@ -1,0 +1,43 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "#include <iostream>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 2
+  l: "#include <vector>\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 3
+  l: "#include <string>\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 4
+  l: "#include <memory>\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 5
+  l: "#include <optional>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 6
+  l: "#include <variant>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 7
+  l: "#include <functional>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 8
+  l: "#include <algorithm>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 9
+  l: "#include <initializer_list>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 10
+  l: "#include <tuple>\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 11
+  l: "#include <map>\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 13
+  l: "#include \"local_include.hpp\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 14
+  l: "#include \"../remote_include.hpp\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

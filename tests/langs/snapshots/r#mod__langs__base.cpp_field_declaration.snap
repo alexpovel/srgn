@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 18
+  l: "    int x, y;\n"
+  m: "    ^^^^^^^^^  "
+- n: 43
+  l: "    int value;\n"
+  m: "    ^^^^^^^^^^  "
+- n: 46
+  l: "    const char *ident;\n"
+  m: "    ^^^^^^^^^^^^^^^^^^  "
+- n: 51
+  l: "union Converter { const int value; const char *ptr; };\n"
+  m: "                  ^^^^^^^^^^^^^^^^                      "
+- n: 51
+  l: "union Converter { const int value; const char *ptr; };\n"
+  m: "                                   ^^^^^^^^^^^^^^^^     "
+- n: 62
+  l: "    T value;\n"
+  m: "    ^^^^^^^^  "

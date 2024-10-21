@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 58
+  l: "using namespace MyNamespace;\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

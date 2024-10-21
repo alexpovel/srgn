@@ -1,0 +1,82 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 22
+  l: "class Example {\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 23
+  l: "public:\n"
+  m: ^^^^^^^^^
+- n: 24
+  l: "    Example() : value(0) {}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 25
+  l: "    explicit Example(int val) : value(val) {}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 26
+  l: "\n"
+  m: ^^
+- n: 27
+  l: "    ~Example() {}\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 28
+  l: "\n"
+  m: ^^
+- n: 29
+  l: "    Example operator+(const Example& other) const {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "        return Example(value + other.value);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 31
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 32
+  l: "\n"
+  m: ^^
+- n: 33
+  l: "    static int staticMethod() {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "        return 42;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 35
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 36
+  l: "\n"
+  m: ^^
+- n: 37
+  l: "    template<typename T>\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 38
+  l: "    T add(T a, T b) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 39
+  l: "        return a + b;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 40
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 41
+  l: "\n"
+  m: ^^
+- n: 42
+  l: "private:\n"
+  m: ^^^^^^^^^^
+- n: 43
+  l: "    int value;\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 44
+  l: "\n"
+  m: ^^
+- n: 45
+  l: "protected:\n"
+  m: ^^^^^^^^^^^^
+- n: 46
+  l: "    const char *ident;\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 47
+  l: "};\n"
+  m: "^   "

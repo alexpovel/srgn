@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 155
+  l: "    try {\n"
+  m: "    ^^^^^^^"
+- n: 156
+  l: "        Example ex4(20);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 157
+  l: "    } catch (const std::exception& e) {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 158
+  l: "        std::cout << \"Exception: \" << e.what() << \"\\n\";\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 159
+  l: "    }\n"
+  m: "^^^^^  "

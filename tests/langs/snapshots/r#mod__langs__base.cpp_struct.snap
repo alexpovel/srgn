@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 17
+  l: "struct Point {\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 18
+  l: "    int x, y;\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 19
+  l: "};\n"
+  m: "^   "
+- n: 61
+  l: "struct Wrapper {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 62
+  l: "    T value;\n"
+  m: ^^^^^^^^^^^^^^
+- n: 63
+  l: "};\n"
+  m: "^   "
