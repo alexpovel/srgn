@@ -19,7 +19,7 @@ impl TryFrom<RawQuery> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::new(&tree_sitter_python::LANGUAGE.into(), &query)?;
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_python::LANGUAGE.into(), query)?;
         Ok(Self(q))
     }
 }
@@ -67,16 +67,12 @@ pub enum PreparedQuery {
     Identifiers,
 }
 
-impl From<PreparedQuery> for RawQuery {
-    fn from(query: PreparedQuery) -> Self {
-        Self(std::borrow::Cow::Borrowed(query.into()))
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-impl From<PreparedQuery> for &'static str {
     #[allow(clippy::too_many_lines)]
-    fn from(value: PreparedQuery) -> Self {
-        match value {
+    fn as_str(self) -> &'static str {
+        match self {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Strings => "(string_content) @string",
             PreparedQuery::Imports => {
@@ -183,6 +179,12 @@ impl From<PreparedQuery> for &'static str {
             PreparedQuery::Types => "(type) @type",
             PreparedQuery::Identifiers => "(identifier) @identifier",
         }
+    }
+
+    fn into_compiled_query(self) -> Self::Query {
+        let q =
+            super::CompiledQuery::from_preparred_query(&tree_sitter_python::LANGUAGE.into(), self);
+        CompiledQuery(q)
     }
 }
 

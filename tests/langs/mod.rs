@@ -3,11 +3,10 @@ use std::ops::Range;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    c, csharp, go, hcl, python, rust, typescript, LanguageScoper, RawQuery,
+    c, csharp, go, hcl, python, rust, typescript, LanguageScoper, PreparedQuery,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
-use tree_sitter::QueryError as TSQueryError;
 
 /// A type that when serialized, will visually highlight the portions of a line which
 /// were matched.
@@ -69,764 +68,763 @@ impl InScopeLinePart {
 #[case(
     "base.py_comments",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Comments)),
+    python::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.py_strings",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Strings)),
+    python::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.py_imports",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Imports)),
+    python::PreparedQuery::Imports.into_compiled_query(),
 )]
 #[case(
     "base.py_docstrings",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::DocStrings)),
+    python::PreparedQuery::DocStrings.into_compiled_query(),
 )]
 #[case(
     "base.py_function-names",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::FunctionNames)),
+    python::PreparedQuery::FunctionNames.into_compiled_query(),
 )]
 #[case(
     "base.py_function-calls",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::FunctionCalls)),
+    python::PreparedQuery::FunctionCalls.into_compiled_query(),
 )]
 #[case(
     "base.py_class",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Class)),
+    python::PreparedQuery::Class.into_compiled_query(),
 )]
 #[case(
     "base.py_def",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Def)),
+    python::PreparedQuery::Def.into_compiled_query(),
 )]
 #[case(
     "base.py_async-def",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::AsyncDef)),
+    python::PreparedQuery::AsyncDef.into_compiled_query(),
 )]
 #[case(
     "base.py_methods",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Methods)),
+    python::PreparedQuery::Methods.into_compiled_query(),
 )]
 #[case(
     "base.py_classmethods",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::ClassMethods)),
+    python::PreparedQuery::ClassMethods.into_compiled_query(),
 )]
 #[case(
     "base.py_staticmethods",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::StaticMethods)),
+    python::PreparedQuery::StaticMethods.into_compiled_query(),
 )]
 #[case(
     "base.py_with",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::With)),
+    python::PreparedQuery::With.into_compiled_query(),
 )]
 #[case(
     "base.py_try",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Try)),
+    python::PreparedQuery::Try.into_compiled_query(),
 )]
 #[case(
     "base.py_lambda",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Lambda)),
+    python::PreparedQuery::Lambda.into_compiled_query(),
 )]
 #[case(
     "base.py_globals",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Globals)),
+    python::PreparedQuery::Globals.into_compiled_query(),
 )]
 #[case(
     "base.py_variable_identifiers",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::VariableIdentifiers)),
+    python::PreparedQuery::VariableIdentifiers.into_compiled_query(),
 )]
 #[case(
     "base.py_types",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Types)),
+    python::PreparedQuery::Types.into_compiled_query(),
 )]
 #[case(
     "base.py_identifiers",
     include_str!("python/base.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Identifiers)),
+    python::PreparedQuery::Identifiers.into_compiled_query(),
 )]
 #[case(
     "identifiers.py_identifiers",
     include_str!("python/identifiers.py"),
-    python::CompiledQuery::try_from(RawQuery::from(python::PreparedQuery::Identifiers)),
+    python::PreparedQuery::Identifiers.into_compiled_query(),
 )]
 #[case(
     "base.ts_strings",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Strings)),
+    typescript::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.ts_comments",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Comments)),
+    typescript::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.ts_imports",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Imports)),
+    typescript::PreparedQuery::Imports.into_compiled_query(),
 )]
 #[case(
     "base.ts_function",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Function)),
+    typescript::PreparedQuery::Function.into_compiled_query(),
 )]
 #[case(
     "base.ts_async-function",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::AsyncFunction)),
+    typescript::PreparedQuery::AsyncFunction.into_compiled_query(),
 )]
 #[case(
     "base.ts_sync-function",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::SyncFunction)),
+    typescript::PreparedQuery::SyncFunction.into_compiled_query(),
 )]
 #[case(
     "base.ts_method",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Method)),
+    typescript::PreparedQuery::Method.into_compiled_query(),
 )]
 #[case(
     "base.ts_constructor",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Constructor)),
+    typescript::PreparedQuery::Constructor.into_compiled_query(),
 )]
 #[case(
     "base.ts_class",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Class)),
+    typescript::PreparedQuery::Class.into_compiled_query(),
 )]
 #[case(
     "base.ts_enum",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Enum)),
+    typescript::PreparedQuery::Enum.into_compiled_query(),
 )]
 #[case(
     "base.ts_interface",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Interface)),
+    typescript::PreparedQuery::Interface.into_compiled_query(),
 )]
 #[case(
     "base.ts_try-block",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::TryCatch)),
+    typescript::PreparedQuery::TryCatch.into_compiled_query(),
 )]
 #[case(
     "base.ts_var_decl",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::VarDecl)),
+    typescript::PreparedQuery::VarDecl.into_compiled_query(),
 )]
 #[case(
     "base.ts_let",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Let)),
+    typescript::PreparedQuery::Let.into_compiled_query(),
 )]
 #[case(
     "base.ts_const",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Const)),
+    typescript::PreparedQuery::Const.into_compiled_query(),
 )]
 #[case(
     "base.ts_var",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Var)),
+    typescript::PreparedQuery::Var.into_compiled_query(),
 )]
 #[case(
     "base.ts_type-params",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::TypeParams)),
+    typescript::PreparedQuery::TypeParams.into_compiled_query(),
 )]
 #[case(
     "base.ts_type-alias",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::TypeAlias)),
+    typescript::PreparedQuery::TypeAlias.into_compiled_query(),
 )]
 #[case(
     "base.ts_namespace",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Namespace)),
+    typescript::PreparedQuery::Namespace.into_compiled_query(),
 )]
 #[case(
     "base.ts_export",
     include_str!("typescript/base.ts"),
-    typescript::CompiledQuery::try_from(RawQuery::from(typescript::PreparedQuery::Export)),
+    typescript::PreparedQuery::Export.into_compiled_query(),
 )]
 #[case(
     "base.rs_strings",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Strings)),
+    rust::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.rs_comments",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Comments)),
+    rust::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.rs_uses",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Uses)),
+    rust::PreparedQuery::Uses.into_compiled_query(),
 )]
 #[case(
     "base.rs_doc-comments",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::DocComments)),
+    rust::PreparedQuery::DocComments.into_compiled_query(),
 )]
 #[case(
     "base.rs_attribute",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Attribute)),
+    rust::PreparedQuery::Attribute.into_compiled_query(),
 )]
 #[case(
     "base.rs_struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Struct)),
+    rust::PreparedQuery::Struct.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubStruct)),
+    rust::PreparedQuery::PubStruct.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-priv-struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PrivStruct)),
+    rust::PreparedQuery::PrivStruct.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-crate-struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubCrateStruct)),
+    rust::PreparedQuery::PubCrateStruct.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-self-struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSelfStruct)),
+    rust::PreparedQuery::PubSelfStruct.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-super-struct",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSuperStruct)),
+    rust::PreparedQuery::PubSuperStruct.into_compiled_query(),
 )]
 #[case(
     "base.enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Enum)),
+    rust::PreparedQuery::Enum.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-priv-enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PrivEnum)),
+    rust::PreparedQuery::PrivEnum.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubEnum)),
+    rust::PreparedQuery::PubEnum.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-crate-enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubCrateEnum)),
+    rust::PreparedQuery::PubCrateEnum.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-self-enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSelfEnum)),
+    rust::PreparedQuery::PubSelfEnum.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-super-enum",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSuperEnum)),
+    rust::PreparedQuery::PubSuperEnum.into_compiled_query(),
 )]
 #[case(
     "base.rs_enum-variant",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::EnumVariant)),
+    rust::PreparedQuery::EnumVariant.into_compiled_query(),
 )]
 #[case(
     "base.rs_fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Fn)),
+    rust::PreparedQuery::Fn.into_compiled_query(),
 )]
 #[case(
     "base.rs_impl-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ImplFn)),
+    rust::PreparedQuery::ImplFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-priv-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PrivFn)),
+    rust::PreparedQuery::PrivFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubFn)),
+    rust::PreparedQuery::PubFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-crate-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubCrateFn)),
+    rust::PreparedQuery::PubCrateFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-self-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSelfFn)),
+    rust::PreparedQuery::PubSelfFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_pub-super-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::PubSuperFn)),
+    rust::PreparedQuery::PubSuperFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_const-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ConstFn)),
+    rust::PreparedQuery::ConstFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_async-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::AsyncFn)),
+    rust::PreparedQuery::AsyncFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_unsafe-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::UnsafeFn)),
+    rust::PreparedQuery::UnsafeFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_extern-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ExternFn)),
+    rust::PreparedQuery::ExternFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_test-fn",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::TestFn)),
+    rust::PreparedQuery::TestFn.into_compiled_query(),
 )]
 #[case(
     "base.rs_trait",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Trait)),
+    rust::PreparedQuery::Trait.into_compiled_query(),
 )]
 #[case(
     "base.rs_impl",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Impl)),
+    rust::PreparedQuery::Impl.into_compiled_query(),
 )]
 #[case(
     "base.rs_impl-trait",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ImplTrait)),
+    rust::PreparedQuery::ImplTrait.into_compiled_query(),
 )]
 #[case(
     "base.rs_impl-type",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ImplType)),
+    rust::PreparedQuery::ImplType.into_compiled_query(),
 )]
 #[case(
     "base.rs_mod",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Mod)),
+    rust::PreparedQuery::Mod.into_compiled_query(),
 )]
 #[case(
     "base.rs_mod-tests",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::ModTests)),
+    rust::PreparedQuery::ModTests.into_compiled_query(),
 )]
 #[case(
     "base.rs_typedefs",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::TypeDef)),
+    rust::PreparedQuery::TypeDef.into_compiled_query(),
 )]
 #[case(
     "base.rs_identifier",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Identifier)),
+    rust::PreparedQuery::Identifier.into_compiled_query(),
 )]
 #[case(
     "base.rs_type-identifier",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::TypeIdentifier)),
+    rust::PreparedQuery::TypeIdentifier.into_compiled_query(),
 )]
 #[case(
     "base.rs_closure",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Closure)),
+    rust::PreparedQuery::Closure.into_compiled_query(),
 )]
 #[case(
     "base.rs_unsafe",
     include_str!("rust/base.rs"),
-    rust::CompiledQuery::try_from(RawQuery::from(rust::PreparedQuery::Unsafe)),
+    rust::PreparedQuery::Unsafe.into_compiled_query(),
 )]
 #[case(
     "base.tf_variable-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Variable)),
+    hcl::PreparedQuery::Variable.into_compiled_query(),
 )]
 #[case(
     "base.tf_resource-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Resource)),
+    hcl::PreparedQuery::Resource.into_compiled_query(),
 )]
 #[case(
     "base.tf_data-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Data)),
+    hcl::PreparedQuery::Data.into_compiled_query(),
 )]
 #[case(
     "base.tf_output-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Output)),
+    hcl::PreparedQuery::Output.into_compiled_query(),
 )]
 #[case(
     "base.tf_provider-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Provider)),
+    hcl::PreparedQuery::Provider.into_compiled_query(),
 )]
 #[case(
     "base.tf_terraform-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Terraform)),
+    hcl::PreparedQuery::Terraform.into_compiled_query(),
 )]
 #[case(
     "base.tf_locals-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Locals)),
+    hcl::PreparedQuery::Locals.into_compiled_query(),
 )]
 #[case(
     "base.tf_module-block",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Module)),
+    hcl::PreparedQuery::Module.into_compiled_query(),
 )]
 #[case(
     "base.tf_variables",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Variables)),
+    hcl::PreparedQuery::Variables.into_compiled_query(),
 )]
 #[case(
     "base.tf_resource-types",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::ResourceTypes)),
+    hcl::PreparedQuery::ResourceTypes.into_compiled_query(),
 )]
 #[case(
     "base.tf_resource-names",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::ResourceNames)),
+    hcl::PreparedQuery::ResourceNames.into_compiled_query(),
 )]
 #[case(
     "base.tf_data-names",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::DataNames)),
+    hcl::PreparedQuery::DataNames.into_compiled_query(),
 )]
 #[case(
     "base.tf_data-sources",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::DataSources)),
+    hcl::PreparedQuery::DataSources.into_compiled_query(),
 )]
 #[case(
     "base.tf_comments",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Comments)),
+    hcl::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.tf_strings",
     include_str!("hcl/base.tf"),
-    hcl::CompiledQuery::try_from(RawQuery::from(hcl::PreparedQuery::Strings)),
+    hcl::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.go_comments",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Comments)),
+    go::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.go_strings",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Strings)),
+    go::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.go_imports",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Imports)),
+    go::PreparedQuery::Imports.into_compiled_query(),
 )]
 #[case(
     "base.go_type-def",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::TypeDef)),
+    go::PreparedQuery::TypeDef.into_compiled_query(),
 )]
 #[case(
     "base.go_type-alias",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::TypeAlias)),
+    go::PreparedQuery::TypeAlias.into_compiled_query(),
 )]
 #[case(
     "base.go_struct",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Struct)),
+    go::PreparedQuery::Struct.into_compiled_query(),
 )]
 #[case(
     "base.go_interface",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Interface)),
+    go::PreparedQuery::Interface.into_compiled_query(),
 )]
 #[case(
     "base.go_const",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Const)),
+    go::PreparedQuery::Const.into_compiled_query(),
 )]
 #[case(
     "base.go_var",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Var)),
+    go::PreparedQuery::Var.into_compiled_query(),
 )]
 #[case(
     "base.go_func",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Func)),
+    go::PreparedQuery::Func.into_compiled_query(),
 )]
 #[case(
     "base.go_method",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Method)),
+    go::PreparedQuery::Method.into_compiled_query(),
 )]
 #[case(
     "base.go_free-func",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::FreeFunc)),
+    go::PreparedQuery::FreeFunc.into_compiled_query(),
 )]
 #[case(
     "base.go_init-func",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::InitFunc)),
+    go::PreparedQuery::InitFunc.into_compiled_query(),
 )]
 #[case(
     "base.go_type-params",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::TypeParams)),
+    go::PreparedQuery::TypeParams.into_compiled_query(),
 )]
 #[case(
     "base.go_defer",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Defer)),
+    go::PreparedQuery::Defer.into_compiled_query(),
 )]
 #[case(
     "base.go_select",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Select)),
+    go::PreparedQuery::Select.into_compiled_query(),
 )]
 #[case(
     "base.go_go",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Go)),
+    go::PreparedQuery::Go.into_compiled_query(),
 )]
 #[case(
     "base.go_switch",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Switch)),
+    go::PreparedQuery::Switch.into_compiled_query(),
 )]
 #[case(
     "base.go_labeled",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Labeled)),
+    go::PreparedQuery::Labeled.into_compiled_query(),
 )]
 #[case(
     "base.go_goto",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::Goto)),
+    go::PreparedQuery::Goto.into_compiled_query(),
 )]
 #[case(
     "base.go_struct-tags",
     include_str!("go/base.go"),
-    go::CompiledQuery::try_from(RawQuery::from(go::PreparedQuery::StructTags)),
+    go::PreparedQuery::StructTags.into_compiled_query(),
 )]
 #[case(
     "base.cs_strings",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Strings)),
+    csharp::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.cs_usings",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Usings)),
+    csharp::PreparedQuery::Usings.into_compiled_query(),
 )]
 #[case(
     "base.cs_comments",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Comments)),
+    csharp::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.cs_struct",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Struct)),
+    csharp::PreparedQuery::Struct.into_compiled_query(),
 )]
 #[case(
     "base.cs_enum",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Enum)),
+    csharp::PreparedQuery::Enum.into_compiled_query(),
 )]
 #[case(
     "base.cs_field",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Field)),
+    csharp::PreparedQuery::Field.into_compiled_query(),
 )]
 #[case(
     "base.cs_attribute",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Attribute)),
+    csharp::PreparedQuery::Attribute.into_compiled_query(),
 )]
 #[case(
     "base.cs_interface",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Interface)),
+    csharp::PreparedQuery::Interface.into_compiled_query(),
 )]
 #[case(
     "base.cs_class",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Class)),
+    csharp::PreparedQuery::Class.into_compiled_query(),
 )]
 #[case(
     "base.cs_variable_declaration",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::VariableDeclaration)),
+    csharp::PreparedQuery::VariableDeclaration.into_compiled_query(),
 )]
 #[case(
     "base.cs_property",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Property)),
+    csharp::PreparedQuery::Property.into_compiled_query(),
 )]
 #[case(
     "base.cs_constructor",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Constructor)),
+    csharp::PreparedQuery::Constructor.into_compiled_query(),
 )]
 #[case(
     "base.cs_destructor",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Destructor)),
+    csharp::PreparedQuery::Destructor.into_compiled_query(),
 )]
 #[case(
     "base.cs_method",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Method)),
+    csharp::PreparedQuery::Method.into_compiled_query(),
 )]
 #[case(
     "base.cs_identifier",
     include_str!("csharp/base.cs"),
-    csharp::CompiledQuery::try_from(RawQuery::from(csharp::PreparedQuery::Identifier)),
+    csharp::PreparedQuery::Identifier.into_compiled_query(),
 )]
 #[case(
     "base.c_comments",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Comments)),
+    c::PreparedQuery::Comments.into_compiled_query(),
 )]
 #[case(
     "base.c_strings",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Strings)),
+    c::PreparedQuery::Strings.into_compiled_query(),
 )]
 #[case(
     "base.c_includes",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Includes)),
+    c::PreparedQuery::Includes.into_compiled_query(),
 )]
 #[case(
     "base.c_typedefs",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::TypeDef)),
+    c::PreparedQuery::TypeDef.into_compiled_query(),
 )]
 #[case(
     "base.c_enum",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Enum)),
+    c::PreparedQuery::Enum.into_compiled_query(),
 )]
 #[case(
     "base.c_struct",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Struct)),
+    c::PreparedQuery::Struct.into_compiled_query(),
 )]
 #[case(
     "base.c_variable",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Variable)),
+    c::PreparedQuery::Variable.into_compiled_query(),
 )]
 #[case(
     "base.c_function",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Function)),
+    c::PreparedQuery::Function.into_compiled_query(),
 )]
 #[case(
     "base.c_function_definition",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::FunctionDef)),
+    c::PreparedQuery::FunctionDef.into_compiled_query(),
 )]
 #[case(
     "base.c_function_declaration",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::FunctionDecl)),
+    c::PreparedQuery::FunctionDecl.into_compiled_query(),
 )]
 #[case(
     "base.c_switch",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Switch)),
+    c::PreparedQuery::Switch.into_compiled_query(),
 )]
 #[case(
     "base.c_if",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::If)),
+    c::PreparedQuery::If.into_compiled_query(),
 )]
 #[case(
     "base.c_for",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::For)),
+    c::PreparedQuery::For.into_compiled_query(),
 )]
 #[case(
     "base.c_while",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::While)),
+    c::PreparedQuery::While.into_compiled_query(),
 )]
 #[case(
     "base.c_do",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Do)),
+    c::PreparedQuery::Do.into_compiled_query(),
 )]
 #[case(
     "base.c_union",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Union)),
+    c::PreparedQuery::Union.into_compiled_query(),
 )]
 #[case(
     "base.c_identifier",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Identifier)),
+    c::PreparedQuery::Identifier.into_compiled_query(),
 )]
 #[case(
     "base.c_declaration",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::Declaration)),
+    c::PreparedQuery::Declaration.into_compiled_query(),
 )]
 #[case(
     "base.c_callexpr",
     include_str!("c/base.c"),
-    c::CompiledQuery::try_from(RawQuery::from(c::PreparedQuery::CallExpression)),
+    c::PreparedQuery::CallExpression.into_compiled_query(),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,
     #[case] contents: &str,
-    #[case] lang: Result<impl LanguageScoper, TSQueryError>,
+    #[case] lang: impl LanguageScoper,
 ) {
-    let lang = lang.expect("Building a Language for a test should not fail");
     let mut builder = ScopedViewBuilder::new(contents);
     builder.explode(&lang);
     let view = builder.build();

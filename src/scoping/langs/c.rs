@@ -18,7 +18,7 @@ impl TryFrom<RawQuery> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError) variant for when this method errors.
     fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::new(&tree_sitter_c::LANGUAGE.into(), &query)?;
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_c::LANGUAGE.into(), query)?;
         Ok(Self(q))
     }
 }
@@ -66,15 +66,11 @@ pub enum PreparedQuery {
     CallExpression,
 }
 
-impl From<PreparedQuery> for RawQuery {
-    fn from(query: PreparedQuery) -> Self {
-        Self(std::borrow::Cow::Borrowed(query.into()))
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-impl From<PreparedQuery> for &'static str {
-    fn from(query: PreparedQuery) -> Self {
-        match query {
+    fn as_str(self) -> &'static str {
+        match self {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Strings => "[(string_literal) (system_lib_string)] @string",
             PreparedQuery::Includes => "(preproc_include) @include",
@@ -97,6 +93,11 @@ impl From<PreparedQuery> for &'static str {
             PreparedQuery::Declaration => "(declaration) @decl",
             PreparedQuery::CallExpression => "(call_expression) @call",
         }
+    }
+
+    fn into_compiled_query(self) -> Self::Query {
+        let q = super::CompiledQuery::from_preparred_query(&tree_sitter_c::LANGUAGE.into(), self);
+        CompiledQuery(q)
     }
 }
 

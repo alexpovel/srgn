@@ -43,15 +43,34 @@ struct CompiledQuery {
     negative_query: Option<TSQuery>,
 }
 
+/// A PreparedQuery must impl this trait to be converted into a CompiledQuery.
+pub trait PreparedQuery {
+    /// The language specific CompiledQuery type.
+    type Query: LanguageScoper;
+
+    /// The string representation of the prepared query.
+    fn as_str(self) -> &'static str;
+
+    /// Convert the PreparedQuery into a CompiledQuery.
+    fn into_compiled_query(self) -> Self::Query;
+}
+
 impl CompiledQuery {
-    /// Create a new language with the given associated query over it.
+    /// Create a new CompiledQuery from a RawQuery.
     ///
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    fn new(lang: &TSLanguage, query: &RawQuery) -> Result<Self, TSQueryError> {
-        let query = &query.0;
+    fn from_raw_query(lang: &TSLanguage, query: RawQuery) -> Result<Self, TSQueryError> {
+        Self::from_str(lang, &query.0)
+    }
 
+    fn from_preparred_query<Q: PreparedQuery>(lang: &TSLanguage, query: Q) -> Self {
+        Self::from_str(lang, query.as_str())
+            .expect("syntax of prepared queries is validated by tests")
+    }
+
+    fn from_str(lang: &TSLanguage, query: &str) -> Result<Self, TSQueryError> {
         let positive_query = TSQuery::new(lang, query)?;
 
         let is_ignored = |name: &str| name.starts_with(IGNORE);

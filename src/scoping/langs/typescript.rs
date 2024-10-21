@@ -17,8 +17,10 @@ impl TryFrom<RawQuery> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q =
-            super::CompiledQuery::new(&tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(), &query)?;
+        let q = super::CompiledQuery::from_raw_query(
+            &tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+            query,
+        )?;
         Ok(Self(q))
     }
 }
@@ -68,15 +70,11 @@ pub enum PreparedQuery {
     Export,
 }
 
-impl From<PreparedQuery> for RawQuery {
-    fn from(query: PreparedQuery) -> Self {
-        Self(std::borrow::Cow::Borrowed(query.into()))
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-impl From<PreparedQuery> for &'static str {
-    fn from(value: PreparedQuery) -> Self {
-        match value {
+    fn as_str(self) -> &'static str {
+        match self {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Imports => r"(import_statement source: (string (string_fragment) @sf))",
             PreparedQuery::Strings => "(string_fragment) @string",
@@ -122,6 +120,14 @@ impl From<PreparedQuery> for &'static str {
             PreparedQuery::Namespace => "(internal_module) @internal_module",
             PreparedQuery::Export => "(export_statement) @export",
         }
+    }
+
+    fn into_compiled_query(self) -> Self::Query {
+        let q = super::CompiledQuery::from_preparred_query(
+            &tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
+            self,
+        );
+        CompiledQuery(q)
     }
 }
 

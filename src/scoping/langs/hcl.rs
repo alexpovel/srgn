@@ -20,7 +20,7 @@ impl TryFrom<RawQuery> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::new(&tree_sitter_hcl::language(), &query)?;
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_hcl::language(), query)?;
         Ok(Self(q))
     }
 }
@@ -70,19 +70,15 @@ pub enum PreparedQuery {
     Strings,
 }
 
-impl From<PreparedQuery> for RawQuery {
-    fn from(query: PreparedQuery) -> Self {
-        Self(std::borrow::Cow::Borrowed(query.into()))
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-impl From<PreparedQuery> for &'static str {
     #[allow(clippy::too_many_lines)] // No good way to avoid
-    fn from(value: PreparedQuery) -> Self {
+    fn as_str(self) -> &'static str {
         // Seems to not play nice with the macro. Put up here, else interpolation is
         // affected.
         #[allow(clippy::needless_raw_string_hashes)]
-        match value {
+        match self {
             PreparedQuery::Variable => {
                 r#"
                     (block
@@ -326,6 +322,11 @@ impl From<PreparedQuery> for &'static str {
                 "
             }
         }
+    }
+
+    fn into_compiled_query(self) -> Self::Query {
+        let q = super::CompiledQuery::from_preparred_query(&tree_sitter_hcl::language(), self);
+        CompiledQuery(q)
     }
 }
 

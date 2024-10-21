@@ -20,8 +20,16 @@ impl TryFrom<RawQuery> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::new(&tree_sitter_c_sharp::LANGUAGE.into(), &query)?;
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_c_sharp::LANGUAGE.into(), query)?;
         Ok(Self(q))
+    }
+}
+
+impl Into<CompiledQuery> for PreparedQuery {
+    fn into(self) -> CompiledQuery {
+        let q =
+            super::CompiledQuery::from_preparred_query(&tree_sitter_c_sharp::LANGUAGE.into(), self);
+        CompiledQuery(q)
     }
 }
 
@@ -63,15 +71,11 @@ pub enum PreparedQuery {
     Identifier,
 }
 
-impl From<PreparedQuery> for RawQuery {
-    fn from(query: PreparedQuery) -> Self {
-        Self(std::borrow::Cow::Borrowed(query.into()))
-    }
-}
+impl super::PreparedQuery for PreparedQuery {
+    type Query = CompiledQuery;
 
-impl From<PreparedQuery> for &'static str {
-    fn from(value: PreparedQuery) -> Self {
-        match value {
+    fn as_str(self) -> &'static str {
+        match self {
             PreparedQuery::Comments => "(comment) @comment",
             PreparedQuery::Usings => r"(using_directive [(identifier) (qualified_name)] @import)",
             PreparedQuery::Strings => {
@@ -101,6 +105,12 @@ impl From<PreparedQuery> for &'static str {
             PreparedQuery::Attribute => "(attribute) @attribute",
             PreparedQuery::Identifier => "(identifier) @identifier",
         }
+    }
+
+    fn into_compiled_query(self) -> Self::Query {
+        let q =
+            super::CompiledQuery::from_preparred_query(&tree_sitter_c_sharp::LANGUAGE.into(), self);
+        CompiledQuery(q)
     }
 }
 
