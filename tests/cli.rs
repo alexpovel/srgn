@@ -342,7 +342,7 @@ Heizoelrueckstossabdaempfung.
     }
 
     #[rstest]
-    #[case(
+    #[case::files_inplace_python(
         "files-inplace-python",
         "tests/files/files-python/in",
         &[
@@ -352,9 +352,9 @@ Heizoelrueckstossabdaempfung.
             "foo",
             "baz"
         ],
-        false
+        false,
     )]
-    #[case(
+    #[case::language_scoping_inplace_python(
         "language-scoping-inplace-python",
         "tests/files/language-scoping-python/in",
         &[
@@ -364,9 +364,9 @@ Heizoelrueckstossabdaempfung.
             "foo",
             "baz"
         ],
-        false
+        false,
     )]
-    #[case(
+    #[case::language_scoping_and_files_inplace_python(
         "language-scoping-and-files-inplace-python",
         "tests/files/language-scoping-and-files-python/in",
         &[
@@ -378,9 +378,9 @@ Heizoelrueckstossabdaempfung.
             "foo",
             "baz"
         ],
-        false
+        false,
     )]
-    #[case(
+    #[case::language_scoping_and_files_inplace_python(
         "language-scoping-and-files-inplace-python",
         "tests/files/language-scoping-and-files-python/in",
         &[
@@ -394,7 +394,7 @@ Heizoelrueckstossabdaempfung.
         // NOT `--sorted`, so not deterministic; use to test that directories are
         // equivalent even if running parallel, unsorted. Output will be random,
         // breaking snapshot testing.
-        true
+        true,
     )]
     fn test_cli_files(
         #[case] mut snapshot_name: String,
