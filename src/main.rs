@@ -274,7 +274,7 @@ fn handle_actions_on_stdin(
     info!("Will use stdin to stdout.");
     let mut source = String::new();
     io::stdin().lock().read_to_string(&mut source)?;
-    let mut destination = String::new();
+    let mut destination = String::with_capacity(source.len());
 
     apply(
         global_options,
@@ -565,10 +565,11 @@ fn process_path(
         let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
-        let mut destination =
+        let mut source =
             String::with_capacity(filesize.try_into().unwrap_or(/* no perf gains for you */ 0));
-        let mut source = String::new();
         file.read_to_string(&mut source)?;
+
+        let mut destination = String::with_capacity(source.len());
 
         let changed = apply(
             global_options,
