@@ -23,17 +23,17 @@ use srgn::actions::{
 };
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
-use srgn::scoping::langs::LanguageScoper;
+use srgn::scoping::langs::Query;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
 use srgn::scoping::Scoper;
 use tree_sitter::QueryError as TSQueryError;
 
-// We have `LanguageScoper: Scoper`, but we cannot upcast
+// We have `Query: Scoper`, but we cannot upcast
 // (https://github.com/rust-lang/rust/issues/65991), so hack around the limitation
 // by providing both.
-type ScoperList = Vec<Box<dyn LanguageScoper>>;
+type QueryList = Vec<Box<dyn Query>>;
 
 #[allow(clippy::too_many_lines)] // Only slightly above.
 #[allow(clippy::cognitive_complexity)]
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
         composable_actions,
         standalone_actions,
         mut options,
-        languages_scopes,
+        languages_scopes: queries,
         #[cfg(feature = "german")]
         german_options,
     } = args;
@@ -75,9 +75,7 @@ fn main() -> Result<()> {
     // outlive the main one. Scoped threads would work here, `ignore` uses them
     // internally even, but we have no access here.
 
-    let language_scopers = languages_scopes
-        .compile_raw_queries_to_scopes()?
-        .map(Arc::new);
+    let queries = queries.compile_raw_queries_to_scopes()?.map(Arc::new);
     debug!("Done assembling scopers.");
 
     let mut actions = {
@@ -116,7 +114,7 @@ fn main() -> Result<()> {
     let input = match (
         options.stdin_override_to.unwrap_or(is_readable_stdin),
         options.glob.clone(),
-        &language_scopers,
+        &queries,
     ) {
         // stdin considered viable: always use it.
         (true, None, _)
@@ -137,12 +135,12 @@ fn main() -> Result<()> {
 
         // If pattern wasn't manually overridden, consult the language scoper itself, if
         // any.
-        (false, None, Some(language_scopers)) => {
-            let language_scopers = Arc::clone(language_scopers);
+        (false, None, Some(queries)) => {
+            let queries = Arc::clone(queries);
             Input::WalkOn(Box::new(move |path| {
                 // TODO: perform this work only once (it's super fast but in the hot
                 // path).
-                let res = language_scopers
+                let res = queries
                     .iter()
                     .map(|s| s.is_valid_path(path))
                     .all_equal_value()
@@ -161,7 +159,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && language_scopers.is_some();
+    let search_mode = actions.is_empty() && queries.is_some();
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
@@ -185,7 +183,7 @@ fn main() -> Result<()> {
         );
     }
 
-    let language_scopers = language_scopers.unwrap_or_default();
+    let queries = queries.unwrap_or_default();
 
     // Now write out
     match (input, options.sorted) {
@@ -195,7 +193,7 @@ fn main() -> Result<()> {
                 &options,
                 standalone_action,
                 &general_scoper,
-                &language_scopers,
+                &queries,
                 &actions,
             )?;
         }
@@ -206,7 +204,7 @@ fn main() -> Result<()> {
                 standalone_action,
                 &validator,
                 &general_scoper,
-                &language_scopers,
+                &queries,
                 &actions,
                 search_mode,
                 options.threads.map_or(
@@ -222,7 +220,7 @@ fn main() -> Result<()> {
                 standalone_action,
                 &validator,
                 &general_scoper,
-                &language_scopers,
+                &queries,
                 &actions,
                 search_mode,
             )?;
@@ -268,7 +266,7 @@ fn handle_actions_on_stdin(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
     general_scoper: &Box<dyn Scoper>,
-    language_scopers: &[Box<dyn LanguageScoper>],
+    queries: &[Box<dyn Query>],
     actions: &[Box<dyn Action>],
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
@@ -282,7 +280,7 @@ fn handle_actions_on_stdin(
         &source,
         &mut destination,
         general_scoper,
-        language_scopers,
+        queries,
         actions,
     )?;
 
@@ -305,7 +303,7 @@ fn handle_actions_on_many_files_sorted(
     standalone_action: StandaloneAction,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
-    language_scopers: &[Box<dyn LanguageScoper>],
+    queries: &[Box<dyn Query>],
     actions: &[Box<dyn Action>],
     search_mode: bool,
 ) -> Result<(), ProgramError> {
@@ -333,7 +331,7 @@ fn handle_actions_on_many_files_sorted(
                     &root,
                     validator,
                     general_scoper,
-                    language_scopers,
+                    queries,
                     actions,
                     search_mode,
                 );
@@ -412,7 +410,7 @@ fn handle_actions_on_many_files_threaded(
     standalone_action: StandaloneAction,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
-    language_scopers: &[Box<dyn LanguageScoper>],
+    queries: &[Box<dyn Query>],
     actions: &[Box<dyn Action>],
     search_mode: bool,
     n_threads: usize,
@@ -447,7 +445,7 @@ fn handle_actions_on_many_files_threaded(
                         &root,
                         validator,
                         general_scoper,
-                        language_scopers,
+                        queries,
                         actions,
                         search_mode,
                     );
@@ -543,7 +541,7 @@ fn process_path(
     root: &Path,
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
-    language_scopers: &[Box<dyn LanguageScoper>],
+    queries: &[Box<dyn Query>],
     actions: &[Box<dyn Action>],
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
@@ -576,7 +574,7 @@ fn process_path(
             &source,
             &mut destination,
             general_scoper,
-            language_scopers,
+            queries,
             actions,
         )?;
 
@@ -642,7 +640,7 @@ fn apply(
     // corresponding checks.
     destination: &mut String,
     general_scoper: &Box<dyn Scoper>,
-    language_scopers: &[Box<dyn LanguageScoper>],
+    queries: &[Box<dyn Query>],
     actions: &[Box<dyn Action>],
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
@@ -650,10 +648,10 @@ fn apply(
 
     if global_options.join_language_scopes {
         // All at once, as a slice: hits a specific, 'joining' `impl`
-        builder.explode(&language_scopers);
+        builder.explode(&queries);
     } else {
         // One by one: hits a different, 'intersecting' `impl`
-        for scoper in language_scopers {
+        for scoper in queries {
             builder.explode(scoper);
         }
     }
@@ -949,9 +947,7 @@ mod cli {
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
-    use srgn::scoping::langs::{
-        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, RawQuery,
-    };
+    use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript, Query, RawQuery};
     use srgn::GLOBAL_SCOPE;
     use tree_sitter::QueryError as TSQueryError;
 
@@ -1258,8 +1254,8 @@ mod cli {
             }
 
             impl LanguageScopes {
-                /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `LanguageScoper`'s.
-                pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
+                /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `Query`'s.
+                pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::QueryList>, ProgramError> {
                     assert_exclusive_lang_scope(&[
                         $(self.$lang_flag.is_some(),)+
                     ]);
@@ -1307,13 +1303,13 @@ mod cli {
     fn accumulate_scopes<C, PQ>(
         prepared_queries: Vec<PQ>,
         literal_queries: Vec<RawQuery>,
-    ) -> Result<super::ScoperList, ProgramError>
+    ) -> Result<super::QueryList, ProgramError>
     where
-        C: LanguageScoper + 'static,
+        C: Query + 'static,
         PQ: Into<C>,
         RawQuery: TryInto<C, Error = TSQueryError>,
     {
-        let mut scopers: crate::ScoperList = Vec::new();
+        let mut scopers: crate::QueryList = Vec::new();
 
         for query in prepared_queries {
             let compiled_query: C = query.into();
