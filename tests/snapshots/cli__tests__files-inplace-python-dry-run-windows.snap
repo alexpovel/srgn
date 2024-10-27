@@ -1,0 +1,26 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap\n{\n    args, stdin: None, stdout:\n    stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: []
+---
+args:
+  - "--sorted"
+  - "--glob"
+  - "**/*.py"
+  - foo
+  - baz
+stdin: ~
+stdout:
+  - "1.py:\n"
+  - "- # This string is found and touched: foo\n"
+  - "+ # This string is found and touched: baz\n"
+  - "- def foo(bar: int) -> int:\n"
+  - "+ def baz(bar: int) -> int:\n"
+  - "subdir\\2.py:\n"
+  - "- def foo(bar: int) -> int:\n"
+  - "+ def baz(bar: int) -> int:\n"
+  - "subdir\\subdir\\3.py:\n"
+  - "- def foo(bar: int) -> int:\n"
+  - "+ def baz(bar: int) -> int:\n"
+exit_code: 0

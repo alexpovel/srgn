@@ -16,6 +16,7 @@ use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
 use log::{debug, error, info, trace, LevelFilter};
 use pathdiff::diff_paths;
+use similar::{ChangeTag, TextDiff};
 #[cfg(feature = "german")]
 use srgn::actions::German;
 use srgn::actions::{
@@ -561,7 +562,7 @@ fn process_path(
 
     debug!("Processing path: {:?}", path);
 
-    let (new_contents, filesize, changed) = {
+    let (new_contents, old_contents, filesize, changed) = {
         let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
@@ -581,7 +582,7 @@ fn process_path(
             actions,
         )?;
 
-        (destination, filesize, changed)
+        (destination, source, filesize, changed)
     };
 
     // Hold the lock so results aren't intertwined
@@ -611,11 +612,36 @@ fn process_path(
         }
 
         if changed {
-            debug!("Got new file contents, writing to file: {:?}", path);
-            fs::write(&path, new_contents.as_bytes())?;
+            trace!(
+                "File contents changed, will process file: {}",
+                path.display()
+            );
 
-            // Confirm after successful write.
-            writeln!(stdout, "{}", path.display())?;
+            if global_options.dry_run {
+                debug!(
+                    "Dry-running: will not overwrite file '{}' with new contents: {}",
+                    path.display(),
+                    new_contents.escape_debug()
+                );
+                writeln!(stdout, "{}", format!("{}:", path.display()).magenta())?;
+
+                let diff = TextDiff::from_lines(&old_contents, &new_contents);
+                for change in diff.iter_all_changes() {
+                    let (sign, color) = match change.tag() {
+                        ChangeTag::Delete => ('-', Color::Red),
+                        ChangeTag::Insert => ('+', Color::Green),
+                        ChangeTag::Equal => continue,
+                    };
+
+                    write!(stdout, "{}", format!("{sign} {change}").color(color))?;
+                }
+            } else {
+                debug!("Got new file contents, writing to file: {:?}", path);
+                fs::write(&path, new_contents.as_bytes())?;
+
+                // Confirm after successful processing.
+                writeln!(stdout, "{}", path.display())?;
+            }
         } else {
             debug!(
                 "Skipping writing file anew (nothing changed): {}",
@@ -1048,6 +1074,12 @@ mod cli {
         /// unexpected outcome in some contexts. This flag makes the condition explicit.
         #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
         pub fail_no_files: bool,
+        /// Do not destructively overwrite files, instead print rich diff only.
+        ///
+        /// The rich diff contains file names and changes which would be performed
+        /// outside of dry running.
+        #[arg(long, verbatim_doc_comment)]
+        pub dry_run: bool,
         /// Undo the effects of passed actions, where applicable.
         ///
         /// Requires a 1:1 mapping between replacements and original, which is currently

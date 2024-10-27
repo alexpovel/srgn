@@ -401,6 +401,7 @@ Heizoelrueckstossabdaempfung.
         #[case] input: PathBuf,
         #[case] args: &[&str],
         #[case] skip_output_check: bool,
+        #[values(true, false)] dry_run: bool,
     ) -> anyhow::Result<()> {
         use std::mem::ManuallyDrop;
 
@@ -409,7 +410,11 @@ Heizoelrueckstossabdaempfung.
         // Arrange
         let mut cmd = get_cmd();
 
-        let baseline = {
+        let baseline = if dry_run {
+            // Stays the same! In dry runs, we compare against the very same directory,
+            // as it should not change.
+            input.clone()
+        } else {
             let mut baseline = input.clone();
             baseline.pop();
             baseline.push("out");
@@ -426,6 +431,9 @@ Heizoelrueckstossabdaempfung.
             ["--stdin-override-to", "false"],
         );
         cmd.args(&args);
+        if dry_run {
+            cmd.arg("--dry-run");
+        }
 
         // Act
         let output = cmd.output().expect("failed to execute binary under test");
@@ -435,8 +443,8 @@ Heizoelrueckstossabdaempfung.
         // Thing itself works
         assert!(output.status.success(), "Binary execution itself failed");
 
-        // Results are correct Do not drop on panic, to keep tmpdir in place for manual
-        // inspection. Can then diff directories.
+        // Do not drop on panic, to keep tmpdir in place for manual inspection. Can then
+        // diff directories.
         check_directories_equality(baseline, candidate.path().to_owned())?;
 
         // Test was successful: ok to drop.
@@ -444,6 +452,8 @@ Heizoelrueckstossabdaempfung.
 
         // Let's look at command output now.
         if !skip_output_check {
+            snapshot_name.push_str(if dry_run { "-dry-run" } else { "" });
+
             // These are inherently platform-specific, as they deal with file paths.
             snapshot_name.push('-');
             snapshot_name.push_str(std::env::consts::OS);
