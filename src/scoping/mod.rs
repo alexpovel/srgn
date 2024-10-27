@@ -14,7 +14,6 @@ pub mod scope;
 pub mod view;
 
 use scope::{ROScopes, RangesWithContext};
-
 #[cfg(doc)]
 use {scope::Scope, view::ScopedView};
 
