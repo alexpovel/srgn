@@ -1,22 +1,43 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use clap::ValueEnum;
 use const_format::formatcp;
-use tree_sitter::QueryError;
 
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
-/// The C# language.
-pub type CSharp = Language<CSharpQuery>;
-/// A query for C#.
-pub type CSharpQuery = CodeQuery<CustomCSharpQuery, PreparedCSharpQuery>;
+/// A compiled query for the C# language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
+
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
+    /// Create a new compiled query for the C# language.
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_c_sharp::LANGUAGE.into(), &query)
+            .expect("syntax of prepared queries is validated by tests");
+        Ok(Self(q))
+    }
+}
+
+impl From<PreparedQuery> for CompiledQuery {
+    fn from(query: PreparedQuery) -> Self {
+        Self(super::CompiledQuery::from_prepared_query(
+            &tree_sitter_c_sharp::LANGUAGE.into(),
+            query.as_str(),
+        ))
+    }
+}
 
 /// Prepared tree-sitter queries for C#.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedCSharpQuery {
+pub enum PreparedQuery {
     /// Comments (including XML, inline, doc comments).
     Comments,
     /// Strings (incl. verbatim, interpolated; incl. quotes, except for interpolated).
@@ -52,84 +73,56 @@ pub enum PreparedCSharpQuery {
     Identifier,
 }
 
-impl From<PreparedCSharpQuery> for TSQuery {
-    fn from(value: PreparedCSharpQuery) -> Self {
-        Self::new(
-            &CSharp::lang(),
-            match value {
-                PreparedCSharpQuery::Comments => "(comment) @comment",
-                PreparedCSharpQuery::Usings => {
-                    r"(using_directive [(identifier) (qualified_name)] @import)"
-                }
-                PreparedCSharpQuery::Strings => {
-                    formatcp!(
-                        r"
-                            [
-                                (interpolated_string_expression (interpolation) @{0})
-                                (string_literal)
-                                (raw_string_literal)
-                                (verbatim_string_literal)
-                            ]
-                            @string
+impl PreparedQuery {
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::Comments => "(comment) @comment",
+            Self::Usings => r"(using_directive [(identifier) (qualified_name)] @import)",
+            Self::Strings => {
+                formatcp!(
+                    r"
+                    [
+                        (interpolated_string_expression (interpolation) @{0})
+                        (string_literal)
+                        (raw_string_literal)
+                        (verbatim_string_literal)
+                    ]
+                    @string
                     ",
-                        IGNORE
-                    )
-                }
-                PreparedCSharpQuery::Struct => "(struct_declaration) @struct",
-                PreparedCSharpQuery::Enum => "(enum_declaration) @enum",
-                PreparedCSharpQuery::Interface => "(interface_declaration) @interface",
-                PreparedCSharpQuery::Class => "(class_declaration) @class",
-                PreparedCSharpQuery::Method => "(method_declaration) @method",
-                PreparedCSharpQuery::VariableDeclaration => "(variable_declaration) @variable",
-                PreparedCSharpQuery::Property => "(property_declaration) @property",
-                PreparedCSharpQuery::Constructor => "(constructor_declaration) @constructor",
-                PreparedCSharpQuery::Destructor => "(destructor_declaration) @destructor",
-                PreparedCSharpQuery::Field => "(field_declaration) @field",
-                PreparedCSharpQuery::Attribute => "(attribute) @attribute",
-                PreparedCSharpQuery::Identifier => "(identifier) @identifier",
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
-
-/// A custom tree-sitter query for C#.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomCSharpQuery(String);
-
-impl FromStr for CustomCSharpQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&CSharp::lang(), s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
+                    IGNORE
+                )
+            }
+            Self::Struct => "(struct_declaration) @struct",
+            Self::Enum => "(enum_declaration) @enum",
+            Self::Interface => "(interface_declaration) @interface",
+            Self::Class => "(class_declaration) @class",
+            Self::Method => "(method_declaration) @method",
+            Self::VariableDeclaration => "(variable_declaration) @variable",
+            Self::Property => "(property_declaration) @property",
+            Self::Constructor => "(constructor_declaration) @constructor",
+            Self::Destructor => "(destructor_declaration) @destructor",
+            Self::Field => "(field_declaration) @field",
+            Self::Attribute => "(attribute) @attribute",
+            Self::Identifier => "(identifier) @identifier",
         }
     }
 }
 
-impl From<CustomCSharpQuery> for TSQuery {
-    fn from(value: CustomCSharpQuery) -> Self {
-        Self::new(&CSharp::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
-    }
-}
-
-impl LanguageScoper for CSharp {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_c_sharp::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for CSharp {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["cs"]
     }

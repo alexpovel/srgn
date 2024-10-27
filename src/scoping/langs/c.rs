@@ -1,20 +1,40 @@
 use std::fmt::Debug;
-use std::str::FromStr;
 
 use clap::ValueEnum;
-use tree_sitter::QueryError;
 
-use super::{CodeQuery, Language, LanguageScoper, TSLanguage, TSQuery};
+use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 
-/// The C language.
-pub type C = Language<CQuery>;
-/// A query for C.
-pub type CQuery = CodeQuery<CustomCQuery, PreparedCQuery>;
+/// A compiled query for the C language.
+#[derive(Debug)]
+pub struct CompiledQuery(super::CompiledQuery);
+
+impl TryFrom<RawQuery> for CompiledQuery {
+    type Error = TSQueryError;
+
+    /// Create a new compiled query for the C language
+    ///
+    /// # Errors
+    ///
+    /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError) variant for when this method errors.
+    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_raw_query(&tree_sitter_c::LANGUAGE.into(), &query)?;
+        Ok(Self(q))
+    }
+}
+
+impl From<PreparedQuery> for CompiledQuery {
+    fn from(query: PreparedQuery) -> Self {
+        Self(super::CompiledQuery::from_prepared_query(
+            &tree_sitter_c::LANGUAGE.into(),
+            query.as_str(),
+        ))
+    }
+}
 
 /// Prepared tree-sitter queries for C.
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum PreparedCQuery {
+pub enum PreparedQuery {
     /// Comments (single- and multi-line).
     Comments,
     /// Strings.
@@ -55,75 +75,49 @@ pub enum PreparedCQuery {
     CallExpression,
 }
 
-impl From<PreparedCQuery> for TSQuery {
-    fn from(value: PreparedCQuery) -> Self {
-        Self::new(
-            &C::lang(),
-            match value {
-                PreparedCQuery::Comments => "(comment) @comment",
-                PreparedCQuery::Strings => "[(string_literal) (system_lib_string)] @string",
-                PreparedCQuery::Includes => "(preproc_include) @include",
-                PreparedCQuery::TypeDef => "(type_definition) @typedef",
-                PreparedCQuery::Enum => "(enum_specifier) @enum",
-                PreparedCQuery::Struct => "(struct_specifier) @struct",
-                PreparedCQuery::Variable => "(declaration) @var",
-                PreparedCQuery::Function => {
-                    "[(function_declarator (identifier)) (call_expression (identifier))] @function"
-                }
-                PreparedCQuery::FunctionDef => "(function_definition) @function_definition",
-                PreparedCQuery::FunctionDecl => "(function_declarator) @function_decl",
-                PreparedCQuery::Switch => "(switch_statement) @switch",
-                PreparedCQuery::If => "(if_statement) @if",
-                PreparedCQuery::For => "(for_statement) @for",
-                PreparedCQuery::While => "(while_statement) @while",
-                PreparedCQuery::Union => "(union_specifier) @union",
-                PreparedCQuery::Do => "(do_statement) @do",
-                PreparedCQuery::Identifier => "(identifier) @ident",
-                PreparedCQuery::Declaration => "(declaration) @decl",
-                PreparedCQuery::CallExpression => "(call_expression) @call",
-            },
-        )
-        .expect("Prepared queries to be valid")
-    }
-}
-
-/// A custom tree-sitter query for C.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CustomCQuery(String);
-
-impl FromStr for CustomCQuery {
-    type Err = QueryError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match TSQuery::new(&C::lang(), s) {
-            Ok(_) => Ok(Self(s.to_string())),
-            Err(e) => Err(e),
+impl PreparedQuery {
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::Comments => "(comment) @comment",
+            Self::Strings => "[(string_literal) (system_lib_string)] @string",
+            Self::Includes => "(preproc_include) @include",
+            Self::TypeDef => "(type_definition) @typedef",
+            Self::Enum => "(enum_specifier) @enum",
+            Self::Struct => "(struct_specifier) @struct",
+            Self::Variable => "(declaration) @var",
+            Self::Function => {
+                "[(function_declarator (identifier)) (call_expression (identifier))] @function"
+            }
+            Self::FunctionDef => "(function_definition) @function_definition",
+            Self::FunctionDecl => "(function_declarator) @function_decl",
+            Self::Switch => "(switch_statement) @switch",
+            Self::If => "(if_statement) @if",
+            Self::For => "(for_statement) @for",
+            Self::While => "(while_statement) @while",
+            Self::Union => "(union_specifier) @union",
+            Self::Do => "(do_statement) @do",
+            Self::Identifier => "(identifier) @ident",
+            Self::Declaration => "(declaration) @decl",
+            Self::CallExpression => "(call_expression) @call",
         }
     }
 }
 
-impl From<CustomCQuery> for TSQuery {
-    fn from(value: CustomCQuery) -> Self {
-        Self::new(&C::lang(), &value.0)
-            .expect("Valid query, as object cannot be constructed otherwise")
-    }
-}
-
-impl LanguageScoper for C {
+impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
         tree_sitter_c::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {
-        &self.positive_query
+        &self.0.positive_query
     }
 
     fn neg_query(&self) -> Option<&TSQuery> {
-        self.negative_query.as_ref()
+        self.0.negative_query.as_ref()
     }
 }
 
-impl Find for C {
+impl Find for CompiledQuery {
     fn extensions(&self) -> &'static [&'static str] {
         &["c", "h"]
     }
