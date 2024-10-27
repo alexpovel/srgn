@@ -80,22 +80,26 @@
 //! types, which are [`LanguageScoper`]s. Those may be used as, for example:
 //!
 //! ```rust
+//! use srgn::scoping::langs::{
+//!     python::{CompiledQuery, PreparedQuery},
+//!     RawQuery
+//! };
 //! use srgn::scoping::view::ScopedViewBuilder;
-//! use srgn::scoping::langs::CodeQuery as CQ;
-//! use srgn::scoping::langs::python::{Python, PreparedPythonQuery};
 //!
 //! let input = "def foo(bar: int) -> int: return bar + 1  # Do a thing";
-//!
-//! let lang = Python::new(CQ::Prepared(PreparedPythonQuery::Comments));
+//! let query = CompiledQuery::from(PreparedQuery::Comments);
 //!
 //! let mut builder = ScopedViewBuilder::new(input);
-//! builder.explode(&lang);
+//! builder.explode(&query);
 //!
 //! let mut view = builder.build();
 //! view.delete();
 //!
 //! // Comment gone, *however* trailing whitespace remains.
-//! assert_eq!(view.to_string(), "def foo(bar: int) -> int: return bar + 1  ");
+//! assert_eq!(
+//!     view.to_string(),
+//!     "def foo(bar: int) -> int: return bar + 1  "
+//! );
 //! ```
 //!
 //! ## Applying an action (associated function)
