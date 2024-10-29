@@ -82,7 +82,7 @@
 //! ```rust
 //! use srgn::scoping::langs::{
 //!     python::{CompiledQuery, PreparedQuery},
-//!     RawQuery
+//!     QuerySource
 //! };
 //! use srgn::scoping::view::ScopedViewBuilder;
 //!

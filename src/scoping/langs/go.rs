@@ -4,7 +4,7 @@ use std::path::{Component, Path};
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
+use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -12,7 +12,7 @@ use crate::scoping::langs::IGNORE;
 #[derive(Debug)]
 pub struct CompiledQuery(super::CompiledQuery);
 
-impl TryFrom<RawQuery> for CompiledQuery {
+impl TryFrom<QuerySource> for CompiledQuery {
     type Error = TSQueryError;
 
     /// Create a new compiled query for the Go language.
@@ -20,8 +20,8 @@ impl TryFrom<RawQuery> for CompiledQuery {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
-    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::from_raw_query(&tree_sitter_go::LANGUAGE.into(), &query)?;
+    fn try_from(query: QuerySource) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_source(&tree_sitter_go::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }

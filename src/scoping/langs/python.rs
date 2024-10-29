@@ -3,14 +3,14 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Find, LanguageScoper, RawQuery, TSLanguage, TSQuery, TSQueryError};
+use super::{Find, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
 use crate::scoping::langs::IGNORE;
 
 /// A compiled query for the Python language.
 #[derive(Debug)]
 pub struct CompiledQuery(super::CompiledQuery);
 
-impl TryFrom<RawQuery> for CompiledQuery {
+impl TryFrom<QuerySource> for CompiledQuery {
     type Error = TSQueryError;
 
     /// Create a new compiled query for the Python language.
@@ -18,8 +18,8 @@ impl TryFrom<RawQuery> for CompiledQuery {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
-    fn try_from(query: RawQuery) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::from_raw_query(&tree_sitter_python::LANGUAGE.into(), &query)?;
+    fn try_from(query: QuerySource) -> Result<Self, Self::Error> {
+        let q = super::CompiledQuery::from_source(&tree_sitter_python::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }
