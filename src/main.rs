@@ -209,8 +209,8 @@ fn main() -> Result<()> {
                 &language_scopers,
                 &actions,
                 search_mode,
-                options.threads.map_or_else(
-                    || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
+                options.threads.map_or(
+                    std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
             )?;
@@ -274,7 +274,7 @@ fn handle_actions_on_stdin(
     info!("Will use stdin to stdout.");
     let mut source = String::new();
     io::stdin().lock().read_to_string(&mut source)?;
-    let mut destination = String::with_capacity(source.len());
+    let mut destination = String::new();
 
     apply(
         global_options,
@@ -565,11 +565,10 @@ fn process_path(
         let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
-        let mut source =
+        let mut destination =
             String::with_capacity(filesize.try_into().unwrap_or(/* no perf gains for you */ 0));
+        let mut source = String::new();
         file.read_to_string(&mut source)?;
-
-        let mut destination = String::with_capacity(source.len());
 
         let changed = apply(
             global_options,
@@ -1246,7 +1245,7 @@ mod cli {
     }
 
     /// For use as <https://docs.rs/clap/latest/clap/struct.Arg.html#method.value_name>
-    const TREE_SITTER_QUERY_VALUE_NAME: &str = "TREE-SITTER-QUERY";
+    const TREE_SITTER_QUERY_VALUE_OR_FILENAME: &str = "TREE-SITTER-QUERY-OR-FILENAME";
 
     macro_rules! impl_lang_scopes {
         ($(($lang_flag:ident, $lang_query_flag:ident, $lang_scope:ident),)+) => {
@@ -1332,7 +1331,7 @@ mod cli {
         Ok(scopers)
     }
 
-    /// Try read a literal query as file.
+    /// Try read a literal query as a file.
     ///
     /// Return the file contents as `QuerySource` if the string interpreted as a file path is
     /// found on disk. Otherwise, in the case of `io::ErrorKind::NotFound`, return the string
@@ -1365,7 +1364,7 @@ mod cli {
         c: Vec<c::PreparedQuery>,
 
         /// Scope C code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         c_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1377,7 +1376,7 @@ mod cli {
         csharp: Vec<csharp::PreparedQuery>,
 
         /// Scope C# code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         csharp_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1391,7 +1390,7 @@ mod cli {
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         hcl_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1403,7 +1402,7 @@ mod cli {
         go: Vec<go::PreparedQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         go_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1415,7 +1414,7 @@ mod cli {
         python: Vec<python::PreparedQuery>,
 
         /// Scope Python code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         python_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1427,7 +1426,7 @@ mod cli {
         rust: Vec<rust::PreparedQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         rust_query: Vec<QuerySourceOrPath>,
     }
 
@@ -1439,7 +1438,7 @@ mod cli {
         typescript: Vec<typescript::PreparedQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         typescript_query: Vec<QuerySourceOrPath>,
     }
 
