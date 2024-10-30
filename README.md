@@ -89,7 +89,7 @@ def register_bird(bird: Bird, db: Db) -> None:
 which can be searched using:
 
 ```console
-$ cat birds.py | srgn --python 'class' 'age'
+$ cat birds.py | srgn --lang python --prepared 'class' 'age'
 11:    age: int
 15:        self.age += 1
 ```
@@ -98,7 +98,7 @@ The string `age` was sought and found *only* within Python `class` definitions (
 for example, in function bodies such as `register_bird`, where `age` also occurs and
 would be nigh impossible to exclude from consideration in vanilla `grep`). By default,
 this 'search mode' also prints line numbers. **Search mode is entered if no actions are
-specified**, and a language such as `--python` is given[^3]—think of it like
+specified**, and a language such as `--lang python` is given[^3]—think of it like
 '[ripgrep](https://github.com/BurntSushi/ripgrep) but with syntactical language
 elements'.
 
@@ -107,7 +107,7 @@ lines](https://docs.rs/regex/1.10.5/regex/index.html#grouping-and-flags), for ex
 find methods (aka *`def` within `class`*) lacking docstrings:
 
 ```console
-$ cat birds.py | srgn --python 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
+$ cat birds.py | srgn --lang python --prepared 'class' 'def .+:\n\s+[^"\s]{3}' # do not try this pattern at home
 13:    def celebrate_birthday(self):
 14:        print("🎉")
 ```
@@ -137,7 +137,7 @@ pub struct Musician {
 multiple items can be surgically drilled down into as
 
 ```console
-$ cat music.rs | srgn --rust 'pub-enum' --rust 'type-identifier' 'Subgenre' # AND'ed together
+$ cat music.rs | srgn --lang rust --prepared 'pub-enum' --prepared 'type-identifier' 'Subgenre' # AND'ed together
 2:    Rock(Subgenre),
 ```
 
@@ -148,7 +148,7 @@ some combinations from making sense: for example, searching for a Python `class`
 however:
 
 ```console
-$ cat birds.py | srgn --py 'class' --py 'doc-strings' # From earlier example; note `--py` is a shorthand for `--python`
+$ cat birds.py | srgn --lang py --prepared 'class' --prepared 'doc-strings' # From earlier example; note `--lang py` is a shorthand for `--lang python`
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 ```
@@ -160,7 +160,7 @@ running all queries independently and joining their results, allowing you to sea
 multiple ways at once:
 
 ```console
-$ cat birds.py | srgn -j --python 'comments' --python 'doc-strings' 'bird[^s]'
+$ cat birds.py | srgn -j --lang python --prepared 'comments' --prepared 'doc-strings' 'bird[^s]'
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 20:        pass  # No bird here yet!
@@ -175,7 +175,7 @@ If standard input is not given, `srgn` knows how to find relevant source files
 automatically, for example in this repository:
 
 ```console
-$ srgn --python 'class' 'age'
+$ srgn --lang python --prepared 'class' 'age'
 docs/samples/birds
 11:    age: int
 15:        self.age += 1
@@ -187,7 +187,7 @@ docs/samples/birds.py
 
 It recursively walks its current directory, finding files based on [file
 extensions](docs/samples/birds.py) and [shebang lines](docs/samples/birds), processing
-at very high speed. For example, `srgn --go strings '\d+'` finds and prints all ~140,000
+at very high speed. For example, `srgn --lang go --prepared strings '\d+'` finds and prints all ~140,000
 runs of digits in literal Go strings inside the [Kubernetes
 codebase](https://github.com/kubernetes/kubernetes/tree/5639f8f848720329f4a9d53555a228891550cb79)
 of ~3,000,000 lines of Go code within 3 seconds on 12 cores of M3. For more on working
@@ -216,14 +216,14 @@ def GNU_says_moo():
 against which the following command is run:
 
 ```bash
-cat gnu.py | srgn --titlecase --python 'doc-strings' '(?<!The )GNU ([a-z]+)' '$1: GNU 🐂 is not Unix'
+cat gnu.py | srgn --titlecase --lang python --prepared 'doc-strings' '(?<!The )GNU ([a-z]+)' '$1: GNU 🐂 is not Unix'
 ```
 
 The anatomy of that invocation is:
 
 - `--titlecase` (an [action](#character-casing)) will Titlecase Everything Found In
   Scope
-- `--python 'doc-strings'` (a [scope](#language-grammar-aware-scopes)) will scope to
+- `--lang python --prepared 'doc-strings'` (a [scope](#language-grammar-aware-scopes)) will scope to
   (i.e., only take into consideration) docstrings according to the Python language
   grammar
 - `'(?<!The )GNU ([a-z]+)'` (a [scope](#scopes)) sees only what was already scoped by
@@ -820,7 +820,7 @@ mod scary_unsafe_operations {
 can be searched as
 
 ```console
-$ cat unsafe.rs | srgn --rs 'unsafe' # Note: no 2nd argument necessary
+$ cat unsafe.rs | srgn --lang rs --prepared 'unsafe' # Note: no 2nd argument necessary
 3:    pub unsafe fn unsafe_array_access(arr: &[i32], index: usize) -> i32 {
 4:        // UNSAFE: This function performs unsafe array access without bounds checking
 5:        *arr.get_unchecked(index)
@@ -856,7 +856,7 @@ layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-la
 is desired. Achieve this move with:
 
 ```bash
-cat imports.py | srgn --python 'imports' '^good_company' 'src.better_company'
+cat imports.py | srgn --lang python --prepared 'imports' '^good_company' 'src.better_company'
 ```
 
 which will yield
@@ -893,7 +893,7 @@ good_company = "good_company";  // good_company
 which, using
 
 ```bash
-cat imports.rs | srgn --rust 'uses' '^good_company' 'better_company'
+cat imports.rs | srgn --lang rust --prepared 'uses' '^good_company' 'better_company'
 ```
 
 becomes
@@ -926,7 +926,7 @@ and *usually* assign people to each note. It's possible to automate assigning yo
 to every unassigned note (lucky you!) using
 
 ```bash
-cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
+cat todo.ts | srgn --lang typescript --prepared 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
 ```
 
 which in this case gives
@@ -966,7 +966,7 @@ and a move to [`logging`](https://docs.python.org/3/library/logging.html) is des
 That's fully automated by a call of
 
 ```bash
-cat money.py | srgn --python 'function-calls' '^print$' 'logging.info'
+cat money.py | srgn --lang python --prepared 'function-calls' '^print$' 'logging.info'
 ```
 
 yielding
@@ -1040,7 +1040,7 @@ public class UserService
 So, should you count purging comments among your fetishes, more power to you:
 
 ```bash
-cat UserService.cs | srgn --csharp 'comments' -d '.*' | srgn -d '[[:blank:]]+\n'
+cat UserService.cs | srgn --lang csharp --prepared 'comments' -d '.*' | srgn -d '[[:blank:]]+\n'
 ```
 
 The result is a tidy, yet taciturn:
@@ -1102,7 +1102,7 @@ resource "aws_instance" "main" {
 with
 
 ```bash
-cat ec2.tf | srgn --hcl 'strings' '^t2\.(\w+)$' 't3.$1' | srgn --hcl 'data-names' 'tiny' 'small'
+cat ec2.tf | srgn --lang hcl --prepared 'strings' '^t2\.(\w+)$' 't3.$1' | srgn --lang hcl --prepared 'data-names' 'tiny' 'small'
 ```
 
 will give
@@ -1137,7 +1137,7 @@ int main(void) {
 using
 
 ```bash
-cat function.c | srgn --c 'function' 'old_function_name' 'new_function_name'
+cat function.c | srgn --lang c --prepared 'function' 'old_function_name' 'new_function_name'
 ```
 
 which will give
@@ -1169,7 +1169,7 @@ else:
 with an invocation of
 
 ```bash
-cat cond.py | srgn --python-query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --fail-any # will fail
+cat cond.py | srgn --lang python --query '(if_statement consequence: (block (return_statement (identifier))) alternative: (else_clause body: (block (return_statement (identifier))))) @cond' --fail-any # will fail
 ```
 
 to hint that the code can be more idiomatically rewritten as `return left if x else
@@ -1188,7 +1188,7 @@ type User struct {
 which can be caught as:
 
 ```bash
-cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[tT]oken") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
+cat sensitive.go | srgn --lang go --query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[tT]oken") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
 ```
 
 ###### Ignoring parts of matches
@@ -1212,7 +1212,7 @@ would need to be matched, with the name part ignored. Any capture name starting 
 `_SRGN_IGNORE` will provide just that:
 
 ```bash
-cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
+cat wrong.rs | srgn --lang rust --query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
 ```
 
 ```rust file=output-wrong.rs
@@ -1256,7 +1256,7 @@ example,
 
 <!-- markdownlint-disable MD010 -->
 ```console
-$ srgn --go 'comments' --glob 'tests/langs/go/fizz*.go' '\w+'
+$ srgn --lang go --prepared 'comments' --glob 'tests/langs/go/fizz*.go' '\w+'
 tests/langs/go/fizzbuzz.go
 5:// fizzBuzz prints the numbers from 1 to a specified limit.
 6:// For multiples of 3, it prints "Fizz" instead of the number,
@@ -1266,7 +1266,7 @@ tests/langs/go/fizzbuzz.go
 ```
 <!-- markdownlint-enable MD010 -->
 
-finds only what's matched by the (narrow) glob, even though `--go` queries by themselves
+finds only what's matched by the (narrow) glob, even though `--lang go` queries by themselves
 would match much more.
 
 `srgn` will process results fully parallel, using all available threads. For example,
@@ -1317,7 +1317,7 @@ def square(a):
 This style can be checked against and "forbidden" using:
 
 ```bash
-cat oldtyping.py | srgn --python 'doc-strings' --fail-any 'param.+type'  # will fail
+cat oldtyping.py | srgn --lang python --prepared 'doc-strings' --fail-any 'param.+type'  # will fail
 ```
 
 #### Literal scope

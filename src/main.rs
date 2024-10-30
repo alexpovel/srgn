@@ -54,7 +54,9 @@ fn main() -> Result<()> {
         composable_actions,
         standalone_actions,
         mut options,
-        languages_scopes,
+        lang,
+        query,
+        prepared,
         #[cfg(feature = "german")]
         german_options,
     } = args;
@@ -75,9 +77,11 @@ fn main() -> Result<()> {
     // outlive the main one. Scoped threads would work here, `ignore` uses them
     // internally even, but we have no access here.
 
-    let language_scopers = languages_scopes
-        .compile_raw_queries_to_scopes()?
+    let language_scopers = lang
+        .map(|lang| cli::compile_raw_queries_to_scopes(lang, query, prepared))
+        .transpose()?
         .map(Arc::new);
+
     debug!("Done assembling scopers.");
 
     let mut actions = {
@@ -724,6 +728,8 @@ enum ProgramError {
     IgnoreError(ignore::Error),
     /// The given query failed to parse
     QueryError(TSQueryError),
+    /// A message from parsing clap values
+    Clap(String),
 }
 
 impl fmt::Display for ProgramError {
@@ -739,6 +745,7 @@ impl fmt::Display for ProgramError {
             Self::QueryError(e) => {
                 write!(f, "Error occurred while creating a tree-sitter query: {e}")
             }
+            Self::Clap(err) => write!(f, "{err}"),
         }
     }
 }
@@ -948,7 +955,7 @@ mod cli {
     use std::num::NonZero;
 
     use clap::builder::ArgPredicate;
-    use clap::{ArgAction, Command, CommandFactory, Parser};
+    use clap::{ArgAction, Command, CommandFactory, Parser, ValueEnum};
     use clap_complete::{generate, Generator, Shell};
     use srgn::scoping::langs::{
         c, csharp, go, hcl, python, rust, typescript, LanguageScoper, RawQuery,
@@ -1009,12 +1016,60 @@ mod cli {
         #[command(flatten)]
         pub(super) options: GlobalOptions,
 
-        #[command(flatten)]
-        pub(super) languages_scopes: LanguageScopes,
+        #[arg(
+            long,
+            short('l'),
+            value_enum,
+            ignore_case(true),
+            env,
+            verbatim_doc_comment
+        )]
+        pub(super) lang: Option<Language>,
+
+        /// Scope code using a custom tree-sitter query.
+        #[arg(
+            long,
+            short('q'),
+            env,
+            verbatim_doc_comment,
+            value_name = TREE_SITTER_QUERY_VALUE_NAME)
+        ]
+        pub(super) query: Vec<RawQuery>,
+
+        /// Scope code using a prepared query.
+        #[arg(long, long("pq"), env, verbatim_doc_comment)]
+        pub(super) prepared: Vec<RawPreparedQuery>,
 
         #[cfg(feature = "german")]
         #[command(flatten)]
         pub(super) german_options: GermanOptions,
+    }
+
+    #[derive(Debug, Clone, Copy, ValueEnum)]
+    pub enum Language {
+        C,
+        #[value(alias = "cs")]
+        CSharp,
+        Go,
+        Hcl,
+        #[value(alias = "py")]
+        Python,
+        #[value(alias = "rs")]
+        Rust,
+        #[value(alias = "ts")]
+        TypeScript,
+    }
+
+    /// A query over a language, for scoping.
+    ///
+    /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
+    #[derive(Clone, Debug)]
+    pub struct RawPreparedQuery(String);
+
+    impl From<String> for RawPreparedQuery {
+        fn from(s: String) -> Self {
+            Self(s)
+        }
     }
 
     /// <https://github.com/clap-rs/clap/blob/f65d421607ba16c3175ffe76a20820f123b6c4cb/clap_complete/examples/completion-derive.rs#L69>
@@ -1246,173 +1301,50 @@ mod cli {
     /// For use as <https://docs.rs/clap/latest/clap/struct.Arg.html#method.value_name>
     const TREE_SITTER_QUERY_VALUE_NAME: &str = "TREE-SITTER-QUERY";
 
-    macro_rules! impl_lang_scopes {
-        ($(($lang_flag:ident, $lang_query_flag:ident, $lang_scope:ident),)+) => {
-            #[derive(Parser, Debug)]
-            #[group(required = false, multiple = false)]
-            #[command(next_help_heading = "Language scopes")]
-            pub struct LanguageScopes {
-                $(
-                    #[command(flatten)]
-                    $lang_flag: Option<$lang_scope>,
-                )+
-            }
-
-            impl LanguageScopes {
-                /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `LanguageScoper`'s.
-                pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
-                    assert_exclusive_lang_scope(&[
-                        $(self.$lang_flag.is_some(),)+
-                    ]);
-
-                    $(
-                        if let Some(s) = self.$lang_flag {
-                            let s = accumulate_scopes::<$lang_flag::CompiledQuery, _>(s.$lang_flag, s.$lang_query_flag)?;
-                            return Ok(Some(s));
-                        }
-                    )+
-
-                    Ok(None)
-                }
+    /// Compiles the `RawQuery`'s and `RawPreparedQuery`'s into a list of `LanguageScoper`'s.
+    pub fn compile_raw_queries_to_scopes(
+        lang: Language,
+        queries: Vec<RawQuery>,
+        prepared_queries: Vec<RawPreparedQuery>,
+    ) -> Result<crate::ScoperList, ProgramError> {
+        let func = match lang {
+            Language::C => accumulate_scopes::<c::CompiledQuery, c::PreparedQuery>,
+            Language::CSharp => accumulate_scopes::<csharp::CompiledQuery, csharp::PreparedQuery>,
+            Language::Go => accumulate_scopes::<go::CompiledQuery, go::PreparedQuery>,
+            Language::Hcl => accumulate_scopes::<hcl::CompiledQuery, hcl::PreparedQuery>,
+            Language::Python => accumulate_scopes::<python::CompiledQuery, python::PreparedQuery>,
+            Language::Rust => accumulate_scopes::<rust::CompiledQuery, rust::PreparedQuery>,
+            Language::TypeScript => {
+                accumulate_scopes::<typescript::CompiledQuery, typescript::PreparedQuery>
             }
         };
-    }
 
-    impl_lang_scopes!(
-        (c, c_query, CScope),
-        (csharp, csharp_query, CSharpScope),
-        (go, go_query, GoScope),
-        (hcl, hcl_query, HclScope),
-        (python, python_query, PythonScope),
-        (rust, rust_query, RustScope),
-        (typescript, typescript_query, TypeScriptScope),
-    );
-
-    /// Assert that either zero or one lang field is set.
-    ///
-    /// If the assertion fails, exit with an error message.
-    fn assert_exclusive_lang_scope(fields_set: &[bool]) {
-        let set_fields_count = fields_set.iter().filter(|b| **b).count();
-
-        if set_fields_count > 1 {
-            let mut cmd = Args::command();
-            cmd.error(
-                clap::error::ErrorKind::ArgumentConflict,
-                "Can only use one language at a time.",
-            )
-            .exit();
-        }
+        func(prepared_queries, queries)
     }
 
     /// Convert the prepared queries and the literal queries into `CompiledQuery`'s
-    fn accumulate_scopes<C, PQ>(
-        prepared_queries: Vec<PQ>,
+    fn accumulate_scopes<CQ, PQ>(
+        prepared_queries: Vec<RawPreparedQuery>,
         literal_queries: Vec<RawQuery>,
     ) -> Result<super::ScoperList, ProgramError>
     where
-        C: LanguageScoper + 'static,
-        PQ: Into<C>,
-        RawQuery: TryInto<C, Error = TSQueryError>,
+        CQ: LanguageScoper + TryFrom<RawQuery, Error = TSQueryError> + 'static,
+        PQ: ValueEnum + Into<CQ>,
     {
         let mut scopers: crate::ScoperList = Vec::new();
 
         for query in prepared_queries {
-            let compiled_query: C = query.into();
+            let query = PQ::from_str(&query.0, true).map_err(ProgramError::Clap)?;
+            let compiled_query = query.into();
             scopers.push(Box::new(compiled_query));
         }
 
         for raw_query in literal_queries {
-            let compiled_query: C = raw_query.try_into()?;
+            let compiled_query = CQ::try_from(raw_query)?;
             scopers.push(Box::new(compiled_query));
         }
 
         Ok(scopers)
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct CScope {
-        /// Scope C code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
-        c: Vec<c::PreparedQuery>,
-
-        /// Scope C code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        c_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct CSharpScope {
-        /// Scope C# code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "cs")]
-        csharp: Vec<csharp::PreparedQuery>,
-
-        /// Scope C# code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        csharp_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct HclScope {
-        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
-        /// Scope HashiCorp Configuration Language code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
-        hcl: Vec<hcl::PreparedQuery>,
-
-        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
-        /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        hcl_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct GoScope {
-        /// Scope Go code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
-        go: Vec<go::PreparedQuery>,
-
-        /// Scope Go code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        go_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct PythonScope {
-        /// Scope Python code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "py")]
-        python: Vec<python::PreparedQuery>,
-
-        /// Scope Python code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        python_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct RustScope {
-        /// Scope Rust code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "rs")]
-        rust: Vec<rust::PreparedQuery>,
-
-        /// Scope Rust code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        rust_query: Vec<RawQuery>,
-    }
-
-    #[derive(Parser, Debug, Clone)]
-    #[group(required = false, multiple = false)]
-    struct TypeScriptScope {
-        /// Scope TypeScript code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "ts")]
-        typescript: Vec<typescript::PreparedQuery>,
-
-        /// Scope TypeScript code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        typescript_query: Vec<RawQuery>,
     }
 
     #[cfg(feature = "german")]

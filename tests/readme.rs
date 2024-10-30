@@ -495,30 +495,17 @@ mod tests {
                                 // first; otherwise, the `--lang` options eat them and
                                 // results turn bad (complaining that `-query` is not a
                                 // valid value). Parsing is brittle here :-(
-                                tag("csharp-query"),
-                                tag("go-query"),
-                                tag("hcl-query"),
-                                tag("python-query"),
-                                tag("rust-query"),
-                                tag("typescript-query"),
                                 //
-                                tag("csharp"),
-                                tag("glob"),
-                                tag("go"),
-                                tag("hcl"),
-                                tag("python"),
-                                tag("rust"),
-                                tag("stdin-override-to"),
-                                tag("threads"),
-                                tag("typescript"),
-                                //
-                                // Shorthands. NOTE: only a limited number of elements
+                                // NOTE: only a limited number of elements
                                 // can go here. `nom` is generic, and this tuple inside
                                 // `alt` is limited to 21 members.
-                                tag("cs"),
-                                tag("py"),
-                                tag("rs"),
-                                tag("ts"),
+                                tag("lang"),
+                                tag("query"),
+                                tag("prepared"),
+                                //
+                                tag("glob"),
+                                tag("stdin-override-to"),
+                                tag("threads"),
                             )),
                         ),
                         cut(

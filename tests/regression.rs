@@ -48,7 +48,7 @@ fn test_brew_build() {
 /// HN](https://news.ycombinator.com/item?id=41675384):
 ///
 /// > These sorts of cases are why I wrote srgn [0]. It's based on tree-sitter too. Calling it as
-/// >      cat file.py | srgn --py def --py identifiers 'database' 'db'
+/// >      cat file.py | srgn --lang py --prepared def --lang py --prepared identifiers 'database' 'db'
 /// >
 /// > will replace all mentions of `database` inside identifiers inside (only!) function definitions (`def`) with `db`.
 /// >
