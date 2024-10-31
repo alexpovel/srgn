@@ -76,7 +76,7 @@ fn main() -> Result<()> {
     // internally even, but we have no access here.
 
     let language_scopers = languages_scopes
-        .compile_querie_sources_to_scopes()?
+        .compile_query_sources_to_scopes()?
         .map(Arc::new);
     debug!("Done assembling scopers.");
 
@@ -209,8 +209,8 @@ fn main() -> Result<()> {
                 &language_scopers,
                 &actions,
                 search_mode,
-                options.threads.map_or(
-                    std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
+                options.threads.map_or_else(
+                    || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
             )?;
@@ -274,7 +274,7 @@ fn handle_actions_on_stdin(
     info!("Will use stdin to stdout.");
     let mut source = String::new();
     io::stdin().lock().read_to_string(&mut source)?;
-    let mut destination = String::new();
+    let mut destination = String::with_capacity(source.len());
 
     apply(
         global_options,
@@ -565,10 +565,11 @@ fn process_path(
         let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
-        let mut destination =
+        let mut source =
             String::with_capacity(filesize.try_into().unwrap_or(/* no perf gains for you */ 0));
-        let mut source = String::new();
         file.read_to_string(&mut source)?;
+
+        let mut destination = String::with_capacity(source.len());
 
         let changed = apply(
             global_options,
@@ -1345,7 +1346,10 @@ mod cli {
             .open(query_or_path.as_str())
         {
             Ok(mut file) => {
-                info!("Query points to a valid file at '{}', will use its contents.", file.path());
+                info!(
+                    "Query points to a valid file at '{}', will use its contents.",
+                    file.path()
+                );
                 let mut s = String::new();
                 file.read_to_string(&mut s)?;
                 Ok(QuerySource::from(s))
