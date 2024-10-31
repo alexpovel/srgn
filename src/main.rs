@@ -1392,7 +1392,7 @@ mod cli {
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-        /// The query can be given inline or if as a path to a file containing a query.
+        /// The query can be given inline or as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         hcl_query: Vec<QuerySourceOrPath>,
     }
