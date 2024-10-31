@@ -1261,7 +1261,7 @@ mod cli {
 
             impl LanguageScopes {
                 /// Finds the first language field set, if any, and compiles the `QuerySourceOrPath`'s into a list of `LanguageScoper`'s.
-                pub(super) fn compile_querie_sources_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
+                pub(super) fn compile_query_sources_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
                     assert_exclusive_lang_scope(&[
                         $(self.$lang_flag.is_some(),)+
                     ]);
