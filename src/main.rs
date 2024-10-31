@@ -952,6 +952,7 @@ mod cli {
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
+    use log::info;
     use srgn::scoping::langs::{
         c, csharp, go, hcl, python, rust, typescript, LanguageScoper, QuerySource,
     };
@@ -1347,15 +1348,21 @@ mod cli {
         {
             Ok(mut file) => {
                 info!(
-                    "Query points to a valid file at '{}', will use its contents.",
-                    file.path()
+                    "Query refers to a valid file at '{}', will use its contents.",
+                    query_or_path.as_str()
                 );
                 let mut s = String::new();
                 file.read_to_string(&mut s)?;
                 Ok(QuerySource::from(s))
             }
             Err(err) => match err.kind() {
-                io::ErrorKind::NotFound => Ok(QuerySource::from(query_or_path.0)),
+                io::ErrorKind::NotFound => {
+                    info!(
+                        "Query doesn't refer to a valid file at '{}', contents will by compiled as a TSQuery.",
+                        query_or_path.as_str()
+                    );
+                    Ok(QuerySource::from(query_or_path.0))
+                }
                 _ => Err(err),
             },
         }
