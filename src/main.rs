@@ -1345,6 +1345,7 @@ mod cli {
             .open(query_or_path.as_str())
         {
             Ok(mut file) => {
+                info!("Query points to a valid file at '{}', will use its contents.", file.path());
                 let mut s = String::new();
                 file.read_to_string(&mut s)?;
                 Ok(QuerySource::from(s))
