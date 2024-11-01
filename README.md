@@ -1577,7 +1577,7 @@ Language scopes:
 
       --c-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope C code using a custom tree-sitter query. The query can be given inline or
-          if as a path to a file containing a query.
+          as a path to a file containing a query.
           
           [env: C_QUERY=]
 
