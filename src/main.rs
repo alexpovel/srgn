@@ -1376,7 +1376,7 @@ mod cli {
         c: Vec<c::PreparedQuery>,
 
         /// Scope C code using a custom tree-sitter query. The query can be given inline or
-        /// if as a path to a file containing a query.
+        /// as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         c_query: Vec<QuerySourceOrPath>,
     }
@@ -1389,7 +1389,7 @@ mod cli {
         csharp: Vec<csharp::PreparedQuery>,
 
         /// Scope C# code using a custom tree-sitter query. The query can be given inline or
-        /// if as a path to a file containing a query.
+        /// as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         csharp_query: Vec<QuerySourceOrPath>,
     }
@@ -1417,7 +1417,7 @@ mod cli {
         go: Vec<go::PreparedQuery>,
 
         /// Scope Go code using a custom tree-sitter query. The query can be given inline or
-        /// if as a path to a file containing a query.
+        /// as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         go_query: Vec<QuerySourceOrPath>,
     }
@@ -1430,7 +1430,7 @@ mod cli {
         python: Vec<python::PreparedQuery>,
 
         /// Scope Python code using a custom tree-sitter query. The query can be given
-        /// inline or if as a path to a file containing a query.
+        /// inline or as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         python_query: Vec<QuerySourceOrPath>,
     }
@@ -1443,7 +1443,7 @@ mod cli {
         rust: Vec<rust::PreparedQuery>,
 
         /// Scope Rust code using a custom tree-sitter query. The query can be given inline
-        /// or if as a path to a file containing a query.
+        /// or as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         rust_query: Vec<QuerySourceOrPath>,
     }
@@ -1456,7 +1456,7 @@ mod cli {
         typescript: Vec<typescript::PreparedQuery>,
 
         /// Scope TypeScript code using a custom tree-sitter query. The query can be given
-        /// inline or if as a path to a file containing a query.
+        /// inline or as a path to a file containing a query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
         typescript_query: Vec<QuerySourceOrPath>,
     }

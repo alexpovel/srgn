@@ -1607,7 +1607,7 @@ Language scopes:
 
       --csharp-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope C# code using a custom tree-sitter query. The query can be given inline or
-          if as a path to a file containing a query.
+          as a path to a file containing a query.
           
           [env: CSHARP_QUERY=]
 
@@ -1641,7 +1641,7 @@ Language scopes:
 
       --go-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope Go code using a custom tree-sitter query. The query can be given inline or
-          if as a path to a file containing a query.
+          as a path to a file containing a query.
           
           [env: GO_QUERY=]
 
@@ -1669,7 +1669,7 @@ Language scopes:
 
       --hcl-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-          The query can be given inline or if as a path to a file containing a query.
+          The query can be given inline or as a path to a file containing a query.
           
           [env: HCL_QUERY=]
 
@@ -1709,7 +1709,7 @@ Language scopes:
 
       --python-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope Python code using a custom tree-sitter query. The query can be given
-          inline or if as a path to a file containing a query.
+          inline or as a path to a file containing a query.
           
           [env: PYTHON_QUERY=]
 
@@ -1770,7 +1770,7 @@ Language scopes:
 
       --rust-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope Rust code using a custom tree-sitter query. The query can be given inline
-          or if as a path to a file containing a query.
+          or as a path to a file containing a query.
           
           [env: RUST_QUERY=]
 
@@ -1804,7 +1804,7 @@ Language scopes:
 
       --typescript-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope TypeScript code using a custom tree-sitter query. The query can be given
-          inline or if as a path to a file containing a query.
+          inline or as a path to a file containing a query.
           
           [env: TYPESCRIPT_QUERY=]
 
