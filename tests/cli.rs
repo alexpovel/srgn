@@ -403,8 +403,6 @@ Heizoelrueckstossabdaempfung.
         #[case] skip_output_check: bool,
         #[values(true, false)] dry_run: bool,
     ) -> anyhow::Result<()> {
-        use std::mem::ManuallyDrop;
-
         let args = args.iter().map(ToString::to_string).collect_vec();
 
         // Arrange
@@ -421,10 +419,10 @@ Heizoelrueckstossabdaempfung.
             baseline
         };
 
-        let candidate = ManuallyDrop::new(copy_to_tmp(&input));
+        let candidate = copy_to_tmp(&input);
         drop(input); // Prevent misuse
 
-        cmd.current_dir(&*candidate);
+        cmd.current_dir(&candidate);
         cmd.args(
             // Override; `Command` is detected as providing stdin but we're working on
             // files here.
@@ -448,11 +446,13 @@ Heizoelrueckstossabdaempfung.
         check_directories_equality(baseline, candidate.path().to_owned())?;
 
         // Test was successful: ok to drop.
-        drop(ManuallyDrop::into_inner(candidate));
+        candidate.close()?;
 
         // Let's look at command output now.
         if !skip_output_check {
-            snapshot_name.push_str(if dry_run { "-dry-run" } else { "" });
+            if dry_run {
+                snapshot_name.push_str("-dry-run");
+            }
 
             // These are inherently platform-specific, as they deal with file paths.
             snapshot_name.push('-');
@@ -967,6 +967,7 @@ right contents:
 
         let tmp_dir = tempfile::Builder::new()
             .prefix(pkg)
+            .keep(true) // Keep for manual inspection if needed
             .tempdir()
             .expect("Failed to create temporary directory");
 
