@@ -162,7 +162,7 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && language_scopers.is_some();
+    let search_mode = actions.is_empty() && language_scopers.is_some() || options.dry_run;
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
@@ -186,6 +186,22 @@ fn main() -> Result<()> {
         );
     }
 
+    let pipeline = if options.dry_run {
+        let action = Style {
+            fg: Some(Color::Green),
+            styles: vec![Styles::Bold],
+            ..Default::default()
+        };
+        let action: Box<dyn Action> = Box::new(action);
+        vec![actions, vec![action]]
+    } else {
+        vec![actions]
+    };
+
+    let pipeline: Vec<&[Box<dyn Action>]> = pipeline.iter().map(Vec::as_slice).collect();
+
+    // let x:  = pipeline.into();
+
     let language_scopers = language_scopers.unwrap_or_default();
 
     // Now write out
@@ -197,7 +213,7 @@ fn main() -> Result<()> {
                 standalone_action,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
             )?;
         }
         (Input::WalkOn(validator), false) => {
@@ -208,7 +224,7 @@ fn main() -> Result<()> {
                 &validator,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
                 search_mode,
                 options.threads.map_or_else(
                     || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
@@ -224,7 +240,7 @@ fn main() -> Result<()> {
                 &validator,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
                 search_mode,
             )?;
         }
@@ -270,7 +286,8 @@ fn handle_actions_on_stdin(
     standalone_action: StandaloneAction,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: &[&[Box<dyn Action>]],
+    // pipeline: impl IntoIterator<Item = impl IntoIterator<Item = Box<dyn Action>>>,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -284,7 +301,7 @@ fn handle_actions_on_stdin(
         &mut destination,
         general_scoper,
         language_scopers,
-        actions,
+        pipeline,
     )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
@@ -307,7 +324,7 @@ fn handle_actions_on_many_files_sorted(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: &[&[Box<dyn Action>]],
     search_mode: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
@@ -335,7 +352,7 @@ fn handle_actions_on_many_files_sorted(
                     validator,
                     general_scoper,
                     language_scopers,
-                    actions,
+                    pipeline,
                     search_mode,
                 );
 
@@ -414,7 +431,7 @@ fn handle_actions_on_many_files_threaded(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: &[&[Box<dyn Action>]],
     search_mode: bool,
     n_threads: usize,
 ) -> Result<(), ProgramError> {
@@ -449,7 +466,7 @@ fn handle_actions_on_many_files_threaded(
                         validator,
                         general_scoper,
                         language_scopers,
-                        actions,
+                        pipeline,
                         search_mode,
                     );
 
@@ -545,7 +562,7 @@ fn process_path(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: &[&[Box<dyn Action>]],
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
@@ -579,7 +596,7 @@ fn process_path(
             &mut destination,
             general_scoper,
             language_scopers,
-            actions,
+            pipeline,
         )?;
 
         (destination, source, filesize, changed)
@@ -624,6 +641,7 @@ fn process_path(
                     new_contents.escape_debug()
                 );
                 writeln!(stdout, "{}", format!("{}:", path.display()).magenta())?;
+                unreachable!("will never get here");
 
                 let diff = TextDiff::from_lines(&old_contents, &new_contents);
                 for change in diff.iter_all_changes() {
@@ -670,7 +688,8 @@ fn apply(
     destination: &mut String,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: &[&[Box<dyn Action>]],
+    // pipeline: impl IntoIterator<Item = impl IntoIterator<Item = Box<dyn Action>>>,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -702,8 +721,10 @@ fn apply(
         view.squeeze();
     }
 
-    for action in actions {
-        view.map_with_context(action)?;
+    for actions in pipeline {
+        for action in *actions {
+            view.map_with_context(action)?;
+        }
     }
 
     debug!("Writing to destination.");
