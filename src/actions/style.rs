@@ -13,6 +13,28 @@ pub struct Style {
     pub styles: Vec<Styles>,
 }
 
+impl Style {
+    /// Creates a style with red foreground color and bold font weight.
+    #[must_use]
+    pub fn red_bold() -> Self {
+        Self {
+            fg: Some(Color::Red),
+            bg: None,
+            styles: vec![Styles::Bold],
+        }
+    }
+
+    /// Creates a style with green foreground color and bold font weight.
+    #[must_use]
+    pub fn green_bold() -> Self {
+        Self {
+            fg: Some(Color::Green),
+            bg: None,
+            styles: vec![Styles::Bold],
+        }
+    }
+}
+
 impl Action for Style {
     fn act(&self, input: &str) -> String {
         const NEWLINE: char = '\n';

@@ -1457,6 +1457,13 @@ Options (global):
           Processing no files is not an error condition in itself, but might be an
           unexpected outcome in some contexts. This flag makes the condition explicit.
 
+      --dry-run
+          Do not destructively overwrite files, instead print rich diff only.
+          
+          The diff details the names of files which would be modified, alongside all
+          changes inside those files which would be performed outside of dry running.
+          It is similar to git diff with word diffing enabled.
+
   -i, --invert
           Undo the effects of passed actions, where applicable.
           
