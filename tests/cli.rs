@@ -401,7 +401,7 @@ Heizoelrueckstossabdaempfung.
         #[case] input: PathBuf,
         #[case] args: &[&str],
         #[case] skip_output_check: bool,
-        #[values(true, false)] dry_run: bool,
+        #[values(true, false)] dry_run: bool, // Check all permutations for all inputs
     ) -> anyhow::Result<()> {
         let args = args.iter().map(ToString::to_string).collect_vec();
 
@@ -445,7 +445,8 @@ Heizoelrueckstossabdaempfung.
         // diff directories.
         check_directories_equality(baseline, candidate.path().to_owned())?;
 
-        // Test was successful: ok to drop.
+        // Test was successful: ok to drop. Caveat: fails test if deletion fails, which
+        // is unwarranted coupling?
         candidate.close()?;
 
         // Let's look at command output now.

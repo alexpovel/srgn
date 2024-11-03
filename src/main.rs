@@ -280,7 +280,6 @@ fn handle_actions_on_stdin(
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: &[&[Box<dyn Action>]],
-    // pipeline: impl IntoIterator<Item = impl IntoIterator<Item = Box<dyn Action>>>,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -662,7 +661,6 @@ fn apply(
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: &[&[Box<dyn Action>]],
-    // pipeline: impl IntoIterator<Item = impl IntoIterator<Item = Box<dyn Action>>>,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -706,9 +704,9 @@ fn apply(
     debug!("Writing to destination.");
     let line_based = global_options.only_matching || global_options.line_numbers;
     if line_based {
-        let line_views = views.iter().map(|v| v.lines().into_iter()).collect_vec();
+        let line_based_views = views.iter().map(|v| v.lines().into_iter()).collect_vec();
 
-        for (i, lines) in line_views.into_iter().parallel_zip().enumerate() {
+        for (i, lines) in line_based_views.into_iter().parallel_zip().enumerate() {
             let i = i + 1;
             for line in lines {
                 if !global_options.only_matching || line.has_any_in_scope() {
@@ -1079,8 +1077,9 @@ mod cli {
         pub fail_no_files: bool,
         /// Do not destructively overwrite files, instead print rich diff only.
         ///
-        /// The rich diff contains file names and changes which would be performed
-        /// outside of dry running.
+        /// The diff details the names of files which would be modified, alongside all
+        /// changes inside those files which would be performed outside of dry running.
+        /// It is similar to git diff with word diffing enabled.
         #[arg(long, verbatim_doc_comment)]
         pub dry_run: bool,
         /// Undo the effects of passed actions, where applicable.
