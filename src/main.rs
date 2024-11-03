@@ -272,6 +272,12 @@ enum StandaloneAction {
     None,
 }
 
+/// A "pipeline" in that there's not just a single sequence (== slice) of actions, but
+/// instead multiple. These can be used in parallel (on the same or different views),
+/// and the different results then used for advanced use cases. For example, diffing
+/// different results against one another.
+type Pipeline<'a> = &'a [&'a [Box<dyn Action>]];
+
 /// Main entrypoint for simple `stdin` -> `stdout` processing.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_stdin(
@@ -279,7 +285,7 @@ fn handle_actions_on_stdin(
     standalone_action: StandaloneAction,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    pipeline: &[&[Box<dyn Action>]],
+    pipeline: Pipeline<'_>,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -316,7 +322,7 @@ fn handle_actions_on_many_files_sorted(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    pipeline: &[&[Box<dyn Action>]],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
@@ -423,7 +429,7 @@ fn handle_actions_on_many_files_threaded(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    pipeline: &[&[Box<dyn Action>]],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
     n_threads: usize,
 ) -> Result<(), ProgramError> {
@@ -554,7 +560,7 @@ fn process_path(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    pipeline: &[&[Box<dyn Action>]],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
@@ -660,7 +666,7 @@ fn apply(
     destination: &mut String,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    pipeline: &[&[Box<dyn Action>]],
+    pipeline: Pipeline<'_>,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -722,6 +728,17 @@ fn apply(
             }
         }
     } else {
+        assert_eq!(
+            views.len(),
+            1,
+            // Multiple views are useful for e.g. diffing, which works line-based (see
+            // `dry_run`). When not line-based, they *currently* do not make sense, as
+            // there's neither any code path where there *would* be multiple views at
+            // this point, *nor* a valid use case. Printing multiple views here would
+            // probably wreak havoc.
+            "Multiple views at this stage make no sense."
+        );
+
         for view in views {
             destination.push_str(&view.to_string());
         }
