@@ -16,7 +16,6 @@ use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
 use log::{debug, error, info, trace, LevelFilter};
 use pathdiff::diff_paths;
-use similar::{ChangeTag, TextDiff};
 #[cfg(feature = "german")]
 use srgn::actions::German;
 use srgn::actions::{
@@ -24,6 +23,7 @@ use srgn::actions::{
 };
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::iterext::ParallelZipExt;
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
@@ -168,7 +168,11 @@ fn main() -> Result<()> {
         info!("Will use search mode."); // Modelled after ripgrep!
 
         let style = Style {
-            fg: Some(Color::Red),
+            fg: if options.dry_run {
+                Some(Color::Green) // "Would change to this", like git diff
+            } else {
+                Some(Color::Red) // "Found!", like ripgrep
+            },
             styles: vec![Styles::Bold],
             ..Default::default()
         };
@@ -187,13 +191,13 @@ fn main() -> Result<()> {
     }
 
     let pipeline = if options.dry_run {
-        let action = Style {
-            fg: Some(Color::Green),
+        let action: Box<dyn Action> = Box::new(Style {
+            fg: Some(Color::Red),
             styles: vec![Styles::Bold],
             ..Default::default()
-        };
-        let action: Box<dyn Action> = Box::new(action);
-        vec![actions, vec![action]]
+        });
+        let color_only = vec![action];
+        vec![color_only, actions]
     } else {
         vec![actions]
     };
@@ -579,7 +583,7 @@ fn process_path(
 
     debug!("Processing path: {:?}", path);
 
-    let (new_contents, old_contents, filesize, changed) = {
+    let (new_contents, filesize, changed) = {
         let mut file = File::open(&path)?;
 
         let filesize = file.metadata().map_or(0, |m| m.len());
@@ -599,7 +603,7 @@ fn process_path(
             pipeline,
         )?;
 
-        (destination, source, filesize, changed)
+        (destination, filesize, changed)
     };
 
     // Hold the lock so results aren't intertwined
@@ -629,37 +633,17 @@ fn process_path(
         }
 
         if changed {
-            trace!(
-                "File contents changed, will process file: {}",
-                path.display()
+            debug!("Got new file contents, writing to file: {:?}", path);
+            assert!(
+                !global_options.dry_run,
+                // Dry run leverages search mode, so should never get here. Assert for
+                // extra safety.
+                "Dry running, but attempted to write file!"
             );
+            fs::write(&path, new_contents.as_bytes())?;
 
-            if global_options.dry_run {
-                debug!(
-                    "Dry-running: will not overwrite file '{}' with new contents: {}",
-                    path.display(),
-                    new_contents.escape_debug()
-                );
-                writeln!(stdout, "{}", format!("{}:", path.display()).magenta())?;
-                unreachable!("will never get here");
-
-                let diff = TextDiff::from_lines(&old_contents, &new_contents);
-                for change in diff.iter_all_changes() {
-                    let (sign, color) = match change.tag() {
-                        ChangeTag::Delete => ('-', Color::Red),
-                        ChangeTag::Insert => ('+', Color::Green),
-                        ChangeTag::Equal => continue,
-                    };
-
-                    write!(stdout, "{}", format!("{sign} {change}").color(color))?;
-                }
-            } else {
-                debug!("Got new file contents, writing to file: {:?}", path);
-                fs::write(&path, new_contents.as_bytes())?;
-
-                // Confirm after successful processing.
-                writeln!(stdout, "{}", path.display())?;
-            }
+            // Confirm after successful processing.
+            writeln!(stdout, "{}", path.display())?;
         } else {
             debug!(
                 "Skipping writing file anew (nothing changed): {}",
@@ -721,7 +705,10 @@ fn apply(
         view.squeeze();
     }
 
-    for actions in pipeline {
+    // Give each pipeline its own fresh view
+    let mut views = vec![view; pipeline.len()];
+
+    for (actions, view) in pipeline.iter().zip_eq(&mut views) {
         for action in *actions {
             view.map_with_context(action)?;
         }
@@ -730,21 +717,27 @@ fn apply(
     debug!("Writing to destination.");
     let line_based = global_options.only_matching || global_options.line_numbers;
     if line_based {
-        for (i, line) in view.lines().into_iter().enumerate() {
-            let i = i + 1;
-            if !global_options.only_matching || line.has_any_in_scope() {
-                if global_options.line_numbers {
-                    // `ColoredString` needs to be 'evaluated' to do anything; make sure
-                    // to not forget even if this is moved outside of `format!`.
-                    #[allow(clippy::to_string_in_format_args)]
-                    destination.push_str(&format!("{}:", i.to_string().green().to_string()));
-                }
+        let line_views = views.iter().map(|v| v.lines().into_iter()).collect_vec();
 
-                destination.push_str(&line.to_string());
+        for (i, lines) in line_views.into_iter().parallel_zip().enumerate() {
+            let i = i + 1;
+            for line in lines {
+                if !global_options.only_matching || line.has_any_in_scope() {
+                    if global_options.line_numbers {
+                        // `ColoredString` needs to be 'evaluated' to do anything; make sure
+                        // to not forget even if this is moved outside of `format!`.
+                        #[allow(clippy::to_string_in_format_args)]
+                        destination.push_str(&format!("{}:", i.to_string().green().to_string()));
+                    }
+
+                    destination.push_str(&line.to_string());
+                }
             }
         }
     } else {
-        destination.push_str(&view.to_string());
+        for view in views {
+            destination.push_str(&view.to_string());
+        }
     };
     debug!("Done writing to destination.");
 

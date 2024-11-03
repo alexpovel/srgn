@@ -14,10 +14,12 @@ args:
   - baz
 stdin: ~
 stdout:
-  - "subdir/2.py:\n"
-  - "- def foo(bar: int) -> int:\n"
-  - "+ def baz(bar: int) -> int:\n"
-  - "subdir/subdir/3.py:\n"
-  - "- def foo(bar: int) -> int:\n"
-  - "+ def baz(bar: int) -> int:\n"
+  - "subdir/2.py\n"
+  - "1:def foo(bar: int) -> int:\n"
+  - "1:def baz(bar: int) -> int:\n"
+  - "\n"
+  - "subdir/subdir/3.py\n"
+  - "1:def foo(bar: int) -> int:\n"
+  - "1:def baz(bar: int) -> int:\n"
+  - "\n"
 exit_code: 0
