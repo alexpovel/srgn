@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::{env, fmt};
 
 use anyhow::{Context, Result};
-use colored::{Color, Colorize, Styles};
+use colored::Colorize;
 use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
 use log::{debug, error, info, trace, LevelFilter};
@@ -167,14 +167,10 @@ fn main() -> Result<()> {
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
 
-        let style = Style {
-            fg: if options.dry_run {
-                Some(Color::Green) // "Would change to this", like git diff
-            } else {
-                Some(Color::Red) // "Found!", like ripgrep
-            },
-            styles: vec![Styles::Bold],
-            ..Default::default()
+        let style = if options.dry_run {
+            Style::green_bold() // "Would change to this", like git diff
+        } else {
+            Style::red_bold() // "Found!", like ripgrep
         };
         actions.push(Box::new(style));
 
@@ -191,11 +187,7 @@ fn main() -> Result<()> {
     }
 
     let pipeline = if options.dry_run {
-        let action: Box<dyn Action> = Box::new(Style {
-            fg: Some(Color::Red),
-            styles: vec![Styles::Bold],
-            ..Default::default()
-        });
+        let action: Box<dyn Action> = Box::new(Style::red_bold());
         let color_only = vec![action];
         vec![color_only, actions]
     } else {
@@ -203,9 +195,6 @@ fn main() -> Result<()> {
     };
 
     let pipeline: Vec<&[Box<dyn Action>]> = pipeline.iter().map(Vec::as_slice).collect();
-
-    // let x:  = pipeline.into();
-
     let language_scopers = language_scopers.unwrap_or_default();
 
     // Now write out
