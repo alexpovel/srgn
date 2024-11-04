@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::{env, fmt};
 
 use anyhow::{Context, Result};
-use colored::{Color, Colorize, Styles};
+use colored::Colorize;
 use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
 use log::{debug, error, info, trace, LevelFilter};
@@ -23,6 +23,7 @@ use srgn::actions::{
 };
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
+use srgn::iterext::ParallelZipExt;
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
@@ -161,15 +162,15 @@ fn main() -> Result<()> {
     // Only have this kick in if a language scoper is in play; otherwise, we'd just be a
     // poor imitation of ripgrep itself. Plus, this retains the `tr`-like behavior,
     // setting it apart from other utilities.
-    let search_mode = actions.is_empty() && language_scopers.is_some();
+    let search_mode = actions.is_empty() && language_scopers.is_some() || options.dry_run;
 
     if search_mode {
         info!("Will use search mode."); // Modelled after ripgrep!
 
-        let style = Style {
-            fg: Some(Color::Red),
-            styles: vec![Styles::Bold],
-            ..Default::default()
+        let style = if options.dry_run {
+            Style::green_bold() // "Would change to this", like git diff
+        } else {
+            Style::red_bold() // "Found!", like ripgrep
         };
         actions.push(Box::new(style));
 
@@ -185,6 +186,15 @@ fn main() -> Result<()> {
         );
     }
 
+    let pipeline = if options.dry_run {
+        let action: Box<dyn Action> = Box::new(Style::red_bold());
+        let color_only = vec![action];
+        vec![color_only, actions]
+    } else {
+        vec![actions]
+    };
+
+    let pipeline: Vec<&[Box<dyn Action>]> = pipeline.iter().map(Vec::as_slice).collect();
     let language_scopers = language_scopers.unwrap_or_default();
 
     // Now write out
@@ -196,7 +206,7 @@ fn main() -> Result<()> {
                 standalone_action,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
             )?;
         }
         (Input::WalkOn(validator), false) => {
@@ -207,7 +217,7 @@ fn main() -> Result<()> {
                 &validator,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
                 search_mode,
                 options.threads.map_or_else(
                     || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
@@ -223,7 +233,7 @@ fn main() -> Result<()> {
                 &validator,
                 &general_scoper,
                 &language_scopers,
-                &actions,
+                &pipeline,
                 search_mode,
             )?;
         }
@@ -262,6 +272,12 @@ enum StandaloneAction {
     None,
 }
 
+/// A "pipeline" in that there's not just a single sequence (== slice) of actions, but
+/// instead multiple. These can be used in parallel (on the same or different views),
+/// and the different results then used for advanced use cases. For example, diffing
+/// different results against one another.
+type Pipeline<'a> = &'a [&'a [Box<dyn Action>]];
+
 /// Main entrypoint for simple `stdin` -> `stdout` processing.
 #[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_stdin(
@@ -269,7 +285,7 @@ fn handle_actions_on_stdin(
     standalone_action: StandaloneAction,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: Pipeline<'_>,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -283,7 +299,7 @@ fn handle_actions_on_stdin(
         &mut destination,
         general_scoper,
         language_scopers,
-        actions,
+        pipeline,
     )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
@@ -306,7 +322,7 @@ fn handle_actions_on_many_files_sorted(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
@@ -334,7 +350,7 @@ fn handle_actions_on_many_files_sorted(
                     validator,
                     general_scoper,
                     language_scopers,
-                    actions,
+                    pipeline,
                     search_mode,
                 );
 
@@ -413,7 +429,7 @@ fn handle_actions_on_many_files_threaded(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
     n_threads: usize,
 ) -> Result<(), ProgramError> {
@@ -448,7 +464,7 @@ fn handle_actions_on_many_files_threaded(
                         validator,
                         general_scoper,
                         language_scopers,
-                        actions,
+                        pipeline,
                         search_mode,
                     );
 
@@ -544,7 +560,7 @@ fn process_path(
     validator: &Validator,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: Pipeline<'_>,
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
@@ -578,7 +594,7 @@ fn process_path(
             &mut destination,
             general_scoper,
             language_scopers,
-            actions,
+            pipeline,
         )?;
 
         (destination, filesize, changed)
@@ -612,9 +628,15 @@ fn process_path(
 
         if changed {
             debug!("Got new file contents, writing to file: {:?}", path);
+            assert!(
+                !global_options.dry_run,
+                // Dry run leverages search mode, so should never get here. Assert for
+                // extra safety.
+                "Dry running, but attempted to write file!"
+            );
             fs::write(&path, new_contents.as_bytes())?;
 
-            // Confirm after successful write.
+            // Confirm after successful processing.
             writeln!(stdout, "{}", path.display())?;
         } else {
             debug!(
@@ -644,7 +666,7 @@ fn apply(
     destination: &mut String,
     general_scoper: &Box<dyn Scoper>,
     language_scopers: &[Box<dyn LanguageScoper>],
-    actions: &[Box<dyn Action>],
+    pipeline: Pipeline<'_>,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -676,28 +698,50 @@ fn apply(
         view.squeeze();
     }
 
-    for action in actions {
-        view.map_with_context(action)?;
+    // Give each pipeline its own fresh view
+    let mut views = vec![view; pipeline.len()];
+
+    for (actions, view) in pipeline.iter().zip_eq(&mut views) {
+        for action in *actions {
+            view.map_with_context(action)?;
+        }
     }
 
     debug!("Writing to destination.");
     let line_based = global_options.only_matching || global_options.line_numbers;
     if line_based {
-        for (i, line) in view.lines().into_iter().enumerate() {
-            let i = i + 1;
-            if !global_options.only_matching || line.has_any_in_scope() {
-                if global_options.line_numbers {
-                    // `ColoredString` needs to be 'evaluated' to do anything; make sure
-                    // to not forget even if this is moved outside of `format!`.
-                    #[allow(clippy::to_string_in_format_args)]
-                    destination.push_str(&format!("{}:", i.to_string().green().to_string()));
-                }
+        let line_based_views = views.iter().map(|v| v.lines().into_iter()).collect_vec();
 
-                destination.push_str(&line.to_string());
+        for (i, lines) in line_based_views.into_iter().parallel_zip().enumerate() {
+            let i = i + 1;
+            for line in lines {
+                if !global_options.only_matching || line.has_any_in_scope() {
+                    if global_options.line_numbers {
+                        // `ColoredString` needs to be 'evaluated' to do anything; make sure
+                        // to not forget even if this is moved outside of `format!`.
+                        #[allow(clippy::to_string_in_format_args)]
+                        destination.push_str(&format!("{}:", i.to_string().green().to_string()));
+                    }
+
+                    destination.push_str(&line.to_string());
+                }
             }
         }
     } else {
-        destination.push_str(&view.to_string());
+        assert_eq!(
+            views.len(),
+            1,
+            // Multiple views are useful for e.g. diffing, which works line-based (see
+            // `dry_run`). When not line-based, they *currently* do not make sense, as
+            // there's neither any code path where there *would* be multiple views at
+            // this point, *nor* a valid use case. Printing multiple views here would
+            // probably wreak havoc.
+            "Multiple views at this stage make no sense."
+        );
+
+        for view in views {
+            destination.push_str(&view.to_string());
+        }
     };
     debug!("Done writing to destination.");
 
@@ -1051,6 +1095,13 @@ mod cli {
         /// unexpected outcome in some contexts. This flag makes the condition explicit.
         #[arg(long, verbatim_doc_comment, alias = "fail-empty-glob")]
         pub fail_no_files: bool,
+        /// Do not destructively overwrite files, instead print rich diff only.
+        ///
+        /// The diff details the names of files which would be modified, alongside all
+        /// changes inside those files which would be performed outside of dry running.
+        /// It is similar to git diff with word diffing enabled.
+        #[arg(long, verbatim_doc_comment)]
+        pub dry_run: bool,
         /// Undo the effects of passed actions, where applicable.
         ///
         /// Requires a 1:1 mapping between replacements and original, which is currently

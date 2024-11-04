@@ -401,31 +401,37 @@ Heizoelrueckstossabdaempfung.
         #[case] input: PathBuf,
         #[case] args: &[&str],
         #[case] skip_output_check: bool,
+        #[values(true, false)] dry_run: bool, // Check all permutations for all inputs
     ) -> anyhow::Result<()> {
-        use std::mem::ManuallyDrop;
-
         let args = args.iter().map(ToString::to_string).collect_vec();
 
         // Arrange
         let mut cmd = get_cmd();
 
-        let baseline = {
+        let baseline = if dry_run {
+            // Stays the same! In dry runs, we compare against the very same directory,
+            // as it should not change.
+            input.clone()
+        } else {
             let mut baseline = input.clone();
             baseline.pop();
             baseline.push("out");
             baseline
         };
 
-        let candidate = ManuallyDrop::new(copy_to_tmp(&input));
+        let candidate = copy_to_tmp(&input);
         drop(input); // Prevent misuse
 
-        cmd.current_dir(&*candidate);
+        cmd.current_dir(&candidate);
         cmd.args(
             // Override; `Command` is detected as providing stdin but we're working on
             // files here.
             ["--stdin-override-to", "false"],
         );
         cmd.args(&args);
+        if dry_run {
+            cmd.arg("--dry-run");
+        }
 
         // Act
         let output = cmd.output().expect("failed to execute binary under test");
@@ -435,15 +441,20 @@ Heizoelrueckstossabdaempfung.
         // Thing itself works
         assert!(output.status.success(), "Binary execution itself failed");
 
-        // Results are correct Do not drop on panic, to keep tmpdir in place for manual
-        // inspection. Can then diff directories.
+        // Do not drop on panic, to keep tmpdir in place for manual inspection. Can then
+        // diff directories.
         check_directories_equality(baseline, candidate.path().to_owned())?;
 
-        // Test was successful: ok to drop.
-        drop(ManuallyDrop::into_inner(candidate));
+        // Test was successful: ok to drop. Caveat: fails test if deletion fails, which
+        // is unwarranted coupling?
+        candidate.close()?;
 
         // Let's look at command output now.
         if !skip_output_check {
+            if dry_run {
+                snapshot_name.push_str("-dry-run");
+            }
+
             // These are inherently platform-specific, as they deal with file paths.
             snapshot_name.push('-');
             snapshot_name.push_str(std::env::consts::OS);
@@ -957,6 +968,7 @@ right contents:
 
         let tmp_dir = tempfile::Builder::new()
             .prefix(pkg)
+            .keep(true) // Keep for manual inspection if needed
             .tempdir()
             .expect("Failed to create temporary directory");
 
