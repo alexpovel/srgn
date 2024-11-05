@@ -5,6 +5,7 @@ info:
   stderr: ""
 ---
 args:
+  - "-vvvv"
   - "--sorted"
   - "--python"
   - function-names
