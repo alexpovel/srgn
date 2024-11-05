@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
-use log::{debug, error, info, trace, LevelFilter};
+use log::{debug, error, info, trace, warn, LevelFilter};
 use pathdiff::diff_paths;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -361,6 +361,8 @@ fn handle_actions_on_many_files_sorted(
 
                 n_files_processed += match res {
                     Ok(()) => 1,
+
+                    // Soft errors with reasonable handling available:
                     Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => 0,
                     Err(PathProcessingError::ApplicationError(ApplicationError::SomeInScope))
                         if global_options.fail_any =>
@@ -379,13 +381,24 @@ fn handle_actions_on_many_files_sorted(
                         trace!("Detected broken pipe, stopping search.");
                         break;
                     }
+                    Err(PathProcessingError::IoError(e, _))
+                        // `InvalidData` does NOT equal "invalid utf-8", but that's how
+                        // it's _effectively_ used in the "read to string" type of
+                        // functions we use throughout.
+                        // https://github.com/rust-lang/rust/blob/096277e989d6de11c3077472fc05778e261e7b8e/library/std/src/io/error.rs#L78-L79
+                        if e.kind() == io::ErrorKind::InvalidData =>
+                    {
+                        warn!("File contains unreadable data (binary? invalid utf-8?), skipped: {}", path.display());
+                        0
+                    }
+
+                    // Hard errors we should do something about:
                     Err(
                         e @ (PathProcessingError::ApplicationError(ApplicationError::ActionError(
                             ..,
                         ))
                         | PathProcessingError::IoError(..)),
                     ) => {
-                        // Hard errors we should do something about.
                         if search_mode {
                             error!("Error walking at {}: {}", path.display(), e);
                             0
@@ -478,6 +491,8 @@ fn handle_actions_on_many_files_threaded(
                             *n_files_processed.lock().unwrap() += 1;
                             WalkState::Continue
                         }
+
+                        // Soft errors with reasonable handling available:
                         Err(PathProcessingError::NotAFile | PathProcessingError::InvalidFile) => {
                             WalkState::Continue
                         }
@@ -499,11 +514,22 @@ fn handle_actions_on_many_files_threaded(
                             trace!("Detected broken pipe, stopping search.");
                             WalkState::Quit
                         }
+                        Err(PathProcessingError::IoError(e, _))
+                            // `InvalidData` does NOT equal "invalid utf-8", but that's
+                            // how it's _effectively_ used in the "read to string" type
+                            // of functions we use throughout.
+                            // https://github.com/rust-lang/rust/blob/096277e989d6de11c3077472fc05778e261e7b8e/library/std/src/io/error.rs#L78-L79
+                            if e.kind() == io::ErrorKind::InvalidData =>
+                        {
+                            warn!("File contains unreadable data (binary? invalid utf-8?), skipped: {}", path.display());
+                            WalkState::Continue
+                        }
+
+                        // Hard errors we should do something about:
                         Err(
                             e @ (PathProcessingError::ApplicationError(..)
                             | PathProcessingError::IoError(..)),
                         ) => {
-                            // Hard errors we should do something about.
                             error!("Error walking at {} due to: {}", path.display(), e);
 
                             if search_mode {
