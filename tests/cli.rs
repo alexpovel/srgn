@@ -346,6 +346,7 @@ Heizoelrueckstossabdaempfung.
         "files-inplace-python",
         "tests/files/files-python/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--sorted",
             "--glob",
             "**/*.py",
@@ -358,6 +359,7 @@ Heizoelrueckstossabdaempfung.
         "language-scoping-inplace-python",
         "tests/files/language-scoping-python/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--sorted",
             "--python",
             "function-names",
@@ -370,6 +372,7 @@ Heizoelrueckstossabdaempfung.
         "language-scoping-and-files-inplace-python",
         "tests/files/language-scoping-and-files-python/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--sorted",
             "--python",
             "function-names",
@@ -384,6 +387,7 @@ Heizoelrueckstossabdaempfung.
         "language-scoping-and-files-inplace-python",
         "tests/files/language-scoping-and-files-python/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--python",
             "function-names",
             "--glob", // Will override language scoper
@@ -400,6 +404,7 @@ Heizoelrueckstossabdaempfung.
         "binary-data-sorted",
         "tests/files/binary-data/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--sorted",
             "--glob",
             "**/*",
@@ -412,6 +417,7 @@ Heizoelrueckstossabdaempfung.
         "binary-data-sorted",
         "tests/files/binary-data/in",
         &[
+            "-vvvv", // Trigger logging lines, just for more coverage
             "--glob",
             "**/*",
             "0a1a09c8-2995-4ac5-9d60-01a0f02920e8",

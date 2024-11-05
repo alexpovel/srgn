@@ -1,10 +1,11 @@
 ---
 source: tests/cli.rs
-expression: "CommandSnap {\n    args,\n    stdin: None,\n    stdout: stdout.split_inclusive('\\n').map(|s| s.to_owned()).collect_vec(),\n    exit_code,\n}"
+expression: "CommandSnap\n{\n    args, stdin: None, stdout:\n    stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
 info:
-  stderr: ""
+  stderr: []
 ---
 args:
+  - "-vvvv"
   - "--sorted"
   - "--glob"
   - "**/*.py"
