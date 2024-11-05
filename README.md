@@ -1191,6 +1191,21 @@ which can be caught as:
 cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) @name tag: (raw_string_literal) @tag (#match? @name "[tT]oken") (#not-eq? @tag "`json:\"-\"`"))' --fail-any # will fail
 ```
 
+##### Custom queries from file
+
+Typing out tree-sitter queries at the CLI can be unwieldy. To mitigate this you can read queries from [file](docs/query/python_cond_query.scm).
+
+Below we use the same Python file from the previous section with an invocation of
+
+```bash
+cat cond.py | srgn --python-query 'docs/python_cond_query.scm' 
+1:if x:
+2:    return left
+3:else:
+4:    return right
+```
+
+
 ###### Ignoring parts of matches
 
 Occassionally, parts of a match need to be ignored, for example when no suitable
@@ -1567,8 +1582,9 @@ Language scopes:
           - declaration:     Declaration
           - call-expression: Call expression
 
-      --c-query <TREE-SITTER-QUERY>
-          Scope C code using a custom tree-sitter query.
+      --c-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope C code using a custom tree-sitter query. The query can be given inline or
+          as a path to a file containing a query.
           
           [env: C_QUERY=]
 
@@ -1596,8 +1612,9 @@ Language scopes:
           - attribute:            Attribute names
           - identifier:           Identifier names
 
-      --csharp-query <TREE-SITTER-QUERY>
-          Scope C# code using a custom tree-sitter query.
+      --csharp-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope C# code using a custom tree-sitter query. The query can be given inline or
+          as a path to a file containing a query.
           
           [env: CSHARP_QUERY=]
 
@@ -1629,8 +1646,9 @@ Language scopes:
           - goto:        `goto` statements
           - struct-tags: Struct tags
 
-      --go-query <TREE-SITTER-QUERY>
-          Scope Go code using a custom tree-sitter query.
+      --go-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope Go code using a custom tree-sitter query. The query can be given inline or
+          as a path to a file containing a query.
           
           [env: GO_QUERY=]
 
@@ -1656,8 +1674,9 @@ Language scopes:
           - comments:       Comments
           - strings:        Literal strings
 
-      --hcl-query <TREE-SITTER-QUERY>
+      --hcl-query <TREE-SITTER-QUERY-OR-FILENAME>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.
+          The query can be given inline or as a path to a file containing a query.
           
           [env: HCL_QUERY=]
 
@@ -1695,8 +1714,9 @@ Language scopes:
           - types:                Types in type hints
           - identifiers:          Identifiers (variable names, ...)
 
-      --python-query <TREE-SITTER-QUERY>
-          Scope Python code using a custom tree-sitter query.
+      --python-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope Python code using a custom tree-sitter query. The query can be given
+          inline or as a path to a file containing a query.
           
           [env: PYTHON_QUERY=]
 
@@ -1755,8 +1775,9 @@ Language scopes:
           - unsafe:           `unsafe` keyword usages (`unsafe fn`, `unsafe` blocks,
             `unsafe Trait`, `unsafe impl Trait`)
 
-      --rust-query <TREE-SITTER-QUERY>
-          Scope Rust code using a custom tree-sitter query.
+      --rust-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope Rust code using a custom tree-sitter query. The query can be given inline
+          or as a path to a file containing a query.
           
           [env: RUST_QUERY=]
 
@@ -1788,8 +1809,9 @@ Language scopes:
           - namespace:      `namespace` blocks
           - export:         `export` blocks
 
-      --typescript-query <TREE-SITTER-QUERY>
-          Scope TypeScript code using a custom tree-sitter query.
+      --typescript-query <TREE-SITTER-QUERY-OR-FILENAME>
+          Scope TypeScript code using a custom tree-sitter query. The query can be given
+          inline or as a path to a file containing a query.
           
           [env: TYPESCRIPT_QUERY=]
 

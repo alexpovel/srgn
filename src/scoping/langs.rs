@@ -49,7 +49,7 @@ impl CompiledQuery {
     /// # Errors
     ///
     /// See the concrete type of the [`TSQueryError`] variant for when this method errors.
-    fn from_raw_query(lang: &TSLanguage, query: &RawQuery) -> Result<Self, TSQueryError> {
+    fn from_source(lang: &TSLanguage, query: &QuerySource) -> Result<Self, TSQueryError> {
         Self::from_str(lang, &query.0)
     }
 
@@ -92,13 +92,13 @@ impl CompiledQuery {
     }
 }
 
-/// A query over a language, for scoping.
+/// An uncompiled source for a query over a language, for scoping.
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
 #[derive(Clone, Debug)]
-pub struct RawQuery(pub Cow<'static, str>);
+pub struct QuerySource(pub Cow<'static, str>);
 
-impl From<String> for RawQuery {
+impl From<String> for QuerySource {
     fn from(s: String) -> Self {
         Self(s.into())
     }

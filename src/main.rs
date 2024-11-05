@@ -77,7 +77,7 @@ fn main() -> Result<()> {
     // internally even, but we have no access here.
 
     let language_scopers = languages_scopes
-        .compile_raw_queries_to_scopes()?
+        .compile_query_sources_to_scopes()?
         .map(Arc::new);
     debug!("Done assembling scopers.");
 
@@ -989,13 +989,16 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
+    use std::io::Read as _;
     use std::num::NonZero;
+    use std::{fs, io};
 
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
     use clap_complete::{generate, Generator, Shell};
+    use log::info;
     use srgn::scoping::langs::{
-        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, RawQuery,
+        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, QuerySource,
     };
     use srgn::GLOBAL_SCOPE;
     use tree_sitter::QueryError as TSQueryError;
@@ -1067,7 +1070,7 @@ mod cli {
             generator,
             cmd,
             cmd.get_name().to_string(),
-            &mut std::io::stdout(),
+            &mut io::stdout(),
         );
     }
 
@@ -1295,7 +1298,7 @@ mod cli {
     }
 
     /// For use as <https://docs.rs/clap/latest/clap/struct.Arg.html#method.value_name>
-    const TREE_SITTER_QUERY_VALUE_NAME: &str = "TREE-SITTER-QUERY";
+    const TREE_SITTER_QUERY_VALUE_OR_FILENAME: &str = "TREE-SITTER-QUERY-OR-FILENAME";
 
     macro_rules! impl_lang_scopes {
         ($(($lang_flag:ident, $lang_query_flag:ident, $lang_scope:ident),)+) => {
@@ -1310,8 +1313,8 @@ mod cli {
             }
 
             impl LanguageScopes {
-                /// Finds the first language field set, if any, and compiles the `RawQuery`'s into a list of `LanguageScoper`'s.
-                pub(super) fn compile_raw_queries_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
+                /// Finds the first language field set, if any, and compiles the `QuerySourceOrPath`'s into a list of `LanguageScoper`'s.
+                pub(super) fn compile_query_sources_to_scopes(self) -> Result<Option<crate::ScoperList>, ProgramError> {
                     assert_exclusive_lang_scope(&[
                         $(self.$lang_flag.is_some(),)+
                     ]);
@@ -1358,12 +1361,12 @@ mod cli {
     /// Convert the prepared queries and the literal queries into `CompiledQuery`'s
     fn accumulate_scopes<C, PQ>(
         prepared_queries: Vec<PQ>,
-        literal_queries: Vec<RawQuery>,
+        literal_queries: Vec<QuerySourceOrPath>,
     ) -> Result<super::ScoperList, ProgramError>
     where
         C: LanguageScoper + 'static,
         PQ: Into<C>,
-        RawQuery: TryInto<C, Error = TSQueryError>,
+        QuerySource: TryInto<C, Error = TSQueryError>,
     {
         let mut scopers: crate::ScoperList = Vec::new();
 
@@ -1372,12 +1375,48 @@ mod cli {
             scopers.push(Box::new(compiled_query));
         }
 
-        for raw_query in literal_queries {
-            let compiled_query: C = raw_query.try_into()?;
+        for lit_query in literal_queries {
+            let query_source = try_read_query_from_file(lit_query)?;
+            let compiled_query: C = query_source.try_into()?;
             scopers.push(Box::new(compiled_query));
         }
 
         Ok(scopers)
+    }
+
+    /// Try read a literal query as a file.
+    ///
+    /// Return the file contents as `QuerySource` if the string interpreted as a file path is
+    /// found on disk. Otherwise, in the case of `io::ErrorKind::NotFound`, return the string
+    /// as `QuerySource` that will be compiled with the presumption that the string content
+    /// is intended to be a valid tree-sitter query.
+    ///
+    /// All other `io::Error`'s are passed up the callstack.
+    fn try_read_query_from_file(query_or_path: QuerySourceOrPath) -> io::Result<QuerySource> {
+        match fs::OpenOptions::new()
+            .read(true)
+            .open(query_or_path.as_str())
+        {
+            Ok(mut file) => {
+                info!(
+                    "Query refers to a valid file at '{}', will use its contents.",
+                    query_or_path.as_str()
+                );
+                let mut s = String::new();
+                file.read_to_string(&mut s)?;
+                Ok(QuerySource::from(s))
+            }
+            Err(err) => match err.kind() {
+                io::ErrorKind::NotFound => {
+                    info!(
+                        "Query doesn't refer to a valid file at '{}', contents will by compiled as a TSQuery.",
+                        query_or_path.as_str()
+                    );
+                    Ok(QuerySource::from(query_or_path.0))
+                }
+                _ => Err(err),
+            },
+        }
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1387,9 +1426,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment)]
         c: Vec<c::PreparedQuery>,
 
-        /// Scope C code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        c_query: Vec<RawQuery>,
+        /// Scope C code using a custom tree-sitter query. The query can be given inline or
+        /// as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        c_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1399,9 +1439,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, visible_alias = "cs")]
         csharp: Vec<csharp::PreparedQuery>,
 
-        /// Scope C# code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        csharp_query: Vec<RawQuery>,
+        /// Scope C# code using a custom tree-sitter query. The query can be given inline or
+        /// as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        csharp_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1414,8 +1455,9 @@ mod cli {
 
         #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        hcl_query: Vec<RawQuery>,
+        /// The query can be given inline or as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        hcl_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1425,9 +1467,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment)]
         go: Vec<go::PreparedQuery>,
 
-        /// Scope Go code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        go_query: Vec<RawQuery>,
+        /// Scope Go code using a custom tree-sitter query. The query can be given inline or
+        /// as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        go_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1437,9 +1480,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, visible_alias = "py")]
         python: Vec<python::PreparedQuery>,
 
-        /// Scope Python code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        python_query: Vec<RawQuery>,
+        /// Scope Python code using a custom tree-sitter query. The query can be given
+        /// inline or as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        python_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1449,9 +1493,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, visible_alias = "rs")]
         rust: Vec<rust::PreparedQuery>,
 
-        /// Scope Rust code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        rust_query: Vec<RawQuery>,
+        /// Scope Rust code using a custom tree-sitter query. The query can be given inline
+        /// or as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        rust_query: Vec<QuerySourceOrPath>,
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1461,9 +1506,10 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, visible_alias = "ts")]
         typescript: Vec<typescript::PreparedQuery>,
 
-        /// Scope TypeScript code using a custom tree-sitter query.
-        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_NAME)]
-        typescript_query: Vec<RawQuery>,
+        /// Scope TypeScript code using a custom tree-sitter query. The query can be given
+        /// inline or as a path to a file containing a query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE_OR_FILENAME)]
+        typescript_query: Vec<QuerySourceOrPath>,
     }
 
     #[cfg(feature = "german")]
@@ -1487,6 +1533,24 @@ mod cli {
         /// dictionaries. Called 'naive' as this does not perform legal checks.
         #[arg(long, env, verbatim_doc_comment)]
         pub german_naive: bool,
+    }
+
+    /// The query as read in from the CLI. This could either be a literal query or
+    /// a path to a query file.
+    #[derive(Clone, Debug)]
+    struct QuerySourceOrPath(String);
+
+    impl QuerySourceOrPath {
+        /// Return the contents as a &str.
+        fn as_str(&self) -> &str {
+            &self.0
+        }
+    }
+
+    impl From<String> for QuerySourceOrPath {
+        fn from(s: String) -> Self {
+            Self(s)
+        }
     }
 
     impl Args {
