@@ -64,6 +64,13 @@ jobs:
           rustup toolchain install nightly
           && rustup component add --toolchain nightly rustfmt
 
+      - name: Print versions
+        run: >
+          rustc --version
+          && cargo --version
+          && cargo +nightly fmt --version
+          && cargo clippy --version
+
       - name: Check formatting
         run: >
           cargo +nightly fmt
