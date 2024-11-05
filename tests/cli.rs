@@ -396,6 +396,32 @@ Heizoelrueckstossabdaempfung.
         // breaking snapshot testing.
         true,
     )]
+    #[case::binary_data_sorted(
+        "binary-data-sorted",
+        "tests/files/binary-data/in",
+        &[
+            "--sorted",
+            "--glob",
+            "**/*",
+            "0a1a09c8-2995-4ac5-9d60-01a0f02920e8",
+            "gone"
+        ],
+        false,
+    )]
+    #[case::binary_data_unsorted(
+        "binary-data-sorted",
+        "tests/files/binary-data/in",
+        &[
+            "--glob",
+            "**/*",
+            "0a1a09c8-2995-4ac5-9d60-01a0f02920e8",
+            "gone"
+        ],
+        // NOT `--sorted`, so not deterministic; use to test that directories are
+        // equivalent even if running parallel, unsorted. Output will be random,
+        // breaking snapshot testing.
+        true,
+    )]
     fn test_cli_files(
         #[case] mut snapshot_name: String,
         #[case] input: PathBuf,
@@ -439,7 +465,12 @@ Heizoelrueckstossabdaempfung.
         // Assert
 
         // Thing itself works
-        assert!(output.status.success(), "Binary execution itself failed");
+        output.status.success().then_some(()).ok_or_else(|| {
+            anyhow::anyhow!(
+                "Binary execution itself failed: {}",
+                String::from_utf8_lossy(&output.stderr).escape_debug()
+            )
+        })?;
 
         // Do not drop on panic, to keep tmpdir in place for manual inspection. Can then
         // diff directories.
