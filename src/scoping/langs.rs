@@ -96,7 +96,7 @@ impl CompiledQuery {
 ///
 /// Parts hit by the query are [`In`] scope, parts not hit are [`Out`] of scope.
 #[derive(Clone, Debug)]
-pub struct QuerySource(pub Cow<'static, str>);
+pub struct QuerySource(Cow<'static, str>);
 
 impl From<String> for QuerySource {
     fn from(s: String) -> Self {

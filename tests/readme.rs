@@ -499,6 +499,12 @@ mod tests {
                                 // so shorter values will short-circuit, potentially
                                 // incorrectly. That's why lines are generally sorted
                                 // longest to shortest, to avoid confusion.
+                                tag("csharp-query-file"),
+                                tag("go-query-file"),
+                                tag("hcl-query-file"),
+                                tag("python-query-file"),
+                                tag("rust-query-file"),
+                                tag("typescript-query-file"),
                                 //
                                 // Parsing is brittle here :-(
                                 alt((
