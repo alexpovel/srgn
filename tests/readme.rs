@@ -466,6 +466,7 @@ mod tests {
     }
 
     /// Parses a single, whole program invocation.
+    #[allow(clippy::too_many_lines)] // :( many hard-coded values
     fn parse_program(input: &str) -> IResult<&str, Program> {
         // Interior mutability is fine, as the different closures aliasing this run
         // sequentially, never at once (is using this and `map` of `nom` an
@@ -491,34 +492,49 @@ mod tests {
                             // *flag*, and `some_value` as a *positional argument*.
                             tag("--"),
                             alt((
-                                // Careful: all `--lang-query` options need to come
-                                // first; otherwise, the `--lang` options eat them and
-                                // results turn bad (complaining that `-query` is not a
-                                // valid value). Parsing is brittle here :-(
-                                tag("csharp-query"),
-                                tag("go-query"),
-                                tag("hcl-query"),
-                                tag("python-query"),
-                                tag("rust-query"),
-                                tag("typescript-query"),
+                                // ⚠️ Careful: all `--<lang>-query` options need to come
+                                // first; otherwise, the shorter `--<lang>` options eat
+                                // them and results turn bad (complaining that `-query`
+                                // is not a valid value). Generally, parsing is greedy,
+                                // so shorter values will short-circuit, potentially
+                                // incorrectly. That's why lines are generally sorted
+                                // longest to shortest, to avoid confusion.
                                 //
-                                tag("csharp"),
-                                tag("glob"),
-                                tag("go"),
-                                tag("hcl"),
-                                tag("python"),
-                                tag("rust"),
-                                tag("stdin-override-to"),
-                                tag("threads"),
-                                tag("typescript"),
+                                // Parsing is brittle here :-(
+                                alt((
+                                    tag("typescript-query"),
+                                    tag("csharp-query"),
+                                    tag("python-query"),
+                                    tag("rust-query"),
+                                    tag("hcl-query"),
+                                    tag("go-query"),
+                                    tag("c-query"),
+                                )),
                                 //
-                                // Shorthands. NOTE: only a limited number of elements
-                                // can go here. `nom` is generic, and this tuple inside
-                                // `alt` is limited to 21 members.
-                                tag("cs"),
-                                tag("py"),
-                                tag("rs"),
-                                tag("ts"),
+                                alt((
+                                    tag("typescript"),
+                                    tag("csharp"),
+                                    tag("python"),
+                                    tag("rust"),
+                                    tag("hcl"),
+                                    tag("go"),
+                                    tag("c"),
+                                )),
+                                // Misc. flags used in the docs
+                                alt((tag("glob"), tag("stdin-override-to"), tag("threads"))),
+                                // Shorthands
+                                alt((
+                                    tag("tsx"),
+                                    tag("hcl"),
+                                    tag("cs"),
+                                    tag("py"),
+                                    tag("rs"),
+                                    tag("ts"),
+                                    tag("go"),
+                                    tag("tf"),
+                                    tag("c"),
+                                    // tag("h"), // Breaks `--help` and isn't used
+                                )),
                             )),
                         ),
                         cut(
