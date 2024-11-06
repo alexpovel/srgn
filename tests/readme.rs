@@ -30,7 +30,7 @@ mod tests {
         alpha1 as ascii_alpha1, alphanumeric1 as ascii_alphanumeric1, anychar, char, line_ending,
         none_of, space0, space1,
     };
-    use nom::combinator::{cut, eof, map, opt};
+    use nom::combinator::{cut, eof, map, opt, recognize};
     use nom::error::ParseError;
     use nom::multi::{many0, many1, many_till, separated_list1};
     use nom::sequence::{delimited, preceded, tuple};
@@ -598,16 +598,16 @@ mod tests {
                     },
                 ),
                 map(
-                    // There's also file names, which cannot occur quoted in shell
-                    // contexts
-                    tuple((ascii_alphanumeric1, char('.'), ascii_alphanumeric1)),
-                    |parts: (&str, char, &str)| {
-                        let (stem, sep, suffix) = parts;
-                        let file_name = format!("{stem}{sep}{suffix}");
+                    // File paths.
+                    recognize(tuple((
+                        many1(alt((ascii_alphanumeric1, tag("/"), tag("-"), tag("_")))),
+                        char('.'),
+                        ascii_alphanumeric1,
+                    ))),
+                    |file_path: &str| {
+                        inv.borrow_mut().args.push(file_path.into());
 
-                        inv.borrow_mut().args.push(file_name.as_str().into());
-
-                        file_name
+                        file_path.to_owned()
                     },
                 ),
             ))),
