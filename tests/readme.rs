@@ -529,7 +529,7 @@ mod tests {
                                 // Quoting always is technically overkill, but much
                                 // simpler and safer
                                 parse_quoted,
-                                space1,
+                                space0,
                             ),
                         ),
                     )),

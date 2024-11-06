@@ -90,10 +90,6 @@ tested](./tests/readme.rs). The testing of the `bash` snippets is pure Rust (no 
 binary needed), making it platform-independent. The downside is that custom parsing is
 used. This has known warts. Those warts have workarounds:
 
-- sometimes, in the [README](./README.md), `bash` lines are terminated by a single space
-  ([example](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/README.md?plain=1#L1201)).
-  This exists to **terminate the parser** properly before the newline, allowing it to
-  finish.
 - the README contains the full output of `srgn --help`, which is also tested against.
   **This is whitespace-sensitive**, so there is trailing whitespace. Removing it fails
   tests.

@@ -1198,13 +1198,12 @@ Typing out tree-sitter queries at the CLI can be unwieldy. To mitigate this you 
 Below we use the same Python file from the previous section with an invocation of
 
 ```bash
-cat cond.py | srgn --python-query 'docs/python_cond_query.scm' 
+cat cond.py | srgn --python-query 'docs/python_cond_query.scm'
 1:if x:
 2:    return left
 3:else:
 4:    return right
 ```
-
 
 ###### Ignoring parts of matches
 
