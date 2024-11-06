@@ -25,7 +25,12 @@ For local development, there isn't much to prepare:
 4. You will need a [nightly
    toolchain](https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust)
    available, as some development (but not build) tooling requires it:
+
    - [`rustfmt`](./rustfmt.toml)
+
+   Note: `rustup toolchain install nightly` should suffice. It should only be
+   *available*. If it's not, and you do not modify areas requiring nightly tooling, you
+   will also be just fine.
 
 ## Adding support for a new language
 
@@ -44,3 +49,66 @@ For local development, there isn't much to prepare:
    <https://github.com/alexpovel/srgn/pull/116>
    (da2580a85c2101e91889519fcba11e876f865249). It showcases where to add tests, for
    example.
+
+## ⚠️ Here Be Dragons
+
+This code base has known warts. These might bite you when developing against it. Known,
+non-obvious, potentially annoying issues to look out for while developing are listed
+below.
+
+### Platform-dependent test snapshots
+
+**Some `insta` snapshots are platform (OS) dependent**
+([example](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/tests/cli.rs#L287-L294)
+at the time of writing). Those will be *manually* renamed to carry an OS-specific suffix
+in their file name, inside the test code. This has a number of consequences: for new
+tests, `insta` will generate new snapshots files for you. They will be named
+`whatever-snapshot-name-you-picked-<YOUR CURRENT PLATFORM>-perhaps-more.snap`. However,
+CI tests against all three major platforms: Linux, macOS and Windows. Locally, you will
+only have generated one of those three. You will have to create the **other two
+manually**, which also requires **adjusting their contents manually** (if the contents
+of all three are identical, the snapshot is *not* platform dependent, and the test might
+be bugged in itself).
+
+An example scenario are tests for the CLI containing stdout output of the binary under
+test, which in turn contains file paths. Say you're developing on Linux. You can copy
+the snapshot file, rename Linux to macOS (see existing snapshots for exact naming), and
+leave contents as-is (file paths do not differ). The Windows snapshot however will need
+`/` replaced by `\\` (it's escaped) throughout. At the time of writing, **this is the
+only relevant type of platform deviance**.
+
+The custom naming, which `insta` doesn't know about, also means things like `cargo insta
+test --unreferenced=delete` *do not work*.
+
+Alternatively, if you forget these adjustments, CI will eventually yell at you, and you
+can fix from there.
+
+### Spotty parsing for README tests
+
+The Markdown code blocks in the [README](./README.md) are [fully
+tested](./tests/readme.rs). The testing of the `bash` snippets is pure Rust (no `bash`
+binary needed), making it platform-independent. The downside is that custom parsing is
+used. This has known warts. Those warts have workarounds:
+
+- sometimes, in the [README](./README.md), `bash` lines are terminated by a single space
+  ([example](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/README.md?plain=1#L1201)).
+  This exists to **terminate the parser** properly before the newline, allowing it to
+  finish.
+- the README contains the full output of `srgn --help`, which is also tested against.
+  **This is whitespace-sensitive**, so there is trailing whitespace. Removing it fails
+  tests.
+- the tests contain [**hard-coded names of CLI
+  options**](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/tests/readme.rs#L494-L521).
+  This is necessary as otherwise it'd be unclear if a string `--foo` should be a flag
+  (no argument) or an option (an argument follows, `--foo bar`).
+
+All these could be considered plain bugs in the custom parser. They would certainly
+be fixable, given the time.
+
+### Custom macros to work around `clap`
+
+The needs of `srgn` go slightly beyond what `clap` offers out of the box. For this,
+there is a custom macro covering some business logic, e.g. ensuring only one language
+(Python, Rust, ...) is [selected at a
+time](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/src/main.rs#L1329-L1359).
+This is not as ergonomic as it could be.
