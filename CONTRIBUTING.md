@@ -91,8 +91,8 @@ binary needed), making it platform-independent. The downside is that custom pars
 used. This has known warts. Those warts have workarounds:
 
 - the README contains the full output of `srgn --help`, which is also tested against.
-  **This is whitespace-sensitive**, so there is trailing whitespace. Removing it fails
-  tests.
+  Run [`./scripts/update-readme.py`](./scripts/update-readme.py) to update this README
+  section automatically if you updated it.
 - the tests contain [**hard-coded names of CLI
   options**](https://github.com/alexpovel/srgn/blob/8ff54ee53ac0a53cdc4791b069648ee4511c7b94/tests/readme.rs#L494-L521).
   This is necessary as otherwise it'd be unclear if a string `--foo` should be a flag

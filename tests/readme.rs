@@ -818,6 +818,8 @@ mod tests {
 
     #[test]
     fn test_readme_code_blocks() {
+        let _helper = TestHinter;
+
         let snippets = get_readme_snippets();
         let pipes = get_readme_program_pipes(&snippets);
 
@@ -948,5 +950,19 @@ mod tests {
         }
 
         res
+    }
+
+    struct TestHinter;
+
+    impl Drop for TestHinter {
+        fn drop(&mut self) {
+            if std::thread::panicking() {
+                println!("\n==============================================");
+                println!("💡 README test failed!");
+                println!("Did you update the `srgn --help` output?");
+                println!("If no, run `./scripts/update-readme.py README.md` and try again.");
+                println!("==============================================\n");
+            }
+        }
     }
 }
