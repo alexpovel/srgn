@@ -148,7 +148,7 @@ some combinations from making sense: for example, searching for a Python `class`
 however:
 
 ```console
-$ cat birds.py | srgn --python 'class' --python 'doc-strings' 
+$ cat birds.py | srgn --py 'class' --py 'doc-strings' 
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 ```
@@ -820,7 +820,7 @@ mod scary_unsafe_operations {
 can be searched as
 
 ```console
-$ cat unsafe.rs | srgn --rs 'unsafe' 
+$ cat unsafe.rs | srgn --rs 'unsafe' # Note: no 2nd argument necessary
 3:    pub unsafe fn unsafe_array_access(arr: &[i32], index: usize) -> i32 {
 4:        // UNSAFE: This function performs unsafe array access without bounds checking
 5:        *arr.get_unchecked(index)
