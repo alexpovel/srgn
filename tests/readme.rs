@@ -503,8 +503,6 @@ mod tests {
                                 tag("go-query-file"),
                                 tag("hcl-query-file"),
                                 tag("python-query-file"),
-                                tag("rust-query-file"),
-                                tag("typescript-query-file"),
                                 //
                                 // Parsing is brittle here :-(
                                 alt((
