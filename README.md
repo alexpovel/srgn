@@ -48,7 +48,7 @@ actions](#actions) are applied after and given as command line flags.
 ### Multiple scopes
 
 Similarly, more than one scope can be specified: in addition to the regex pattern, a
-[**language grammar-aware**]((https://tree-sitter.github.io/tree-sitter/)) scope can be
+[**language grammar-aware**](https://tree-sitter.github.io/tree-sitter/) scope can be
 given, which scopes to **syntactical elements of source code** (think, for example, "all
 bodies of `class` definitions in Python"). If both are given, the regular expression
 pattern is then **only applied *within* that first, language scope**. This enables
@@ -1193,7 +1193,7 @@ cat sensitive.go | srgn --go-query '(field_declaration name: (field_identifier) 
 
 ##### Custom queries from file
 
-Typing out tree-sitter queries at the CLI can be unwieldy. To mitigate this you can read queries from [file](docs/query/python_cond_query.scm).
+Typing out tree-sitter queries at the CLI can be unwieldy. To mitigate this you can read queries from [file](docs/python_cond_query.scm).
 
 Below we use the same Python file from the previous section with an invocation of
 
