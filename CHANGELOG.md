@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.13.4](https://github.com/alexpovel/srgn/compare/srgn-v0.13.3...srgn-v0.13.4) (2024-11-09)
+
+
+### Features
+
+* **cli:** `--&lt;LANG&gt;-query-file` option for reading queries from files ([#168](https://github.com/alexpovel/srgn/issues/168)) ([4967356](https://github.com/alexpovel/srgn/commit/496735690cb9f5056b416056a6e7b47865b0532e))
+* **cli:** Dry run mode ( `--dry-run` flag) ([#156](https://github.com/alexpovel/srgn/issues/156)) ([c2a6d2a](https://github.com/alexpovel/srgn/commit/c2a6d2aadb11ab3a5d74c53ba3ede688eb5e6cdb))
+
+
+### Bug Fixes
+
+* **alloc:** Right(ish)-sized buffer allocations ([3f64519](https://github.com/alexpovel/srgn/commit/3f645198087af037ee922e3f80c11ee7ce53d870))
+* **cli:** Ignore (do not abort on) non-utf8 files when walking recursively ([b3b9d6e](https://github.com/alexpovel/srgn/commit/b3b9d6ef2c12df90677fff2a64fb690296768092)), closes [#166](https://github.com/alexpovel/srgn/issues/166)
+
 ## [0.13.3](https://github.com/alexpovel/srgn/compare/srgn-v0.13.2...srgn-v0.13.3) (2024-10-19)
 
 
