@@ -15,6 +15,7 @@ mod tests {
     use core::{fmt, panic};
     use std::cell::RefCell;
     use std::collections::{HashMap, VecDeque};
+    use std::error::Error;
     use std::io::Write;
     use std::mem::ManuallyDrop;
     use std::rc::Rc;
@@ -40,7 +41,8 @@ mod tests {
     use unescape::unescape;
 
     const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
-    const DOCUMENT: &str = include_str!("../README.md");
+    const PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/", "README.md");
+    const FIX_ENV_VAR: &str = "FIX_README";
 
     /// A flag, either short or long.
     ///
@@ -738,10 +740,10 @@ mod tests {
 
     type Snippets = HashMap<String, Snippet>;
 
-    fn get_readme_snippets() -> Snippets {
+    fn get_readme_snippets(doc: &str) -> Snippets {
         let mut snippets = HashMap::new();
 
-        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
+        map_on_markdown_codeblocks(doc, |ncb| {
             if let Some((_language, options)) = ncb.info.split_once(' ') {
                 let mut snippet = Snippet::default();
                 let options: BlockOptions = options.into();
@@ -774,10 +776,10 @@ mod tests {
         snippets
     }
 
-    fn get_readme_program_pipes(snippets: &Snippets) -> Vec<PipedPrograms> {
+    fn get_readme_program_pipes(doc: &str, snippets: &Snippets) -> Vec<PipedPrograms> {
         let mut pipes = Vec::new();
 
-        map_on_markdown_codeblocks(DOCUMENT, |ncb| {
+        map_on_markdown_codeblocks(doc, |ncb| {
             let (language, options): (&str, Option<BlockOptions>) = ncb
                 .info
                 .split_once(' ')
@@ -826,11 +828,12 @@ mod tests {
     }
 
     #[test]
-    fn test_readme_code_blocks() {
-        let _helper = TestHinter;
+    fn test_readme_code_blocks() -> Result<(), Box<dyn Error>> {
+        let _hinter = TestHinter;
 
-        let snippets = get_readme_snippets();
-        let pipes = get_readme_program_pipes(&snippets);
+        let contents = std::fs::read_to_string(PATH)?;
+        let snippets = get_readme_snippets(&contents);
+        let pipes = get_readme_program_pipes(&contents, &snippets);
 
         for pipe in pipes {
             let mut previous_stdin = None;
@@ -875,37 +878,48 @@ mod tests {
                     }
 
                     if observed_stdout != expected_stdout {
-                        // Write to files for easier inspection
-                        let (mut obs_f, mut exp_f) = (
-                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
-                            ManuallyDrop::new(NamedTempFile::new().unwrap()),
-                        );
+                        if std::env::var(FIX_ENV_VAR).as_deref() == Ok("1") {
+                            let old_readme = std::fs::read_to_string(PATH)?;
+                            // We'd REALLY want the exact byte ranges here for exact
+                            // precision, but those aren't easily available. This
+                            // naive replacement will fail in various scenarios.
+                            let new_readme = old_readme.replace(&expected_stdout, &observed_stdout);
 
-                        obs_f.write_all(observed_stdout.as_bytes()).unwrap();
-                        exp_f.write_all(expected_stdout.as_bytes()).unwrap();
+                            assert!(old_readme != new_readme, "No changes made to {PATH}, bug.");
 
-                        // Now panic as usual, for the usual output
-                        assert_eq!(
-                            // Get some more readable output diff compared to
-                            // `assert::Command`'s `stdout()` function, for which diffing
-                            // whitespace is very hard.
-                            expected_stdout,
-                            observed_stdout,
-                            "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
-                            obs_f.path().display(),
-                            exp_f.path().display()
-                        );
+                            std::fs::write(PATH, new_readme)?;
+                        } else {
+                            // Write to files for easier inspection
+                            let (mut obs_f, mut exp_f) = (
+                                ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                                ManuallyDrop::new(NamedTempFile::new().unwrap()),
+                            );
 
-                        // Temporary files remain, they're not dropped.
+                            obs_f.write_all(observed_stdout.as_bytes()).unwrap();
+                            exp_f.write_all(expected_stdout.as_bytes()).unwrap();
 
-                        unreachable!();
+                            // Now panic as usual, for the usual output
+                            assert_eq!(
+                                    // Get some more readable output diff compared to
+                                    // `assert::Command`'s `stdout()` function, for which diffing
+                                    // whitespace is very hard.
+                                    expected_stdout,
+                                    observed_stdout,
+                                    "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
+                                    obs_f.path().display(),
+                                    exp_f.path().display()
+                                );
+
+                            // Temporary files remain, they're not dropped.
+                        }
                     }
                 }
-
                 // Pipe stdout to stdin of next run...
                 previous_stdin = Some(observed_stdout);
             }
         }
+
+        Ok(())
     }
 
     fn fix_windows_output(mut input: String) -> String {
@@ -966,11 +980,12 @@ mod tests {
     impl Drop for TestHinter {
         fn drop(&mut self) {
             if std::thread::panicking() {
-                println!("\n==============================================");
-                println!("💡 README test failed!");
-                println!("Did you update the `srgn --help` output?");
-                println!("If no, run `./scripts/update-readme.py README.md` and try again.");
-                println!("==============================================\n");
+                println!(
+                    r#"
+💡 README test failed!
+Run with `{FIX_ENV_VAR}=1` env var to fix the README automatically (BEST EFFORT!).
+"#
+                );
             }
         }
     }
