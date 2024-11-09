@@ -148,7 +148,7 @@ some combinations from making sense: for example, searching for a Python `class`
 however:
 
 ```console
-$ cat birds.py | srgn --py 'class' --py 'doc-strings' # From earlier example; note `--py` is a shorthand for `--python`
+$ cat birds.py | srgn --py 'class' --py 'doc-strings' 
 8:    """A bird!"""
 19:        """Create a bird from an egg."""
 ```
@@ -1198,7 +1198,7 @@ Typing out tree-sitter queries at the CLI can be unwieldy. To mitigate this you 
 Below we use the same Python file from the previous section with an invocation of
 
 ```bash
-cat cond.py | srgn --python-query 'docs/python_cond_query.scm'
+cat cond.py | srgn --python-query-file 'docs/python_cond_query.scm'
 1:if x:
 2:    return left
 3:else:
@@ -1581,11 +1581,15 @@ Language scopes:
           - declaration:     Declaration
           - call-expression: Call expression
 
-      --c-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope C code using a custom tree-sitter query. The query can be given inline or
-          as a path to a file containing a query.
+      --c-query <TREE-SITTER-QUERY-VALUE>
+          Scope C code using a custom tree-sitter query.
           
           [env: C_QUERY=]
+
+      --c-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope C code using a custom tree-sitter query from file.
+          
+          [env: C_QUERY_FILE=]
 
       --csharp <CSHARP>
           Scope C# code using a prepared query.
@@ -1611,11 +1615,15 @@ Language scopes:
           - attribute:            Attribute names
           - identifier:           Identifier names
 
-      --csharp-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope C# code using a custom tree-sitter query. The query can be given inline or
-          as a path to a file containing a query.
+      --csharp-query <TREE-SITTER-QUERY-VALUE>
+          Scope C# code using a custom tree-sitter query.
           
           [env: CSHARP_QUERY=]
+
+      --csharp-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope C# code using a custom tree-sitter query from file.
+          
+          [env: CSHARP_QUERY_FILE=]
 
       --go <GO>
           Scope Go code using a prepared query.
@@ -1645,11 +1653,15 @@ Language scopes:
           - goto:        `goto` statements
           - struct-tags: Struct tags
 
-      --go-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope Go code using a custom tree-sitter query. The query can be given inline or
-          as a path to a file containing a query.
+      --go-query <TREE-SITTER-QUERY-VALUE>
+          Scope Go code using a custom tree-sitter query.
           
           [env: GO_QUERY=]
+
+      --go-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope Go code using a custom tree-sitter query from file.
+          
+          [env: GO_QUERY_FILE=]
 
       --hcl <HCL>
           Scope HashiCorp Configuration Language code using a prepared query.
@@ -1673,11 +1685,16 @@ Language scopes:
           - comments:       Comments
           - strings:        Literal strings
 
-      --hcl-query <TREE-SITTER-QUERY-OR-FILENAME>
+      --hcl-query <TREE-SITTER-QUERY-VALUE>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.
-          The query can be given inline or as a path to a file containing a query.
           
           [env: HCL_QUERY=]
+
+      --hcl-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope HashiCorp Configuration Language code using a custom tree-sitter query
+          from file.
+          
+          [env: HCL_QUERY_FILE=]
 
       --python <PYTHON>
           Scope Python code using a prepared query.
@@ -1713,11 +1730,15 @@ Language scopes:
           - types:                Types in type hints
           - identifiers:          Identifiers (variable names, ...)
 
-      --python-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope Python code using a custom tree-sitter query. The query can be given
-          inline or as a path to a file containing a query.
+      --python-query <TREE-SITTER-QUERY-VALUE>
+          Scope Python code using a custom tree-sitter query.
           
           [env: PYTHON_QUERY=]
+
+      --python-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope Python code using a custom tree-sitter query from file.
+          
+          [env: PYTHON_QUERY_FILE=]
 
       --rust <RUST>
           Scope Rust code using a prepared query.
@@ -1774,11 +1795,15 @@ Language scopes:
           - unsafe:           `unsafe` keyword usages (`unsafe fn`, `unsafe` blocks,
             `unsafe Trait`, `unsafe impl Trait`)
 
-      --rust-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope Rust code using a custom tree-sitter query. The query can be given inline
-          or as a path to a file containing a query.
+      --rust-query <TREE-SITTER-QUERY-VALUE>
+          Scope Rust code using a custom tree-sitter query.
           
           [env: RUST_QUERY=]
+
+      --rust-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope Rust code using a custom tree-sitter query from file.
+          
+          [env: RUST_QUERY_FILE=]
 
       --typescript <TYPESCRIPT>
           Scope TypeScript code using a prepared query.
@@ -1808,11 +1833,15 @@ Language scopes:
           - namespace:      `namespace` blocks
           - export:         `export` blocks
 
-      --typescript-query <TREE-SITTER-QUERY-OR-FILENAME>
-          Scope TypeScript code using a custom tree-sitter query. The query can be given
-          inline or as a path to a file containing a query.
+      --typescript-query <TREE-SITTER-QUERY-VALUE>
+          Scope TypeScript code using a custom tree-sitter query.
           
           [env: TYPESCRIPT_QUERY=]
+
+      --typescript-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope TypeScript code using a custom tree-sitter query from file.
+          
+          [env: TYPESCRIPT_QUERY_FILE=]
 
 Options (german):
       --german-prefer-original
