@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
 use log::{debug, info, trace};
+use streaming_iterator::StreamingIterator; // TODO: remove once https://github.com/tree-sitter/tree-sitter/pull/4034 is released
 use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
     QueryError as TSQueryError,
@@ -173,12 +174,21 @@ pub trait LanguageScoper: Scoper + Find + Send + Sync {
             trace!("Running query: {:?}", query);
 
             let mut qc = TSQueryCursor::new();
-            let matches = qc.matches(query, root, input.as_bytes());
+            let mut matches = qc.matches(query, root, input.as_bytes());
 
-            let mut ranges: Ranges<usize> = matches
-                .flat_map(|query_match| query_match.captures)
-                .map(|capture| capture.node.byte_range())
-                .collect();
+            let mut ranges: Ranges<usize> = {
+                // The size hint is hard-coded to 0 currently so there's no effect; use it
+                // regardless as it might be useful in the future.
+                let mut ranges = Vec::with_capacity(matches.size_hint().1.unwrap_or_default());
+
+                while let Some(m) = matches.next() {
+                    for capture in m.captures {
+                        ranges.push(capture.node.byte_range());
+                    }
+                }
+
+                ranges.into_iter().collect()
+            };
 
             // ⚠️ tree-sitter queries with multiple captures will return them in some
             // mixed order (not ordered, and not merged), but we later rely on cleanly
