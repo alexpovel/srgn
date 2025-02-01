@@ -319,16 +319,13 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.28.0"
+version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c93ab3577cca16b4a1d80a88c2e0cd8b6e969e51696f0bbb0d1dcb0157109832"
+checksum = "52602e10393cfaaf8accaf707f2da743dc22cbe700a343ff8dbc9e5e04bc6b74"
 dependencies = [
  "caseless",
- "derive_builder",
  "entities",
  "memchr",
- "once_cell",
- "regex",
  "slug",
  "typed-arena",
  "unicode_categories",
@@ -435,37 +432,6 @@ dependencies = [
  "bitflags",
  "log",
  "unicode_titlecase",
-]
-
-[[package]]
-name = "derive_builder"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0350b5cb0331628a5916d6c5c0b72e97393b8b6b03b47a9284f4e7f5a405ffd7"
-dependencies = [
- "derive_builder_macro",
-]
-
-[[package]]
-name = "derive_builder_core"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d48cda787f839151732d396ac69e3473923d54312c070ee21e9effcaa8ca0b1d"
-dependencies = [
- "darling",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "derive_builder_macro"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "206868b8242f27cecce124c19fd88157fbd0dd334df2587f36417bafbc85097b"
-dependencies = [
- "derive_builder_core",
- "syn",
 ]
 
 [[package]]
