@@ -466,7 +466,7 @@ mod tests {
 
         use log::info;
         use rand;
-        use rand::seq::SliceRandom;
+        use rand::seq::IndexedRandom;
         use rand::Rng;
 
         use super::*;
@@ -483,14 +483,14 @@ mod tests {
 
             let mut regex = String::new();
 
-            for _ in 0..rng.gen_range(1..=2) {
-                if rng.gen_bool(0.3) {
+            for _ in 0..rng.random_range(1..=2) {
+                if rng.random_bool(0.3) {
                     regex.push_str(atoms.choose(&mut rng).unwrap());
                 }
 
-                if rng.gen_bool(0.6) {
+                if rng.random_bool(0.6) {
                     let letter = letters.choose(&mut rng).unwrap();
-                    if rng.gen_bool(0.5) {
+                    if rng.random_bool(0.5) {
                         let uc = letter.to_uppercase();
                         regex.push_str(uc.as_str());
                     } else {
@@ -498,11 +498,11 @@ mod tests {
                     }
                 }
 
-                if rng.gen_bool(0.3) {
+                if rng.random_bool(0.3) {
                     regex.push_str(quantifiers.choose(&mut rng).unwrap());
                 }
 
-                if rng.gen_bool(0.1) {
+                if rng.random_bool(0.1) {
                     regex.push_str(others.choose(&mut rng).unwrap());
                 }
             }
@@ -535,7 +535,7 @@ mod tests {
                 Duration::from_millis(500)
             };
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // "Anything but 'other'", see also:
             // https://docs.rs/regex/latest/regex/#matching-one-character
