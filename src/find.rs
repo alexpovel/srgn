@@ -42,11 +42,10 @@ pub trait Find {
         match (path.extension(), self.interpreters()) {
             (Some(ext), _) => ext
                 .to_str()
-                .map_or(false, |ext| self.extensions().contains(&ext)),
-            (None, Some(interpreters)) => File::open(path).map_or(false, |mut fh| {
-                find_interpreter(&mut fh).map_or(false, |interpreter| {
-                    interpreters.contains(&interpreter.as_str())
-                })
+                .is_some_and(|ext| self.extensions().contains(&ext)),
+            (None, Some(interpreters)) => File::open(path).is_ok_and(|mut fh| {
+                find_interpreter(&mut fh)
+                    .is_some_and(|interpreter| interpreters.contains(&interpreter.as_str()))
             }),
             _ => false,
         }

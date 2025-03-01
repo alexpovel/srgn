@@ -981,10 +981,10 @@ mod tests {
         fn drop(&mut self) {
             if std::thread::panicking() {
                 println!(
-                    r#"
+                    r"
 💡 README test failed!
 Run with `{FIX_ENV_VAR}=1` env var to fix the README automatically (BEST EFFORT!).
-"#
+"
                 );
             }
         }
