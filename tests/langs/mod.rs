@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
-use srgn::scoping::langs::{c, csharp, go, hcl, python, rust, typescript, LanguageScoper};
+use srgn::scoping::langs::{LanguageScoper, c, csharp, go, hcl, python, rust, typescript};
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
 

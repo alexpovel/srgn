@@ -83,7 +83,7 @@ mod natural_languages {
         use std::io::{BufReader, BufWriter, Read, Write};
         use std::sync::Mutex;
 
-        use decompound::{decompound, DecompositionOptions};
+        use decompound::{DecompositionOptions, decompound};
         use rayon::prelude::*;
 
         macro_rules! time_it {

@@ -22,7 +22,7 @@ pub use normalization::Normalization;
 pub use replace::{Replacement, ReplacementError};
 pub use style::Style;
 #[cfg(feature = "symbols")]
-pub use symbols::{inversion::Symbols as SymbolsInversion, Symbols};
+pub use symbols::{Symbols, inversion::Symbols as SymbolsInversion};
 pub use titlecase::Titlecase;
 pub use upper::Upper;
 

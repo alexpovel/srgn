@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 #[cfg(test)]
-use enum_iterator::{all, Sequence};
+use enum_iterator::{Sequence, all};
 
 #[cfg(all(doc, feature = "german"))]
 use super::German;

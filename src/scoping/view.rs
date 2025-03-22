@@ -5,12 +5,12 @@ use itertools::Itertools;
 use log::{debug, trace, warn};
 
 use crate::actions::{self, Action, ActionError};
+use crate::scoping::Scoper;
 use crate::scoping::dosfix::DosFix;
 use crate::scoping::scope::Scope::{In, Out};
 #[cfg(doc)]
 use crate::scoping::scope::ScopeContext;
 use crate::scoping::scope::{ROScope, ROScopes, RWScope, RWScopes};
-use crate::scoping::Scoper;
 
 /// A view of some input, sorted into parts, which are either [`In`] or [`Out`] of scope
 /// for processing.
@@ -410,10 +410,10 @@ mod tests {
     use rstest::rstest;
 
     use super::ScopedView;
+    use crate::RegexPattern;
     use crate::scoping::scope::RWScopes;
     use crate::scoping::scope::Scope::{self, In, Out};
     use crate::scoping::view::ScopedViewBuilder;
-    use crate::RegexPattern;
 
     #[rstest]
     // Pattern only
