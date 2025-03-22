@@ -18,6 +18,11 @@ as a mix of
 *simplicity*: if you know regex and the basics of the language you are working with, you
 are good to go.
 
+> The answer to "What if `grep`, `tr`, `sed` and `tree-sitter` got really drunk one
+> night and had a baby?"
+>
+> -- [Real Python Podcast](https://realpython.com/podcasts/rpp/225/#t=2286)
+
 ## Quick walkthrough
 
 > [!TIP]
