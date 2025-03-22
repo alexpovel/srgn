@@ -125,7 +125,7 @@ pub enum PreparedQuery {
 }
 
 impl PreparedQuery {
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     const fn as_str(self) -> &'static str {
         match self {
             Self::Comments => {

@@ -585,14 +585,14 @@ expression: inscope_parts
   l: "#[cfg(feature = \"some-feature\")]\n"
   m: "      ^^^^^^^                       "
 - n: 246
-  l: "#[allow(clippy::single_match_else)]\n"
-  m: "  ^^^^^                              "
+  l: "#[expect(clippy::single_match_else)]\n"
+  m: "  ^^^^^^                              "
 - n: 246
-  l: "#[allow(clippy::single_match_else)]\n"
-  m: "        ^^^^^^                       "
+  l: "#[expect(clippy::single_match_else)]\n"
+  m: "         ^^^^^^                       "
 - n: 246
-  l: "#[allow(clippy::single_match_else)]\n"
-  m: "                ^^^^^^^^^^^^^^^^^    "
+  l: "#[expect(clippy::single_match_else)]\n"
+  m: "                 ^^^^^^^^^^^^^^^^^    "
 - n: 247
   l: "#[cfg(doc)]\n"
   m: "  ^^^        "

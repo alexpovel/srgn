@@ -79,7 +79,7 @@ mod tests {
     /// Has a value, e.g. `--option value` or `-o value`.
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum Opt {
-        #[allow(dead_code)] // Not used yet
+        #[expect(dead_code)] // Not used yet
         Short(char, String),
         Long(String, String),
     }
@@ -468,7 +468,7 @@ mod tests {
     }
 
     /// Parses a single, whole program invocation.
-    #[allow(clippy::too_many_lines)] // :( many hard-coded values
+    #[expect(clippy::too_many_lines)] // :( many hard-coded values
     fn parse_program(input: &str) -> IResult<&str, Program> {
         // Interior mutability is fine, as the different closures aliasing this run
         // sequentially, never at once (is using this and `map` of `nom` an
@@ -655,8 +655,7 @@ mod tests {
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum OS {
         Linux,
-        #[allow(clippy::enum_variant_names)]
-        MacOS,
+        Darwin,
         Windows,
     }
 
@@ -667,7 +666,7 @@ mod tests {
         fn try_from(value: String) -> Result<Self, Self::Error> {
             match value.as_str() {
                 "linux" => Ok(Self::Linux),
-                "macos" => Ok(Self::MacOS),
+                "macos" => Ok(Self::Darwin),
                 "windows" => Ok(Self::Windows),
                 // Just a double check to ensure parsing of options went right.
                 _ => Err("unknown OS"),

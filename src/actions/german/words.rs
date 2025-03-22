@@ -255,8 +255,8 @@ mod tests {
         assert_eq!(WordCasing::try_from(input), expected);
     }
 }
+
 #[cfg(test)]
-#[allow(clippy::ignored_unit_patterns)] // in `proptest` macro, cannot be avoided
 mod properties {
     use proptest::prelude::*;
 

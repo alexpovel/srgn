@@ -140,7 +140,7 @@ mod tests {
     use crate::scoping::view::{ScopedView, ScopedViewBuilder};
 
     /// Get 'Capture Group 0', the default which is always present.
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     fn cg0(string: &str) -> Option<ScopeContext<'_>> {
         Some(ScopeContext::CaptureGroups(HashMap::from([(
             CaptureGroup::Numbered(0),
@@ -149,7 +149,7 @@ mod tests {
     }
 
     /// Get naively numbered capture groups.
-    #[allow(clippy::unnecessary_wraps)]
+    #[expect(clippy::unnecessary_wraps)]
     fn cgs<'a>(strings: &[&'a str]) -> Option<ScopeContext<'a>> {
         let mut cgs = HashMap::new();
 

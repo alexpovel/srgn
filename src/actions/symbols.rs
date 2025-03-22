@@ -45,7 +45,7 @@ impl Action for Symbols {
     /// coroutine so it can be yielded again.
     ///
     /// All in all, ugly and verbose, would not recommend, but a worthwhile experiment.
-    #[allow(clippy::cognitive_complexity)] // Yep, it's terrible alright
+    #[expect(clippy::cognitive_complexity)] // Yep, it's terrible alright
     fn act(&self, input: &str) -> String {
         let mut deque = input.chars().collect::<VecDeque<_>>();
         let mut out = String::new();

@@ -447,8 +447,7 @@ fn find_valid_replacement(
     // `Busse`.
     debug_assert!(replacement_combinations.first().is_none_or(Vec::is_empty));
 
-    #[allow(clippy::bool_to_int_with_if)] // Readability is much better.
-    let n_skip = if prefer_original { 0 } else { 1 };
+    let n_skip = (!prefer_original).into();
 
     for replacements in replacement_combinations.into_iter().skip(n_skip) {
         let mut candidate = word.to_owned();

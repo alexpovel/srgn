@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+//! Build scripts.
 
 fn main() {
     #[cfg(feature = "german")]
@@ -37,7 +37,6 @@ mod hcl {
 }
 
 #[cfg(feature = "german")]
-#[allow(unreachable_pub)] // Cannot get this to play nice with clippy
 mod natural_languages {
     use std::env;
     use std::fs::{self, File};

@@ -12,7 +12,7 @@ type Variables<'a> = HashMap<CaptureGroup, &'a str>;
 ///
 /// Variables are treated as they occur in regular expressions: they can be [named or
 /// numbered](https://docs.rs/regex/latest/regex/struct.Captures.html).
-#[allow(clippy::too_many_lines)] // :(
+#[expect(clippy::too_many_lines)] // :(
 pub(super) fn inject_variables(
     input: &str,
     variables: &Variables<'_>,
@@ -64,9 +64,7 @@ pub(super) fn inject_variables(
                 braced: true,
             },
 
-            // Nothing useful matched, go back. This is order-dependent, see also
-            // https://github.com/rust-lang/rust-clippy/issues/860
-            #[allow(clippy::match_same_arms)]
+            // Nothing useful matched, go back.
             (State::Start | State::BracedStart, _) => State::Noop,
 
             // Building up
