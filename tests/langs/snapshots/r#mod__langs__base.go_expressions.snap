@@ -1,0 +1,385 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 19
+  l: "\tpi        = 3.14159\n"
+  m: "              ^^^^^^^  "
+- n: 20
+  l: "\te         = 2.71828\n"
+  m: "              ^^^^^^^  "
+- n: 21
+  l: "\tdebugMode = true\n"
+  m: "              ^^^^  "
+- n: 26
+  l: "\tlow = iota\n"
+  m: "        ^^^^  "
+- n: 37
+  l: "\treturn e.message\n"
+  m: "         ^^^^^^^^^  "
+- n: 63
+  l: "var testResults = make(map[string]bool)\n"
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 66
+  l: "var testChannel = make(chan TestCase, 10)\n"
+  m: "                  ^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 72
+  l: "var fixedTestCases [5]TestCase\n"
+  m: "                    ^           "
+- n: 85
+  l: "\tif a > b {\n"
+  m: "     ^^^^^    "
+- n: 86
+  l: "\t\treturn a\n"
+  m: "           ^  "
+- n: 88
+  l: "\treturn b\n"
+  m: "         ^  "
+- n: 98
+  l: "\tfor _, test := range tests {\n"
+  m: "      ^                         "
+- n: 98
+  l: "\tfor _, test := range tests {\n"
+  m: "         ^^^^                   "
+- n: 98
+  l: "\tfor _, test := range tests {\n"
+  m: "                       ^^^^^    "
+- n: 99
+  l: "\t\ttest(t)\n"
+  m: "    ^^^^^^^  "
+- n: 106
+  l: "\tdefer func() {\n"
+  m: "        ^^^^^^^^^^"
+- n: 107
+  l: "\t\t// Defer statement\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 108
+  l: "\t\tfmt.Println(\"Cleanup after tests\")\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 109
+  l: "\t}()\n"
+  m: "^^^^^  "
+- n: 112
+  l: "\tm.Run()\n"
+  m: "  ^^^^^^^  "
+- n: 118
+  l: "\tx := 42\n"
+  m: "  ^        "
+- n: 118
+  l: "\tx := 42\n"
+  m: "       ^^  "
+- n: 121
+  l: "\tif x > 0 {\n"
+  m: "     ^^^^^    "
+- n: 122
+  l: "\t\tt.Log(\"Positive number\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 124
+  l: "\t\tt.Error(\"Non-positive number\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 129
+  l: "\tcase x < 0:\n"
+  m: "       ^^^^^   "
+- n: 130
+  l: "\t\tt.Error(\"Negative number\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 131
+  l: "\tcase x == 0:\n"
+  m: "       ^^^^^^   "
+- n: 132
+  l: "\t\tt.Error(\"Zero\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^  "
+- n: 134
+  l: "\t\tt.Log(\"Positive number\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 138
+  l: "\tsum := 0\n"
+  m: "  ^^^       "
+- n: 138
+  l: "\tsum := 0\n"
+  m: "         ^  "
+- n: 139
+  l: "\tfor i := 1; i <= 10; i++ {\n"
+  m: "      ^                       "
+- n: 139
+  l: "\tfor i := 1; i <= 10; i++ {\n"
+  m: "           ^                  "
+- n: 139
+  l: "\tfor i := 1; i <= 10; i++ {\n"
+  m: "              ^^^^^^^         "
+- n: 139
+  l: "\tfor i := 1; i <= 10; i++ {\n"
+  m: "                       ^      "
+- n: 140
+  l: "\t\tsum += i\n"
+  m: "    ^^^       "
+- n: 140
+  l: "\t\tsum += i\n"
+  m: "           ^  "
+- n: 144
+  l: "\tif sum != 55 {\n"
+  m: "     ^^^^^^^^^    "
+- n: 145
+  l: "\t\tt.Errorf(\"Expected sum to be 55, got %d\", sum)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 149
+  l: "\tgo func() {\n"
+  m: "     ^^^^^^^^^^"
+- n: 150
+  l: "\t\ttestChannel <- TestCase{Name: \"async test\", Input: 1, Expected: 1}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 151
+  l: "\t}()\n"
+  m: "^^^^^  "
+- n: 155
+  l: "\tcase tc := <-testChannel:\n"
+  m: "       ^^                    "
+- n: 155
+  l: "\tcase tc := <-testChannel:\n"
+  m: "             ^^^^^^^^^^^^^   "
+- n: 156
+  l: "\t\tt.Logf(\"Received test case: %s\", tc.Name)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 157
+  l: "\tcase <-time.After(1 * time.Second):\n"
+  m: "       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 158
+  l: "\t\tt.Error(\"Timeout waiting for test case\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 162
+  l: "\tdefer func() {\n"
+  m: "        ^^^^^^^^^^"
+- n: 163
+  l: "\t\tif r := recover(); r != nil {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 164
+  l: "\t\t\tt.Log(\"Recovered from panic:\", r)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 165
+  l: "\t\t}\n"
+  m: ^^^^^^^
+- n: 166
+  l: "\t}()\n"
+  m: "^^^^^  "
+- n: 169
+  l: "\tif debugMode {\n"
+  m: "     ^^^^^^^^^    "
+- n: 170
+  l: "\t\tpanic(\"This is a debug panic\")\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 176
+  l: "\tfor i := 0; i < b.N; i++ {\n"
+  m: "      ^                       "
+- n: 176
+  l: "\tfor i := 0; i < b.N; i++ {\n"
+  m: "           ^                  "
+- n: 176
+  l: "\tfor i := 0; i < b.N; i++ {\n"
+  m: "              ^^^^^^^         "
+- n: 176
+  l: "\tfor i := 0; i < b.N; i++ {\n"
+  m: "                       ^      "
+- n: 177
+  l: "\t\t_ = math.Sqrt(float64(i))\n"
+  m: "    ^                          "
+- n: 177
+  l: "\t\t_ = math.Sqrt(float64(i))\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^  "
+- n: 183
+  l: "\ttc := TestCase{Name: \"example\", Input: 2, Expected: 4}\n"
+  m: "  ^^                                                        "
+- n: 183
+  l: "\ttc := TestCase{Name: \"example\", Input: 2, Expected: 4}\n"
+  m: "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 184
+  l: "\tfmt.Printf(\"Running test case: %s\\n\", tc.Name)\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 190
+  l: "\tswitch x := v.(type) {\n"
+  m: "         ^                "
+- n: 190
+  l: "\tswitch x := v.(type) {\n"
+  m: "              ^           "
+- n: 192
+  l: "\t\tfmt.Printf(\"Integer: %d\\n\", x)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 194
+  l: "\t\turlValue, err := u.Parse(x)\n"
+  m: "    ^^^^^^^^                     "
+- n: 194
+  l: "\t\turlValue, err := u.Parse(x)\n"
+  m: "              ^^^                "
+- n: 194
+  l: "\t\turlValue, err := u.Parse(x)\n"
+  m: "                     ^^^^^^^^^^  "
+- n: 195
+  l: "\t\tif err == nil {\n"
+  m: "       ^^^^^^^^^^    "
+- n: 196
+  l: "\t\t\tfmt.Printf(\"URL: %s\\n\", urlValue)\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 198
+  l: "\t\t\tfmt.Printf(\"String: %s\\n\", x)\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 201
+  l: "\t\tfmt.Printf(\"Unknown type: %T\\n\", x)\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 207
+  l: "\treturn func(x int) int {\n"
+  m: "         ^^^^^^^^^^^^^^^^^^^"
+- n: 208
+  l: "\t\treturn x * factor\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 209
+  l: "\t}\n"
+  m: "^^^  "
+- n: 213
+  l: "var complexNumber = 3 + 4i\n"
+  m: "                    ^^^^^^  "
+- n: 217
+  l: "\truneValue    = '世'\n"
+  m: "                 ^^^^^^^^^^^^  "
+- n: 218
+  l: "\trawString    = `This is a \"raw\" string`\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 219
+  l: "\tinterpString = \"Interpolated \\n string\"\n"
+  m: "                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 224
+  l: "\tread = 1 << iota\n"
+  m: "         ^^^^^^^^^  "
+- n: 238
+  l: "\tcase <-time.After(5 * time.Second):\n"
+  m: "       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   "
+- n: 239
+  l: "\t\treturn nil\n"
+  m: "           ^^^  "
+- n: 240
+  l: "\tcase <-ctx.Done():\n"
+  m: "       ^^^^^^^^^^^^   "
+- n: 241
+  l: "\t\treturn ctx.Err()\n"
+  m: "           ^^^^^^^^^  "
+- n: 247
+  l: "\tt := reflect.TypeOf(x)\n"
+  m: "  ^                       "
+- n: 247
+  l: "\tt := reflect.TypeOf(x)\n"
+  m: "       ^^^^^^^^^^^^^^^^^  "
+- n: 248
+  l: "\tfmt.Printf(\"Type: %v, Kind: %v\\n\", t, t.Kind())\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 253
+  l: "\tx := [4]int{1, 2, 3, 4}\n"
+  m: "  ^                        "
+- n: 253
+  l: "\tx := [4]int{1, 2, 3, 4}\n"
+  m: "       ^^^^^^^^^^^^^^^^^^  "
+- n: 254
+  l: "\tp := unsafe.Pointer(&x)\n"
+  m: "  ^                        "
+- n: 254
+  l: "\tp := unsafe.Pointer(&x)\n"
+  m: "       ^^^^^^^^^^^^^^^^^^  "
+- n: 255
+  l: "\tfmt.Printf(\"First element: %d\\n\", *(*int)(p))\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 260
+  l: "\tfmt.Println(\"Initializing package\")\n"
+  m: "  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 274
+  l: "\tswitch x {\n"
+  m: "         ^    "
+- n: 275
+  l: "\tcase 0:\n"
+  m: "       ^   "
+- n: 277
+  l: "\tcase 1:\n"
+  m: "       ^   "
+- n: 278
+  l: "\t\treturn \"Low\"\n"
+  m: "           ^^^^^^^  "
+- n: 279
+  l: "\tcase 2:\n"
+  m: "       ^   "
+- n: 280
+  l: "\t\treturn \"Medium\"\n"
+  m: "           ^^^^^^^^^^  "
+- n: 282
+  l: "\t\treturn \"High\"\n"
+  m: "           ^^^^^^^^  "
+- n: 288
+  l: "\ti := 0\n"
+  m: "  ^       "
+- n: 288
+  l: "\ti := 0\n"
+  m: "       ^  "
+- n: 290
+  l: "\tif i < 5 {\n"
+  m: "     ^^^^^    "
+- n: 291
+  l: "\t\ti++\n"
+  m: "    ^    "
+- n: 320
+  l: "\treturn a + b\n"
+  m: "         ^^^^^  "
+- n: 328
+  l: "\tmul := func(a, b float64) float64 {\n"
+  m: "  ^^^                                  "
+- n: 328
+  l: "\tmul := func(a, b float64) float64 {\n"
+  m: "         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+- n: 329
+  l: "\t\treturn a * b\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 330
+  l: "\t}\n"
+  m: "^^^  "
+- n: 332
+  l: "\treturn mul(r.width, r.height)\n"
+  m: "         ^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 336
+  l: "\ttotal := 0\n"
+  m: "  ^^^^^       "
+- n: 336
+  l: "\ttotal := 0\n"
+  m: "           ^  "
+- n: 337
+  l: "\tfor _, num := range nums {\n"
+  m: "      ^                       "
+- n: 337
+  l: "\tfor _, num := range nums {\n"
+  m: "         ^^^                  "
+- n: 337
+  l: "\tfor _, num := range nums {\n"
+  m: "                      ^^^^    "
+- n: 338
+  l: "\t\ttotal += num\n"
+  m: "    ^^^^^         "
+- n: 338
+  l: "\t\ttotal += num\n"
+  m: "             ^^^  "
+- n: 340
+  l: "\treturn total\n"
+  m: "         ^^^^^  "
+- n: 344
+  l: "\treturn f(x)\n"
+  m: "         ^^^^  "
+- n: 348
+  l: "\tcount := 0\n"
+  m: "  ^^^^^       "
+- n: 348
+  l: "\tcount := 0\n"
+  m: "           ^  "
+- n: 349
+  l: "\treturn func() int {\n"
+  m: "         ^^^^^^^^^^^^^^"
+- n: 350
+  l: "\t\tcount++\n"
+  m: ^^^^^^^^^^^^^
+- n: 351
+  l: "\t\treturn count\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 352
+  l: "\t}\n"
+  m: "^^^  "

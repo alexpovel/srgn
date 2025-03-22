@@ -44,6 +44,8 @@ pub enum PreparedQuery {
     Strings,
     /// Imports.
     Imports,
+    /// Expressions (all of them!).
+    Expression,
     /// Type definitions.
     TypeDef,
     /// Type alias assignments.
@@ -100,6 +102,7 @@ impl PreparedQuery {
                 )
             }
             Self::Imports => r"(import_spec path: (interpreted_string_literal) @path)",
+            Self::Expression => r"(_expression) @expr",
             Self::TypeDef => r"(type_declaration) @type_decl",
             Self::TypeAlias => r"(type_alias) @type_alias",
             Self::Struct => r"(type_declaration (type_spec type: (struct_type))) @struct",
