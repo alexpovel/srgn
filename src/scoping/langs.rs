@@ -1,10 +1,9 @@
 use std::borrow::Cow;
 
 use log::{debug, info, trace};
-use streaming_iterator::StreamingIterator; // TODO: remove once https://github.com/tree-sitter/tree-sitter/pull/4034 is released
 use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
-    QueryError as TSQueryError,
+    QueryError as TSQueryError, StreamingIterator,
 };
 
 use super::Scoper;
