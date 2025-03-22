@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 
-use super::scope::{RangesWithContext, ScopeContext};
 use super::Scoper;
-use crate::{RegexPattern, GLOBAL_SCOPE};
+use super::scope::{RangesWithContext, ScopeContext};
+use crate::{GLOBAL_SCOPE, RegexPattern};
 
 /// A regular expression for querying.
 #[derive(Debug)]
@@ -466,8 +466,8 @@ mod tests {
 
         use log::info;
         use rand;
-        use rand::seq::IndexedRandom;
         use rand::Rng;
+        use rand::seq::IndexedRandom;
 
         use super::*;
         use crate::scoping::scope::ROScope;

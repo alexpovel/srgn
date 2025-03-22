@@ -7,8 +7,8 @@ use tree_sitter::{
     QueryError as TSQueryError,
 };
 
-use super::scope::RangesWithContext;
 use super::Scoper;
+use super::scope::RangesWithContext;
 use crate::find::Find;
 use crate::ranges::Ranges;
 #[cfg(doc)]

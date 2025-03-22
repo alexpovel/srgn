@@ -152,7 +152,7 @@ pub(super) fn inject_variables(
                         out.push(tail);
                     }
                     None => {
-                        return Err(VariableExpressionError::UndefinedVariable(num.to_string()))
+                        return Err(VariableExpressionError::UndefinedVariable(num.to_string()));
                     }
                 };
 

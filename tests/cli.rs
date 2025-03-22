@@ -852,12 +852,14 @@ Heizoelrueckstossabdaempfung.
                         .expect("(our) directories under test always have parents")
                         .to_owned();
 
-                    assert!(check_directories_equality(
-                        // Impossible: a directory always compares unequal to a subdirectory
-                        // of itself.
-                        parent, path
-                    )
-                    .is_err());
+                    assert!(
+                        check_directories_equality(
+                            // Impossible: a directory always compares unequal to a subdirectory
+                            // of itself.
+                            parent, path
+                        )
+                        .is_err()
+                    );
                 }
             }
         }

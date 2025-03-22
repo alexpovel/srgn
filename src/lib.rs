@@ -174,9 +174,9 @@ use std::ops::Range;
 use crate::{
     actions::Action,
     scoping::{
+        Scoper,
         langs::LanguageScoper,
         view::{ScopedView, ScopedViewBuilder},
-        Scoper,
     },
 };
 

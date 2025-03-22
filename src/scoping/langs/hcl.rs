@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{tree_sitter_hcl, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
+use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, tree_sitter_hcl};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 

@@ -140,8 +140,7 @@ impl StateMachine {
             self.word.push(input);
             trace!(
                 "Appending {:?} to current word due to transition {:?}.",
-                input,
-                self.transition
+                input, self.transition
             );
         };
 

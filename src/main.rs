@@ -5,7 +5,7 @@
 
 use std::error::Error;
 use std::fs::{self, File};
-use std::io::{self, stdout, Read, Write};
+use std::io::{self, Read, Write, stdout};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{env, fmt};
@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
-use log::{debug, error, info, trace, warn, LevelFilter};
+use log::{LevelFilter, debug, error, info, trace, warn};
 use pathdiff::diff_paths;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -24,11 +24,11 @@ use srgn::actions::{
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::iterext::ParallelZipExt;
+use srgn::scoping::Scoper;
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
-use srgn::scoping::Scoper;
 use tree_sitter::QueryError as TSQueryError;
 
 // We have `LanguageScoper: Scoper`, but we cannot upcast
@@ -641,10 +641,10 @@ fn process_path(
     } else {
         if filesize > 0 && new_contents.is_empty() {
             error!(
-                    "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
-                    path.display(),
-                    filesize
-                );
+                "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
+                path.display(),
+                filesize
+            );
             return Err(io::Error::new(
                 io::ErrorKind::Other,
                 "attempt to wipe non-empty file (failsafe guard)",
@@ -1005,7 +1005,9 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
     level += additional_verbosity as usize;
 
     available.get(level).copied().unwrap_or_else(|| {
-        eprintln!("Requested additional verbosity on top of env default exceeds maximum, will use maximum");
+        eprintln!(
+            "Requested additional verbosity on top of env default exceeds maximum, will use maximum"
+        );
 
         available
             .last()
@@ -1021,12 +1023,12 @@ mod cli {
 
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
-    use clap_complete::{generate, Generator, Shell};
+    use clap_complete::{Generator, Shell, generate};
     use log::info;
-    use srgn::scoping::langs::{
-        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, QuerySource,
-    };
     use srgn::GLOBAL_SCOPE;
+    use srgn::scoping::langs::{
+        LanguageScoper, QuerySource, c, csharp, go, hcl, python, rust, typescript,
+    };
     use tree_sitter::QueryError as TSQueryError;
 
     use crate::{ProgramError, StandaloneAction};
