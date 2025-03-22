@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.5](https://github.com/alexpovel/srgn/compare/srgn-v0.13.4...srgn-v0.13.5) (2025-03-22)
+
+
+### Features
+
+* **go:** Scope expressions ([#192](https://github.com/alexpovel/srgn/issues/192)) ([06bd4d3](https://github.com/alexpovel/srgn/commit/06bd4d393ce39786c9b98ee5ceabb2d1b47277c6))
+
 ## [0.13.4](https://github.com/alexpovel/srgn/compare/srgn-v0.13.3...srgn-v0.13.4) (2024-11-09)
 
 
