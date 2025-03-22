@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{tree_sitter_hcl, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
+use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, tree_sitter_hcl};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -80,11 +80,11 @@ pub enum PreparedQuery {
 }
 
 impl PreparedQuery {
-    #[allow(clippy::too_many_lines)] // No good way to avoid
+    #[expect(clippy::too_many_lines)] // No good way to avoid
     const fn as_str(self) -> &'static str {
         // Seems to not play nice with the macro. Put up here, else interpolation is
         // affected.
-        #[allow(clippy::needless_raw_string_hashes)]
+        #[expect(clippy::needless_raw_string_hashes)]
         match self {
             Self::Variable => {
                 r#"

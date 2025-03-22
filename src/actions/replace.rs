@@ -3,7 +3,7 @@ use std::fmt;
 
 use log::{debug, info};
 use unescape::unescape;
-use variables::{inject_variables, VariableExpressionError};
+use variables::{VariableExpressionError, inject_variables};
 
 use super::{Action, ActionError};
 use crate::scoping::scope::ScopeContext;

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Find, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, IGNORE};
+use super::{Find, IGNORE, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
 
 /// A compiled query for the Rust language.
 #[derive(Debug)]
@@ -125,7 +125,7 @@ pub enum PreparedQuery {
 }
 
 impl PreparedQuery {
-    #[allow(clippy::too_many_lines)]
+    #[expect(clippy::too_many_lines)]
     const fn as_str(self) -> &'static str {
         match self {
             Self::Comments => {

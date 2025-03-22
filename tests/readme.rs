@@ -22,7 +22,7 @@ mod tests {
 
     use assert_cmd::Command;
     use comrak::nodes::{NodeCodeBlock, NodeValue};
-    use comrak::{parse_document, Arena, ComrakOptions};
+    use comrak::{Arena, ComrakOptions, parse_document};
     use fancy_regex::Regex;
     use itertools::Itertools;
     use nom::branch::alt;
@@ -33,7 +33,7 @@ mod tests {
     };
     use nom::combinator::{cut, eof, map, opt, recognize};
     use nom::error::ParseError;
-    use nom::multi::{many0, many1, many_till, separated_list1};
+    use nom::multi::{many_till, many0, many1, separated_list1};
     use nom::sequence::{delimited, preceded, tuple};
     use nom::{Finish, IResult};
     use pretty_assertions::assert_eq;
@@ -79,7 +79,7 @@ mod tests {
     /// Has a value, e.g. `--option value` or `-o value`.
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum Opt {
-        #[allow(dead_code)] // Not used yet
+        #[expect(dead_code)] // Not used yet
         Short(char, String),
         Long(String, String),
     }
@@ -317,7 +317,7 @@ mod tests {
             // Set the *second*, if any, command's standard input.
             match programs.front_mut() {
                 Some(Program::Echo(_) | Program::Cat(_)) => {
-                    return Err("Stdin-generating program should not be in the middle of a pipe")
+                    return Err("Stdin-generating program should not be in the middle of a pipe");
                 }
                 Some(Program::Self_(inv)) => {
                     inv.stdin = stdin;
@@ -333,7 +333,7 @@ mod tests {
             let mut first = first;
             match programs.back_mut() {
                 Some(Program::Echo(_) | Program::Cat(_)) => {
-                    return Err("Stdin-generating program should not be at the end of a pipe")
+                    return Err("Stdin-generating program should not be at the end of a pipe");
                 }
                 Some(Program::Self_(inv)) => {
                     inv.stdout = if should_fail {
@@ -360,7 +360,7 @@ mod tests {
                     match &mut first {
                         // There is no 'last program': we have a stand-alone one.
                         Program::Echo(_) | Program::Cat(_) => {
-                            return Err("Illegal standalone program")
+                            return Err("Illegal standalone program");
                         }
                         Program::Self_(inv) => {
                             inv.stdout = Some(
@@ -468,7 +468,7 @@ mod tests {
     }
 
     /// Parses a single, whole program invocation.
-    #[allow(clippy::too_many_lines)] // :( many hard-coded values
+    #[expect(clippy::too_many_lines)] // :( many hard-coded values
     fn parse_program(input: &str) -> IResult<&str, Program> {
         // Interior mutability is fine, as the different closures aliasing this run
         // sequentially, never at once (is using this and `map` of `nom` an
@@ -655,8 +655,7 @@ mod tests {
     #[derive(Debug, Clone, PartialEq, Eq)]
     enum OS {
         Linux,
-        #[allow(clippy::enum_variant_names)]
-        MacOS,
+        Darwin,
         Windows,
     }
 
@@ -667,7 +666,7 @@ mod tests {
         fn try_from(value: String) -> Result<Self, Self::Error> {
             match value.as_str() {
                 "linux" => Ok(Self::Linux),
-                "macos" => Ok(Self::MacOS),
+                "macos" => Ok(Self::Darwin),
                 "windows" => Ok(Self::Windows),
                 // Just a double check to ensure parsing of options went right.
                 _ => Err("unknown OS"),
@@ -900,15 +899,15 @@ mod tests {
 
                             // Now panic as usual, for the usual output
                             assert_eq!(
-                                    // Get some more readable output diff compared to
-                                    // `assert::Command`'s `stdout()` function, for which diffing
-                                    // whitespace is very hard.
-                                    expected_stdout,
-                                    observed_stdout,
-                                    "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
-                                    obs_f.path().display(),
-                                    exp_f.path().display()
-                                );
+                                // Get some more readable output diff compared to
+                                // `assert::Command`'s `stdout()` function, for which diffing
+                                // whitespace is very hard.
+                                expected_stdout,
+                                observed_stdout,
+                                "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
+                                obs_f.path().display(),
+                                exp_f.path().display()
+                            );
 
                             // Temporary files remain, they're not dropped.
                         }

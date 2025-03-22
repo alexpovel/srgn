@@ -1,7 +1,7 @@
 [package]
 name = "srgn"
 version = "0.13.5"
-edition = "2021"
+edition = "2024"
 authors = ["Alex Povel <rust@alexpovel.de>"]
 description = "A grep-like tool which understands source code syntax and allows for manipulation in addition to search"
 license = "MIT OR Apache-2.0"
@@ -16,7 +16,7 @@ categories = [
     "text-editors",
     "text-processing",
 ]
-rust-version = "1.80.0"
+rust-version = "1.85.0"
 exclude = [
     # Contains large submodules; those should *not* be checked out when packaging for
     # crates.io, aka not end up being a problem, but protect against accidents
@@ -54,7 +54,7 @@ pathdiff = "0.2.3"
 streaming-iterator = "0.1.9"
 tempfile = "3.13.0"
 titlecase = "3.3.0"
-tree-sitter = "0.24.6"
+tree-sitter = "0.25.3"
 tree-sitter-c = "0.23.4"
 tree-sitter-c-sharp = "0.23.0"
 tree-sitter-go = "0.23.4"

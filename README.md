@@ -834,6 +834,39 @@ $ cat unsafe.rs | srgn --rs 'unsafe' # Note: no 2nd argument necessary
 surfacing only truly `unsafe` items (and not comments, strings etc. merely mentioning
 it).[^4]
 
+###### Replacing `allow` with `expect` for lints (Rust)
+
+Taking advantage of the stabilization of the `expect` lint level in [Rust
+1.81](https://blog.rust-lang.org/2024/09/05/Rust-1.81.0.html#expectlint), one might want
+to migrate from `allow` to `expect` throughout (cf.
+959a692f1d788d071d5f55376e2bb5ff3c2ae15a in this repo):
+
+```rust file=allow.rs
+#[allow(unsafe_code)]
+if let Some(env_value) = env_value {
+    unsafe {
+        env::set_var(DEFAULT_FILTER_ENV, env_value);
+    }
+}
+```
+
+can be refactored using
+
+```bash
+cat allow.rs | srgn --rust 'attribute' '^allow' 'expect'
+```
+
+which will yield
+
+```rust file=output-allow.rs
+#[expect(unsafe_code)]
+if let Some(env_value) = env_value {
+    unsafe {
+        env::set_var(DEFAULT_FILTER_ENV, env_value);
+    }
+}
+```
+
 ###### Mass import (module) renaming (Python, Rust)
 
 As part of a large refactor (say, after an acquisition), imagine all imports of a

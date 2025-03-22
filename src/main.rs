@@ -5,7 +5,7 @@
 
 use std::error::Error;
 use std::fs::{self, File};
-use std::io::{self, stdout, Read, Write};
+use std::io::{self, Read, Write, stdout};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{env, fmt};
@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use ignore::{WalkBuilder, WalkState};
 use itertools::Itertools;
-use log::{debug, error, info, trace, warn, LevelFilter};
+use log::{LevelFilter, debug, error, info, trace, warn};
 use pathdiff::diff_paths;
 #[cfg(feature = "german")]
 use srgn::actions::German;
@@ -24,11 +24,11 @@ use srgn::actions::{
 #[cfg(feature = "symbols")]
 use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::iterext::ParallelZipExt;
+use srgn::scoping::Scoper;
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
 use srgn::scoping::view::ScopedViewBuilder;
-use srgn::scoping::Scoper;
 use tree_sitter::QueryError as TSQueryError;
 
 // We have `LanguageScoper: Scoper`, but we cannot upcast
@@ -36,8 +36,8 @@ use tree_sitter::QueryError as TSQueryError;
 // by providing both.
 type ScoperList = Vec<Box<dyn LanguageScoper>>;
 
-#[allow(clippy::too_many_lines)] // Only slightly above.
-#[allow(clippy::cognitive_complexity)]
+#[expect(clippy::too_many_lines)] // Only slightly above.
+#[expect(clippy::cognitive_complexity)]
 fn main() -> Result<()> {
     let args = cli::Args::init();
 
@@ -204,7 +204,7 @@ fn main() -> Result<()> {
             handle_actions_on_stdin(
                 &options,
                 standalone_action,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
             )?;
@@ -215,7 +215,7 @@ fn main() -> Result<()> {
                 &options,
                 standalone_action,
                 &validator,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
                 search_mode,
@@ -231,7 +231,7 @@ fn main() -> Result<()> {
                 &options,
                 standalone_action,
                 &validator,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
                 search_mode,
@@ -279,11 +279,10 @@ enum StandaloneAction {
 type Pipeline<'a> = &'a [&'a [Box<dyn Action>]];
 
 /// Main entrypoint for simple `stdin` -> `stdout` processing.
-#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_stdin(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
-    general_scoper: &Box<dyn Scoper>,
+    general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
 ) -> Result<(), ProgramError> {
@@ -315,12 +314,11 @@ fn handle_actions_on_stdin(
 ///
 /// [ripgrep]:
 ///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
-#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn handle_actions_on_many_files_sorted(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
     validator: &Validator,
-    general_scoper: &Box<dyn Scoper>,
+    general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
     search_mode: bool,
@@ -371,7 +369,7 @@ fn handle_actions_on_many_files_sorted(
                         info!("Match at {}, exiting early", path.display());
                         return Err(ProgramError::SomethingProcessed);
                     }
-                    #[allow(clippy::match_same_arms)]
+                    #[expect(clippy::match_same_arms)]
                     Err(PathProcessingError::ApplicationError(
                         ApplicationError::NoneInScope | ApplicationError::SomeInScope,
                     )) => 0,
@@ -433,14 +431,13 @@ fn handle_actions_on_many_files_sorted(
 }
 
 /// Main entrypoint for processing using at least 1 thread.
-#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
-#[allow(clippy::too_many_lines)]
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_lines)]
+#[expect(clippy::too_many_arguments)]
 fn handle_actions_on_many_files_threaded(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
     validator: &Validator,
-    general_scoper: &Box<dyn Scoper>,
+    general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
     search_mode: bool,
@@ -576,15 +573,14 @@ fn handle_actions_on_many_files_threaded(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
+#[expect(clippy::too_many_arguments)]
 fn process_path(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
     path: &Path,
     root: &Path,
     validator: &Validator,
-    general_scoper: &Box<dyn Scoper>,
+    general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
     search_mode: bool,
@@ -641,10 +637,10 @@ fn process_path(
     } else {
         if filesize > 0 && new_contents.is_empty() {
             error!(
-                    "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
-                    path.display(),
-                    filesize
-                );
+                "Failsafe triggered: file {} is nonempty ({} bytes), but new contents are empty. Will not wipe file.",
+                path.display(),
+                filesize
+            );
             return Err(io::Error::new(
                 io::ErrorKind::Other,
                 "attempt to wipe non-empty file (failsafe guard)",
@@ -682,7 +678,6 @@ fn process_path(
 ///
 /// TODO: The way this interacts with [`process_path`] etc. is just **awful** spaghetti
 /// of the most imperative, procedural kind. Refactor needed.
-#[allow(clippy::borrowed_box)] // Used throughout, not much of a pain
 fn apply(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
@@ -690,7 +685,7 @@ fn apply(
     // Use a string to avoid repeated and unnecessary bytes -> utf8 conversions and
     // corresponding checks.
     destination: &mut String,
-    general_scoper: &Box<dyn Scoper>,
+    general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
 ) -> std::result::Result<bool, ApplicationError> {
@@ -743,10 +738,7 @@ fn apply(
             for line in lines {
                 if !global_options.only_matching || line.has_any_in_scope() {
                     if global_options.line_numbers {
-                        // `ColoredString` needs to be 'evaluated' to do anything; make sure
-                        // to not forget even if this is moved outside of `format!`.
-                        #[allow(clippy::to_string_in_format_args)]
-                        destination.push_str(&format!("{}:", i.to_string().green().to_string()));
+                        destination.push_str(&format!("{}:", i.to_string().green()));
                     }
 
                     destination.push_str(&line.to_string());
@@ -1005,7 +997,9 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
     level += additional_verbosity as usize;
 
     available.get(level).copied().unwrap_or_else(|| {
-        eprintln!("Requested additional verbosity on top of env default exceeds maximum, will use maximum");
+        eprintln!(
+            "Requested additional verbosity on top of env default exceeds maximum, will use maximum"
+        );
 
         available
             .last()
@@ -1021,12 +1015,12 @@ mod cli {
 
     use clap::builder::ArgPredicate;
     use clap::{ArgAction, Command, CommandFactory, Parser};
-    use clap_complete::{generate, Generator, Shell};
+    use clap_complete::{Generator, Shell, generate};
     use log::info;
-    use srgn::scoping::langs::{
-        c, csharp, go, hcl, python, rust, typescript, LanguageScoper, QuerySource,
-    };
     use srgn::GLOBAL_SCOPE;
+    use srgn::scoping::langs::{
+        LanguageScoper, QuerySource, c, csharp, go, hcl, python, rust, typescript,
+    };
     use tree_sitter::QueryError as TSQueryError;
 
     use crate::{ProgramError, StandaloneAction};
@@ -1103,7 +1097,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (global)")]
-    #[allow(clippy::struct_excessive_bools)]
+    #[expect(clippy::struct_excessive_bools)]
     pub struct GlobalOptions {
         /// Glob of files to work on (instead of reading stdin).
         ///
@@ -1226,7 +1220,7 @@ mod cli {
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Composable Actions")]
-    #[allow(clippy::struct_excessive_bools)]
+    #[expect(clippy::struct_excessive_bools)]
     pub struct ComposableActions {
         /// Replace anything in scope with this value.
         ///
@@ -1464,17 +1458,17 @@ mod cli {
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
     struct HclScope {
-        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
+        #[expect(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a prepared query.
         #[arg(long, env, verbatim_doc_comment)]
         hcl: Vec<hcl::PreparedQuery>,
 
-        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
+        #[expect(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE)]
         hcl_query: Vec<QueryLiteral>,
 
-        #[allow(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
+        #[expect(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a custom tree-sitter query
         /// from file.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
@@ -1598,84 +1592,77 @@ mod cli {
 #[cfg(test)]
 mod tests {
     use std::env;
+    use std::sync::LazyLock;
 
     use env_logger::DEFAULT_FILTER_ENV;
     use log::LevelFilter;
+    use rstest::rstest;
 
     use super::*;
 
-    /// This test has to run **sequentially**, as env variable access and manipulation
-    /// is *not* thread-safe.
-    ///
-    /// Therefore, we cannot use `rstest` table tests. There is `serial_test`, but it
-    /// has tons of async-only dependencies which we don't need here and cannot be
-    /// turned off via features.
-    #[test]
-    fn test_level_filter_from_env_and_verbosity() {
-        for (env_value, additional_verbosity, expected) in [
-            (None, 0, LevelFilter::Error),
-            (None, 1, LevelFilter::Warn),
-            (None, 2, LevelFilter::Info),
-            (None, 3, LevelFilter::Debug),
-            (None, 4, LevelFilter::Trace),
-            (None, 5, LevelFilter::Trace),
-            (None, 128, LevelFilter::Trace),
-            (Some("off"), 0, LevelFilter::Off),
-            (Some("off"), 1, LevelFilter::Error),
-            (Some("off"), 2, LevelFilter::Warn),
-            (Some("off"), 3, LevelFilter::Info),
-            (Some("off"), 4, LevelFilter::Debug),
-            (Some("off"), 5, LevelFilter::Trace),
-            (Some("off"), 6, LevelFilter::Trace),
-            (Some("off"), 128, LevelFilter::Trace),
-            (Some("error"), 0, LevelFilter::Error),
-            (Some("error"), 1, LevelFilter::Warn),
-            (Some("error"), 2, LevelFilter::Info),
-            (Some("error"), 3, LevelFilter::Debug),
-            (Some("error"), 4, LevelFilter::Trace),
-            (Some("error"), 5, LevelFilter::Trace),
-            (Some("error"), 128, LevelFilter::Trace),
-            (Some("warn"), 0, LevelFilter::Warn),
-            (Some("warn"), 1, LevelFilter::Info),
-            (Some("warn"), 2, LevelFilter::Debug),
-            (Some("warn"), 3, LevelFilter::Trace),
-            (Some("warn"), 4, LevelFilter::Trace),
-            (Some("warn"), 128, LevelFilter::Trace),
-            (Some("info"), 0, LevelFilter::Info),
-            (Some("info"), 1, LevelFilter::Debug),
-            (Some("info"), 2, LevelFilter::Trace),
-            (Some("info"), 3, LevelFilter::Trace),
-            (Some("info"), 128, LevelFilter::Trace),
-            (Some("debug"), 0, LevelFilter::Debug),
-            (Some("debug"), 1, LevelFilter::Trace),
-            (Some("debug"), 2, LevelFilter::Trace),
-            (Some("debug"), 128, LevelFilter::Trace),
-            (Some("trace"), 0, LevelFilter::Trace),
-            (Some("trace"), 1, LevelFilter::Trace),
-            (Some("trace"), 128, LevelFilter::Trace),
-        ] {
-            #[allow(unsafe_code)]
-            // Test itself runs sequentially and this env var doesn't otherwise matter.
-            // And it's just a test...
-            if let Some(env_value) = env_value {
-                unsafe {
-                    env::set_var(DEFAULT_FILTER_ENV, env_value);
-                }
-            } else {
-                unsafe {
-                    // Might be set on parent and fork()ed down
-                    env::remove_var(DEFAULT_FILTER_ENV);
-                }
-            }
+    static ENV_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
-            // Sanity check for sequential tests
-            let i_am_not_sure_if_this_test_really_runs_sequentially = false;
-            if i_am_not_sure_if_this_test_really_runs_sequentially {
-                std::thread::sleep(std::time::Duration::from_secs(2));
-            }
+    #[rstest]
+    #[case(None, 0, LevelFilter::Error)]
+    #[case(None, 1, LevelFilter::Warn)]
+    #[case(None, 2, LevelFilter::Info)]
+    #[case(None, 3, LevelFilter::Debug)]
+    #[case(None, 4, LevelFilter::Trace)]
+    #[case(None, 5, LevelFilter::Trace)]
+    #[case(None, 128, LevelFilter::Trace)]
+    #[case(Some("off"), 0, LevelFilter::Off)]
+    #[case(Some("off"), 1, LevelFilter::Error)]
+    #[case(Some("off"), 2, LevelFilter::Warn)]
+    #[case(Some("off"), 3, LevelFilter::Info)]
+    #[case(Some("off"), 4, LevelFilter::Debug)]
+    #[case(Some("off"), 5, LevelFilter::Trace)]
+    #[case(Some("off"), 6, LevelFilter::Trace)]
+    #[case(Some("off"), 128, LevelFilter::Trace)]
+    #[case(Some("error"), 0, LevelFilter::Error)]
+    #[case(Some("error"), 1, LevelFilter::Warn)]
+    #[case(Some("error"), 2, LevelFilter::Info)]
+    #[case(Some("error"), 3, LevelFilter::Debug)]
+    #[case(Some("error"), 4, LevelFilter::Trace)]
+    #[case(Some("error"), 5, LevelFilter::Trace)]
+    #[case(Some("error"), 128, LevelFilter::Trace)]
+    #[case(Some("warn"), 0, LevelFilter::Warn)]
+    #[case(Some("warn"), 1, LevelFilter::Info)]
+    #[case(Some("warn"), 2, LevelFilter::Debug)]
+    #[case(Some("warn"), 3, LevelFilter::Trace)]
+    #[case(Some("warn"), 4, LevelFilter::Trace)]
+    #[case(Some("warn"), 128, LevelFilter::Trace)]
+    #[case(Some("info"), 0, LevelFilter::Info)]
+    #[case(Some("info"), 1, LevelFilter::Debug)]
+    #[case(Some("info"), 2, LevelFilter::Trace)]
+    #[case(Some("info"), 3, LevelFilter::Trace)]
+    #[case(Some("info"), 128, LevelFilter::Trace)]
+    #[case(Some("debug"), 0, LevelFilter::Debug)]
+    #[case(Some("debug"), 1, LevelFilter::Trace)]
+    #[case(Some("debug"), 2, LevelFilter::Trace)]
+    #[case(Some("debug"), 128, LevelFilter::Trace)]
+    #[case(Some("trace"), 0, LevelFilter::Trace)]
+    #[case(Some("trace"), 1, LevelFilter::Trace)]
+    #[case(Some("trace"), 128, LevelFilter::Trace)]
+    fn test_level_filter_from_env_and_verbosity(
+        #[case] env_value: Option<&str>,
+        #[case] additional_verbosity: u8,
+        #[case] expected: LevelFilter,
+    ) {
+        let _guard = ENV_MUTEX.lock().unwrap();
 
-            let result = level_filter_from_env_and_verbosity(additional_verbosity);
-            assert_eq!(result, expected);
+        #[expect(unsafe_code)]
+        if let Some(env_value) = env_value {
+            unsafe {
+                env::set_var(DEFAULT_FILTER_ENV, env_value);
+            }
+        } else {
+            unsafe {
+                // Might be set on parent and fork()ed down
+                env::remove_var(DEFAULT_FILTER_ENV);
+            }
         }
+
+        let result = level_filter_from_env_and_verbosity(additional_verbosity);
+        assert_eq!(result, expected);
     }
 }

@@ -8,12 +8,13 @@
 //! is available on <https://crates.io> and updated to a high enough `tree-sitter`
 //! version**.
 
-extern "C" {
-    fn tree_sitter_hcl() -> tree_sitter::Language;
+#[expect(unsafe_code)] // No way around this yet - wait until tree-sitter-hcl on crates.io
+unsafe extern "C" {
+    unsafe fn tree_sitter_hcl() -> tree_sitter::Language;
 }
 
 pub fn language() -> tree_sitter::Language {
-    #[allow(unsafe_code)]
+    #[expect(unsafe_code)]
     unsafe {
         tree_sitter_hcl()
     }

@@ -1,16 +1,16 @@
 use std::sync::LazyLock;
 
-use cached::proc_macro::cached;
 use cached::SizedCache;
-use decompound::{decompound, DecompositionOptions};
+use cached::proc_macro::cached;
+use decompound::{DecompositionOptions, decompound};
 use itertools::Itertools;
 use itertools::MinMaxResult::{MinMax, NoElements, OneElement};
 use log::{debug, trace};
 use unicode_titlecase::StrTitleCase;
 
+use crate::actions::Action;
 use crate::actions::german::machine::{StateMachine, Transition};
 use crate::actions::german::words::{Replace, Replacement, WordCasing};
-use crate::actions::Action;
 
 /// German language action, responsible for Umlauts and Eszett.
 ///
@@ -445,10 +445,9 @@ fn find_valid_replacement(
     // iteration. Then, `Busse` will turn out to be valid already and will be returned .
     // Skipping it means `Buße` is tried, which is *also* valid and returned, foregoing
     // `Busse`.
-    debug_assert!(replacement_combinations.first().map_or(true, Vec::is_empty));
+    debug_assert!(replacement_combinations.first().is_none_or(Vec::is_empty));
 
-    #[allow(clippy::bool_to_int_with_if)] // Readability is much better.
-    let n_skip = if prefer_original { 0 } else { 1 };
+    let n_skip = (!prefer_original).into();
 
     for replacements in replacement_combinations.into_iter().skip(n_skip) {
         let mut candidate = word.to_owned();

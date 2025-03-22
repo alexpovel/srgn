@@ -538,12 +538,12 @@ mod tests {
         0..4,
         Ranges { inner: vec![0..1, 1..2, 2..3, 3..4] },
     )]
-    #[allow(clippy::single_range_in_vec_init)]
+    #[expect(clippy::single_range_in_vec_init)]
     #[case(
         1..2,
         Ranges { inner: vec![1..2] },
     )]
-    #[allow(clippy::reversed_empty_ranges)]
+    #[expect(clippy::reversed_empty_ranges)]
     #[case(
         2..1,
         Ranges { inner: vec![] },

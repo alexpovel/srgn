@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+//! Build scripts.
 
 fn main() {
     #[cfg(feature = "german")]
@@ -37,7 +37,6 @@ mod hcl {
 }
 
 #[cfg(feature = "german")]
-#[allow(unreachable_pub)] // Cannot get this to play nice with clippy
 mod natural_languages {
     use std::env;
     use std::fs::{self, File};
@@ -83,7 +82,7 @@ mod natural_languages {
         use std::io::{BufReader, BufWriter, Read, Write};
         use std::sync::Mutex;
 
-        use decompound::{decompound, DecompositionOptions};
+        use decompound::{DecompositionOptions, decompound};
         use rayon::prelude::*;
 
         macro_rules! time_it {

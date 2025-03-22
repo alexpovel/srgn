@@ -5,12 +5,12 @@ use itertools::Itertools;
 use log::{debug, trace, warn};
 
 use crate::actions::{self, Action, ActionError};
+use crate::scoping::Scoper;
 use crate::scoping::dosfix::DosFix;
 use crate::scoping::scope::Scope::{In, Out};
 #[cfg(doc)]
 use crate::scoping::scope::ScopeContext;
 use crate::scoping::scope::{ROScope, ROScopes, RWScope, RWScopes};
-use crate::scoping::Scoper;
 
 /// A view of some input, sorted into parts, which are either [`In`] or [`Out`] of scope
 /// for processing.
@@ -52,7 +52,10 @@ impl<'viewee> ScopedView<'viewee> {
     /// This method is infallible, as it does not access any [`ScopeContext`].
     ///
     /// See implementors of [`Action`] for available types.
-    #[allow(clippy::missing_panics_doc)] // 🤞
+    ///
+    /// # Panics
+    ///
+    /// On internal programming error - "cannot happen".
     pub fn map_without_context(&mut self, action: &impl Action) -> &mut Self {
         self.map_impl(action, false)
             .expect("not accessing context, so is infallible");
@@ -348,7 +351,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
     /// Panics if the [`Scoper`] scopes such that the view is no longer consistent, i.e.
     /// gaps were created and the original input can no longer be reconstructed from the
     /// new view. This would be an internal bug.
-    pub fn explode(&mut self, scoper: &impl Scoper) -> &mut Self {
+    pub fn explode(&mut self, scoper: &dyn Scoper) -> &mut Self {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.0.len());
         for scope in self.scopes.0.drain(..) {
@@ -410,10 +413,10 @@ mod tests {
     use rstest::rstest;
 
     use super::ScopedView;
+    use crate::RegexPattern;
     use crate::scoping::scope::RWScopes;
     use crate::scoping::scope::Scope::{self, In, Out};
     use crate::scoping::view::ScopedViewBuilder;
-    use crate::RegexPattern;
 
     #[rstest]
     // Pattern only

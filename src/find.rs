@@ -133,9 +133,15 @@ mod test {
     #[case("#!/usr/bin/env perl -w\n", Some(String::from("perl")))]
     #[case("#!/usr/bin/env perl -w\r\n", Some(String::from("perl")))]
     //
-    #[case("#!/some/very/long/path/which/is/not/expected/in/real/life/but/should/still/work/because/why/not/bin/bash", Some(String::from("bash")))]
+    #[case(
+        "#!/some/very/long/path/which/is/not/expected/in/real/life/but/should/still/work/because/why/not/bin/bash",
+        Some(String::from("bash"))
+    )]
     //
-    #[case("#!/some/very/long/path/which/is/not/expected/in/real/life/and/will/not/work/because/there/is/a/certain/limit/to/the/nonsense/we/accept/in/this/function/bin/nope", None)]
+    #[case(
+        "#!/some/very/long/path/which/is/not/expected/in/real/life/and/will/not/work/because/there/is/a/certain/limit/to/the/nonsense/we/accept/in/this/function/bin/nope",
+        None
+    )]
     fn test_find_interpreter(#[case] input: &str, #[case] expected: Option<String>) {
         assert_eq!(
             find_interpreter(&mut Cursor::new(input.as_bytes())),

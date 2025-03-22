@@ -5,8 +5,8 @@ use std::ops::Range;
 use log::trace;
 use unescape::unescape;
 
-use super::scope::RangesWithContext;
 use super::Scoper;
+use super::scope::RangesWithContext;
 use crate::ranges::Ranges;
 
 /// A literal string for querying.

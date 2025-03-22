@@ -817,7 +817,7 @@ Heizoelrueckstossabdaempfung.
 
         let input = b"invalid utf8 \xFF";
 
-        #[allow(invalid_from_utf8)] // Attribute didn't work on `assert` macro?
+        #[expect(invalid_from_utf8)] // Attribute didn't work on `assert` macro?
         let check = std::str::from_utf8(input);
         assert!(check.is_err(), "Input is valid UTF8, test is broken");
 
@@ -852,12 +852,14 @@ Heizoelrueckstossabdaempfung.
                         .expect("(our) directories under test always have parents")
                         .to_owned();
 
-                    assert!(check_directories_equality(
-                        // Impossible: a directory always compares unequal to a subdirectory
-                        // of itself.
-                        parent, path
-                    )
-                    .is_err());
+                    assert!(
+                        check_directories_equality(
+                            // Impossible: a directory always compares unequal to a subdirectory
+                            // of itself.
+                            parent, path
+                        )
+                        .is_err()
+                    );
                 }
             }
         }
