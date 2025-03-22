@@ -1634,6 +1634,7 @@ Language scopes:
           - comments:    Comments (single- and multi-line)
           - strings:     Strings (interpreted and raw; excluding struct tags)
           - imports:     Imports
+          - expression:  Expressions (all of them!)
           - type-def:    Type definitions
           - type-alias:  Type alias assignments
           - struct:      `struct` type definitions

@@ -559,6 +559,11 @@ impl InScopeLinePart {
     go::CompiledQuery::from(go::PreparedQuery::Imports),
 )]
 #[case(
+    "base.go_expressions",
+    include_str!("go/base.go"),
+    go::CompiledQuery::from(go::PreparedQuery::Expression),
+)]
+#[case(
     "base.go_type-def",
     include_str!("go/base.go"),
     go::CompiledQuery::from(go::PreparedQuery::TypeDef),
