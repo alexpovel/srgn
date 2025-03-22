@@ -204,7 +204,7 @@ fn main() -> Result<()> {
             handle_actions_on_stdin(
                 &options,
                 standalone_action,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
             )?;
@@ -215,7 +215,7 @@ fn main() -> Result<()> {
                 &options,
                 standalone_action,
                 &validator,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
                 search_mode,
@@ -231,7 +231,7 @@ fn main() -> Result<()> {
                 &options,
                 standalone_action,
                 &validator,
-                &general_scoper,
+                general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
                 search_mode,

@@ -37,10 +37,3 @@ pub trait Scoper: Send + Sync {
     /// Raw ranges are those not turned into [`ROScopes`] yet.
     fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee>;
 }
-
-// https://www.reddit.com/r/rust/comments/droxdg/why_arent_traits_impld_for_boxdyn_trait/
-impl Scoper for Box<dyn Scoper> {
-    fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        self.as_ref().scope_raw(input)
-    }
-}
