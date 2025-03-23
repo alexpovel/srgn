@@ -1,0 +1,43 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 32
+  l: "type TestError struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 33
+  l: "\tmessage string\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "}\n"
+  m: "^  "
+- n: 46
+  l: "type TestCase struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 47
+  l: "\tName     string      `json:\"name,omitempty\" db:\"name\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 48
+  l: "\tInput    interface{} `json:\"input\" db:\"input\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 49
+  l: "\tExpected interface{} `json:\"expected\" db:\"expected\"`\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 50
+  l: "\tunequal  bool        // Unexported field\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 51
+  l: "}\n"
+  m: "^  "
+- n: 54
+  l: "type ExtendedTestCase struct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 55
+  l: "\tTestCase\n"
+  m: ^^^^^^^^^^^^
+- n: 56
+  l: "\ttimeout time.Duration\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 57
+  l: "}\n"
+  m: "^  "

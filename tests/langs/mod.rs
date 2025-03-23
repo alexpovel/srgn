@@ -1,8 +1,11 @@
 use std::ops::Range;
 
+use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
-use srgn::scoping::langs::{LanguageScoper, c, csharp, go, hcl, python, rust, typescript};
+use srgn::scoping::langs::{
+    LanguageScoper, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+};
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
 
@@ -293,6 +296,22 @@ impl InScopeLinePart {
     include_str!("rust/base.rs"),
     rust::CompiledQuery::from(rust::PreparedQuery::Struct),
 )]
+#[expect(clippy::trivial_regex)]
+#[case(
+    "base.rs_struct_named_Test",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::StructNamed(TreeSitterRegex(Regex::new("Test").unwrap()))),
+)]
+#[case(
+    "base.rs_struct_named_PubSuperSelf",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::StructNamed(TreeSitterRegex(Regex::new("Pub(Super|Self)").unwrap()))),
+)]
+#[case(
+    "base.rs_struct_named_LongerThan12",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::StructNamed(TreeSitterRegex(Regex::new(r"\w{12,}").unwrap()))),
+)]
 #[case(
     "base.rs_pub-struct",
     include_str!("rust/base.rs"),
@@ -322,6 +341,17 @@ impl InScopeLinePart {
     "base.enum",
     include_str!("rust/base.rs"),
     rust::CompiledQuery::from(rust::PreparedQuery::Enum),
+)]
+#[expect(clippy::trivial_regex)]
+#[case(
+    "base.rs_enum_named_Test",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::EnumNamed(TreeSitterRegex(Regex::new("Test").unwrap()))),
+)]
+#[case(
+    "base.rs_enum_named_PubSuperSelf",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::EnumNamed(TreeSitterRegex(Regex::new("Pub(Super|Self)").unwrap()))),
 )]
 #[case(
     "base.rs_pub-priv-enum",
@@ -357,6 +387,17 @@ impl InScopeLinePart {
     "base.rs_fn",
     include_str!("rust/base.rs"),
     rust::CompiledQuery::from(rust::PreparedQuery::Fn),
+)]
+#[expect(clippy::trivial_regex)]
+#[case(
+    "base.rs_fn_named_test",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::FnNamed(TreeSitterRegex(Regex::new("test").unwrap()))),
+)]
+#[case(
+    "base.rs_fn_named_pubsuperself",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::FnNamed(TreeSitterRegex(Regex::new("pub_(super|self)").unwrap()))),
 )]
 #[case(
     "base.rs_impl-fn",
@@ -419,6 +460,11 @@ impl InScopeLinePart {
     rust::CompiledQuery::from(rust::PreparedQuery::Trait),
 )]
 #[case(
+    "base.rs_trait_some",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::TraitNamed(TreeSitterRegex(Regex::new(r"(?i)some").unwrap()))),
+)]
+#[case(
     "base.rs_impl",
     include_str!("rust/base.rs"),
     rust::CompiledQuery::from(rust::PreparedQuery::Impl),
@@ -437,6 +483,11 @@ impl InScopeLinePart {
     "base.rs_mod",
     include_str!("rust/base.rs"),
     rust::CompiledQuery::from(rust::PreparedQuery::Mod),
+)]
+#[case(
+    "base.rs_mod_par",
+    include_str!("rust/base.rs"),
+    rust::CompiledQuery::from(rust::PreparedQuery::ModNamed(TreeSitterRegex(Regex::new(r"par.").unwrap()))),
 )]
 #[case(
     "base.rs_mod-tests",
@@ -579,9 +630,19 @@ impl InScopeLinePart {
     go::CompiledQuery::from(go::PreparedQuery::Struct),
 )]
 #[case(
+    "base.go_struct_tTest",
+    include_str!("go/base.go"),
+    go::CompiledQuery::from(go::PreparedQuery::StructNamed(TreeSitterRegex(Regex::new(r"[tT]est").unwrap()))),
+)]
+#[case(
     "base.go_interface",
     include_str!("go/base.go"),
     go::CompiledQuery::from(go::PreparedQuery::Interface),
+)]
+#[case(
+    "base.go_interface_tTest",
+    include_str!("go/base.go"),
+    go::CompiledQuery::from(go::PreparedQuery::InterfaceNamed(TreeSitterRegex(Regex::new(r"[tT]est").unwrap()))),
 )]
 #[case(
     "base.go_const",
@@ -597,6 +658,11 @@ impl InScopeLinePart {
     "base.go_func",
     include_str!("go/base.go"),
     go::CompiledQuery::from(go::PreparedQuery::Func),
+)]
+#[case(
+    "base.go_func_tTest",
+    include_str!("go/base.go"),
+    go::CompiledQuery::from(go::PreparedQuery::FuncNamed(TreeSitterRegex(Regex::new(r"[tT]est").unwrap()))),
 )]
 #[case(
     "base.go_method",

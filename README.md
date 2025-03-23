@@ -203,7 +203,7 @@ with many files, see [below](#run-against-multiple-files).
 Scopes and actions can be combined almost arbitrarily (though many combinations are not
 going to be use- or even meaningful). For example, consider this Python snippet (for
 examples using other supported languages see
-[below](#prepared-queries-sample-showcases)):
+[below](#prepared-queries)):
 
 ```python file=gnu.py
 """GNU module."""
@@ -790,9 +790,74 @@ language such as `python`. See [below](#custom-queries) for more on this advance
 > Language scopes are applied *first*, so whatever regex aka main scope you pass, it
 > operates on each matched language construct individually.
 
-##### Prepared queries (sample showcases)
+##### Prepared queries
 
 This section shows examples for some of the **prepared queries**.
+
+Most prepared queries are static, e.g. they always scope "all comments", for example.
+Various language elements are naturally *named* however: functions, classes, structs,
+modules and more are usually not anonymous, but carry names. Some prepared queries
+therefore have *dynamic* variants, where an optional regular expression pattern can
+additionally be supplied. The pattern then applies to the name of the item, and will
+only scope those items whose name matches the pattern. This allows for an extra degree
+of freedom for querying. Examples follow.
+
+###### Finding all structs related to testing (Go)
+
+An input like
+
+```go file=testing.go
+type PublicTestInput struct {
+    Name  string
+    Value int
+}
+
+type privateTestInput struct {
+    name  string
+    value int
+}
+
+type ActualDomainType struct {
+    Name  string
+    Value int
+}
+```
+
+can be searched as
+
+```console
+$ cat testing.go | srgn --go 'struct~[tT]est'
+1:type PublicTestInput struct {
+2:    Name  string
+3:    Value int
+4:}
+6:type privateTestInput struct {
+7:    name  string
+8:    value int
+9:}
+```
+
+surfacing only `struct`s whose name matches `[tT]est`. The `~` character serves as the
+separator between the language grammar/node type and pattern. This approach allows
+manipulation of *only these structs*, e.g.
+
+```console
+$ cat testing.go | srgn --go 'struct~[tT]est' '(\s+)Name' '${1}TestName'
+type PublicTestInput struct {
+    TestName  string
+    Value int
+}
+
+type privateTestInput struct {
+    name  string
+    value int
+}
+
+type ActualDomainType struct {
+    Name  string
+    Value int
+}
+```
 
 ###### Finding all `unsafe` code (Rust)
 
@@ -1669,28 +1734,34 @@ Language scopes:
           [env: GO=]
 
           Possible values:
-          - comments:    Comments (single- and multi-line)
-          - strings:     Strings (interpreted and raw; excluding struct tags)
-          - imports:     Imports
-          - expression:  Expressions (all of them!)
-          - type-def:    Type definitions
-          - type-alias:  Type alias assignments
-          - struct:      `struct` type definitions
-          - interface:   `interface` type definitions
-          - const:       `const` specifications
-          - var:         `var` specifications
-          - func:        `func` definitions
-          - method:      Method `func` definitions (`func (recv Recv) SomeFunc()`)
-          - free-func:   Free `func` definitions (`func SomeFunc()`)
-          - init-func:   `func init()` definitions
-          - type-params: Type parameters (generics)
-          - defer:       `defer` blocks
-          - select:      `select` blocks
-          - go:          `go` blocks
-          - switch:      `switch` blocks
-          - labeled:     Labeled statements
-          - goto:        `goto` statements
-          - struct-tags: Struct tags
+          - comments:            Comments (single- and multi-line)
+          - strings:             Strings (interpreted and raw; excluding struct tags)
+          - imports:             Imports
+          - expression:          Expressions (all of them!)
+          - type-def:            Type definitions
+          - type-alias:          Type alias assignments
+          - struct:              `struct` type definitions
+          - struct~<PATTERN>:    Like struct, but only considers items whose name matches
+            PATTERN.
+          - interface:           `interface` type definitions
+          - interface~<PATTERN>: Like interface, but only considers items whose name
+            matches PATTERN.
+          - const:               `const` specifications
+          - var:                 `var` specifications
+          - func:                `func` definitions
+          - func~<PATTERN>:      Like func, but only considers items whose name matches
+            PATTERN.
+          - method:              Method `func` definitions (`func (recv Recv) SomeFunc()`)
+          - free-func:           Free `func` definitions (`func SomeFunc()`)
+          - init-func:           `func init()` definitions
+          - type-params:         Type parameters (generics)
+          - defer:               `defer` blocks
+          - select:              `select` blocks
+          - go:                  `go` blocks
+          - switch:              `switch` blocks
+          - labeled:             Labeled statements
+          - goto:                `goto` statements
+          - struct-tags:         Struct tags
 
       --go-query <TREE-SITTER-QUERY-VALUE>
           Scope Go code using a custom tree-sitter query.
@@ -1794,12 +1865,16 @@ Language scopes:
             format strings!)
           - attribute:        Attributes like `#[attr]`
           - struct:           `struct` definitions
+          - struct~<PATTERN>: Like struct, but only considers items whose name matches
+            PATTERN.
           - priv-struct:      `struct` definitions not marked `pub`
           - pub-struct:       `struct` definitions marked `pub`
           - pub-crate-struct: `struct` definitions marked `pub(crate)`
           - pub-self-struct:  `struct` definitions marked `pub(self)`
           - pub-super-struct: `struct` definitions marked `pub(super)`
           - enum:             `enum` definitions
+          - enum~<PATTERN>:   Like enum, but only considers items whose name matches
+            PATTERN.
           - priv-enum:        `enum` definitions not marked `pub`
           - pub-enum:         `enum` definitions marked `pub`
           - pub-crate-enum:   `enum` definitions marked `pub(crate)`
@@ -1807,6 +1882,8 @@ Language scopes:
           - pub-super-enum:   `enum` definitions marked `pub(super)`
           - enum-variant:     Variant members of `enum` definitions
           - fn:               Function definitions
+          - fn~<PATTERN>:     Like fn, but only considers items whose name matches
+            PATTERN.
           - impl-fn:          Function definitions inside `impl` blocks (associated
             functions/methods)
           - priv-fn:          Function definitions not marked `pub`
@@ -1821,11 +1898,15 @@ Language scopes:
           - test-fn:          Function definitions with attributes containing `test`
             (`#[test]`, `#[rstest]`, ...)
           - trait:            `trait` definitions
+          - trait~<PATTERN>:  Like trait, but only considers items whose name matches
+            PATTERN.
           - impl:             `impl` blocks
           - impl-type:        `impl` blocks for types (`impl SomeType {}`)
           - impl-trait:       `impl` blocks for traits on types (`impl SomeTrait for
             SomeType {}`)
           - mod:              `mod` blocks
+          - mod~<PATTERN>:    Like mod, but only considers items whose name matches
+            PATTERN.
           - mod-tests:        `mod tests` blocks
           - type-def:         Type definitions (`struct`, `enum`, `union`)
           - identifier:       Identifiers

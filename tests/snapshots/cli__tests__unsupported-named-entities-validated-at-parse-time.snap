@@ -1,0 +1,15 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap\n{\n    args, stdin: None, stdout:\n    stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr:
+    - "error: the argument 'comments' cannot be used with 'a pattern ('InherentlyHaveNoNames')'"
+    - ""
+    - "For more information, try '--help'."
+---
+args:
+  - "--rust"
+  - comments~InherentlyHaveNoNames
+stdin: ~
+stdout: []
+exit_code: 2

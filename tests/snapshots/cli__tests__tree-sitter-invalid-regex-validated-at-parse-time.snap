@@ -1,0 +1,20 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap\n{\n    args, stdin: None, stdout:\n    stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr:
+    - "error: invalid value '(?<=Foo)Bar' for 'struct'"
+    - ""
+    - "  tip: error was: regex parse error:"
+    - "    (?<=Foo)Bar"
+    - "    ^^^^"
+    - "error: look-around, including look-ahead and look-behind, is not supported"
+    - ""
+    - "For more information, try '--help'."
+---
+args:
+  - "--rust"
+  - struct~(?<=Foo)Bar
+stdin: ~
+stdout: []
+exit_code: 2

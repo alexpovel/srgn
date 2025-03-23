@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 353
+  l: "    trait SomeTrait {\n"
+  m: "    ^^^^^^^^^^^^^^^^^^^"
+- n: 354
+  l: "        unsafe fn unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 355
+  l: "        async unsafe fn async_unsafe_method(&self);\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 356
+  l: "    }\n"
+  m: "^^^^^  "

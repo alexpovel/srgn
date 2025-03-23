@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 72
+  l: "struct TestStruct {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 73
+  l: "    instance_var: String,\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 74
+  l: "}\n"
+  m: "^  "
