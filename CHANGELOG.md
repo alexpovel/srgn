@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.6](https://github.com/alexpovel/srgn/compare/srgn-v0.13.5...srgn-v0.13.6) (2025-03-23)
+
+
+### Features
+
+* **language-scoping:** "Dynamic" prepared queries ([#196](https://github.com/alexpovel/srgn/issues/196)) ([c44152f](https://github.com/alexpovel/srgn/commit/c44152f71ea6fd4d59d17b9688ad9fad0521c98d))
+
 ## [0.13.5](https://github.com/alexpovel/srgn/compare/srgn-v0.13.4...srgn-v0.13.5) (2025-03-22)
 
 
