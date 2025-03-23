@@ -20,8 +20,7 @@ impl TryFrom<QuerySource> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: QuerySource) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::from_source(&tree_sitter_c_sharp::LANGUAGE.into(), &query)
-            .expect("syntax of prepared queries is validated by tests");
+        let q = super::CompiledQuery::from_source(&tree_sitter_c_sharp::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }
