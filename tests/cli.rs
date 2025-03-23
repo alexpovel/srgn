@@ -745,6 +745,30 @@ Heizoelrueckstossabdaempfung.
         ],
         Some(Path::new("tests/langs/go/vendor-dir-test/")), // Contains vendor dir
     )]
+    #[case(
+        // tree-sitter regular expressions do not support `fancy_regex` features such as
+        // lookaheads. This is validated during CLI arg parsing time, instead of failing
+        // much later at runtime in the tree-sitter library, at which we point we lose
+        // rich error messages.
+        "tree-sitter-invalid-regex-validated-at-parse-time",
+        None,
+        &[
+            "--rust",
+            "struct~(?<=Foo)Bar",
+        ],
+        None,
+    )]
+    #[case(
+        // Some grammar elements/node types do not support "namedness" - they are
+        // anonymous. This should be caught and rejected at parse time.
+        "unsupported-named-entities-validated-at-parse-time",
+        None,
+        &[
+            "--rust",
+            "comments~InherentlyHaveNoNames",
+        ],
+        None,
+    )]
     fn test_cli_failure_modes(
         #[case] snapshot_name: String,
         #[case] stdin: Option<&str>,

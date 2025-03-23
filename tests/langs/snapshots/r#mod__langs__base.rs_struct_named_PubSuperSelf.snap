@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 274
+  l: "pub(self) struct PubSelfStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 275
+  l: "pub(super) struct PubSuperStruct {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

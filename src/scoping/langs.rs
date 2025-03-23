@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use log::{debug, info, trace};
+use log::{debug, error, info, trace};
 use tree_sitter::{
     Language as TSLanguage, Parser as TSParser, Query as TSQuery, QueryCursor as TSQueryCursor,
     QueryError as TSQueryError, StreamingIterator,
@@ -32,6 +32,28 @@ mod tree_sitter_hcl;
 /// TypeScript.
 pub mod typescript;
 
+/// A regular expression pattern as supported by tree-sitter.
+///
+/// While tree-sitter supports the `match` directives, concrete support [depends on
+/// implementations](https://tree-sitter.github.io/tree-sitter/using-parsers/queries/3-predicates-and-directives.html#admonition-info).
+/// This type wraps over [what the tree-sitter Rust bindings
+/// use](https://github.com/tree-sitter/tree-sitter/blob/e3db212b0b12a189010979b4c129a792009e8361/lib/binding_rust/lib.rs#L2675),
+/// granting some improved type safety (things blow up before the regex is built by
+/// tree-sitter, at which point we get less rich error feedback), for better validation
+/// -- **at the risk of these types going out of sync with the upstream**.
+#[derive(Debug, Clone)]
+pub struct TreeSitterRegex(pub regex::bytes::Regex);
+
+impl std::fmt::Display for TreeSitterRegex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Passing patterns into tree-sitter queries for `match?` requires escaping, cf.
+        // https://tree-sitter.github.io/tree-sitter/using-parsers/queries/3-predicates-and-directives.html#the-match-predicate.
+        let escaped = regex::escape(self.0.as_str());
+
+        write!(f, "{escaped}")
+    }
+}
+
 /// Represents query compiled for a (programming) language L.
 #[derive(Debug)]
 struct CompiledQuery {
@@ -54,7 +76,10 @@ impl CompiledQuery {
     }
 
     fn from_prepared_query(lang: &TSLanguage, query: &str) -> Self {
-        Self::from_str(lang, query).expect("syntax of prepared queries is validated by tests")
+        Self::from_str(lang, query).unwrap_or_else(|qe| {
+            error!("Failed to compile prepared query: {:?}", qe);
+            panic!("syntax of prepared queries should be validated by tests, and injection of regex be protected by {}", stringify!(TreeSitterRegex))
+        })
     }
 
     fn from_str(lang: &TSLanguage, query: &str) -> Result<Self, TSQueryError> {

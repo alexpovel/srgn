@@ -1,0 +1,13 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 41
+  l: "type Testable interface {\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 42
+  l: "\tTest() bool\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 43
+  l: "}\n"
+  m: "^  "

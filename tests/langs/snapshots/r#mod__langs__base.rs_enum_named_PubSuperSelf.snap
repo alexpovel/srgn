@@ -1,0 +1,10 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 279
+  l: "pub(self) enum PubSelfEnum {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 280
+  l: "pub(super) enum PubSuperEnum {}\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

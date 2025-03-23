@@ -1009,17 +1009,21 @@ fn level_filter_from_env_and_verbosity(additional_verbosity: u8) -> LevelFilter 
 }
 
 mod cli {
+    use std::ffi::OsStr;
+    use std::fmt::Write;
     use std::num::NonZero;
     use std::path::PathBuf;
     use std::{fs, io};
 
-    use clap::builder::ArgPredicate;
-    use clap::{ArgAction, Command, CommandFactory, Parser};
+    use clap::builder::{ArgPredicate, StyledStr};
+    use clap::error::ErrorKind;
+    use clap::{ArgAction, Command, CommandFactory, Parser, ValueEnum};
     use clap_complete::{Generator, Shell, generate};
     use log::info;
+    use regex::bytes::Regex;
     use srgn::GLOBAL_SCOPE;
     use srgn::scoping::langs::{
-        LanguageScoper, QuerySource, c, csharp, go, hcl, python, rust, typescript,
+        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
     };
     use tree_sitter::QueryError as TSQueryError;
 
@@ -1321,6 +1325,11 @@ mod cli {
     const TREE_SITTER_QUERY_VALUE: &str = "TREE-SITTER-QUERY-VALUE";
     const TREE_SITTER_QUERY_FILENAME: &str = "TREE-SITTER-QUERY-FILENAME";
 
+    /// For grammar items supporting the concept of "namedness", like structs, enums,
+    /// modules, classes and more, this is the separator used to separate the name from
+    /// the pattern itself, when passed as a single argument.
+    const NAMED_ITEM_PATTERN_SEPARATOR: &str = "~";
+
     macro_rules! impl_lang_scopes {
         ($(($lang_flag:ident, $lang_query_flag:ident, $lang_query_file_flag:ident, $lang_scope:ident),)+) => {
             #[derive(Parser, Debug)]
@@ -1377,7 +1386,7 @@ mod cli {
         if set_fields_count > 1 {
             let mut cmd = Args::command();
             cmd.error(
-                clap::error::ErrorKind::ArgumentConflict,
+                ErrorKind::ArgumentConflict,
                 "Can only use one language at a time.",
             )
             .exit();
@@ -1421,6 +1430,179 @@ mod cli {
         info!("Reading query from file at '{}'", path.display());
         let s = fs::read_to_string(path)?;
         Ok(QuerySource::from(s))
+    }
+
+    /// Macro to create a `PreparedQueryParser` for a specific language.
+    macro_rules! define_prepared_query_parser {
+        (
+            $parser_name:ident,
+            $query_type:path,
+            variants = [$(($variant:ident, $named_variant:ident)),*],
+            separator = $separator:expr
+        ) => {
+            /// A dedicated type to implement `TypedValueParser` for.
+            ///
+            /// We need a full-blown, dedicated type as we leverage the `inner` parser
+            /// of existing types, for which `ValueEnum` is implemented. That way, the
+            /// enum variants etc. do not  need to be repeated manually. Only the select
+            /// entries where we have a mapping to a named variant need to be listed.
+            ///
+            /// In essence, this allows us to have enums with only unit variants,
+            /// `derive(ValueEnum)` on it, and benefit from that implementation.
+            /// Non-unit variant enums are [not supported
+            /// yet](https://github.com/clap-rs/clap/issues/2621). We then layer this
+            /// parser on top, which just maps CLI args to the **full** enum (which
+            /// *does* have some non-unit variants, which just were `skip`ped so they're
+            /// compatible with `clap`) surface. Currently, this means splitting args to
+            /// support grammar items with the concept of "namedness".
+            ///
+            /// Some items like structs, classes, functions, modules etc. are naturally
+            /// named. Others like comments, literal strings, expression are not - they
+            /// are anonymous. Supplying patterns to scope down to individual names of
+            /// items makes usage more ergonomic - it allows the pattern to apply to
+            /// *just* the names, not the entire scope (which requires multi-line regex
+            /// contortions otherwise).
+            #[derive(Clone)]
+            struct $parser_name;
+
+            impl clap::builder::TypedValueParser for $parser_name {
+                type Value = $query_type;
+
+                fn parse_ref(
+                    &self,
+                    cmd: &Command,
+                    arg: Option<&clap::Arg>,
+                    value: &OsStr,
+                ) -> Result<Self::Value, clap::Error> {
+                    let inner = clap::value_parser!($query_type);
+                    let val = if let Some(Some((name, pattern))) =
+                        value.to_str().map(|s| s.split_once($separator))
+                    {
+                        // Found a separator! Parse the value as a pattern.
+                        let pattern = TreeSitterRegex(Regex::new(pattern).map_err(|e| {
+                            let mut err = clap::Error::new(ErrorKind::ValueValidation).with_cmd(cmd);
+                            err.insert(
+                                clap::error::ContextKind::InvalidValue,
+                                clap::error::ContextValue::String(pattern.to_string()),
+                            );
+                            err.insert(
+                                clap::error::ContextKind::Suggested,
+                                clap::error::ContextValue::StyledStrs({
+                                    // Need `StyledStrs` here - anything else will not print via
+                                    // `RichFormatter` (which is the default):
+                                    // https://github.com/clap-rs/clap/blob/f046ca6a2b2da2ee0a46cb46544cebaba9f9a45a/clap_builder/src/error/format.rs#L110
+                                    let mut s = StyledStr::new();
+                                    write!(s, "error was: {e}").unwrap();
+                                    vec![s]
+                                }),
+                            );
+                            err.insert(
+                                clap::error::ContextKind::InvalidArg,
+                                clap::error::ContextValue::String(name.into()),
+                            );
+                            err
+                        })?);
+
+                        let parsed = inner.parse_ref(cmd, arg, OsStr::new(name))?;
+
+                        match parsed {
+                            // Is it any of the known variants we have a mapping to a
+                            // named variant for?
+                            $(
+                                <$query_type>::$variant => <$query_type>::$named_variant(pattern),
+                            )*
+
+                            // It is not, so using a separator and thus a pattern is not
+                            // supported.
+                            _ => {
+                                let mut err = clap::Error::new(ErrorKind::ArgumentConflict).with_cmd(cmd);
+
+                                // Add some context for user feedback.
+
+                                // A bit hacky - relies on internal implementation, and is
+                                // misusing it to a degree:
+                                // https://github.com/clap-rs/clap/blob/f046ca6a2b2da2ee0a46cb46544cebaba9f9a45a/clap_builder/src/error/format.rs#L176-L191
+                                err.insert(
+                                    clap::error::ContextKind::PriorArg,
+                                    clap::error::ContextValue::String(format!("a pattern ('{pattern}')")),
+                                );
+                                err.insert(
+                                    clap::error::ContextKind::InvalidArg,
+                                    clap::error::ContextValue::String(name.into()),
+                                );
+
+                                return Err(err);
+                            }
+                        }
+                    } else {
+                        // No separator found, just parse the value as-is using existing
+                        // base implementation.
+                        inner.parse_ref(cmd, arg, value)?
+                    };
+
+                    Ok(val)
+                }
+
+                /// Provide possible values for the parser.
+                ///
+                /// This mainly dispatches on the underlying, existing [`ValueEnum`]
+                /// implementation and its value variants/possible values. This manual
+                /// step is necessary as the default impl returns `None`. Additionally,
+                /// we add the pattern variants.
+                fn possible_values(
+                    &self,
+                ) -> Option<Box<dyn Iterator<Item = clap::builder::PossibleValue> + '_>> {
+                    // Get all the variant possible values
+                    let variants = <$query_type>::value_variants()
+                        .iter()
+                        .map(|v|
+                            v.to_possible_value().expect(
+                                "all value variants have a possible mapping, as `ValueEnum` is derived",
+                            )
+                        )
+                        .collect::<Vec<_>>();
+
+                    // Create the pattern values, to be inserted after their base variants
+                    let pattern_values = vec![
+                        $(
+                            (
+                                stringify!($variant).to_lowercase(),
+                                clap::builder::PossibleValue::new(format!(
+                                    "{}{}{}",
+                                    stringify!($variant).to_lowercase(),
+                                    $separator,
+                                    "<PATTERN>"
+                                ))
+                                .help(format!(
+                                    "Like {}, but only considers items whose name matches PATTERN.",
+                                    stringify!($variant).to_lowercase()
+                                ))
+                            ),
+                        )*
+                    ];
+
+                    // Create a new vector with patterns inserted after their variants
+                    let mut result = Vec::with_capacity(variants.len() + pattern_values.len());
+
+                    for val in variants {
+                        // Add the base variant
+                        result.push(val.clone());
+
+                        // Find and add any matching pattern variant. This ensures
+                        // pattern variants are slotted in right after their base
+                        // variant, instead of e.g. at the end. Improves docs &
+                        // discoverability.
+                        for (name, pattern_val) in &pattern_values {
+                            if val.get_name() == name {
+                                result.push(pattern_val.clone());
+                            }
+                        }
+                    }
+
+                    Some(Box::new(result.into_iter()))
+                }
+            }
+        };
     }
 
     #[derive(Parser, Debug, Clone)]
@@ -1479,7 +1661,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     struct GoScope {
         /// Scope Go code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_parser = GoPreparedQueryParser)]
         go: Vec<go::PreparedQuery>,
 
         /// Scope Go code using a custom tree-sitter query.
@@ -1490,6 +1672,17 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
         go_query_file: Vec<PathBuf>,
     }
+
+    define_prepared_query_parser!(
+        GoPreparedQueryParser,
+        go::PreparedQuery,
+        variants = [
+            (Struct, StructNamed),
+            (Interface, InterfaceNamed),
+            (Func, FuncNamed)
+        ],
+        separator = NAMED_ITEM_PATTERN_SEPARATOR
+    );
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]
@@ -1511,7 +1704,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     struct RustScope {
         /// Scope Rust code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "rs")]
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "rs", value_parser = RustPreparedQueryParser)]
         rust: Vec<rust::PreparedQuery>,
 
         /// Scope Rust code using a custom tree-sitter query.
@@ -1522,6 +1715,19 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
         rust_query_file: Vec<PathBuf>,
     }
+
+    define_prepared_query_parser!(
+        RustPreparedQueryParser,
+        rust::PreparedQuery,
+        variants = [
+            (Struct, StructNamed),
+            (Enum, EnumNamed),
+            (Fn, FnNamed),
+            (Trait, TraitNamed),
+            (Mod, ModNamed)
+        ],
+        separator = NAMED_ITEM_PATTERN_SEPARATOR
+    );
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]

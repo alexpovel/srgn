@@ -4,7 +4,7 @@ use std::path::{Component, Path};
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
+use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, TreeSitterRegex};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -30,13 +30,13 @@ impl From<PreparedQuery> for CompiledQuery {
     fn from(query: PreparedQuery) -> Self {
         Self(super::CompiledQuery::from_prepared_query(
             &tree_sitter_go::LANGUAGE.into(),
-            query.as_str(),
+            &query.as_string(),
         ))
     }
 }
 
 /// Prepared tree-sitter queries for Go.
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum)]
 pub enum PreparedQuery {
     /// Comments (single- and multi-line).
     Comments,
@@ -52,14 +52,23 @@ pub enum PreparedQuery {
     TypeAlias,
     /// `struct` type definitions.
     Struct,
+    /// `struct` type definitions, where the struct name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    StructNamed(TreeSitterRegex),
     /// `interface` type definitions.
     Interface,
+    /// `interface` type definitions, where the interface name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    InterfaceNamed(TreeSitterRegex),
     /// `const` specifications.
     Const,
     /// `var` specifications.
     Var,
     /// `func` definitions.
     Func,
+    /// `func` definitions, where the function name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    FuncNamed(TreeSitterRegex),
     /// Method `func` definitions (`func (recv Recv) SomeFunc()`).
     Method,
     /// Free `func` definitions (`func SomeFunc()`).
@@ -85,9 +94,9 @@ pub enum PreparedQuery {
 }
 
 impl PreparedQuery {
-    const fn as_str(self) -> &'static str {
+    fn as_string(&self) -> String {
         match self {
-            Self::Comments => "(comment) @comment",
+            Self::Comments => "(comment) @comment".into(),
             Self::Strings => {
                 formatcp!(
                     r"
@@ -101,14 +110,41 @@ impl PreparedQuery {
                     IGNORE
                 )
             }
-            Self::Imports => r"(import_spec path: (interpreted_string_literal) @path)",
-            Self::Expression => r"(_expression) @expr",
-            Self::TypeDef => r"(type_declaration) @type_decl",
-            Self::TypeAlias => r"(type_alias) @type_alias",
-            Self::Struct => r"(type_declaration (type_spec type: (struct_type))) @struct",
-            Self::Interface => r"(type_declaration (type_spec type: (interface_type))) @interface",
-            Self::Const => "(const_spec) @const",
-            Self::Var => "(var_spec) @var",
+            .into(),
+            Self::Imports => r"(import_spec path: (interpreted_string_literal) @path)".into(),
+            Self::Expression => r"(_expression) @expr".into(),
+            Self::TypeDef => r"(type_declaration) @type_decl".into(),
+            Self::TypeAlias => r"(type_alias) @type_alias".into(),
+            Self::Struct => r"(type_declaration (type_spec type: (struct_type))) @struct".into(),
+            Self::StructNamed(pattern) => {
+                format!(
+                    r#"(
+                        type_declaration(
+                            type_spec
+                                name: _ @name
+                                type: (struct_type)
+                        )
+                        (#match? @name "{pattern}")
+                    ) @struct"#
+                )
+            }
+            Self::Interface => {
+                r"(type_declaration (type_spec type: (interface_type))) @interface".into()
+            }
+            Self::InterfaceNamed(pattern) => {
+                format!(
+                    r#"(
+                        type_declaration(
+                            type_spec
+                                name: _ @name
+                                type: (interface_type)
+                        )
+                        (#match? @name "{pattern}")
+                    ) @interface"#
+                )
+            }
+            Self::Const => "(const_spec) @const".into(),
+            Self::Var => "(var_spec) @var".into(),
             Self::Func => {
                 r"
                 [
@@ -117,21 +153,38 @@ impl PreparedQuery {
                     (func_literal)
                 ] @func"
             }
-            Self::Method => "(method_declaration) @method",
-            Self::FreeFunc => "(function_declaration) @free_func",
+            .into(),
+            Self::FuncNamed(pattern) => {
+                format!(
+                    r#"(
+                        [
+                            (method_declaration
+                                name: _ @name
+                            )
+                            (function_declaration
+                                name: _ @name
+                            )
+                        ]
+                        (#match? @name "{pattern}")
+                    ) @func"#
+                )
+            }
+            Self::Method => "(method_declaration) @method".into(),
+            Self::FreeFunc => "(function_declaration) @free_func".into(),
             Self::InitFunc => {
                 r#"(function_declaration
                     name: (identifier) @id (#eq? @id "init")
                 ) @init_func"#
             }
-            Self::TypeParams => "(type_parameter_declaration) @type_params",
-            Self::Defer => "(defer_statement) @defer",
-            Self::Select => "(select_statement) @select",
-            Self::Go => "(go_statement) @go",
-            Self::Switch => "(expression_switch_statement) @switch",
-            Self::Labeled => "(labeled_statement) @labeled",
-            Self::Goto => "(goto_statement) @goto",
-            Self::StructTags => "(field_declaration tag: (raw_string_literal) @tag)",
+            .into(),
+            Self::TypeParams => "(type_parameter_declaration) @type_params".into(),
+            Self::Defer => "(defer_statement) @defer".into(),
+            Self::Select => "(select_statement) @select".into(),
+            Self::Go => "(go_statement) @go".into(),
+            Self::Switch => "(expression_switch_statement) @switch".into(),
+            Self::Labeled => "(labeled_statement) @labeled".into(),
+            Self::Goto => "(goto_statement) @goto".into(),
+            Self::StructTags => "(field_declaration tag: (raw_string_literal) @tag)".into(),
         }
     }
 }

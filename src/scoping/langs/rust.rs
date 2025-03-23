@@ -3,7 +3,9 @@ use std::fmt::Debug;
 use clap::ValueEnum;
 use const_format::formatcp;
 
-use super::{Find, IGNORE, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError};
+use super::{
+    Find, IGNORE, LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, TreeSitterRegex,
+};
 
 /// A compiled query for the Rust language.
 #[derive(Debug)]
@@ -27,13 +29,13 @@ impl From<PreparedQuery> for CompiledQuery {
     fn from(query: PreparedQuery) -> Self {
         Self(super::CompiledQuery::from_prepared_query(
             &tree_sitter_rust::LANGUAGE.into(),
-            query.as_str(),
+            &query.as_string(),
         ))
     }
 }
 
 /// Prepared tree-sitter queries for Rust.
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum)]
 pub enum PreparedQuery {
     /// Comments (line and block styles; excluding doc comments; comment chars incl.).
     Comments,
@@ -50,6 +52,9 @@ pub enum PreparedQuery {
     Attribute,
     /// `struct` definitions.
     Struct,
+    /// `struct` definitions, where the struct name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    StructNamed(TreeSitterRegex),
     /// `struct` definitions not marked `pub`.
     PrivStruct,
     /// `struct` definitions marked `pub`.
@@ -62,6 +67,9 @@ pub enum PreparedQuery {
     PubSuperStruct,
     /// `enum` definitions.
     Enum,
+    /// `enum` definitions, where the enum name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    EnumNamed(TreeSitterRegex),
     /// `enum` definitions not marked `pub`.
     PrivEnum,
     /// `enum` definitions marked `pub`.
@@ -76,6 +84,9 @@ pub enum PreparedQuery {
     EnumVariant,
     /// Function definitions.
     Fn,
+    /// Function definitions, where the function name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    FnNamed(TreeSitterRegex),
     /// Function definitions inside `impl` blocks (associated functions/methods).
     ImplFn,
     /// Function definitions not marked `pub`.
@@ -101,6 +112,9 @@ pub enum PreparedQuery {
     TestFn,
     /// `trait` definitions.
     Trait,
+    /// `trait` definitions, where the trait name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    TraitNamed(TreeSitterRegex),
     /// `impl` blocks.
     Impl,
     /// `impl` blocks for types (`impl SomeType {}`).
@@ -109,6 +123,9 @@ pub enum PreparedQuery {
     ImplTrait,
     /// `mod` blocks.
     Mod,
+    /// `mod` blocks, where the module name matches the provided pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    ModNamed(TreeSitterRegex),
     /// `mod tests` blocks.
     ModTests,
     /// Type definitions (`struct`, `enum`, `union`).
@@ -126,7 +143,7 @@ pub enum PreparedQuery {
 
 impl PreparedQuery {
     #[expect(clippy::too_many_lines)]
-    const fn as_str(self) -> &'static str {
+    fn as_string(&self) -> String {
         match self {
             Self::Comments => {
                 r#"
@@ -138,6 +155,7 @@ impl PreparedQuery {
                 @comment
                 "#
             }
+            .into(),
             Self::DocComments => {
                 r#"
                 (
@@ -146,6 +164,7 @@ impl PreparedQuery {
                 )
                 "#
             }
+            .into(),
             Self::Uses => {
                 // Match any (wildcard `_`) `argument`, which includes:
                 //
@@ -163,121 +182,172 @@ impl PreparedQuery {
                 ]
                 "
             }
-            Self::Strings => "(string_content) @string",
-            Self::Attribute => "(attribute) @attribute",
-            Self::Struct => "(struct_item) @struct_item",
+            .into(),
+            Self::Strings => "(string_content) @string".into(),
+            Self::Attribute => "(attribute) @attribute".into(),
+            Self::Struct => "(struct_item) @struct_item".into(),
+            Self::StructNamed(pattern) => {
+                format!(
+                    r#"(
+                        (struct_item
+                            name: _ @name
+                        )
+                        (#match? @name "{pattern}")
+                    ) @struct_item"#,
+                )
+            }
             Self::PrivStruct => {
                 r"(struct_item
                     .
                     name: (type_identifier)
                 ) @struct_item_without_visibility_modifier"
             }
+            .into(),
             Self::PubStruct => {
                 r#"(struct_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @struct_item"#
             }
+            .into(),
             Self::PubCrateStruct => {
                 r"(struct_item
                     (visibility_modifier (crate))
                 ) @struct_item"
             }
+            .into(),
             Self::PubSelfStruct => {
                 r"(struct_item
                     (visibility_modifier (self))
                 ) @struct_item"
             }
+            .into(),
             Self::PubSuperStruct => {
                 r"(struct_item
                     (visibility_modifier (super))
                 ) @struct_item"
             }
-            Self::Enum => "(enum_item) @enum_item",
+            .into(),
+            Self::Enum => "(enum_item) @enum_item".into(),
+            Self::EnumNamed(pattern) => {
+                format!(
+                    r#"(
+                        (enum_item
+                            name: _ @name
+                        )
+                        (#match? @name "{pattern}")
+                    ) @enum_item"#,
+                )
+            }
             Self::PrivEnum => {
                 r"(enum_item
                     .
                     name: (type_identifier)
                 ) @enum_item_without_visibility_modifier"
             }
+            .into(),
             Self::PubEnum => {
                 r#"(enum_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @enum_item"#
             }
+            .into(),
             Self::PubCrateEnum => {
                 r"(enum_item
                     (visibility_modifier (crate))
                 ) @enum_item"
             }
+            .into(),
             Self::PubSelfEnum => {
                 r"(enum_item
                     (visibility_modifier (self))
                 ) @enum_item"
             }
+            .into(),
             Self::PubSuperEnum => {
                 r"(enum_item
                     (visibility_modifier (super))
                 ) @enum_item"
             }
-            Self::EnumVariant => "(enum_variant) @enum_variant",
-            Self::Fn => "(function_item) @function_item",
+            .into(),
+            Self::EnumVariant => "(enum_variant) @enum_variant".into(),
+            Self::Fn => "(function_item) @function_item".into(),
+            Self::FnNamed(pattern) => {
+                format!(
+                    r#"(
+                        (function_item
+                            name: _ @name
+                        )
+                        (#match? @name "{pattern}")
+                    ) @function_item"#,
+                )
+            }
             Self::ImplFn => {
                 r"(impl_item
                     body: (_ (function_item) @function)
                 )"
             }
+            .into(),
             Self::PrivFn => {
                 r"(function_item
                     .
                     name: (identifier)
                 ) @function_item_without_visibility_modifier"
             }
+            .into(),
             Self::PubFn => {
                 r#"(function_item
                     (visibility_modifier) @vis
                     (#eq? @vis "pub")
                 ) @function_item"#
             }
+            .into(),
             Self::PubCrateFn => {
                 r"(function_item
                     (visibility_modifier (crate))
                 ) @function_item"
             }
+            .into(),
             Self::PubSelfFn => {
                 r"(function_item
                     (visibility_modifier (self))
                 ) @function_item"
             }
+            .into(),
             Self::PubSuperFn => {
                 r"(function_item
                     (visibility_modifier (super))
                 ) @function_item"
             }
+            .into(),
             Self::ConstFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "const")
                 ) @function_item"#
             }
+            .into(),
             Self::AsyncFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "async")
                 ) @function_item"#
             }
+            .into(),
             Self::UnsafeFn => {
                 r#"(function_item
                     (function_modifiers) @funcmods
                     (#match? @funcmods "unsafe")
                 ) @function_item"#
             }
+            .into(),
             Self::ExternFn => {
                 r"(function_item
                     (function_modifiers (extern_modifier))
                 ) @extern_function"
             }
+            .into(),
             Self::TestFn => {
                 // Any attribute which matches aka contains `test`, preceded or
                 // followed by more attributes, eventually preceded by a function.
@@ -297,14 +367,26 @@ impl PreparedQuery {
                     IGNORE
                 )
             }
-            Self::Trait => "(trait_item) @trait_item",
-            Self::Impl => "(impl_item) @impl_item",
+            .into(),
+            Self::Trait => "(trait_item) @trait_item".into(),
+            Self::TraitNamed(pattern) => {
+                format!(
+                    r#"(
+                        (trait_item
+                            name: _ @name
+                        )
+                        (#match? @name "{pattern}")
+                    ) @trait_item"#,
+                )
+            }
+            Self::Impl => "(impl_item) @impl_item".into(),
             Self::ImplType => {
                 r"(impl_item
                     type: (_)
                     !trait
                 ) @impl_item"
             }
+            .into(),
             Self::ImplTrait => {
                 r"(impl_item
                     trait: (_)
@@ -312,7 +394,18 @@ impl PreparedQuery {
                     type: (_)
                 ) @impl_item"
             }
-            Self::Mod => "(mod_item) @mod_item",
+            .into(),
+            Self::Mod => "(mod_item) @mod_item".into(),
+            Self::ModNamed(pattern) => {
+                format!(
+                    r#"(
+                        (mod_item
+                            name: _ @name
+                        )
+                        (#match? @name "{pattern}")
+                    ) @mod_item"#,
+                )
+            }
             Self::ModTests => {
                 r#"(mod_item
                     name: (identifier) @mod_name
@@ -320,6 +413,7 @@ impl PreparedQuery {
                 ) @mod_tests
                 "#
             }
+            .into(),
             Self::TypeDef => {
                 r"
                 [
@@ -330,9 +424,10 @@ impl PreparedQuery {
                 @typedef
                 "
             }
-            Self::Identifier => "(identifier) @identifier",
-            Self::TypeIdentifier => "(type_identifier) @identifier",
-            Self::Closure => "(closure_expression) @closure",
+            .into(),
+            Self::Identifier => "(identifier) @identifier".into(),
+            Self::TypeIdentifier => "(type_identifier) @identifier".into(),
+            Self::Closure => "(closure_expression) @closure".into(),
             Self::Unsafe => {
                 r#"
                     [
@@ -354,6 +449,7 @@ impl PreparedQuery {
                     ] @unsafe
                 "#
             }
+            .into(),
         }
     }
 }

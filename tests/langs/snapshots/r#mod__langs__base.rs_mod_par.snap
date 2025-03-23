@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 17
+  l: "mod parent {\n"
+  m: ^^^^^^^^^^^^^^
+- n: 18
+  l: "    pub fn x() {\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 19
+  l: "        println!(\"Function x from parent module\");\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 20
+  l: "    }\n"
+  m: ^^^^^^^
+- n: 21
+  l: "}\n"
+  m: "^  "
