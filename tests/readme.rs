@@ -34,8 +34,8 @@ mod tests {
     use nom::combinator::{cut, eof, map, opt, recognize};
     use nom::error::ParseError;
     use nom::multi::{many_till, many0, many1, separated_list1};
-    use nom::sequence::{delimited, preceded, tuple};
-    use nom::{Finish, IResult};
+    use nom::sequence::{delimited, preceded};
+    use nom::{Finish, IResult, Parser};
     use pretty_assertions::assert_eq;
     use tempfile::NamedTempFile;
     use unescape::unescape;
@@ -418,7 +418,7 @@ mod tests {
         snippets: &Snippets,
     ) -> IResult<&'a str, PipedPrograms> {
         let prompt = '$';
-        let (input, _) = opt(char(prompt))(input)?;
+        let (input, _) = opt(char(prompt)).parse(input)?;
         let (input, _) = space0(input)?;
 
         let (input, programs) = parse_piped_programs(input)?;
@@ -432,7 +432,7 @@ mod tests {
         // Parse stdout; anything up to the next prompt. Be careful about `$` signs
         // *inside* of expected stdout: only `\n$` is a new prompt.
         let (input, (stdout_chars, start_of_next_input)) =
-            many_till(anychar, alt((preceded(line_ending, tag("$")), eof)))(input)?;
+            many_till(anychar, alt((preceded(line_ending, tag("$")), eof))).parse(input)?;
 
         assert!(
             start_of_next_input == "$" || start_of_next_input.is_empty(),
@@ -459,7 +459,7 @@ mod tests {
     /// <https://docs.rs/nom/7.1.3/nom/recipes/index.html#wrapper-combinators-that-eat-whitespace-before-and-after-a-parser>
     /// A combinator that takes a parser `inner` and produces a parser that also consumes both leading and
     /// trailing whitespace, returning the output of `inner`.
-    fn maybe_ws<'a, F, O, E>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
+    fn maybe_ws<'a, F, O, E>(inner: F) -> impl Parser<&'a str, Output = O, Error = E>
     where
         F: 'a + Fn(&'a str) -> IResult<&'a str, O, E>,
         E: ParseError<&'a str>,
@@ -475,11 +475,11 @@ mod tests {
         // anti-pattern? works quite well...)
         let inv = Rc::new(RefCell::new(Invocation::default()));
 
-        let (input, (name, _flags, _args)) = tuple((
+        let (input, (name, _flags, _args)) = (
             maybe_ws(ascii_alpha1),
             many0(alt((
                 map(
-                    tuple((
+                    (
                         preceded(
                             // Long options. Hard-coded, as otherwise it's undecidable
                             // whether an option is supposed to have a value or not
@@ -559,14 +559,14 @@ mod tests {
                                 space0,
                             ),
                         ),
-                    )),
+                    ),
                     |findings| {
                         inv.borrow_mut().opts.push(findings.into());
                         findings
                     },
                 ),
                 map(
-                    tuple((
+                    (
                         preceded(
                             // Long flags, like `--long-flag`. No values. Can contain
                             // hyphens itself.
@@ -574,7 +574,7 @@ mod tests {
                             take_while1(|c: char| c == '-' || c.is_ascii_alphanumeric()),
                         ),
                         space0,
-                    )),
+                    ),
                     |findings: (&str, &str)| {
                         let (flag, _space) = findings;
                         inv.borrow_mut().flags.push(flag.into());
@@ -582,11 +582,11 @@ mod tests {
                     },
                 ),
                 map(
-                    tuple((
+                    (
                         // Short flags, like `-s`, but also `-sGu`. No values.
                         preceded(char('-'), ascii_alphanumeric1),
                         space0,
-                    )),
+                    ),
                     |found: (&str, &str)| {
                         let (flag, _space) = found;
 
@@ -610,11 +610,11 @@ mod tests {
                 ),
                 map(
                     // File paths.
-                    recognize(tuple((
+                    recognize((
                         many1(alt((ascii_alphanumeric1, tag("/"), tag("-"), tag("_")))),
                         char('.'),
                         ascii_alphanumeric1,
-                    ))),
+                    )),
                     |file_path: &str| {
                         inv.borrow_mut().args.push(file_path.into());
 
@@ -622,7 +622,8 @@ mod tests {
                     },
                 ),
             ))),
-        ))(input)?;
+        )
+            .parse(input)?;
 
         let (input, _) = space0(input)?;
 
@@ -631,7 +632,7 @@ mod tests {
     }
 
     fn parse_piped_programs(input: &str) -> IResult<&str, Vec<Program>> {
-        separated_list1(tag("|"), parse_program)(input)
+        separated_list1(tag("|"), parse_program).parse(input)
     }
 
     /// Parses multiple pairs of 'command and output' into a list of them.
@@ -639,14 +640,14 @@ mod tests {
         input: &'a str,
         snippets: &Snippets,
     ) -> IResult<&'a str, Vec<PipedPrograms>> {
-        many1(|input| parse_piped_programs_with_prompt_and_output(input, snippets))(input)
+        many1(|input| parse_piped_programs_with_prompt_and_output(input, snippets)).parse(input)
     }
 
     /// <https://stackoverflow.com/a/58907488/11477374>
     fn parse_quoted(input: &str) -> IResult<&str, &str> {
         let esc = escaped(none_of(r"'"), '\\', tag("'"));
         let esc_or_empty = alt((esc, tag("")));
-        let res = delimited(tag("'"), esc_or_empty, tag("'"))(input)?;
+        let res = delimited(tag("'"), esc_or_empty, tag("'")).parse(input)?;
 
         Ok(res)
     }
