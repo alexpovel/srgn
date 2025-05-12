@@ -1031,7 +1031,7 @@ right contents:
 
         let tmp_dir = tempfile::Builder::new()
             .prefix(pkg)
-            .keep(true) // Keep for manual inspection if needed
+            .disable_cleanup(true) // Keep for manual inspection if needed
             .tempdir()
             .expect("Failed to create temporary directory");
 
