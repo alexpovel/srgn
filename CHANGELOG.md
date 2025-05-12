@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.7](https://github.com/alexpovel/srgn/compare/srgn-v0.13.6...srgn-v0.13.7) (2025-05-12)
+
+
+### Bug Fixes
+
+* Clippy lints ([e78a8d1](https://github.com/alexpovel/srgn/commit/e78a8d10e965a34102c12ce91286f41c953dbada))
+
 ## [0.13.6](https://github.com/alexpovel/srgn/compare/srgn-v0.13.5...srgn-v0.13.6) (2025-03-23)
 
 
