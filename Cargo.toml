@@ -163,7 +163,7 @@ opt-level = 3
 opt-level = 3
 
 [build-dependencies]
-cc = { version = "1.1.31", features = ["parallel"] }
+cc = { version = "1.2.22", features = ["parallel"] }
 decompound = "0.3.0"
 fst = "0.4.7"
 rayon = "1.10.0"
