@@ -70,7 +70,7 @@ pub(crate) fn find_interpreter(source: &mut impl Read) -> Option<String> {
 
             match (n_char - 1, c as char) {
                 // Correct shebang start
-                (0, '#') | (1, '!') => continue,
+                (0, '#') | (1, '!') => { /* no-op */ }
 
                 (0 | 1, _) | (_, '\n' | '\r') => break 'read,
 

@@ -302,24 +302,28 @@ impl German {
     }
 
     /// Prefer the original word over any replacement.
+    #[allow(clippy::missing_const_for_fn)] // In case we want to become non-const, don't want a breaking change then
     pub fn prefer_original(&mut self) -> &mut Self {
         self.prefer_original = true;
         self
     }
 
     /// Prefer any replacement over the original word.
+    #[allow(clippy::missing_const_for_fn)] // In case we want to become non-const, don't want a breaking change then
     pub fn prefer_replacement(&mut self) -> &mut Self {
         self.prefer_original = false;
         self
     }
 
     /// Be naive.
+    #[allow(clippy::missing_const_for_fn)] // In case we want to become non-const, don't want a breaking change then
     pub fn naive(&mut self) -> &mut Self {
         self.naive = true;
         self
     }
 
     /// Stop being naive.
+    #[allow(clippy::missing_const_for_fn)] // In case we want to become non-const, don't want a breaking change then
     pub fn sophisticated(&mut self) -> &mut Self {
         self.naive = false;
         self
@@ -360,11 +364,8 @@ impl Action for German {
             match transition {
                 Transition::External => {
                     output.push(char);
-                    continue;
                 }
-                Transition::Entered | Transition::Internal => {
-                    continue;
-                }
+                Transition::Entered | Transition::Internal => { /* no-op */ }
                 Transition::Exited => {
                     debug!("Exited machine: {:?}", machine);
 

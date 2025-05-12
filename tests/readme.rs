@@ -367,7 +367,7 @@ mod tests {
                                 stdout.expect("Stdout should be given for standalone program"),
                             );
                         }
-                    };
+                    }
 
                     assert!(standalone, "Should have been set before.");
 

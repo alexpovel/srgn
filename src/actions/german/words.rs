@@ -152,6 +152,7 @@ impl Word {
         &self.replacements
     }
 
+    #[allow(clippy::missing_const_for_fn)] // In case we want to become non-const, don't want a breaking change then
     pub(super) fn content(&self) -> &str {
         &self.content
     }

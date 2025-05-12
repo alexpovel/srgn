@@ -128,7 +128,7 @@ pub(super) fn inject_variables(
                         out.push(tail);
                     }
                     None => return Err(VariableExpressionError::UndefinedVariable(name)),
-                };
+                }
 
                 match c {
                     '$' => {
@@ -152,7 +152,7 @@ pub(super) fn inject_variables(
                     None => {
                         return Err(VariableExpressionError::UndefinedVariable(num.to_string()));
                     }
-                };
+                }
 
                 match c {
                     '$' => {

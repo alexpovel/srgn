@@ -131,7 +131,7 @@ mod natural_languages {
                             // Hot loop IO: very costly, only use when debugging
                             // println!("Keeping '{}'", word);
                         }
-                    };
+                    }
                 })
             );
 

@@ -4,6 +4,7 @@
 //! deals with CLI argument handling, I/O, threading, and more.
 
 use std::error::Error;
+use std::fmt::Write as _; // import without risk of name clashing
 use std::fs::{self, File};
 use std::io::{self, Read, Write, stdout};
 use std::path::{Path, PathBuf};
@@ -237,7 +238,7 @@ fn main() -> Result<()> {
                 search_mode,
             )?;
         }
-    };
+    }
 
     info!("Done, exiting");
     Ok(())
@@ -668,7 +669,7 @@ fn process_path(
         }
 
         debug!("Done processing file: {:?}", path);
-    };
+    }
 
     Ok(())
 }
@@ -712,7 +713,7 @@ fn apply(
 
     if global_options.fail_any && view.has_any_in_scope() {
         return Err(ApplicationError::SomeInScope);
-    };
+    }
 
     debug!("Applying actions to view.");
     if matches!(standalone_action, StandaloneAction::Squeeze) {
@@ -738,7 +739,8 @@ fn apply(
             for line in lines {
                 if !global_options.only_matching || line.has_any_in_scope() {
                     if global_options.line_numbers {
-                        destination.push_str(&format!("{}:", i.to_string().green()));
+                        write!(destination, "{}:", i.to_string().green())
+                            .expect("infallible on String (are we OOM?)");
                     }
 
                     destination.push_str(&line.to_string());
@@ -760,7 +762,7 @@ fn apply(
         for view in views {
             destination.push_str(&view.to_string());
         }
-    };
+    }
     debug!("Done writing to destination.");
 
     Ok(source != *destination)

@@ -68,7 +68,7 @@ impl StateMachine {
             self.word.clear();
 
             trace!("Cleared current word, machine now is: {self:?}.");
-        };
+        }
     }
 
     pub(super) fn transition(&mut self, input: MachineInput) -> Transition {
@@ -142,7 +142,7 @@ impl StateMachine {
                 "Appending {:?} to current word due to transition {:?}.",
                 input, self.transition
             );
-        };
+        }
 
         trace!("After transition, machine is: {self:?}.");
     }
