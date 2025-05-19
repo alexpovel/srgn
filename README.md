@@ -1779,21 +1779,22 @@ Language scopes:
           [env: HCL=]
 
           Possible values:
-          - variable:       `variable` blocks (in their entirety)
-          - resource:       `resource` blocks (in their entirety)
-          - data:           `data` blocks (in their entirety)
-          - output:         `output` blocks (in their entirety)
-          - provider:       `provider` blocks (in their entirety)
-          - terraform:      `terraform` blocks (in their entirety)
-          - locals:         `locals` blocks (in their entirety)
-          - module:         `module` blocks (in their entirety)
-          - variables:      Variable declarations and usages
-          - resource-names: `resource` name declarations and usages
-          - resource-types: `resource` type declarations and usages
-          - data-names:     `data` name declarations and usages
-          - data-sources:   `data` source declarations and usages
-          - comments:       Comments
-          - strings:        Literal strings
+          - variable:           `variable` blocks (in their entirety)
+          - resource:           `resource` blocks (in their entirety)
+          - data:               `data` blocks (in their entirety)
+          - output:             `output` blocks (in their entirety)
+          - provider:           `provider` blocks (in their entirety)
+          - required-providers: All `required_providers` from the `terraform` block
+          - terraform:          `terraform` blocks (in their entirety)
+          - locals:             `locals` blocks (in their entirety)
+          - module:             `module` blocks (in their entirety)
+          - variables:          Variable declarations and usages
+          - resource-names:     `resource` name declarations and usages
+          - resource-types:     `resource` type declarations and usages
+          - data-names:         `data` name declarations and usages
+          - data-sources:       `data` source declarations and usages
+          - comments:           Comments
+          - strings:            Literal strings
 
       --hcl-query <TREE-SITTER-QUERY-VALUE>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.

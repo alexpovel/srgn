@@ -1,9 +1,11 @@
 use std::fmt::Debug;
 
 use clap::ValueEnum;
-use const_format::formatcp;
 
-use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, tree_sitter_hcl};
+use super::{
+    LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, TreeSitterRegex,
+    tree_sitter_hcl,
+};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -29,13 +31,13 @@ impl From<PreparedQuery> for CompiledQuery {
     fn from(query: PreparedQuery) -> Self {
         Self(super::CompiledQuery::from_prepared_query(
             &tree_sitter_hcl::language(),
-            query.as_str(),
+            &query.as_string(),
         ))
     }
 }
 
 /// Prepared tree-sitter queries for Hcl.
-#[derive(Debug, Clone, Copy, ValueEnum)]
+#[derive(Debug, Clone, ValueEnum)]
 pub enum PreparedQuery {
     /// `variable` blocks (in their entirety).
     Variable,
@@ -47,6 +49,11 @@ pub enum PreparedQuery {
     Output,
     /// `provider` blocks (in their entirety).
     Provider,
+    /// All `required_providers` from the `terraform` block.
+    RequiredProviders,
+    /// Entry from `required_providers` whose given name matches the pattern.
+    #[value(skip)] // Non-unit enum variants need: https://github.com/clap-rs/clap/issues/2621
+    RequiredProvidersNamed(TreeSitterRegex),
     /// `terraform` blocks (in their entirety).
     Terraform,
     /// `locals` blocks (in their entirety).
@@ -81,91 +88,122 @@ pub enum PreparedQuery {
 
 impl PreparedQuery {
     #[expect(clippy::too_many_lines)] // No good way to avoid
-    const fn as_str(self) -> &'static str {
+    fn as_string(&self) -> String {
         // Seems to not play nice with the macro. Put up here, else interpolation is
         // affected.
-        #[expect(clippy::needless_raw_string_hashes)]
         match self {
-            Self::Variable => {
-                r#"
+            Self::Variable => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "variable")
                     ) @block
                 "#
-            }
-            Self::Resource => {
-                r#"
+            .into(),
+            Self::Resource => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "resource")
                     ) @block
                 "#
-            }
-            Self::Data => {
-                r#"
+            .into(),
+            Self::Data => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "data")
                     ) @block
                 "#
-            }
-            Self::Output => {
-                r#"
+            .into(),
+            Self::Output => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "output")
                     ) @block
                 "#
-            }
-            Self::Provider => {
-                r#"
+            .into(),
+            Self::Provider => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "provider")
                     ) @block
                 "#
+            .into(),
+            Self::RequiredProviders => {
+                format!(
+                    r#"
+                    (block
+                        (identifier) @{IGNORE}.level1.identifier
+                        (body
+                            (block
+                                (identifier) @{IGNORE}.level2.identifier
+                                (body) @body
+                                (#eq? @{IGNORE}.level2.identifier "required_providers")
+                            )
+                        )
+                        (#eq? @{IGNORE}.level1.identifier "terraform")
+                    )
+                    "#,
+                )
             }
-            Self::Terraform => {
-                r#"
+            Self::RequiredProvidersNamed(provider) => {
+                format!(
+                    r#"
+                    (block
+                        (identifier) @{IGNORE}.level1.identifier
+                        (body
+                            (block
+                                (identifier) @{IGNORE}.level2.identifier
+                                (body
+                                    (attribute
+                                        (identifier) @{IGNORE}.attribute.identifier
+                                        (#match? @{IGNORE}.attribute.identifier "{provider}")
+                                        (expression) @expr
+                                    )
+                                )
+                                (#eq? @{IGNORE}.level2.identifier "required_providers")
+                            )
+                        )
+                        (#eq? @{IGNORE}.level1.identifier "terraform")
+                    )
+                    "#,
+                )
+            }
+            Self::Terraform => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "terraform")
                     ) @block
                 "#
-            }
-            Self::Locals => {
-                r#"
+            .into(),
+            Self::Locals => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "locals")
                     ) @block
                 "#
-            }
-            Self::Module => {
-                r#"
+            .into(),
+            Self::Module => r#"
                     (block
                         (identifier) @name
                         (#eq? @name "module")
                     ) @block
                 "#
-            }
+            .into(),
             Self::Variables => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
-                formatcp!(
+                format!(
                     r#"
                         [
                             (block
-                                (identifier) @{0}.declaration
+                                (identifier) @{IGNORE}.declaration
                                 (string_lit (template_literal) @name.declaration)
-                                (#match? @{0}.declaration "variable")
+                                (#match? @{IGNORE}.declaration "variable")
                             )
                             (
                                 (variable_expr
-                                    (identifier) @{0}.usage
-                                    (#match? @{0}.usage "var")
+                                    (identifier) @{IGNORE}.usage
+                                    (#match? @{IGNORE}.usage "var")
                                 )
                                 .
                                 (get_attr
@@ -173,27 +211,26 @@ impl PreparedQuery {
                                 )
                             )
                         ]
-                    "#,
-                    IGNORE
+                    "#
                 )
             }
             Self::ResourceNames => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
-                formatcp!(
+                format!(
                     r#"
                         [
                             (block
-                                (identifier) @{0}.declaration
+                                (identifier) @{IGNORE}.declaration
                                 (string_lit)
                                 (string_lit (template_literal) @name.declaration)
-                                (#match? @{0}.declaration "resource")
+                                (#match? @{IGNORE}.declaration "resource")
                             )
                             (
                                 (variable_expr
-                                    (identifier) @{0}.usage
-                                    (#not-any-of? @{0}.usage
+                                    (identifier) @{IGNORE}.usage
+                                    (#not-any-of? @{IGNORE}.usage
                                         "var"
                                         "data"
                                         "count"
@@ -207,22 +244,21 @@ impl PreparedQuery {
                                 )
                             )
                         ]
-                    "#,
-                    IGNORE
+                    "#
                 )
             }
             Self::ResourceTypes => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
-                formatcp!(
+                format!(
                     r#"
                         [
                             (block
-                                (identifier) @{0}.declaration
+                                (identifier) @{IGNORE}.declaration
                                 (string_lit (template_literal) @name.type)
                                 (string_lit)
-                                (#match? @{0}.declaration "resource")
+                                (#match? @{IGNORE}.declaration "resource")
                             )
                             (
                                 (variable_expr
@@ -242,27 +278,26 @@ impl PreparedQuery {
                                 )
                             )
                         ]
-                    "#,
-                    IGNORE
+                    "#
                 )
             }
             Self::DataNames => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
-                formatcp!(
+                format!(
                     r#"
                         [
                             (block
-                                (identifier) @{0}.declaration
+                                (identifier) @{IGNORE}.declaration
                                 (string_lit)
                                 (string_lit (template_literal) @name.declaration)
-                                (#match? @{0}.declaration "data")
+                                (#match? @{IGNORE}.declaration "data")
                             )
                             (
                                 (variable_expr
-                                    (identifier) @{0}.usage
-                                    (#match? @{0}.usage "data")
+                                    (identifier) @{IGNORE}.usage
+                                    (#match? @{IGNORE}.usage "data")
                                 )
                                 .
                                 (get_attr
@@ -274,27 +309,26 @@ impl PreparedQuery {
                                 )
                             )
                         ]
-                    "#,
-                    IGNORE
+                    "#
                 )
             }
             Self::DataSources => {
                 // Capturing nodes with names, such as `@id`, requires names to be
                 // unique across the *entire* query, else things break. Hence, us
                 // `@a.b` syntax (which seems undocumented).
-                formatcp!(
+                format!(
                     r#"
                         [
                             (block
-                                (identifier) @{0}.declaration
+                                (identifier) @{IGNORE}.declaration
                                 (string_lit (template_literal) @name.provider)
                                 (string_lit)
-                                (#match? @{0}.declaration "data")
+                                (#match? @{IGNORE}.declaration "data")
                             )
                             (
                                 (variable_expr
-                                    (identifier) @{0}.usage
-                                    (#match? @{0}.usage "data")
+                                    (identifier) @{IGNORE}.usage
+                                    (#match? @{IGNORE}.usage "data")
                                 )
                                 .
                                 (get_attr
@@ -306,13 +340,11 @@ impl PreparedQuery {
                                 )
                             )
                         ]
-                    "#,
-                    IGNORE
+                    "#
                 )
             }
-            Self::Comments => "(comment) @comment",
-            Self::Strings => {
-                r"
+            Self::Comments => "(comment) @comment".into(),
+            Self::Strings => r"
                 [
                     (literal_value
                         (string_lit
@@ -327,7 +359,7 @@ impl PreparedQuery {
                     )
                 ]
                 "
-            }
+            .into(),
         }
     }
 }

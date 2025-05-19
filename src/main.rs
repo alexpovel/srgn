@@ -1644,7 +1644,7 @@ mod cli {
     struct HclScope {
         #[expect(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
         /// Scope HashiCorp Configuration Language code using a prepared query.
-        #[arg(long, env, verbatim_doc_comment)]
+        #[arg(long, env, verbatim_doc_comment, value_parser = HclPreparedQueryParser)]
         hcl: Vec<hcl::PreparedQuery>,
 
         #[expect(clippy::doc_markdown)] // CamelCase detected as 'needs backticks'
@@ -1658,6 +1658,15 @@ mod cli {
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
         hcl_query_file: Vec<PathBuf>,
     }
+
+    define_prepared_query_parser!(
+        HclPreparedQueryParser,
+        hcl::PreparedQuery,
+        variants = [
+            (RequiredProviders, RequiredProvidersNamed) //
+        ],
+        separator = NAMED_ITEM_PATTERN_SEPARATOR
+    );
 
     #[derive(Parser, Debug, Clone)]
     #[group(required = false, multiple = false)]

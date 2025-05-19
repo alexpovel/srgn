@@ -2,9 +2,9 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 62
+- n: 66
   l: "data \"aws_ami\" \"latest_ubuntu\" {\n"
   m: "       ^^^^^^^                        "
-- n: 75
+- n: 79
   l: "  ami           = data.aws_ami.latest_ubuntu.id\n"
   m: "                       ^^^^^^^                   "

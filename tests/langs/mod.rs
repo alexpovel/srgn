@@ -545,6 +545,22 @@ impl InScopeLinePart {
     hcl::CompiledQuery::from(hcl::PreparedQuery::Provider),
 )]
 #[case(
+    "base.tf_required_providers",
+    include_str!("hcl/base.tf"),
+    hcl::CompiledQuery::from(hcl::PreparedQuery::RequiredProviders),
+)]
+#[allow(clippy::trivial_regex)]
+#[case(
+    "base.tf_required_providers-named-single",
+    include_str!("hcl/base.tf"),
+    hcl::CompiledQuery::from(hcl::PreparedQuery::RequiredProvidersNamed(TreeSitterRegex(Regex::new("aws").unwrap()))),
+)]
+#[case(
+    "base.tf_required_providers-named-multiple",
+    include_str!("hcl/base.tf"),
+    hcl::CompiledQuery::from(hcl::PreparedQuery::RequiredProvidersNamed(TreeSitterRegex(Regex::new("aws|github").unwrap()))),
+)]
+#[case(
     "base.tf_terraform-block",
     include_str!("hcl/base.tf"),
     hcl::CompiledQuery::from(hcl::PreparedQuery::Terraform),
