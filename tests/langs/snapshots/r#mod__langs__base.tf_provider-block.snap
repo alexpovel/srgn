@@ -2,12 +2,12 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 57
+- n: 61
   l: "provider \"aws\" {\n"
   m: ^^^^^^^^^^^^^^^^^^^^
-- n: 58
+- n: 62
   l: "  region = \"us-west-2\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 59
+- n: 63
   l: "}\n"
   m: "^  "

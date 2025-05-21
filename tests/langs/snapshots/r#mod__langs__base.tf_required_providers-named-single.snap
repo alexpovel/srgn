@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 13
+  l: "    aws = {\n"
+  m: "          ^^^"
+- n: 14
+  l: "      source  = \"hashicorp/aws\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 15
+  l: "      version = \"~> 4.0\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 16
+  l: "    }\n"
+  m: "^^^^^  "

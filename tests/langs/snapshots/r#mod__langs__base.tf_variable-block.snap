@@ -2,63 +2,63 @@
 source: tests/langs/mod.rs
 expression: inscope_parts
 ---
-- n: 26
+- n: 30
   l: "variable \"app_name\" {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 27
+- n: 31
   l: "  description = \"The name of the application\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 28
+- n: 32
   l: "  type        = string\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 29
+- n: 33
   l: "  default     = \"TestApp\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 30
+- n: 34
   l: "}\n"
   m: "^  "
-- n: 32
+- n: 36
   l: "variable \"instance_count\" {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 33
+- n: 37
   l: "  description = \"Number of instances to deploy\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 34
+- n: 38
   l: "  type        = number\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 35
+- n: 39
   l: "  default     = 3\n"
   m: ^^^^^^^^^^^^^^^^^^^
-- n: 36
+- n: 40
   l: "}\n"
   m: "^  "
-- n: 38
+- n: 42
   l: "variable \"enable_feature_x\" {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 39
+- n: 43
   l: "  description = \"Enable feature X\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 40
+- n: 44
   l: "  type        = bool\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^
-- n: 41
+- n: 45
   l: "  default     = true\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^
-- n: 42
+- n: 46
   l: "}\n"
   m: "^  "
-- n: 44
+- n: 48
   l: "variable \"admins\" {\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^
-- n: 45
+- n: 49
   l: "  description = \"List of admin users\"\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 46
+- n: 50
   l: "  type        = list(string)\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 47
+- n: 51
   l: "  default     = [\"alice\", \"bob\"]\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- n: 48
+- n: 52
   l: "}\n"
   m: "^  "
