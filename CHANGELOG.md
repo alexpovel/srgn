@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.7](https://github.com/alexpovel/srgn/compare/srgn-v0.13.6...srgn-v0.13.7) (2025-05-21)
+
+
+### Features
+
+* **hcl:** Scope `required_providers` (also named) ([#211](https://github.com/alexpovel/srgn/issues/211)) ([12f9260](https://github.com/alexpovel/srgn/commit/12f9260c965fc309d977d1c66053275c0000edbf))
+
+
+### Bug Fixes
+
+* Clippy lints ([e78a8d1](https://github.com/alexpovel/srgn/commit/e78a8d10e965a34102c12ce91286f41c953dbada))
+
 ## [0.13.6](https://github.com/alexpovel/srgn/compare/srgn-v0.13.5...srgn-v0.13.6) (2025-03-23)
 
 
