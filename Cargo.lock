@@ -905,13 +905,12 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3779b94aeb87e8bd4e834cee3650289ee9e0d5677f976ecdb6d219e5f4f6cd94"
+checksum = "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
 dependencies = [
  "rand_chacha 0.9.0",
  "rand_core 0.9.0",
- "zerocopy 0.8.14",
 ]
 
 [[package]]
@@ -959,7 +958,7 @@ version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1eb7969b106060de455cbdb979d3d84c84ffec7b9fa6fa5c56343df409e1614a"
 dependencies = [
- "rand 0.9.0",
+ "rand 0.9.1",
  "regex-syntax",
 ]
 
@@ -1212,7 +1211,7 @@ dependencies = [
  "predicates",
  "pretty_assertions",
  "proptest",
- "rand 0.9.0",
+ "rand 0.9.1",
  "rand_regex",
  "rayon",
  "regex",
