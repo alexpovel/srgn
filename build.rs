@@ -146,7 +146,7 @@ mod natural_languages {
             let n_dropped = dropped_words.len();
             if n_dropped > 0 {
                 println!(
-                    "cargo::warning=Dropped {} compound words ({} remaining); see '{:?}' for a list.",
+                    "cargo::warning=Dropped {} compound words ({} remaining); see '{}' for a list.",
                     n_dropped,
                     keepers.len(),
                     {
@@ -154,7 +154,8 @@ mod natural_languages {
                         assert!(path.pop(), "no parent element"); // Remove "out"
                         path.push("output"); // The log file
                         path
-                    },
+                    }
+                    .display(),
                 );
             }
 

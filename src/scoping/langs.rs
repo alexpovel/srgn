@@ -77,7 +77,7 @@ impl CompiledQuery {
 
     fn from_prepared_query(lang: &TSLanguage, query: &str) -> Self {
         Self::from_str(lang, query).unwrap_or_else(|qe| {
-            error!("Failed to compile prepared query: {:?}", qe);
+            error!("Failed to compile prepared query: {qe:?}");
             panic!("syntax of prepared queries should be validated by tests, and injection of regex be protected by {}", stringify!(TreeSitterRegex))
         })
     }
@@ -102,7 +102,7 @@ impl CompiledQuery {
                     .collect::<Vec<_>>();
 
                 for name in acknowledged_captures {
-                    trace!("Disabling capture for: {:?}", name);
+                    trace!("Disabling capture for: {name:?}");
                     query.disable_capture(&name);
                 }
 
@@ -182,7 +182,7 @@ pub trait LanguageScoper: Scoper + Find + Send + Sync {
         // tree-sitter is about incremental parsing, which we don't use here
         let old_tree = None;
 
-        trace!("Parsing into AST: {:?}", input);
+        trace!("Parsing into AST: {input:?}");
 
         let tree = Self::parser()
             .parse(input, old_tree)
@@ -195,7 +195,7 @@ pub trait LanguageScoper: Scoper + Find + Send + Sync {
         );
 
         let run = |query: &TSQuery| {
-            trace!("Running query: {:?}", query);
+            trace!("Running query: {query:?}");
 
             let mut qc = TSQueryCursor::new();
             let mut matches = qc.matches(query, root, input.as_bytes());
@@ -219,7 +219,7 @@ pub trait LanguageScoper: Scoper + Find + Send + Sync {
             // ordered, non-overlapping ranges (a bit unfortunate we have to know about
             // that remote part over here).
             ranges.merge();
-            trace!("Querying yielded ranges: {:?}", ranges);
+            trace!("Querying yielded ranges: {ranges:?}");
 
             ranges
         };
@@ -254,7 +254,7 @@ impl Scoper for &[Box<dyn LanguageScoper>] {
     /// position/range is considered in scope. In some sense, this is the opposite of
     /// [`ScopedViewBuilder::explode`], which is subtractive.
     fn scope_raw<'viewee>(&self, input: &'viewee str) -> RangesWithContext<'viewee> {
-        trace!("Scoping many scopes: {:?}", input);
+        trace!("Scoping many scopes: {input:?}");
 
         if self.is_empty() {
             trace!("Short-circuiting: self is empty, nothing to scope.");

@@ -83,7 +83,7 @@ impl<'viewee> ScopedView<'viewee> {
         for scope in &mut self.scopes.0 {
             match scope {
                 RWScope(In(s, ctx)) => {
-                    debug!("Mapping with context: {:?}", ctx);
+                    debug!("Mapping with context: {ctx:?}");
                     let res = match (&ctx, use_context) {
                         (Some(c), true) => action.act_with_context(s, c)?,
                         _ => action.act(s),
@@ -112,7 +112,7 @@ impl<'viewee> ScopedView<'viewee> {
         self.scopes.0.retain(|scope| {
             let keep = !(prev_was_in && matches!(scope, RWScope(In { .. })));
             prev_was_in = matches!(scope, RWScope(In { .. }));
-            trace!("keep: {}, scope: {:?}", keep, scope);
+            trace!("keep: {keep}, scope: {scope:?}");
             keep
         });
 
@@ -355,7 +355,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
         trace!("Exploding scopes: {:?}", self.scopes);
         let mut new = Vec::with_capacity(self.scopes.0.len());
         for scope in self.scopes.0.drain(..) {
-            trace!("Exploding scope: {:?}", scope);
+            trace!("Exploding scope: {scope:?}");
 
             if scope.is_empty() {
                 trace!("Skipping empty scope");
@@ -374,7 +374,7 @@ impl<'viewee> ScopedViewBuilder<'viewee> {
                 out @ ROScope(Out(_)) => new.push(out),
             }
 
-            trace!("Exploded scope, new scopes are: {:?}", new);
+            trace!("Exploded scope, new scopes are: {new:?}");
         }
         trace!("Done exploding scopes.");
 

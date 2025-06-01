@@ -49,10 +49,7 @@ impl Scoper for DosFix {
         let literal = Literal::try_from("\r".to_string()).unwrap();
         let scopes = literal.scope_raw(input);
 
-        trace!(
-            "Scopes after applying DOS-style line endings fix: {:?}",
-            scopes
-        );
+        trace!("Scopes after applying DOS-style line endings fix: {scopes:?}");
         scopes
     }
 }

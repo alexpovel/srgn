@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         .format_timestamp_micros() // High precision is nice for benchmarks
         .init();
 
-    info!("Launching app with args: {:?}", args);
+    info!("Launching app with args: {args:?}");
 
     let cli::Args {
         scope,
@@ -410,17 +410,17 @@ fn handle_actions_on_many_files_sorted(
             }
             Err(e) => {
                 if search_mode {
-                    error!("Error walking: {}", e);
+                    error!("Error walking: {e}");
                 } else {
-                    error!("Aborting walk due to: {}", e);
+                    error!("Aborting walk due to: {e}");
                     return Err(e.into());
                 }
             }
         }
     }
 
-    info!("Saw {} items", n_files_seen);
-    info!("Processed {} files", n_files_processed);
+    info!("Saw {n_files_seen} items");
+    info!("Processed {n_files_processed} files");
 
     if n_files_seen == 0 && global_options.fail_no_files {
         Err(ProgramError::NoFilesFound)
@@ -544,10 +544,10 @@ fn handle_actions_on_many_files_threaded(
                 }
                 Err(e) => {
                     if search_mode {
-                        error!("Error walking: {}", e);
+                        error!("Error walking: {e}");
                         WalkState::Continue
                     } else {
-                        error!("Aborting walk due to: {}", e);
+                        error!("Aborting walk due to: {e}");
                         *err.lock().unwrap() = Some(e.into());
                         WalkState::Quit
                     }
@@ -561,9 +561,9 @@ fn handle_actions_on_many_files_threaded(
     }
 
     let n_files_seen = *n_files_seen.lock().unwrap();
-    info!("Saw {} items", n_files_seen);
+    info!("Saw {n_files_seen} items");
     let n_files_processed = *n_files_processed.lock().unwrap();
-    info!("Processed {} files", n_files_processed);
+    info!("Processed {n_files_processed} files");
 
     if n_files_seen == 0 && global_options.fail_no_files {
         Err(ProgramError::NoFilesFound)
@@ -587,18 +587,18 @@ fn process_path(
     search_mode: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
-        trace!("Skipping path (not a file): {:?}", path);
+        trace!("Skipping path (not a file): {}", path.display());
         return Err(PathProcessingError::NotAFile);
     }
 
     let path = diff_paths(path, root).expect("started walk at root, so relative to root works");
 
     if !validator(&path) {
-        trace!("Skipping path (invalid): {:?}", path);
+        trace!("Skipping path (invalid): {}", path.display());
         return Err(PathProcessingError::InvalidFile);
     }
 
-    debug!("Processing path: {:?}", path);
+    debug!("Processing path: {}", path.display());
 
     let (new_contents, filesize, changed) = {
         let mut file = File::open(&path)?;
@@ -642,15 +642,11 @@ fn process_path(
                 path.display(),
                 filesize
             );
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "attempt to wipe non-empty file (failsafe guard)",
-            )
-            .into());
+            return Err(io::Error::other("attempt to wipe non-empty file (failsafe guard)").into());
         }
 
         if changed {
-            debug!("Got new file contents, writing to file: {:?}", path);
+            debug!("Got new file contents, writing to file: {}", path.display());
             assert!(
                 !global_options.dry_run,
                 // Dry run leverages search mode, so should never get here. Assert for
@@ -668,7 +664,7 @@ fn process_path(
             );
         }
 
-        debug!("Done processing file: {:?}", path);
+        debug!("Done processing file: {}", path.display());
     }
 
     Ok(())
