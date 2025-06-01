@@ -959,10 +959,8 @@ Heizoelrueckstossabdaempfung.
                     .with_context(|| format!("Failure reading right file: {candidate:?}"))?;
 
                 if left_contents != right_contents {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        format!(
-                            r"File contents differ:
+                    return Err(std::io::Error::other(format!(
+                        r"File contents differ:
 left path: {:?}
 right path: {:?}
 ---------
@@ -973,12 +971,11 @@ right contents:
 {}
 ---------
 ",
-                            left.path(),
-                            candidate,
-                            String::from_utf8_lossy(&left_contents).escape_debug(),
-                            String::from_utf8_lossy(&right_contents).escape_debug()
-                        ),
-                    )
+                        left.path(),
+                        candidate,
+                        String::from_utf8_lossy(&left_contents).escape_debug(),
+                        String::from_utf8_lossy(&right_contents).escape_debug()
+                    ))
                     .into());
                 }
             } else if metadata.is_dir() {

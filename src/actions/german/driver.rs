@@ -359,7 +359,7 @@ impl Action for German {
 
             let transition = machine.transition(char);
 
-            trace!("Transition is '{:?}'", transition);
+            trace!("Transition is '{transition:?}'");
 
             match transition {
                 Transition::External => {
@@ -367,7 +367,7 @@ impl Action for German {
                 }
                 Transition::Entered | Transition::Internal => { /* no-op */ }
                 Transition::Exited => {
-                    debug!("Exited machine: {:?}", machine);
+                    debug!("Exited machine: {machine:?}");
 
                     let original = machine.current_word().content().to_owned();
                     let word = find_valid_replacement(
@@ -429,11 +429,8 @@ fn find_valid_replacement(
         res
     };
 
-    debug!("Starting search for valid replacement for word '{}'", word);
-    trace!(
-        "All replacement combinations to try: {:?}",
-        replacement_combinations
-    );
+    debug!("Starting search for valid replacement for word '{word}'");
+    trace!("All replacement combinations to try: {replacement_combinations:?}");
 
     // By definition, the power set contains the empty set. There are two options for
     // handling it:
@@ -453,17 +450,14 @@ fn find_valid_replacement(
     for replacements in replacement_combinations.into_iter().skip(n_skip) {
         let mut candidate = word.to_owned();
         candidate.apply_replacements(replacements);
-        trace!(
-            "Replaced candidate word, now is: '{}'. Starting validity check.",
-            candidate
-        );
+        trace!("Replaced candidate word, now is: '{candidate}'. Starting validity check.");
 
         if naive || is_valid(&candidate, &contained_in_global_word_list) {
-            debug!("Candidate '{}' is valid, returning early", candidate);
+            debug!("Candidate '{candidate}' is valid, returning early");
             return Some(candidate);
         }
 
-        trace!("Candidate '{}' is invalid, trying next one", candidate);
+        trace!("Candidate '{candidate}' is invalid, trying next one");
     }
 
     debug!("No valid replacement found, returning");
@@ -493,10 +487,10 @@ fn contained_in_global_word_list(word: &str) -> bool {
     convert = r#"{ String::from(word) }"#
 )]
 fn is_valid(word: &str, predicate: &impl Fn(&str) -> bool) -> bool {
-    trace!("Trying candidate '{}'", word);
+    trace!("Trying candidate '{word}'");
 
     let casing = WordCasing::try_from(word);
-    trace!("Casing of candidate is '{:?}'", casing);
+    trace!("Casing of candidate is '{casing:?}'");
 
     match casing {
         Ok(WordCasing::AllLowercase) => {

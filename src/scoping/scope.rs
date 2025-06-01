@@ -92,7 +92,7 @@ impl<'viewee> ROScopes<'viewee> {
     /// Panics if the given `ranges` contain indices out-of-bounds for `input`.
     #[must_use]
     pub fn from_raw_ranges(input: &'viewee str, ranges: RangesWithContext<'viewee>) -> Self {
-        trace!("Constructing scopes from raw ranges: {:?}", ranges);
+        trace!("Constructing scopes from raw ranges: {ranges:?}");
 
         let mut scopes = Vec::with_capacity(ranges.len());
 
@@ -119,7 +119,7 @@ impl<'viewee> ROScopes<'viewee> {
             scopes.push(ROScope(Out(tail)));
         }
 
-        debug!("Scopes: {:?}", scopes);
+        debug!("Scopes: {scopes:?}");
 
         ROScopes(scopes)
     }
@@ -136,7 +136,7 @@ impl<'viewee> ROScopes<'viewee> {
                 ROScope(Out(s)) => ROScope(In(s, None)),
             })
             .collect();
-        trace!("Inverted scopes: {:?}", scopes);
+        trace!("Inverted scopes: {scopes:?}");
 
         Self(scopes)
     }

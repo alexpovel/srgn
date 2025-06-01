@@ -8,7 +8,7 @@ pub struct Lower {}
 
 impl Action for Lower {
     fn act(&self, input: &str) -> String {
-        info!("Lowercasing: '{}'", input);
+        info!("Lowercasing: '{input}'");
         input.to_lowercase()
     }
 }

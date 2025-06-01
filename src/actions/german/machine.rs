@@ -92,10 +92,7 @@ impl StateMachine {
                 let end = pos + c.len_utf8();
                 self.word.add_replacement(start, end, Umlaut(*umlaut));
 
-                trace!(
-                    "Added replacement at position {}, machine now is: {self:?}.",
-                    pos
-                );
+                trace!("Added replacement at position {pos}, machine now is: {self:?}.");
 
                 State::Word(None)
             }
@@ -106,10 +103,7 @@ impl StateMachine {
                 let end = pos + c.len_utf8();
                 self.word.add_replacement(start, end, Eszett(*casing));
 
-                trace!(
-                    "Added replacement at position {}, machine now is: {self:?}.",
-                    pos
-                );
+                trace!("Added replacement at position {pos}, machine now is: {self:?}.");
 
                 State::Word(None)
             }

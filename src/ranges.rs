@@ -31,7 +31,7 @@ impl<Idx: Ord + Copy + Debug> Ranges<Idx> {
     pub(crate) fn merge(&mut self) -> &mut Self {
         debug_assert!(self.is_sorted(), "Merging relies on sorted ranges");
 
-        debug!("Merging ranges: {:?}", self);
+        debug!("Merging ranges: {self:?}");
 
         // We're potentially removing elements, so building up from a new allocation is
         // easiest.
@@ -76,7 +76,7 @@ impl<Idx: Ord + Copy + Debug> Ranges<Idx> {
 
         self.inner = res;
         self.inner.shrink_to_fit(); // Might have removed elements, so yield memory back
-        debug!("Merged ranges: {:?}", self);
+        debug!("Merged ranges: {self:?}");
         self
     }
 
@@ -246,7 +246,7 @@ impl<Idx: Ord + Copy + Debug> Sub for Ranges<Idx> {
         let mut right = right_iter.next();
 
         loop {
-            trace!("Subtracting, left: {:?}, right: {:?}", left, right);
+            trace!("Subtracting, left: {left:?}, right: {right:?}");
             match (&mut left, &mut right) {
                 (None, _) => break,
                 (Some(l), None) => {

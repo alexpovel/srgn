@@ -577,8 +577,7 @@ mod tests {
 
             info!(
                 // To test anything, we actually need matches so splits happen.
-                "Processed {} inputs, of which {} were matched and successfully reassembled",
-                n_tries, n_matches
+                "Processed {n_tries} inputs, of which {n_matches} were matched and successfully reassembled"
             );
 
             assert!(

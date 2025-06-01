@@ -56,7 +56,7 @@ impl Scoper for Literal {
                 })
                 .collect();
 
-            trace!("Ranges in scope for {:?}: {:?}", self, ranges);
+            trace!("Ranges in scope for {self:?}: {ranges:?}");
 
             ranges
         };
