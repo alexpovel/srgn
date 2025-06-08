@@ -733,14 +733,16 @@ fn apply(
         for (i, lines) in line_based_views.into_iter().parallel_zip().enumerate() {
             let i = i + 1;
             for line in lines {
-                if !global_options.only_matching || line.has_any_in_scope() {
-                    if global_options.line_numbers {
-                        write!(destination, "{}:", i.to_string().green())
-                            .expect("infallible on String (are we OOM?)");
-                    }
-
-                    destination.push_str(&line.to_string());
+                if global_options.only_matching && !line.has_any_in_scope() {
+                    continue;
                 }
+
+                if global_options.line_numbers {
+                    write!(destination, "{}:", i.to_string().green())
+                        .expect("infallible on String (are we OOM?)");
+                }
+
+                destination.push_str(&line.to_string());
             }
         }
     } else {
