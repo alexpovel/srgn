@@ -1448,6 +1448,82 @@ $ echo 'stuff...' | srgn -d --literal-string '.'
 stuff
 ```
 
+### Automatic output format detection
+
+Similar to ripgrep, `srgn` attempts to detect if its standard output is a TTY . If it
+is, the output will be rendered human-readable. If it isn't, such as when piping to
+further commands, output will be rendered machine-readable. Using `--stdout-detection`,
+this behavior can also be forced. The format is
+
+```text
+<FILE>:<1-INDEXED LINE NUMBER>:<0-INDEXED COLUMN START:NON-INCLUSIVE END>[;<ADDITIONAL COLUMNS IF PRESENT>]*:<LINE CONTENTS>`
+```
+
+which looks like
+
+```console
+$ echo 'x = "foo bar"' | srgn --python 'strings' --stdout-detection 'force-pipe' '(foo|bar)' # Note, file is `(stdin)`
+(stdin):1:5-8;9-12:x = "foo bar"
+$ echo 'x = "foo bar"' | srgn --python 'strings' --stdout-detection 'force-tty' '(foo|bar)'
+1:x = "foo bar"
+```
+
+For file inputs, the output mentions their names for further parsing use:
+
+```console
+$ srgn --python 'class' --stdout-detection 'force-pipe' 'egg'
+docs/samples/birds:18:13-16;17-20:    def from_egg(egg):
+docs/samples/birds:19:33-36:        """Create a bird from an egg."""
+docs/samples/birds.py:16:13-16;17-20:    def from_egg(egg):
+docs/samples/birds.py:17:33-36:        """Create a bird from an egg."""
+```
+
+An example program to parse and further process this output is this Python script:
+
+```python
+#!/usr/bin/env python3
+
+"""Script to ingest srgn output and transform it further."""
+
+import sys
+from pathlib import Path
+
+FIELD_SEP = ":"
+N_FIELDS = 3  # The format is: `filename:line_no:[colstart-colend][;colstart-colend]*`
+COL_SEP = ";"
+
+for line in sys.stdin.readlines():
+    file_raw, line_no_raw, col_pairs_raw, text = line.split(
+        FIELD_SEP, maxsplit=N_FIELDS
+    )
+
+    file = Path(file_raw)
+    line_no = int(line_no_raw)
+    col_pairs: list[tuple[int, int]] = []
+    for start_end in col_pairs_raw.split(COL_SEP):
+        start, end = (int(v) for v in start_end.split("-"))
+        col_pairs.append((start, end))
+
+    transformed = ""  # Might want to use list if performance matters
+    last_pos = 0
+    for start, end in col_pairs:
+        transformed += text[last_pos:start]
+
+        # Transform however necessary. Here, we color in red and uppercase.
+        transformed += f"\033[31m{text[start:end].upper()}\033[0m"
+
+        last_pos = end
+
+    transformed += text[last_pos:]
+
+    print(
+        f"Got {file=}, at {line_no=} and columns {col_pairs=}",
+        f"raw:\t\t{text.removesuffix("\n")}",
+        f"transformed:\t{transformed}",
+        sep="\n\t",
+    )
+```
+
 ### Help output
 
 For reference, the full help output with all available options is given below. As with
@@ -1643,6 +1719,16 @@ Options (global):
           files in sorted order.
           
           Sorted processing disables parallel processing.
+
+      --stdout-detection <STDOUT_DETECTION>
+          Control heuristics for stdout detection, and potentially force to value.
+          
+          [default: auto]
+
+          Possible values:
+          - auto:       Automatically detect if stdout is a TTY and act accordingly
+          - force-tty:  Act as if stdout is a TTY
+          - force-pipe: Act as if stdout is not a TTY, e.g. a pipe, redirect
 
       --threads <THREADS>
           Number of threads to run processing on, when working with files.

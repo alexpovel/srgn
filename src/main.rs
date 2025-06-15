@@ -6,7 +6,7 @@
 use std::error::Error;
 use std::fmt::Write as _; // import without risk of name clashing
 use std::fs::{self, File};
-use std::io::{self, Read, Write, stdout};
+use std::io::{self, IsTerminal, Read, Write, stdout};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{env, fmt};
@@ -29,6 +29,7 @@ use srgn::scoping::Scoper;
 use srgn::scoping::langs::LanguageScoper;
 use srgn::scoping::literal::{Literal, LiteralError};
 use srgn::scoping::regex::{Regex, RegexError};
+use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
 use tree_sitter::QueryError as TSQueryError;
 
@@ -114,6 +115,16 @@ fn main() -> Result<()> {
     let is_readable_stdin = grep_cli::is_readable_stdin();
     info!("Detected stdin as readable: {is_readable_stdin}.");
 
+    let is_stdout_tty = match options.stdout_detection {
+        cli::StdoutDetection::Auto => {
+            debug!("Detecting if stdout is a TTY");
+            stdout().is_terminal()
+        }
+        cli::StdoutDetection::ForceTTY => true,
+        cli::StdoutDetection::ForcePipe => false,
+    };
+    info!("Treating stdout as tty: {is_stdout_tty}.");
+
     // See where we're reading from
     let input = match (
         options.stdin_override_to.unwrap_or(is_readable_stdin),
@@ -173,7 +184,12 @@ fn main() -> Result<()> {
         } else {
             Style::red_bold() // "Found!", like ripgrep
         };
-        actions.push(Box::new(style));
+
+        if is_stdout_tty {
+            // For human consumption, we style - otherwise, none needed (in fact, color
+            // codes would mess with column positions, so omit).
+            actions.push(Box::new(style));
+        }
 
         options.only_matching = true;
         options.line_numbers = true;
@@ -208,6 +224,7 @@ fn main() -> Result<()> {
                 general_scoper.as_ref(),
                 &language_scopers,
                 &pipeline,
+                is_stdout_tty,
             )?;
         }
         (Input::WalkOn(validator), false) => {
@@ -224,6 +241,7 @@ fn main() -> Result<()> {
                     || std::thread::available_parallelism().map_or(1, std::num::NonZero::get),
                     std::num::NonZero::get,
                 ),
+                is_stdout_tty,
             )?;
         }
         (Input::WalkOn(validator), true) => {
@@ -236,6 +254,7 @@ fn main() -> Result<()> {
                 &language_scopers,
                 &pipeline,
                 search_mode,
+                is_stdout_tty,
             )?;
         }
     }
@@ -286,6 +305,7 @@ fn handle_actions_on_stdin(
     general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
+    is_stdout_tty: bool,
 ) -> Result<(), ProgramError> {
     info!("Will use stdin to stdout.");
     let mut source = String::new();
@@ -300,6 +320,8 @@ fn handle_actions_on_stdin(
         general_scoper,
         language_scopers,
         pipeline,
+        None, // No filename for stdin
+        is_stdout_tty,
     )?;
 
     stdout().lock().write_all(destination.as_bytes())?;
@@ -315,6 +337,7 @@ fn handle_actions_on_stdin(
 ///
 /// [ripgrep]:
 ///     https://github.com/BurntSushi/ripgrep/blob/71d71d2d98964653cdfcfa315802f518664759d7/GUIDE.md#L1016-L1017
+#[expect(clippy::too_many_arguments)] // Yes :-(
 fn handle_actions_on_many_files_sorted(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
@@ -323,6 +346,7 @@ fn handle_actions_on_many_files_sorted(
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
     search_mode: bool,
+    is_stdout_tty: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
     info!(
@@ -351,6 +375,7 @@ fn handle_actions_on_many_files_sorted(
                     language_scopers,
                     pipeline,
                     search_mode,
+                    is_stdout_tty,
                 );
 
                 n_files_seen += match res {
@@ -443,6 +468,7 @@ fn handle_actions_on_many_files_threaded(
     pipeline: Pipeline<'_>,
     search_mode: bool,
     n_threads: usize,
+    is_stdout_tty: bool,
 ) -> Result<(), ProgramError> {
     let root = env::current_dir()?;
     info!(
@@ -477,6 +503,7 @@ fn handle_actions_on_many_files_threaded(
                         language_scopers,
                         pipeline,
                         search_mode,
+                        is_stdout_tty,
                     );
 
                     match res {
@@ -585,6 +612,7 @@ fn process_path(
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
     search_mode: bool,
+    is_stdout_tty: bool,
 ) -> std::result::Result<(), PathProcessingError> {
     if !path.is_file() {
         trace!("Skipping path (not a file): {}", path.display());
@@ -618,6 +646,8 @@ fn process_path(
             general_scoper,
             language_scopers,
             pipeline,
+            Some(&path),
+            is_stdout_tty,
         )?;
 
         (destination, filesize, changed)
@@ -628,12 +658,19 @@ fn process_path(
 
     if search_mode {
         if !new_contents.is_empty() {
-            writeln!(
-                stdout,
-                "{}\n{}",
-                path.display().to_string().magenta(),
-                &new_contents
-            )?;
+            if is_stdout_tty {
+                // TTY format: colored filename with empty line separator
+                writeln!(
+                    stdout,
+                    "{}\n{}",
+                    path.display().to_string().magenta(),
+                    &new_contents
+                )?;
+            } else {
+                // Machine-parseable format: the content should already be formatted
+                // with filename:line_number: prefix by the apply function
+                write!(stdout, "{}", &new_contents)?;
+            }
         }
     } else {
         if filesize > 0 && new_contents.is_empty() {
@@ -675,6 +712,7 @@ fn process_path(
 ///
 /// TODO: The way this interacts with [`process_path`] etc. is just **awful** spaghetti
 /// of the most imperative, procedural kind. Refactor needed.
+#[expect(clippy::too_many_arguments)] // Yes :-(
 fn apply(
     global_options: &cli::GlobalOptions,
     standalone_action: StandaloneAction,
@@ -685,6 +723,8 @@ fn apply(
     general_scoper: &dyn Scoper,
     language_scopers: &[Box<dyn LanguageScoper>],
     pipeline: Pipeline<'_>,
+    file_path: Option<&Path>,
+    is_stdout_tty: bool,
 ) -> std::result::Result<bool, ApplicationError> {
     debug!("Building view.");
     let mut builder = ScopedViewBuilder::new(source);
@@ -737,8 +777,56 @@ fn apply(
                     continue;
                 }
 
+                let sep = ":";
+
+                if !is_stdout_tty {
+                    // Machine-parseable format
+                    if let Some(path) = file_path {
+                        write!(destination, "{}{sep}", path.display())
+                            .expect("infallible on String (are we OOM?)");
+                    } else {
+                        write!(destination, "(stdin){sep}")
+                            .expect("infallible on String (are we OOM?)");
+                    }
+                }
+
                 if global_options.line_numbers {
-                    write!(destination, "{}:", i.to_string().green())
+                    write!(
+                        destination,
+                        "{}{sep}",
+                        if is_stdout_tty {
+                            i.to_string().green().to_string()
+                        } else {
+                            i.to_string()
+                        }
+                    )
+                    .expect("infallible on String (are we OOM?)");
+                }
+
+                if !is_stdout_tty {
+                    // This is for programmatic use: column positions are 0-indexed.
+                    let mut col = 0;
+
+                    let mut ranges = Vec::new();
+
+                    // NB: this manual column position computation should not live at
+                    // this layer; ideally a `Scope` knows how to serialize itself,
+                    // which would generalize to CLI output, JSON, ...
+                    for scope in &line.scopes().0 {
+                        let s: &str = scope.into();
+
+                        // This is for programmatic use: ranges are half-open, [from,
+                        // to).
+                        let end = col + s.len();
+
+                        if let Scope::In(..) = scope.0 {
+                            ranges.push(format!("{col}-{end}"));
+                        }
+
+                        col = end;
+                    }
+
+                    write!(destination, "{ranges}{sep}", ranges = ranges.join(";"))
                         .expect("infallible on String (are we OOM?)");
                 }
 
@@ -1098,6 +1186,17 @@ mod cli {
         );
     }
 
+    /// Controls for stdout detection.
+    #[derive(Debug, Clone, ValueEnum)]
+    pub enum StdoutDetection {
+        /// Automatically detect if stdout is a TTY and act accordingly.
+        Auto,
+        /// Act as if stdout is a TTY.
+        ForceTTY,
+        /// Act as if stdout is not a TTY, e.g. a pipe, redirect.
+        ForcePipe,
+    }
+
     #[derive(Parser, Debug)]
     #[group(required = false, multiple = true)]
     #[command(next_help_heading = "Options (global)")]
@@ -1201,6 +1300,14 @@ mod cli {
         #[arg(long, hide(true), verbatim_doc_comment)]
         // Hidden: internal use for testing, where some forceful overriding is required.
         pub stdin_override_to: Option<bool>,
+        /// Control heuristics for stdout detection, and potentially force to value.
+        #[arg(
+            long,
+            value_enum,
+            default_value_t=StdoutDetection::Auto,
+            verbatim_doc_comment
+        )]
+        pub stdout_detection: StdoutDetection,
         /// Number of threads to run processing on, when working with files.
         ///
         /// If not specified, will default to available parallelism. Set to 1 for
