@@ -532,7 +532,12 @@ mod tests {
                                     tag("c"),
                                 )),
                                 // Misc. flags used in the docs
-                                alt((tag("glob"), tag("stdin-override-to"), tag("threads"))),
+                                alt((
+                                    tag("stdin-override-to"),
+                                    tag("stdout-detection"),
+                                    tag("threads"),
+                                    tag("glob"),
+                                )),
                                 // Shorthands
                                 alt((
                                     tag("tsx"),
@@ -848,8 +853,22 @@ mod tests {
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
 
-                // We're testing and need determinism. This hard-codes a flag!
-                cmd.arg("--sorted");
+                // NB: this hard-codes some flags.
+                cmd.args([
+                    // We're testing and need determinism.
+                    "--sorted",
+                ]);
+
+                // Set a default for this value - but only if it's not specified. Allows
+                // overriding this in the README where necessary, for testing and
+                // demonstration.
+                let stdout_detection_arg = "--stdout-detection";
+                if !cmd.get_args().any(|arg| arg == stdout_detection_arg) {
+                    cmd.args([
+                        stdout_detection_arg,
+                        "force-tty", // This is prettier for human consumption in the README
+                    ]);
+                }
 
                 if let Some(previous_stdin) = previous_stdin {
                     cmd.write_stdin(previous_stdin);
@@ -872,6 +891,9 @@ mod tests {
                     s.to_owned()
                 };
 
+                let observed_stderr = String::from_utf8(assertion.get_output().stderr.clone())
+                    .expect("Stderr should be given as UTF-8");
+
                 if let Some(expected_stdout) = program.stdout().clone() {
                     if cfg!(target_os = "windows") {
                         observed_stdout = fix_windows_output(observed_stdout);
@@ -890,13 +912,15 @@ mod tests {
                             std::fs::write(PATH, new_readme)?;
                         } else {
                             // Write to files for easier inspection
-                            let (mut obs_f, mut exp_f) = (
+                            let (mut obs_stdout_f, mut obs_stderr_f, mut exp_stdout_f) = (
+                                ManuallyDrop::new(NamedTempFile::new().unwrap()),
                                 ManuallyDrop::new(NamedTempFile::new().unwrap()),
                                 ManuallyDrop::new(NamedTempFile::new().unwrap()),
                             );
 
-                            obs_f.write_all(observed_stdout.as_bytes()).unwrap();
-                            exp_f.write_all(expected_stdout.as_bytes()).unwrap();
+                            obs_stdout_f.write_all(observed_stdout.as_bytes()).unwrap();
+                            obs_stderr_f.write_all(observed_stderr.as_bytes()).unwrap();
+                            exp_stdout_f.write_all(expected_stdout.as_bytes()).unwrap();
 
                             // Now panic as usual, for the usual output
                             assert_eq!(
@@ -905,9 +929,10 @@ mod tests {
                                 // whitespace is very hard.
                                 expected_stdout,
                                 observed_stdout,
-                                "Output differs; for inspection see observed stdout at '{}', expected stdout at '{}'",
-                                obs_f.path().display(),
-                                exp_f.path().display()
+                                "Output differs; for inspection see observed stdout at '{}', observed stderr at '{}', expected stdout at '{}'",
+                                obs_stdout_f.path().display(),
+                                obs_stderr_f.path().display(),
+                                exp_stdout_f.path().display()
                             );
 
                             // Temporary files remain, they're not dropped.
@@ -950,10 +975,12 @@ mod tests {
         // Matches: test\some\more\files
         // Matches: test
         // Matches: test\some\file.py
+        // Matches: docs\samples\birds:19:33-36
+        // Matches: docs\samples\birds.py:16:13-16;17-20:
         //```
         //
-        // https://regex101.com/r/NURPe2/1
-        let pattern = Regex::new(r"^([a-z]+\\)*[a-z]+(\.[a-z]+)?$").unwrap();
+        // https://regex101.com/r/NURPe2/2
+        let pattern = Regex::new(r"^([a-z]+\\)+[a-z]+(\.[a-z]+)?").unwrap();
         let mut res = input
             .lines()
             .map(|s| {
