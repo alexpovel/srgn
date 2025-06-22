@@ -2,10 +2,7 @@ use std::fmt::Debug;
 
 use clap::ValueEnum;
 
-use super::{
-    LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, TreeSitterRegex,
-    tree_sitter_hcl,
-};
+use super::{LanguageScoper, QuerySource, TSLanguage, TSQuery, TSQueryError, TreeSitterRegex};
 use crate::find::Find;
 use crate::scoping::langs::IGNORE;
 
@@ -22,7 +19,7 @@ impl TryFrom<QuerySource> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: QuerySource) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::from_source(&tree_sitter_hcl::language(), &query)?;
+        let q = super::CompiledQuery::from_source(&tree_sitter_python::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }
@@ -30,7 +27,7 @@ impl TryFrom<QuerySource> for CompiledQuery {
 impl From<PreparedQuery> for CompiledQuery {
     fn from(query: PreparedQuery) -> Self {
         Self(super::CompiledQuery::from_prepared_query(
-            &tree_sitter_hcl::language(),
+            &tree_sitter_hcl::LANGUAGE.into(),
             &query.as_string(),
         ))
     }
@@ -366,7 +363,7 @@ impl PreparedQuery {
 
 impl LanguageScoper for CompiledQuery {
     fn lang() -> TSLanguage {
-        tree_sitter_hcl::language()
+        tree_sitter_hcl::LANGUAGE.into()
     }
 
     fn pos_query(&self) -> &TSQuery {

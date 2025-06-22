@@ -2373,16 +2373,6 @@ A straightforward use case. Upper- and lowercase are often used.
     - [`tr "[:lower:]" "[:upper:]"`](https://github.com/Fivium/Oracle-Backup-and-Sync/blob/036aace4a8eb45ab7e6e226ddceb08f35c46b9f3/dbsync/scripts/dbsync.sh#L122)
     - [`tr "[:lower:]" "[:upper:]"`](https://github.com/jorgeazevedo/xenomai-lab/blob/a2ce85a86f37fd9762905026ce4a1542684c714b/data/.xenomailab/blocks/template/rename.sh#L5)
 
-## License
-
-This project is licensed under either of
-
-- Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-  <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
-
-at your option.
-
 [tr]: https://www.gnu.org/software/coreutils/manual/html_node/tr-invocation.html
 [^1]: Currently, reversibility is not possible for any other action. For example,
     lowercasing is not the inverse of uppercasing. Information is lost, so it cannot be
