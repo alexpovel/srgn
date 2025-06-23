@@ -112,9 +112,6 @@ fn main() -> Result<()> {
         actions
     };
 
-    let is_readable_stdin = grep_cli::is_readable_stdin();
-    info!("Detected stdin as readable: {is_readable_stdin}.");
-
     let is_stdout_tty = match options.stdout_detection {
         cli::StdoutDetection::Auto => {
             debug!("Detecting if stdout is a TTY");
@@ -125,9 +122,19 @@ fn main() -> Result<()> {
     };
     info!("Treating stdout as tty: {is_stdout_tty}.");
 
+    let is_stdin_readable = match options.stdin_detection {
+        cli::StdinDetection::Auto => {
+            debug!("Detecting if stdin is readable");
+            grep_cli::is_readable_stdin()
+        }
+        cli::StdinDetection::ForceReadable => true,
+        cli::StdinDetection::ForceUnreadable => false,
+    };
+    info!("Treating stdin as readable: {is_stdin_readable}.");
+
     // See where we're reading from
     let input = match (
-        options.stdin_override_to.unwrap_or(is_readable_stdin),
+        is_stdin_readable,
         options.glob.clone(),
         &language_scopers,
     ) {
@@ -1186,6 +1193,17 @@ mod cli {
         );
     }
 
+    /// Controls for stdin readability detection.
+    #[derive(Debug, Clone, ValueEnum)]
+    pub enum StdinDetection {
+        /// Automatically detect if stdin is readable.
+        Auto,
+        /// Act as if stdin is readable.
+        ForceReadable,
+        /// Act as if stdin is not readable.
+        ForceUnreadable,
+    }
+
     /// Controls for stdout detection.
     #[derive(Debug, Clone, ValueEnum)]
     pub enum StdoutDetection {
@@ -1293,13 +1311,14 @@ mod cli {
         /// Sorted processing disables parallel processing.
         #[arg(long, verbatim_doc_comment)]
         pub sorted: bool,
-        /// Override detection heuristics for stdin readability, and force to value.
-        ///
-        /// `true` will always attempt to read from stdin. `false` will never read from
-        /// stdin, even if provided.
-        #[arg(long, hide(true), verbatim_doc_comment)]
-        // Hidden: internal use for testing, where some forceful overriding is required.
-        pub stdin_override_to: Option<bool>,
+        /// Control heuristics for stdin readability detection, and force to value.
+        #[arg(
+            long,
+            value_enum,
+            default_value_t=StdinDetection::Auto,
+            verbatim_doc_comment
+        )]
+        pub stdin_detection: StdinDetection,
         /// Control heuristics for stdout detection, and potentially force to value.
         #[arg(
             long,

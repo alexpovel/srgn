@@ -1720,6 +1720,16 @@ Options (global):
           
           Sorted processing disables parallel processing.
 
+      --stdin-detection <STDIN_DETECTION>
+          Control heuristics for stdin readability detection, and force to value.
+          
+          [default: auto]
+
+          Possible values:
+          - auto:             Automatically detect if stdin is readable
+          - force-readable:   Act as if stdin is readable
+          - force-unreadable: Act as if stdin is not readable
+
       --stdout-detection <STDOUT_DETECTION>
           Control heuristics for stdout detection, and potentially force to value.
           

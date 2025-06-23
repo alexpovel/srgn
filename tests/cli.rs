@@ -308,7 +308,7 @@ Heizoelrueckstossabdaempfung.
             cmd.args(
                 // Override; `Command` is detected as providing stdin but we're working on
                 // files here.
-                ["--stdin-override-to", "false"],
+                ["--stdin-detection", "force-unreadable"],
             );
         }
 
@@ -458,7 +458,7 @@ Heizoelrueckstossabdaempfung.
         cmd.args(
             // Override; `Command` is detected as providing stdin but we're working on
             // files here.
-            ["--stdin-override-to", "false"],
+            ["--stdin-detection", "force-unreadable"],
         );
         cmd.args(&args);
         if dry_run {
@@ -786,7 +786,7 @@ Heizoelrueckstossabdaempfung.
             cmd.args(
                 // Override; `Command` is detected as providing stdin but we're working on
                 // files here.
-                ["--stdin-override-to", "false"],
+                ["--stdin-detection", "force-unreadable"],
             );
         }
         cmd.args(&args);
