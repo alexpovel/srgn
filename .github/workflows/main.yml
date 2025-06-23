@@ -419,6 +419,6 @@ jobs:
         # Because it's hard to test, this isn't asserted against anything. Just a nice
         # final check. Requires overriding stdin as that is unfortunately detected as
         # present in GitHub Actions. Should not be necessary in normal CLI use.
-        run: srgn -vvvv --stdin-override-to false --rust struct
+        run: srgn -vvvv --stdin-detection force-unreadable --rust struct
       - name: Perform dummy run (minimal verbosity)
-        run: srgn --stdin-override-to false --rust struct
+        run: srgn --stdin-detection force-unreadable --rust struct

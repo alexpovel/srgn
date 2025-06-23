@@ -170,9 +170,10 @@ mod tests {
         /// For that scenario, we need a hacky method to disable stdin for good.
         fn force_ignore_stdin(&mut self) {
             match self {
-                Self::Self_(inv) => inv
-                    .opts
-                    .push(Opt::Long("stdin-override-to".into(), "false".into())),
+                Self::Self_(inv) => inv.opts.push(Opt::Long(
+                    "stdin-detection".into(),
+                    "force-unreadable".into(),
+                )),
                 _ => panic!("Forcing stdin ignore only applicable to `self` program"),
             }
         }
@@ -533,8 +534,8 @@ mod tests {
                                 )),
                                 // Misc. flags used in the docs
                                 alt((
-                                    tag("stdin-override-to"),
                                     tag("stdout-detection"),
+                                    tag("stdin-detection"),
                                     tag("threads"),
                                     tag("glob"),
                                 )),
