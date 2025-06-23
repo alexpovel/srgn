@@ -1173,7 +1173,7 @@ dependencies = [
 
 [[package]]
 name = "srgn"
-version = "0.13.7"
+version = "0.14.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
