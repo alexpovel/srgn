@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.14.0](https://github.com/alexpovel/srgn/compare/srgn-v0.13.7...srgn-v0.14.0) (2025-06-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** Replacement action argument forced last
+
+### Features
+
+* **cli:** `stdin-detection` option ([509b0a2](https://github.com/alexpovel/srgn/commit/509b0a25c9a51f2583e3f527a83aad0ae4431e59))
+* **cli:** Parseable output format (with auto-detection) ([1d64ef2](https://github.com/alexpovel/srgn/commit/1d64ef28ec6698b0e929f4422630e4833e96e603))
+* **cli:** Replacement action argument forced last ([11921e6](https://github.com/alexpovel/srgn/commit/11921e64fead1c024637bd693457b88765caa8a5))
+
 ## [0.13.7](https://github.com/alexpovel/srgn/compare/srgn-v0.13.6...srgn-v0.13.7) (2025-05-21)
 
 
