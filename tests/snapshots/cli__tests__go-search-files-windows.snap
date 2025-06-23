@@ -5,6 +5,10 @@ info:
   stderr: []
 ---
 args:
+  - "--stdin-detection"
+  - force-unreadable
+  - "--threads"
+  - "1"
   - "--sorted"
   - "--go"
   - comments

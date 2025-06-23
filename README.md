@@ -33,7 +33,7 @@ are good to go.
 The most simple `srgn` usage works [similar to `tr`](#comparison-with-tr):
 
 ```bash
-$ echo 'Hello World!' | srgn '[wW]orld' 'there' # replacement
+$ echo 'Hello World!' | srgn '[wW]orld' -- 'there' # replacement
 Hello there!
 ```
 
@@ -43,12 +43,13 @@ Matches for the regular expression pattern `'[wW]orld'` (the *scope*) are replac
 ```bash
 $ echo 'Hello World!' | srgn '[wW]orld' # zero actions: input returned unchanged
 Hello World!
-$ echo 'Hello World!' | srgn --upper '[wW]orld' 'you' # two actions: replacement, afterwards uppercasing
+$ echo 'Hello World!' | srgn --upper '[wW]orld' -- 'you' # two actions: replacement, afterwards uppercasing
 Hello YOU!
 ```
 
-Replacement is always performed first and specified positionally. Any [other
-actions](#actions) are applied after and given as command line flags.
+Replacement is always performed first and specified positionally. The argument goes
+*last*, disambiguated by `--` for safety. Any [other actions](#actions) are applied
+after and given as command line flags.
 
 ### Multiple scopes
 
@@ -221,7 +222,7 @@ def GNU_says_moo():
 against which the following command is run:
 
 ```bash
-cat gnu.py | srgn --titlecase --python 'doc-strings' '(?<!The )GNU ([a-z]+)' '$1: GNU 🐂 is not Unix'
+cat gnu.py | srgn --titlecase --python 'doc-strings' '(?<!The )GNU ([a-z]+)' -- '$1: GNU 🐂 is not Unix'
 ```
 
 The anatomy of that invocation is:
@@ -422,28 +423,33 @@ cases, and only go beyond when needed.
 
 ### Actions
 
-The simplest action is replacement. It is specially accessed (as an argument, not an
-option) for compatibility with [`tr`][tr], and general ergonomics. All other actions are
-given as flags, or options should they take a value.
+The simplest action is replacement. It is specially accessed (as the **last positional
+argument**, not an option) for approximate compatibility with [`tr`][tr], and general
+ergonomics. All other actions are given as flags, or options should they take a value.
 
 #### Replacement
 
-For example, simple, single-character replacements work as in [`tr`][tr]:
+For example, simple, single-character replacements work similar to [`tr`][tr]:
 
 ```console
-$ echo 'Hello, World!' | srgn 'H' 'J'
+$ echo 'Hello, World!' | srgn 'H' -- 'J'
 Jello, World!
 ```
 
 The first argument is the scope (literal `H` in this case). Anything matched by it is
-subject to processing (replacement by `J`, the second argument, in this case). However,
-there is **no direct concept of character classes** as in [`tr`][tr]. Instead, by
+subject to processing (replacement by `J`, the second argument, in this case). The
+replacement argument is separated by `--`. Otherwise, `srgn` invocations could be easily
+and accidentally recursive and destructive. Forgetting quotes on the CLI would be enough
+to trigger this behavior, hence `srgn` is strict and just disallows it, favoring
+explicitness.
+
+There is **no direct concept of character classes** as in [`tr`][tr]. Instead, by
 default, the scope is a regular expression pattern, so *its*
 [classes](https://docs.rs/regex/1.9.5/regex/index.html#character-classes) can be used to
 similar effect:
 
 ```console
-$ echo 'Hello, World!' | srgn '[a-z]' '_'
+$ echo 'Hello, World!' | srgn '[a-z]' -- '_'
 H____, W____!
 ```
 
@@ -453,7 +459,7 @@ reminiscent of [`tr`'s
 `[:alnum:]`](https://github.com/coreutils/coreutils/blob/769ace51e8a1129c44ee4e7e209c3b2df2111524/src/tr.c#L322C25-L322C25)):
 
 ```console
-$ echo 'ghp_oHn0As3cr3T!!' | srgn 'ghp_[[:alnum:]]+' '*' # A GitHub token
+$ echo 'ghp_oHn0As3cr3T!!' | srgn 'ghp_[[:alnum:]]+' -- '*' # A GitHub token
 *!!
 ```
 
@@ -462,7 +468,7 @@ Advanced regex features are
 example lookarounds:
 
 ```console
-$ echo 'ghp_oHn0As3cr3T' | srgn '(?<=ghp_)[[:alnum:]]+' '*'
+$ echo 'ghp_oHn0As3cr3T' | srgn '(?<=ghp_)[[:alnum:]]+' -- '*'
 ghp_*
 ```
 
@@ -475,7 +481,7 @@ The replacement is not limited to a single character. It can be any string, for 
 to fix [this quote](http://regex.info/blog/2006-09-15/247):
 
 ```console
-$ echo '"Using regex, I now have no issues."' | srgn 'no issues' '2 problems'
+$ echo '"Using regex, I now have no issues."' | srgn 'no issues' -- '2 problems'
 "Using regex, I now have 2 problems."
 ```
 
@@ -484,9 +490,9 @@ character
 classes](https://github.com/rust-lang/regex/blob/061ee815ef2c44101dba7b0b124600fcb03c1912/UNICODE.md#rl12-properties):
 
 ```console
-$ echo 'Mood: 🙂' | srgn '🙂' '😀'
+$ echo 'Mood: 🙂' | srgn '🙂' -- '😀'
 Mood: 😀
-$ echo 'Mood: 🤮🤒🤧🦠 :(' | srgn '\p{Emoji_Presentation}' '😷'
+$ echo 'Mood: 🤮🤒🤧🦠 :(' | srgn '\p{Emoji_Presentation}' -- '😷'
 Mood: 😷😷😷😷 :(
 ```
 
@@ -497,11 +503,11 @@ capture groups. Capture groups can be numbered, or optionally named. The zeroth 
 group corresponds to the entire match.
 
 ```console
-$ echo 'Swap It' | srgn '(\w+) (\w+)' '$2 $1' # Regular, numbered
+$ echo 'Swap It' | srgn '(\w+) (\w+)' -- '$2 $1' # Regular, numbered
 It Swap
-$ echo 'Swap It' | srgn '(\w+) (\w+)' '$2 $1$1$1' # Use as many times as you'd like
+$ echo 'Swap It' | srgn '(\w+) (\w+)' -- '$2 $1$1$1' # Use as many times as you'd like
 It SwapSwapSwap
-$ echo 'Call +1-206-555-0100!' | srgn 'Call (\+?\d\-\d{3}\-\d{3}\-\d{4}).+' 'The phone number in "$0" is: $1.' # Variable `0` is the entire match
+$ echo 'Call +1-206-555-0100!' | srgn 'Call (\+?\d\-\d{3}\-\d{3}\-\d{4}).+' -- 'The phone number in "$0" is: $1.' # Variable `0` is the entire match
 The phone number in "Call +1-206-555-0100!" is: +1-206-555-0100.
 ```
 
@@ -509,7 +515,7 @@ A more advanced use case is, for example, code refactoring using named capture g
 (perhaps you can come up with a more useful one...):
 
 ```console
-$ echo 'let x = 3;' | srgn 'let (?<var>[a-z]+) = (?<expr>.+);' 'const $var$var = $expr + $expr;'
+$ echo 'let x = 3;' | srgn 'let (?<var>[a-z]+) = (?<expr>.+);' -- 'const $var$var = $expr + $expr;'
 const xx = 3 + 3;
 ```
 
@@ -517,10 +523,10 @@ As in bash, use curly braces to disambiguate variables from immediately adjacent
 content:
 
 ```console
-$ echo '12' | srgn '(\d)(\d)' '$2${1}1'
+$ echo '12' | srgn '(\d)(\d)' -- '$2${1}1'
 211
-$ echo '12' | srgn '(\d)(\d)' '$2$11' # will fail (`11` is unknown)
-$ echo '12' | srgn '(\d)(\d)' '$2${11' # will fail (brace was not closed)
+$ echo '12' | srgn '(\d)(\d)' -- '$2$11' # will fail (`11` is unknown)
+$ echo '12' | srgn '(\d)(\d)' -- '$2${11' # will fail (brace was not closed)
 ```
 
 #### Beyond replacement
@@ -586,7 +592,7 @@ Winter is coming... 🌞🌞🌞
 Invert greediness if the use case calls for it:
 
 ```console
-$ echo 'Winter is coming... 🌞🌞🌞' | srgn -s '🌞+?' '☃️'
+$ echo 'Winter is coming... 🌞🌞🌞' | srgn -s '🌞+?' -- '☃️'
 Winter is coming... ☃️
 ```
 
@@ -757,7 +763,7 @@ Note: regex escaping (`\.`) can be circumvent using [literal scoping](#literal-s
 The specially treated replacement action is also composable:
 
 ```console
-$ echo 'Mooood: 🤮🤒🤧🦠!!!' | srgn -s '\p{Emoji}' '😷'
+$ echo 'Mooood: 🤮🤒🤧🦠!!!' | srgn -s '\p{Emoji}' -- '😷'
 Mooood: 😷!!!
 ```
 
@@ -842,7 +848,7 @@ separator between the language grammar/node type and pattern. This approach allo
 manipulation of *only these structs*, e.g.
 
 ```console
-$ cat testing.go | srgn --go 'struct~[tT]est' '(\s+)Name' '${1}TestName'
+$ cat testing.go | srgn --go 'struct~[tT]est' '(\s+)Name' -- '${1}TestName'
 type PublicTestInput struct {
     TestName  string
     Value int
@@ -923,7 +929,7 @@ if let Some(env_value) = env_value {
 can be refactored using
 
 ```bash
-cat allow.rs | srgn --rust 'attribute' '^allow' 'expect'
+cat allow.rs | srgn --rust 'attribute' '^allow' -- 'expect'
 ```
 
 which will yield
@@ -959,7 +965,7 @@ layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-la
 is desired. Achieve this move with:
 
 ```bash
-cat imports.py | srgn --python 'imports' '^good_company' 'src.better_company'
+cat imports.py | srgn --python 'imports' '^good_company' -- 'src.better_company'
 ```
 
 which will yield
@@ -996,7 +1002,7 @@ good_company = "good_company";  // good_company
 which, using
 
 ```bash
-cat imports.rs | srgn --rust 'uses' '^good_company' 'better_company'
+cat imports.rs | srgn --rust 'uses' '^good_company' -- 'better_company'
 ```
 
 becomes
@@ -1029,7 +1035,7 @@ and *usually* assign people to each note. It's possible to automate assigning yo
 to every unassigned note (lucky you!) using
 
 ```bash
-cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' 'TODO(@poorguy)'
+cat todo.ts | srgn --typescript 'comments' 'TODO(?=:)' -- 'TODO(@poorguy)'
 ```
 
 which in this case gives
@@ -1069,7 +1075,7 @@ and a move to [`logging`](https://docs.python.org/3/library/logging.html) is des
 That's fully automated by a call of
 
 ```bash
-cat money.py | srgn --python 'function-calls' '^print$' 'logging.info'
+cat money.py | srgn --python 'function-calls' '^print$' -- 'logging.info'
 ```
 
 yielding
@@ -1205,7 +1211,7 @@ resource "aws_instance" "main" {
 with
 
 ```bash
-cat ec2.tf | srgn --hcl 'strings' '^t2\.(\w+)$' 't3.$1' | srgn --hcl 'data-names' 'tiny' 'small'
+cat ec2.tf | srgn --hcl 'strings' '^t2\.(\w+)$' -- 't3.$1' | srgn --hcl 'data-names' 'tiny' -- 'small'
 ```
 
 will give
@@ -1240,7 +1246,7 @@ int main(void) {
 using
 
 ```bash
-cat function.c | srgn --c 'function' 'old_function_name' 'new_function_name'
+cat function.c | srgn --c 'function' 'old_function_name' -- 'new_function_name'
 ```
 
 which will give
@@ -1329,7 +1335,7 @@ would need to be matched, with the name part ignored. Any capture name starting 
 `_SRGN_IGNORE` will provide just that:
 
 ```bash
-cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' 'wrong'
+cat wrong.rs | srgn --rust-query '((macro_invocation macro: (identifier) @_SRGN_IGNORE_name) @macro)' 'error' -- 'wrong'
 ```
 
 ```rust file=output-wrong.rs
@@ -1535,7 +1541,7 @@ $ srgn --help
 A grep-like tool which understands source code syntax and allows for manipulation in
 addition to search
 
-Usage: srgn [OPTIONS] [SCOPE] [REPLACEMENT]
+Usage: srgn [OPTIONS] [SCOPE] [-- <REPLACEMENT>]
 
 Arguments:
   [SCOPE]
@@ -2184,7 +2190,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo 'some-variable? 🤔' | srgn '[^[:alnum:]_\n]' '_'
+    $ echo 'some-variable? 🤔' | srgn '[^[:alnum:]_\n]' -- '_'
     some_variable___
     ```
 
@@ -2205,7 +2211,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo 'some  variablê' | srgn '[^[:alnum:]]' '_'
+    $ echo 'some  variablê' | srgn '[^[:alnum:]]' -- '_'
     some__variabl_
     ```
 
@@ -2215,7 +2221,7 @@ Making inputs safe for use as identifiers, for example as variable names.
     Translates to:
 
     ```console
-    $ echo '🙂 hellö???' | srgn -s '[^[:alnum:]]' '-'
+    $ echo '🙂 hellö???' | srgn -s '[^[:alnum:]]' -- '-'
     -hell-
     ```
 
@@ -2231,7 +2237,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo 'x86_64 arm64 i386' | srgn ' ' ';'
+    $ echo 'x86_64 arm64 i386' | srgn ' ' -- ';'
     x86_64;arm64;i386
     ```
 
@@ -2248,11 +2254,11 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo '3.12.1' | srgn --literal-string '.' '\n'  # Escape sequence works
+    $ echo '3.12.1' | srgn --literal-string '.' -- '\n'  # Escape sequence works
     3
     12
     1
-    $ echo '3.12.1' | srgn '\.' '\n'  # Escape regex otherwise
+    $ echo '3.12.1' | srgn '\.' -- '\n'  # Escape regex otherwise
     3
     12
     1
@@ -2264,7 +2270,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     Translates to:
 
     ```console
-    $ echo -ne 'Some\nMulti\nLine\nText' | srgn --literal-string '\n' ','
+    $ echo -ne 'Some\nMulti\nLine\nText' | srgn --literal-string '\n' -- ','
     Some,Multi,Line,Text
     ```
 
@@ -2273,7 +2279,7 @@ Translates a *single*, literal character to another, for example to clean newlin
     otherwise interpreted by the tool as a newline:
 
     ```console
-    $ echo -nE 'Some\nMulti\nLine\nText' | srgn --literal-string '\\n' ','
+    $ echo -nE 'Some\nMulti\nLine\nText' | srgn --literal-string '\\n' -- ','
     Some,Multi,Line,Text
     ```
 
@@ -2407,7 +2413,7 @@ Remove repeated whitespace, as it often occurs when slicing and dicing text.
     Translates to:
 
     ```console
-    $ echo '1969-12-28    13:37:45Z' | srgn -s ' ' 'T'  # ISO8601
+    $ echo '1969-12-28    13:37:45Z' | srgn -s ' ' -- 'T'  # ISO8601
     1969-12-28T13:37:45Z
     ```
 
@@ -2416,7 +2422,7 @@ Remove repeated whitespace, as it often occurs when slicing and dicing text.
     Translates to:
 
     ```console
-    $ echo -e '/usr/local/sbin \t /usr/local/bin' | srgn -s '[[:blank:]]' ':'
+    $ echo -e '/usr/local/sbin \t /usr/local/bin' | srgn -s '[[:blank:]]' -- ':'
     /usr/local/sbin:/usr/local/bin
     ```
 
