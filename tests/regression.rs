@@ -18,7 +18,7 @@ fn test_brew_build() {
 
     {
         let mut cmd = get_cmd();
-        cmd.args(["[a-z]", "_"]);
+        cmd.args(["[a-z]", "--", "_"]);
         cmd.write_stdin("Hello");
         cmd.assert().success();
         cmd.assert().stdout("H____");
@@ -26,7 +26,7 @@ fn test_brew_build() {
 
     {
         let mut cmd = get_cmd();
-        cmd.args(["(ghp_[[:alnum:]]+)", "*"]);
+        cmd.args(["(ghp_[[:alnum:]]+)", "--", "*"]);
         cmd.write_stdin("Hide ghp_th15 and ghp_th4t");
         cmd.assert().success();
         cmd.assert().stdout("Hide * and *");
@@ -146,7 +146,7 @@ class database:
 "#;
 
     let mut cmd = get_cmd();
-    cmd.args(["--py", "def", "--py", "identifiers", "database", "db"]);
+    cmd.args(["--py", "def", "--py", "identifiers", "database", "--", "db"]);
     cmd.write_stdin(input);
     cmd.assert().success();
     cmd.assert().stdout(expected_output);

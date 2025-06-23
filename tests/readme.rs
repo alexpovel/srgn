@@ -192,9 +192,21 @@ mod tests {
                 Program::Self_(inv) => {
                     let mut cmd = Self::cargo_bin(name).expect("Should be able to find binary");
 
+                    // Push some test-wide flags which just help with test setup
+                    // (determinism, test environment control, ...). Push these first to
+                    // not interfere with any potential later positional arguments. NB:
+                    // *this hard-codes some flags*.
+                    cmd.args([
+                        // We're testing and need determinism.
+                        "--sorted",
+                    ]);
+
                     for flag in &inv.flags {
                         cmd.arg(flag.to_string());
                     }
+
+                    let stdout_detection_option = "stdout-detection";
+                    let mut stdout_detection_was_overridden = false;
 
                     for opt in inv.opts {
                         match opt {
@@ -205,9 +217,20 @@ mod tests {
                                 cmd.args([format!("-{name}"), value]);
                             }
                             Opt::Long(name, value) => {
+                                stdout_detection_was_overridden |= name == stdout_detection_option;
                                 cmd.args([format!("--{name}"), value]);
                             }
                         }
+                    }
+
+                    // Set a default for this value - but only if it wasn't specified.
+                    // Allows overriding this in the README where necessary, for testing
+                    // and demonstration.
+                    if !stdout_detection_was_overridden {
+                        cmd.args([
+                            format!("--{stdout_detection_option}"),
+                            "force-tty".into(), // This is prettier for human consumption in the README
+                        ]);
                     }
 
                     for arg in &inv.args {
@@ -476,7 +499,7 @@ mod tests {
         // anti-pattern? works quite well...)
         let inv = Rc::new(RefCell::new(Invocation::default()));
 
-        let (input, (name, _flags, _args)) = (
+        let (input, (name, _flags, _args, _last_arg)) = (
             maybe_ws(ascii_alpha1),
             many0(alt((
                 map(
@@ -628,6 +651,15 @@ mod tests {
                     },
                 ),
             ))),
+            opt(map(
+                // Handle -- separator followed by the last argument (replacement)
+                preceded((space0, tag("--"), space0), parse_quoted),
+                |s: &str| {
+                    inv.borrow_mut().args.push("--".into());
+                    inv.borrow_mut().args.push(s.into());
+                    s.to_owned()
+                },
+            )),
         )
             .parse(input)?;
 
@@ -853,23 +885,6 @@ mod tests {
 
                 let mut cmd = Command::try_from(program.clone())
                     .expect("Should be able to convert invocation to cmd to run");
-
-                // NB: this hard-codes some flags.
-                cmd.args([
-                    // We're testing and need determinism.
-                    "--sorted",
-                ]);
-
-                // Set a default for this value - but only if it's not specified. Allows
-                // overriding this in the README where necessary, for testing and
-                // demonstration.
-                let stdout_detection_arg = "--stdout-detection";
-                if !cmd.get_args().any(|arg| arg == stdout_detection_arg) {
-                    cmd.args([
-                        stdout_detection_arg,
-                        "force-tty", // This is prettier for human consumption in the README
-                    ]);
-                }
 
                 if let Some(previous_stdin) = previous_stdin {
                     cmd.write_stdin(previous_stdin);

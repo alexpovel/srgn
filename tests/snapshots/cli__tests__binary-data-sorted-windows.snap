@@ -10,6 +10,7 @@ args:
   - "--glob"
   - "**/*"
   - 0a1a09c8-2995-4ac5-9d60-01a0f02920e8
+  - "--"
   - gone
 stdin: ~
 stdout:
