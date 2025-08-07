@@ -27,8 +27,8 @@ use srgn::actions::{Symbols, SymbolsInversion};
 use srgn::iterext::ParallelZipExt;
 use srgn::scoping::Scoper;
 use srgn::scoping::langs::LanguageScoper;
-use srgn::scoping::literal::{Literal, LiteralError};
-use srgn::scoping::regex::{Regex, RegexError};
+use srgn::scoping::literal::Literal;
+use srgn::scoping::regex::Regex;
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
 use tree_sitter::QueryError as TSQueryError;
@@ -999,35 +999,6 @@ impl From<ApplicationError> for PathProcessingError {
 }
 
 impl Error for PathProcessingError {}
-
-#[derive(Debug)]
-enum ScoperBuildError {
-    RegexError(RegexError),
-    LiteralError(LiteralError),
-}
-
-impl From<LiteralError> for ScoperBuildError {
-    fn from(e: LiteralError) -> Self {
-        Self::LiteralError(e)
-    }
-}
-
-impl From<RegexError> for ScoperBuildError {
-    fn from(e: RegexError) -> Self {
-        Self::RegexError(e)
-    }
-}
-
-impl fmt::Display for ScoperBuildError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::RegexError(e) => write!(f, "Regex error: {e}"),
-            Self::LiteralError(e) => write!(f, "Literal error: {e}"),
-        }
-    }
-}
-
-impl Error for ScoperBuildError {}
 
 fn get_general_scoper(options: &cli::GlobalOptions, scope: String) -> Result<Box<dyn Scoper>> {
     Ok(if options.literal_string {
