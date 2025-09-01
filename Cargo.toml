@@ -24,7 +24,7 @@ exclude = [
 ]
 
 [dependencies]
-anyhow = { version = "1.0.98", features = ["backtrace"] }
+anyhow = { version = "1.0.99", features = ["backtrace"] }
 cached = { version = "0.56.0", optional = true, default-features = false, features = [
     "ahash",
     "proc_macro",
