@@ -32,7 +32,7 @@ jobs:
         # in the repo.
         run: |
           git config --global core.autocrlf false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check actual EOL on disk
         run: |
           git ls-files --eol
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swatinem/rust-cache@v2
 
       - name: Set up nightly toolchain
@@ -92,14 +92,14 @@ jobs:
     if: github.event_name == 'pull_request'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.base_ref }}
           path: base
       - run: cargo tree | tee tree
         working-directory: base
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: head
       - run: cargo tree | tee tree
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with:
@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - uses: swatinem/rust-cache@v2
@@ -144,7 +144,7 @@ jobs:
     name: Build and test feature powerset
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swatinem/rust-cache@v2
       - uses: taiki-e/install-action@v2
         with:
@@ -164,7 +164,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swatinem/rust-cache@v2
 
       - name: Install cargo-tarpaulin (for coverage)
@@ -265,7 +265,7 @@ jobs:
       contents: write # For `gh` to upload asset to release
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Add rustup target
         # Idempotent, so just succeeds if already added.
@@ -317,7 +317,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swatinem/rust-cache@v2
 
       - name: Publish
@@ -342,7 +342,7 @@ jobs:
       url: https://crates.io/crates/srgn/${{ needs.release-please.outputs.tag_name_without_v }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Publish
         # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
@@ -366,7 +366,7 @@ jobs:
       contents: write # For `gh` to edit release
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Remove draft status from release
         # Now that everything is done, fully release.
         env:
@@ -412,7 +412,7 @@ jobs:
         shell: bash
         run: >
           [[ $(srgn --version) == "srgn ${{ needs.release-please.outputs.tag_name_without_v }}" ]]
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Perform dummy run (full verbosity)
         # A final sanity check. Can be used to check things which are super annoying to
         # test, e.g. terminal color output (which should work in GitHub Actions).
