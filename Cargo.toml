@@ -87,7 +87,7 @@ proptest = "1.8.0"
 rand = "0.9.1"
 rand_regex = "0.18.1"
 rstest = { version = "0.26.1", default-features = false }
-serde = { version = "1.0.219", features = ["derive"], default-features = false }
+serde = { version = "1.0.228", features = ["derive"], default-features = false }
 
 [lints.clippy]
 pedantic = "warn"
