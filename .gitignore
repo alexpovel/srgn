@@ -6,6 +6,9 @@ benches/django
 benches/pydantic
 benches/kubernetes
 
+# Nix build output
+result
+
 .claude/
 
 # While working on new README samples, ignore corresponding files

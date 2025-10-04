@@ -21,6 +21,11 @@ exclude = [
     # Contains large submodules; those should *not* be checked out when packaging for
     # crates.io, aka not end up being a problem, but protect against accidents
     "benches/",
+    ".vscode/",
+    ".github/",
+    "release-please-config.json",
+    "flake.nix",
+    "flake.lock",
 ]
 
 [dependencies]
