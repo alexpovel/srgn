@@ -26,12 +26,19 @@
         let
           pkgs = import nixpkgs { inherit system; };
         in
-        pkgs.rustPlatform.buildRustPackage {
+        pkgs.rustPlatform.buildRustPackage rec {
           pname = crateName;
           inherit version;
 
           src = self;
           cargoLock.lockFile = ./Cargo.lock;
+
+          nativeBuildInputs = [ pkgs.installShellFiles ];
+          postInstall = ''
+            for shell in bash zsh fish; do
+              installShellCompletion --cmd ${pname} --''${shell} <("$out/bin/${pname}" --completions "$shell")
+            done
+          '';
         };
     in
     {
