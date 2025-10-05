@@ -327,16 +327,25 @@ source](#cargo-compile-from-source).
 
 A [formula](https://formulae.brew.sh/formula/srgn) is available via:
 
-```text
+```bash
 brew install srgn
 ```
 
 ### Nix
 
-Available via [unstable](https://search.nixos.org/packages?channel=unstable&show=srgn&from=0&size=50&sort=relevance&type=packages&query=srgn):
+Available in `nixpkgs`:
 
-```text
+```bash
 nix-shell -p srgn
+```
+
+#### Flake
+
+The repository also ships with a [flake](./flake.nix), which can be used for overlaying
+or direct running:
+
+```bash
+nix run github:alexpovel/srgn
 ```
 
 ### Arch Linux
@@ -347,7 +356,7 @@ Available via the [AUR](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=s
 
 A [port](https://ports.macports.org/port/srgn/) is available:
 
-```text
+```bash
 sudo port install srgn
 ```
 
