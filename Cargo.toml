@@ -51,7 +51,7 @@ env_logger = { version = "0.11.6", default-features = false, features = [
 ] }
 fancy-regex = "0.16.2"
 fst = { version = "0.4.7", optional = true }
-glob = "0.3.2"
+glob = "0.3.3"
 grep-cli = "0.1.12"
 ignore = "0.4.23"
 itertools = "0.14.0"
