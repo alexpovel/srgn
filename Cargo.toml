@@ -43,7 +43,7 @@ clap = { version = "4.5.13", features = [
 ] }
 clap_complete = "4.5.13"
 colored = "3.0.0"
-const_format = "0.2.34"
+const_format = "0.2.35"
 decompound = { version = "0.3.0", optional = true }
 env_logger = { version = "0.11.6", default-features = false, features = [
     "auto-color",
