@@ -22,7 +22,8 @@ mod tests {
 
     use assert_cmd::Command;
     use comrak::nodes::{NodeCodeBlock, NodeValue};
-    use comrak::{Arena, ComrakOptions, parse_document};
+    use comrak::options::Options;
+    use comrak::{Arena, parse_document};
     use fancy_regex::Regex;
     use itertools::Itertools;
     use nom::branch::alt;
@@ -851,10 +852,10 @@ mod tests {
         pipes
     }
 
-    fn map_on_markdown_codeblocks(markdown: &str, mut f: impl FnMut(NodeCodeBlock)) {
+    fn map_on_markdown_codeblocks(markdown: &str, mut f: impl FnMut(Box<NodeCodeBlock>)) {
         let arena = Arena::new();
 
-        let root = parse_document(&arena, markdown, &ComrakOptions::default());
+        let root = parse_document(&arena, markdown, &Options::default());
 
         root.descendants().for_each(|node| {
             let value = node.to_owned().data.borrow().value.clone();

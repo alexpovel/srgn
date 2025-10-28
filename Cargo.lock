@@ -301,14 +301,13 @@ dependencies = [
 
 [[package]]
 name = "comrak"
-version = "0.40.0"
+version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32c3278f396e5707769a68bc0943e9b8f84a172836b173827810918279621747"
+checksum = "dc151d9c800c4fadd542c949b84c1dae6d1b424315ebcfd154e611d4f7910a97"
 dependencies = [
  "caseless",
  "entities",
- "memchr",
- "slug",
+ "jetscii",
  "typed-arena",
  "unicode_categories",
 ]
@@ -415,12 +414,6 @@ dependencies = [
  "log",
  "unicode_titlecase",
 ]
-
-[[package]]
-name = "deunicode"
-version = "1.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6e854126756c496b8c81dec88f9a706b15b875c5849d4097a3854476b9fdf94"
 
 [[package]]
 name = "diff"
@@ -684,6 +677,12 @@ name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
+
+[[package]]
+name = "jetscii"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47f142fe24a9c9944451e8349de0a56af5f3e7226dc46f3ed4d4ecc0b85af75e"
 
 [[package]]
 name = "js-sys"
@@ -1129,16 +1128,6 @@ name = "similar"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1de1d4f81173b03af4c0cbed3c898f6bff5b870e4a7f5d6f4057d62a7a4b686e"
-
-[[package]]
-name = "slug"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bd94acec9c8da640005f8e135a39fc0372e74535e6b368b7a04b875f784c8c4"
-dependencies = [
- "deunicode",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "srgn"
