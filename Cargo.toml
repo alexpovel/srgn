@@ -81,7 +81,7 @@ german = ["cached", "decompound", "fst"]
 symbols = []
 
 [dev-dependencies]
-assert_cmd = "2.0.17"
+assert_cmd = "2.1.0"
 comrak = { version = "0.46.0", default-features = false }
 enum-iterator = "2.3.0"
 insta = { version = "1.41.1", features = ["yaml"] }

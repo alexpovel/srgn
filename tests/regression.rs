@@ -1,6 +1,8 @@
 //! This file contains individual, totally independent regression tests for very
 //! specific scenarios each.
 
+use assert_cmd::cargo::cargo_bin_cmd;
+
 /// If this test fails, brew build process will fail:
 ///
 /// <https://github.com/Homebrew/homebrew-core/blob/a13b8b53c3902e3e18b6c839f3188cc37d529e6f/Formula/s/srgn.rb#L26-L31>
@@ -12,9 +14,7 @@
 /// Would be nice for brew to just run `cargo test`?
 #[test]
 fn test_brew_build() {
-    use assert_cmd::Command;
-
-    let get_cmd = || Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("test binary to be found");
+    let get_cmd = || cargo_bin_cmd!();
 
     {
         let mut cmd = get_cmd();
@@ -101,9 +101,7 @@ fn test_brew_build() {
 /// > [0]: https://github.com/alexpovel/srgn
 #[test]
 fn test_hn_41675384() {
-    use assert_cmd::Command;
-
-    let get_cmd = || Command::cargo_bin(env!("CARGO_PKG_NAME")).expect("test binary to be found");
+    let get_cmd = || cargo_bin_cmd!();
 
     let input = r#"import database
 import pytest

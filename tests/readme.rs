@@ -21,6 +21,7 @@ mod tests {
     use std::rc::Rc;
 
     use assert_cmd::Command;
+    use assert_cmd::cargo::cargo_bin_cmd;
     use comrak::nodes::{NodeCodeBlock, NodeValue};
     use comrak::options::Options;
     use comrak::{Arena, parse_document};
@@ -149,14 +150,6 @@ mod tests {
             }
         }
 
-        const fn name(&self) -> &str {
-            match self {
-                Self::Echo(_) => "echo",
-                Self::Cat(_) => "cat",
-                Self::Self_(_) => PROGRAM_NAME,
-            }
-        }
-
         fn stdout(&self) -> Option<String> {
             match self {
                 Self::Echo(inv) | Self::Cat(inv) | Self::Self_(inv) => inv.stdout.clone(),
@@ -184,14 +177,12 @@ mod tests {
         type Error = &'static str;
 
         fn try_from(prog: Program) -> Result<Self, Self::Error> {
-            let name = prog.name().to_string();
-
             match prog {
                 Program::Echo(_) | Program::Cat(_) => {
                     Err("Cannot be run, only used to generate stdin")
                 }
                 Program::Self_(inv) => {
-                    let mut cmd = Self::cargo_bin(name).expect("Should be able to find binary");
+                    let mut cmd = cargo_bin_cmd!();
 
                     // Push some test-wide flags which just help with test setup
                     // (determinism, test environment control, ...). Push these first to

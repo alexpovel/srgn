@@ -9,6 +9,7 @@ mod tests {
 
     use anyhow::Context;
     use assert_cmd::Command;
+    use assert_cmd::cargo::cargo_bin_cmd;
     use insta::with_settings;
     use itertools::Itertools;
     use rstest::rstest;
@@ -911,7 +912,7 @@ Heizoelrueckstossabdaempfung.
     }
 
     fn get_cmd() -> Command {
-        Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap()
+        cargo_bin_cmd!()
     }
 
     /// Same as [`compare_directories`], but checks in both directions.
