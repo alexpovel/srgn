@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.14.1](https://github.com/alexpovel/srgn/compare/srgn-v0.14.0...srgn-v0.14.1) (2025-11-09)
+
+
+### Features
+
+* **nix:** Set up flake ([459cdb6](https://github.com/alexpovel/srgn/commit/459cdb668aecf2b9e4c2f146e613bc0931cddd49))
+* **nix:** Shell completions ([3f31555](https://github.com/alexpovel/srgn/commit/3f31555433802e0156ed1350f0b5e9a0b7bb58f3))
+
+
+### Bug Fixes
+
+* **docs:** Use `text` code block type ([fba4c99](https://github.com/alexpovel/srgn/commit/fba4c99155600cb7863b7e13782095cf914dfaac))
+* **publishing:** Do not publish crap ([385e2e3](https://github.com/alexpovel/srgn/commit/385e2e33fc261eec085a809e365a6f5fc9583616))
+
 ## [0.14.0](https://github.com/alexpovel/srgn/compare/srgn-v0.13.7...srgn-v0.14.0) (2025-06-23)
 
 
