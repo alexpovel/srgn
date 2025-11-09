@@ -37,7 +37,7 @@ impl TryFrom<String> for Literal {
 
     fn try_from(literal: String) -> Result<Self, Self::Error> {
         let unescaped = unescape(&literal)
-            .ok_or_else(|| LiteralError::InvalidEscapeSequences(literal.to_string()))?;
+            .ok_or_else(|| LiteralError::InvalidEscapeSequences(literal.clone()))?;
 
         Ok(Self(unescaped))
     }
