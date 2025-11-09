@@ -82,7 +82,7 @@ symbols = []
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
-comrak = { version = "0.46.0", default-features = false }
+comrak = { version = "0.47.0", default-features = false }
 enum-iterator = "2.3.0"
 insta = { version = "1.41.1", features = ["yaml"] }
 nom = "8.0.0"
