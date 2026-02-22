@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.2](https://github.com/alexpovel/srgn/compare/srgn-v0.14.1...srgn-v0.14.2) (2026-02-22)
+
+
+### Bug Fixes
+
+* **hcl:** Custom queries use correct language ([e901ee3](https://github.com/alexpovel/srgn/commit/e901ee351d4e6ccf98df8336acd6899ae85338e9))
+
 ## [0.14.1](https://github.com/alexpovel/srgn/compare/srgn-v0.14.0...srgn-v0.14.1) (2025-11-09)
 
 
