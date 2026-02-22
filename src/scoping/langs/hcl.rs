@@ -19,7 +19,7 @@ impl TryFrom<QuerySource> for CompiledQuery {
     ///
     /// See the concrete type of the [`TSQueryError`](tree_sitter::QueryError)variant for when this method errors.
     fn try_from(query: QuerySource) -> Result<Self, Self::Error> {
-        let q = super::CompiledQuery::from_source(&tree_sitter_python::LANGUAGE.into(), &query)?;
+        let q = super::CompiledQuery::from_source(&tree_sitter_hcl::LANGUAGE.into(), &query)?;
         Ok(Self(q))
     }
 }

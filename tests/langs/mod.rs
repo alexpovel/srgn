@@ -4,7 +4,7 @@ use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    LanguageScoper, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
@@ -945,4 +945,23 @@ fn test_language_scopers(
         .collect();
 
     insta::assert_yaml_snapshot!(snapshot_name, inscope_parts);
+}
+
+/// Ensure each language's [`TryFrom`] from [`QuerySource`] for custom queries compiles
+/// against its own tree-sitter grammar, not a different one.
+///
+/// Each query uses a node type **specific to that language's grammar**, so compiling
+/// against the wrong grammar will fail with an error.
+#[rstest]
+#[case::c(c::CompiledQuery::try_from(QuerySource::from("(preproc_include) @x".to_string())))]
+#[case::csharp(csharp::CompiledQuery::try_from(QuerySource::from("(using_directive) @x".to_string())))]
+#[case::go(go::CompiledQuery::try_from(QuerySource::from("(go_statement) @x".to_string())))]
+#[case::hcl(hcl::CompiledQuery::try_from(QuerySource::from("(block_end) @x".to_string())))]
+#[case::python(python::CompiledQuery::try_from(QuerySource::from("(decorated_definition) @x".to_string())))]
+#[case::rust(rust::CompiledQuery::try_from(QuerySource::from("(lifetime) @x".to_string())))]
+#[case::typescript(typescript::CompiledQuery::try_from(QuerySource::from("(type_annotation) @x".to_string())))]
+fn test_custom_query_uses_correct_language(
+    #[case] result: Result<impl LanguageScoper, tree_sitter::QueryError>,
+) {
+    result.expect("Custom query should compile against the language's own grammar");
 }
