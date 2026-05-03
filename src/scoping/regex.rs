@@ -465,9 +465,8 @@ mod tests {
         use std::time::{Duration, Instant};
 
         use log::info;
-        use rand;
-        use rand::Rng;
         use rand::seq::IndexedRandom;
+        use rand::{self, Rng};
 
         use super::*;
         use crate::scoping::scope::ROScope;
