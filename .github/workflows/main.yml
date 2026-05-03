@@ -39,14 +39,11 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - name: Build
         run: >
-          cargo build
-          --locked
-          --verbose
+          cargo build --locked --verbose
 
       - name: Run tests (without coverage)
         run: >
-          cargo test
-          --verbose
+          cargo test --verbose
 
   check-clippy-and-format:
     name: Check clippy and format
@@ -61,29 +58,22 @@ jobs:
         # Cannot be `minimal` profile, need `rustfmt` and `clippy`:
         # https://rust-lang.github.io/rustup/concepts/profiles.html#profiles
         run: >
-          rustup toolchain install nightly
-          && rustup component add --toolchain nightly rustfmt
+          rustup toolchain install nightly && rustup component add --toolchain
+          nightly rustfmt
 
       - name: Print versions
         run: >
-          rustc --version
-          && cargo --version
-          && cargo +nightly fmt --version
-          && cargo clippy --version
+          rustc --version && cargo --version && cargo +nightly fmt --version &&
+          cargo clippy --version
 
       - name: Check formatting
         run: >
-          cargo +nightly fmt
-          --all
-          -- --check
+          cargo +nightly fmt --all -- --check
 
       - name: Check clippy
         run: >
-          cargo clippy
-          --workspace
-          --all-targets
-          --all-features
-          -- --deny warnings
+          cargo clippy --workspace --all-targets --all-features -- --deny
+          warnings
 
   check-dependency-changes:
     name: Check for changes in `Cargo.toml` and `Cargo.lock`
@@ -151,9 +141,7 @@ jobs:
           tool: cargo-hack
       - name: Run tests
         run: >
-          cargo hack
-          --feature-powerset
-          test
+          cargo hack --feature-powerset test
 
   build-test-coverage:
     name: Build and test with coverage
@@ -180,15 +168,7 @@ jobs:
       - name: Run tests (with coverage)
         # Will read from `tarpaulin.toml`. Extra flags given here complement the config.
         run: >
-          cargo tarpaulin
-          --verbose
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6
-        with:
-          fail_ci_if_error: false
-          verbose: true
-          token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
+          cargo tarpaulin --verbose
 
   release-please:
     name: Execute release chores
@@ -203,7 +183,8 @@ jobs:
     outputs:
       created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
-      tag_name_without_v: ${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
+      tag_name_without_v: ${{ steps.release.outputs.major }}.${{
+        steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}
       html_url: ${{ steps.release.outputs.html_url }}
 
     steps:
@@ -274,11 +255,7 @@ jobs:
       - name: Build
         shell: bash
         run: >
-          cargo build
-          --release
-          --locked
-          --verbose
-          --target ${{ matrix.target }}
+          cargo build --release --locked --verbose --target ${{ matrix.target }}
           --bin ${{ matrix.binary }}
 
       - name: Package binary (for cargo-binstall)
@@ -286,16 +263,9 @@ jobs:
         env:
           DIR: ${{ matrix.crate }}
         run: >
-          mkdir "$DIR"
-          && mv
-          "target/${{ matrix.target }}/release/${{ matrix.binary }}${{ matrix.extension }}"
-          "$DIR"
-          && tar
-          --create
-          --verbose
-          --gzip
-          --file "$ASSET_FILE"
-          "$DIR"
+          mkdir "$DIR" && mv "target/${{ matrix.target }}/release/${{
+          matrix.binary }}${{ matrix.extension }}" "$DIR" && tar --create
+          --verbose --gzip --file "$ASSET_FILE" "$DIR"
 
       - name: Attach binary to release
         shell: bash
@@ -304,8 +274,7 @@ jobs:
           # https://josh-ops.com/posts/gh-auth-login-in-actions/#example-2---env-variable
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
-          gh release upload
-          ${{ needs.release-please.outputs.tag_name }}
+          gh release upload ${{ needs.release-please.outputs.tag_name }}
           "$ASSET_FILE"
 
   publish-dry-run:
@@ -322,10 +291,7 @@ jobs:
 
       - name: Publish
         run: >
-          cargo publish
-          --verbose
-          --locked
-          --dry-run
+          cargo publish --verbose --locked --dry-run
 
   publish:
     name: Publish to crates.io
@@ -339,7 +305,8 @@ jobs:
 
     environment:
       name: crates.io
-      url: https://crates.io/crates/srgn/${{ needs.release-please.outputs.tag_name_without_v }}
+      url: https://crates.io/crates/srgn/${{
+        needs.release-please.outputs.tag_name_without_v }}
 
     steps:
       - uses: actions/checkout@v6
@@ -347,11 +314,8 @@ jobs:
       - name: Publish
         # https://doc.rust-lang.org/cargo/reference/config.html?highlight=CARGO_REGISTRY_TOKEN#credentials
         run: >
-          cargo publish
-          --verbose
-          --locked
-          --no-verify
-          --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          cargo publish --verbose --locked --no-verify --token ${{
+          secrets.CARGO_REGISTRY_TOKEN }}
 
   release-draft:
     name: Turn release draft into full release
@@ -372,8 +336,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
-          gh release edit
-          ${{ needs.release-please.outputs.tag_name }}
+          gh release edit ${{ needs.release-please.outputs.tag_name }}
           --draft=false
 
   test-binstall-installation:
@@ -399,11 +362,9 @@ jobs:
         # Get the current version that was just released, and fail if no binaries are
         # directly available (don't allow fallback to compilation from source).
         run: >
-          cargo binstall
-          --version ${{ needs.release-please.outputs.tag_name_without_v }}
-          --strategies crate-meta-data
-          --no-confirm
-          srgn
+          cargo binstall --version ${{
+          needs.release-please.outputs.tag_name_without_v }} --strategies
+          crate-meta-data --no-confirm srgn
       - name: Print version
         run: srgn --version
       - name: Print help
@@ -411,7 +372,8 @@ jobs:
       - name: Test version matches release
         shell: bash
         run: >
-          [[ $(srgn --version) == "srgn ${{ needs.release-please.outputs.tag_name_without_v }}" ]]
+          [[ $(srgn --version) == "srgn ${{
+          needs.release-please.outputs.tag_name_without_v }}" ]]
       - uses: actions/checkout@v6
       - name: Perform dummy run (full verbosity)
         # A final sanity check. Can be used to check things which are super annoying to

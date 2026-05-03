@@ -2109,21 +2109,12 @@ future.
 ### Status and stats
 
 [![docs.rs](https://img.shields.io/docsrs/srgn)](https://docs.rs/srgn/)
-[![codecov](https://codecov.io/gh/alexpovel/srgn/graph/badge.svg?token=IPU7L9BWMV)](https://codecov.io/gh/alexpovel/srgn)
 [![crates](https://img.shields.io/crates/v/srgn.svg)](https://crates.io/crates/srgn)
 [![dependency status](https://deps.rs/repo/github/alexpovel/srgn/status.svg)](https://deps.rs/repo/github/alexpovel/srgn)
 [![Lines of Code](https://tokei.rs/b1/github/alexpovel/srgn?category=code)](https://github.com/XAMPPRocky/tokei#badges)
 [![Hits-of-Code](https://hitsofcode.com/github/alexpovel/srgn?branch=main)](https://hitsofcode.com/github/alexpovel/srgn/view?branch=main)
 
 Note: these apply to the entire repository, including the [binary](./src/main.rs).
-
-#### Code coverage icicle graph
-
-The code is currently structured as (color indicates coverage):
-
-[![Code coverage icile graph](https://codecov.io/gh/alexpovel/srgn/graphs/icicle.svg?token=IPU7L9BWMV)](https://codecov.io/gh/alexpovel/srgn/graphs/icicle.svg?token=IPU7L9BWMV)
-
-Hover over the rectangles for file names.
 
 ## Contributing
 
