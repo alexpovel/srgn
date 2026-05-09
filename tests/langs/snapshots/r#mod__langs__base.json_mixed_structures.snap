@@ -1,0 +1,5 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+[]

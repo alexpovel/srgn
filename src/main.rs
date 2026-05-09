@@ -1089,7 +1089,7 @@ mod cli {
     use regex::bytes::Regex;
     use srgn::GLOBAL_SCOPE;
     use srgn::scoping::langs::{
-        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust, typescript,
     };
     use tree_sitter::QueryError as TSQueryError;
 
@@ -1472,6 +1472,7 @@ mod cli {
             typescript_query_file,
             TypeScriptScope
         ),
+        (json, json_query, json_query_file, JsonScope),
     );
 
     /// Assert that either zero or one lang field is set.
@@ -1849,6 +1850,22 @@ mod cli {
         /// Scope TypeScript code using a custom tree-sitter query from file.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
         typescript_query_file: Vec<PathBuf>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    struct JsonScope {
+        /// Scope JSON code using a prepared query.
+        #[arg(long, env, verbatim_doc_comment)]
+        json: Vec<json::PreparedQuery>,
+
+        /// Scope JSON code using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE)]
+        json_query: Vec<QueryLiteral>,
+
+        /// Scope JSON code using a custom tree-sitter query from file.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
+        json_query_file: Vec<PathBuf>,
     }
 
     #[cfg(feature = "german")]

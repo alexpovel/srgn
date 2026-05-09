@@ -1,0 +1,170 @@
+/**
+ * Test data file for JSON language testing.
+ * Contains examples for various JSON grammatical elements.
+ */
+
+// Nested objects
+{
+  "name": "John Doe",
+  "age": 30,
+  "address": {
+    "street": "123 Main St",
+    "city": "Springfield",
+    "state": "IL"
+  }
+}
+
+// Nested arrays
+{
+  "outer": [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+  ]
+}
+
+// Mixed structures
+{
+  "data": [
+    {"type": "user", "id": 1},
+    {"type": "admin", "id": 2},
+    {"type": "guest", "id": 3}
+  ]
+}
+
+// String literals
+{
+  "name": "Jane Doe",
+  "description": "A person",
+  "bio": "Software developer with extensive experience",
+  "tags": ["coding", "engineering", "AI"]
+}
+
+// Number literals (integers and floats)
+{
+  "count": 42,
+  "score": 95.5,
+  "temperature": -12.5,
+  "percentage": 67.8
+}
+
+// Boolean literals (true and false)
+{
+  "is_active": true,
+  "is_admin": false,
+  "has_permission": true
+}
+
+// Null values
+{
+  "middle_name": null,
+  "favorite_color": null,
+  "last_login": null
+}
+
+// Object key-value pairs
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "phone": "+1-555-0199",
+  "website": "https://example.com"
+}
+
+// Array elements
+{
+  "values": ["first", "second", "third"]
+}
+
+// String escape sequences
+{
+  "path": "/Users/john/Documents",
+  "quote": "He said: \"Hello World\"",
+  "special": "Line1\nLine2\nLine3"
+}
+
+// All JSON value types
+{
+  "string_val": "text",
+  "int_val": 42,
+  "float_val": 3.14,
+  "bool_val": true,
+  "null_val": null,
+  "object_val": {"key": "value"},
+  "array_val": [1, 2, 3]
+}
+
+// Nested objects (objects within objects)
+{
+  "user": {
+    "profile": {
+      "name": "John",
+      "age": 30
+    }
+  },
+  "settings": {
+    "theme": "dark",
+    "notifications": true
+  }
+}
+
+// Nested arrays (arrays within arrays)
+{
+  "matrix": [
+    [1, 2],
+    [3, 4],
+    [5, 6]
+  ]
+}
+
+// Empty objects
+{
+  "empty_obj": {}
+}
+
+// Top-level values
+[
+  {
+    "id": 1,
+    "name": "First"
+  },
+  {
+    "id": 2,
+    "name": "Second"
+  }
+]
+
+// Integer numbers specifically
+{
+  "scores": [10, 20, 30, 40, 50]
+}
+
+// Floating-point numbers specifically  
+{
+  "measurements": [1.5, 2.7, 3.9, 4.1]
+}
+
+// Double-quoted strings only  
+{
+  "standard": "double-quoted value"
+}
+
+// Complex nested structure
+{
+  "project": {
+    "name": "Test Project",
+    "settings": {
+      "enabled": true,
+      "priority": "high"
+    },
+    "team": [
+      {
+        "name": "Alice",
+        "role": "lead"
+      },
+      {
+        "name": "Bob",
+        "role": "developer"
+      }
+    ]
+  }
+}

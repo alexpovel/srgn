@@ -1,0 +1,22 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 53
+  l: "  \"is_active\": true,\n"
+  m: "                 ^^^^   "
+- n: 54
+  l: "  \"is_admin\": false,\n"
+  m: "                ^^^^^   "
+- n: 55
+  l: "  \"has_permission\": true\n"
+  m: "                      ^^^^  "
+- n: 90
+  l: "  \"bool_val\": true,\n"
+  m: "                ^^^^   "
+- n: 106
+  l: "    \"notifications\": true\n"
+  m: "                       ^^^^  "
+- n: 156
+  l: "      \"enabled\": true,\n"
+  m: "                   ^^^^   "

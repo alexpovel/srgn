@@ -30,6 +30,8 @@ pub mod python;
 pub mod rust;
 /// TypeScript.
 pub mod typescript;
+/// JSON.
+pub mod json;
 
 /// A regular expression pattern as supported by tree-sitter.
 ///

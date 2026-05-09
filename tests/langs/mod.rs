@@ -4,7 +4,7 @@ use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust, typescript,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
@@ -903,7 +903,102 @@ impl InScopeLinePart {
 #[case(
     "base.c_callexpr",
     include_str!("c/base.c"),
-   c::CompiledQuery::from (c::PreparedQuery::CallExpression),
+    c::CompiledQuery::from(c::PreparedQuery::CallExpression),
+)]
+#[case(
+    "base.json_comments",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::Comments),
+)]
+#[case(
+    "base.json_objects",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::Objects),
+)]
+#[case(
+    "base.json_arrays",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::Arrays),
+)]
+#[case(
+    "base.json_strings",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::Strings),
+)]
+#[case(
+    "base.json_numbers",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::Numbers),
+)]
+#[case(
+    "base.json_boolean_literals",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::BooleanLiterals),
+)]
+#[case(
+    "base.json_null_values",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::NullValues),
+)]
+#[case(
+    "base.json_object_key_value_pairs",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::ObjectKeyValuePairs),
+)]
+#[case(
+    "base.json_array_elements",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::ArrayElements),
+)]
+#[case(
+    "base.json_string_escape_sequences",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::StringEscapeSequences),
+)]
+#[case(
+    "base.json_all_values",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::AllValues),
+)]
+#[case(
+    "base.json_nested_objects",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::NestedObjects),
+)]
+#[case(
+    "base.json_nested_arrays",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::NestedArrays),
+)]
+#[case(
+    "base.json_mixed_structures",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::MixedStructures),
+)]
+#[case(
+    "base.json_integer_numbers",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::IntegerNumbers),
+)]
+#[case(
+    "base.json_float_numbers",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::FloatNumbers),
+)]
+#[case(
+    "base.json_double_quoted_strings",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::DoubleQuotedStrings),
+)]
+#[case(
+    "base.json_top_level_values",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::TopLevelValues),
+)]
+#[case(
+    "base.json_empty_objects",
+    include_str!("json/base.json"),
+    json::CompiledQuery::from(json::PreparedQuery::EmptyObjects),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,
@@ -957,6 +1052,7 @@ fn test_language_scopers(
 #[case::csharp(csharp::CompiledQuery::try_from(QuerySource::from("(using_directive) @x".to_string())))]
 #[case::go(go::CompiledQuery::try_from(QuerySource::from("(go_statement) @x".to_string())))]
 #[case::hcl(hcl::CompiledQuery::try_from(QuerySource::from("(block_end) @x".to_string())))]
+#[case::json(json::CompiledQuery::try_from(QuerySource::from("(object) @x".to_string())))]
 #[case::python(python::CompiledQuery::try_from(QuerySource::from("(decorated_definition) @x".to_string())))]
 #[case::rust(rust::CompiledQuery::try_from(QuerySource::from("(lifetime) @x".to_string())))]
 #[case::typescript(typescript::CompiledQuery::try_from(QuerySource::from("(type_annotation) @x".to_string())))]

@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 81
+  l: "  \"quote\": \"He said: \\\"Hello World\\\"\",\n"
+  m: "                        ^^^^                    "
+- n: 81
+  l: "  \"quote\": \"He said: \\\"Hello World\\\"\",\n"
+  m: "                                       ^^^^     "
+- n: 82
+  l: "  \"special\": \"Line1\\nLine2\\nLine3\"\n"
+  m: "                      ^^^                 "
+- n: 82
+  l: "  \"special\": \"Line1\\nLine2\\nLine3\"\n"
+  m: "                              ^^^         "

@@ -1,0 +1,73 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 1
+  l: "/**\n"
+  m: ^^^^^
+- n: 2
+  l: " * Test data file for JSON language testing.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 3
+  l: " * Contains examples for various JSON grammatical elements.\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 4
+  l: " */\n"
+  m: "^^^  "
+- n: 6
+  l: "// Nested objects\n"
+  m: "^^^^^^^^^^^^^^^^^  "
+- n: 17
+  l: "// Nested arrays\n"
+  m: "^^^^^^^^^^^^^^^^  "
+- n: 26
+  l: "// Mixed structures\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 35
+  l: "// String literals\n"
+  m: "^^^^^^^^^^^^^^^^^^  "
+- n: 43
+  l: "// Number literals (integers and floats)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 51
+  l: "// Boolean literals (true and false)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 58
+  l: "// Null values\n"
+  m: "^^^^^^^^^^^^^^  "
+- n: 65
+  l: "// Object key-value pairs\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 73
+  l: "// Array elements\n"
+  m: "^^^^^^^^^^^^^^^^^  "
+- n: 78
+  l: "// String escape sequences\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 85
+  l: "// All JSON value types\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 96
+  l: "// Nested objects (objects within objects)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 110
+  l: "// Nested arrays (arrays within arrays)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 119
+  l: "// Empty objects\n"
+  m: "^^^^^^^^^^^^^^^^  "
+- n: 124
+  l: "// Top-level values\n"
+  m: "^^^^^^^^^^^^^^^^^^^  "
+- n: 136
+  l: "// Integer numbers specifically\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 141
+  l: "// Floating-point numbers specifically  \n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 146
+  l: "// Double-quoted strings only  \n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 151
+  l: "// Complex nested structure\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 60
+  l: "  \"middle_name\": null,\n"
+  m: "                   ^^^^   "
+- n: 61
+  l: "  \"favorite_color\": null,\n"
+  m: "                      ^^^^   "
+- n: 62
+  l: "  \"last_login\": null\n"
+  m: "                  ^^^^  "
+- n: 91
+  l: "  \"null_val\": null,\n"
+  m: "                ^^^^   "

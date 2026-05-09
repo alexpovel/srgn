@@ -2075,6 +2075,42 @@ Language scopes:
           
           [env: TYPESCRIPT_QUERY_FILE=]
 
+      --json <JSON>
+          Scope JSON code using a prepared query.
+          
+          [env: JSON=]
+
+          Possible values:
+          - comments:                Comments (non-standard but widely supported)
+          - objects:                 All JSON objects
+          - arrays:                  All JSON arrays
+          - strings:                 All string literals
+          - numbers:                 All number literals (both integers and floats)
+          - boolean-literals:        Boolean literals (true and false)
+          - null-values:             Null values
+          - object-key-value-pairs:  Object key-value pairs
+          - array-elements:          Array elements
+          - string-escape-sequences: String escape sequences
+          - all-values:              All JSON values (catch-all for all value types)
+          - nested-objects:          Nested objects (objects within objects)
+          - nested-arrays:           Nested arrays (arrays within arrays)
+          - mixed-structures:        Mixed structures (heterogeneous arrays/objects)
+          - integer-numbers:         Integer numbers specifically
+          - float-numbers:           Floating-point numbers specifically
+          - double-quoted-strings:   Double-quoted strings
+          - top-level-values:        JSON top-level values
+          - empty-objects:           Empty objects
+
+      --json-query <TREE-SITTER-QUERY-VALUE>
+          Scope JSON code using a custom tree-sitter query.
+          
+          [env: JSON_QUERY=]
+
+      --json-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope JSON code using a custom tree-sitter query from file.
+          
+          [env: JSON_QUERY_FILE=]
+
 Options (german):
       --german-prefer-original
           When some original version and its replacement are equally legal, prefer the
