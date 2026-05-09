@@ -1,6 +1,7 @@
 ---
 source: tests/langs/mod.rs
 expression: inscope_parts
+snapshot_kind: text
 ---
 - n: 9
   l: "  \"age\": 30,\n"
@@ -89,36 +90,45 @@ expression: inscope_parts
 - n: 115
   l: "    [5, 6]\n"
   m: "        ^   "
-- n: 127
+- n: 125
+  l: "[\"first\", {\"type\": \"mixed\"}, [1, 2, 3]]\n"
+  m: "                                    ^          "
+- n: 125
+  l: "[\"first\", {\"type\": \"mixed\"}, [1, 2, 3]]\n"
+  m: "                                       ^       "
+- n: 125
+  l: "[\"first\", {\"type\": \"mixed\"}, [1, 2, 3]]\n"
+  m: "                                          ^    "
+- n: 130
   l: "    \"id\": 1,\n"
   m: "            ^   "
-- n: 131
+- n: 134
   l: "    \"id\": 2,\n"
   m: "            ^   "
-- n: 138
+- n: 141
   l: "  \"scores\": [10, 20, 30, 40, 50]\n"
   m: "               ^^                   "
-- n: 138
+- n: 141
   l: "  \"scores\": [10, 20, 30, 40, 50]\n"
   m: "                   ^^               "
-- n: 138
+- n: 141
   l: "  \"scores\": [10, 20, 30, 40, 50]\n"
   m: "                       ^^           "
-- n: 138
+- n: 141
   l: "  \"scores\": [10, 20, 30, 40, 50]\n"
   m: "                           ^^       "
-- n: 138
+- n: 141
   l: "  \"scores\": [10, 20, 30, 40, 50]\n"
   m: "                               ^^   "
-- n: 143
+- n: 146
   l: "  \"measurements\": [1.5, 2.7, 3.9, 4.1]\n"
   m: "                     ^^^                  "
-- n: 143
+- n: 146
   l: "  \"measurements\": [1.5, 2.7, 3.9, 4.1]\n"
   m: "                          ^^^             "
-- n: 143
+- n: 146
   l: "  \"measurements\": [1.5, 2.7, 3.9, 4.1]\n"
   m: "                               ^^^        "
-- n: 143
+- n: 146
   l: "  \"measurements\": [1.5, 2.7, 3.9, 4.1]\n"
   m: "                                    ^^^   "

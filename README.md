@@ -2082,24 +2082,28 @@ Language scopes:
 
           Possible values:
           - comments:                Comments (non-standard but widely supported)
-          - objects:                 All JSON objects
-          - arrays:                  All JSON arrays
+          - objects:                 All JSON objects (including empty ones)
+          - arrays:                  All JSON arrays (including empty ones)
           - strings:                 All string literals
           - numbers:                 All number literals (both integers and floats)
           - boolean-literals:        Boolean literals (true and false)
           - null-values:             Null values
-          - object-key-value-pairs:  Object key-value pairs
-          - array-elements:          Array elements
+          - object-key-value-pairs:  Object key-value pairs (only the pairs, not the
+            containing object)
+          - array-elements:          Array elements (only the elements, not the containing
+            array)
           - string-escape-sequences: String escape sequences
           - all-values:              All JSON values (catch-all for all value types)
           - nested-objects:          Nested objects (objects within objects)
           - nested-arrays:           Nested arrays (arrays within arrays)
-          - mixed-structures:        Mixed structures (heterogeneous arrays/objects)
-          - integer-numbers:         Integer numbers specifically
-          - float-numbers:           Floating-point numbers specifically
-          - double-quoted-strings:   Double-quoted strings
-          - top-level-values:        JSON top-level values
-          - empty-objects:           Empty objects
+          - mixed-structures:        Mixed structures (arrays containing a mix of strings,
+            objects, and nested arrays)
+          - integer-numbers:         Integer numbers (no decimal point or exponent)
+          - float-numbers:           Floating-point numbers (contains a decimal point)
+          - double-quoted-strings:   Double-quoted strings (equivalent to strings, as all
+            JSON strings are double-quoted)
+          - top-level-values:        Top-level values in the document
+          - empty-objects:           Empty objects (objects with no key-value pairs)
 
       --json-query <TREE-SITTER-QUERY-VALUE>
           Scope JSON code using a custom tree-sitter query.

@@ -24,14 +24,14 @@ pub mod csharp;
 pub mod go;
 /// Hashicorp Configuration Language
 pub mod hcl;
+/// JSON.
+pub mod json;
 /// Python.
 pub mod python;
 /// Rust.
 pub mod rust;
 /// TypeScript.
 pub mod typescript;
-/// JSON.
-pub mod json;
 
 /// A regular expression pattern as supported by tree-sitter.
 ///

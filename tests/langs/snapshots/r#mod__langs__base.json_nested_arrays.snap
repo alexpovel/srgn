@@ -1,6 +1,7 @@
 ---
 source: tests/langs/mod.rs
 expression: inscope_parts
+snapshot_kind: text
 ---
 - n: 19
   l: "  \"outer\": [\n"
@@ -32,3 +33,6 @@ expression: inscope_parts
 - n: 116
   l: "  ]\n"
   m: "^^^  "
+- n: 125
+  l: "[\"first\", {\"type\": \"mixed\"}, [1, 2, 3]]\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

@@ -36,9 +36,9 @@ impl From<PreparedQuery> for CompiledQuery {
 pub enum PreparedQuery {
     /// Comments (non-standard but widely supported)
     Comments,
-    /// All JSON objects
+    /// All JSON objects (including empty ones)
     Objects,
-    /// All JSON arrays
+    /// All JSON arrays (including empty ones)
     Arrays,
     /// All string literals
     Strings,
@@ -48,9 +48,9 @@ pub enum PreparedQuery {
     BooleanLiterals,
     /// Null values
     NullValues,
-    /// Object key-value pairs
+    /// Object key-value pairs (only the pairs, not the containing object)
     ObjectKeyValuePairs,
-    /// Array elements
+    /// Array elements (only the elements, not the containing array)
     ArrayElements,
     /// String escape sequences
     StringEscapeSequences,
@@ -60,17 +60,17 @@ pub enum PreparedQuery {
     NestedObjects,
     /// Nested arrays (arrays within arrays)
     NestedArrays,
-    /// Mixed structures (heterogeneous arrays/objects)
+    /// Mixed structures (arrays containing a mix of strings, objects, and nested arrays)
     MixedStructures,
-    /// Integer numbers specifically
+    /// Integer numbers (no decimal point or exponent)
     IntegerNumbers,
-    /// Floating-point numbers specifically
+    /// Floating-point numbers (contains a decimal point)
     FloatNumbers,
-    /// Double-quoted strings
+    /// Double-quoted strings (equivalent to strings, as all JSON strings are double-quoted)
     DoubleQuotedStrings,
-    /// JSON top-level values
+    /// Top-level values in the document
     TopLevelValues,
-    /// Empty objects
+    /// Empty objects (objects with no key-value pairs)
     EmptyObjects,
 }
 
@@ -81,24 +81,28 @@ impl PreparedQuery {
         #[allow(clippy::match_same_arms)]
         match self {
             Self::Comments => "(comment) @comment",
-Self::Objects => r"(object (pair key: (string) @property)) @object",
-Self::Arrays => "(array (_value) @element) @array",
+            Self::Objects => "(object) @object",
+            Self::Arrays => "(array) @array",
             Self::Strings => "(string) @string",
             Self::Numbers => "(number) @number",
             Self::BooleanLiterals => "(true) @boolean (false) @boolean",
             Self::NullValues => "(null) @null",
-            Self::ObjectKeyValuePairs => "(object (pair) @pair) @object",
-            Self::ArrayElements => "(array (_value) @value) @array",
+            Self::ObjectKeyValuePairs => "(object (pair) @pair)",
+            Self::ArrayElements => "(array (_value) @value)",
             Self::StringEscapeSequences => "(escape_sequence) @escape",
-            Self::AllValues => "(string) @value (number) @value (true) @value (false) @value (null) @value (object) @value (array) @value",
+            Self::AllValues => {
+                "(string) @value (number) @value (true) @value (false) @value (null) @value (object) @value (array) @value"
+            }
             Self::NestedObjects => "(object (pair value: (object) @nested)) @parent",
             Self::NestedArrays => "(array (array) @nested) @parent",
-            Self::MixedStructures => r"(array (object) @object (array) @array (string) @string) @array",
-Self::IntegerNumbers => "(number) @integer",
-Self::FloatNumbers => "(number) @float",
-Self::DoubleQuotedStrings => "(string) @string",
-Self::TopLevelValues => "(document (number) @value (string) @value (true) @value (false) @value (null) @value (object) @value (array) @value) @document",
-Self::EmptyObjects => "(object) @object",
+            Self::MixedStructures => {
+                r"(array (string) @string (object) @object (array) @array) @array"
+            }
+            Self::IntegerNumbers => r#"((number) @integer (#match? @integer "^-?[0-9]+$"))"#,
+            Self::FloatNumbers => r#"((number) @float (#match? @float "\."))"#,
+            Self::DoubleQuotedStrings => "(string) @string",
+            Self::TopLevelValues => "(document (_value) @value)",
+            Self::EmptyObjects => r#"((object) @object (#match? @object "^\\{\\s*\\}$"))"#,
         }
     }
 }

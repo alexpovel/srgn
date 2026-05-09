@@ -121,6 +121,9 @@
   "empty_obj": {}
 }
 
+// Mixed types array (string, object, nested array in order)
+["first", {"type": "mixed"}, [1, 2, 3]]
+
 // Top-level values
 [
   {

@@ -1,6 +1,7 @@
 ---
 source: tests/langs/mod.rs
 expression: inscope_parts
+snapshot_kind: text
 ---
 - n: 1
   l: "/**\n"
@@ -57,17 +58,20 @@ expression: inscope_parts
   l: "// Empty objects\n"
   m: "^^^^^^^^^^^^^^^^  "
 - n: 124
+  l: "// Mixed types array (string, object, nested array in order)\n"
+  m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 127
   l: "// Top-level values\n"
   m: "^^^^^^^^^^^^^^^^^^^  "
-- n: 136
+- n: 139
   l: "// Integer numbers specifically\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 141
+- n: 144
   l: "// Floating-point numbers specifically  \n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 146
+- n: 149
   l: "// Double-quoted strings only  \n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
-- n: 151
+- n: 154
   l: "// Complex nested structure\n"
   m: "^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

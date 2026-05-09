@@ -1089,7 +1089,8 @@ mod cli {
     use regex::bytes::Regex;
     use srgn::GLOBAL_SCOPE;
     use srgn::scoping::langs::{
-        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust, typescript,
+        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust,
+        typescript,
     };
     use tree_sitter::QueryError as TSQueryError;
 

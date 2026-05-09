@@ -1,6 +1,7 @@
 ---
 source: tests/langs/mod.rs
 expression: inscope_parts
+snapshot_kind: text
 ---
 - n: 53
   l: "  \"is_active\": true,\n"
@@ -17,6 +18,6 @@ expression: inscope_parts
 - n: 106
   l: "    \"notifications\": true\n"
   m: "                       ^^^^  "
-- n: 156
+- n: 159
   l: "      \"enabled\": true,\n"
   m: "                   ^^^^   "

@@ -4,7 +4,8 @@ use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust, typescript,
+    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, json, python, rust,
+    typescript,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
