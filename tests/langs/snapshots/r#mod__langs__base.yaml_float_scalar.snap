@@ -1,0 +1,16 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 6
+  l: "  version: 1.0\n"
+  m: "           ^^^  "
+- n: 64
+  l: "  memory_limit: 4.0\n"
+  m: "                ^^^  "
+- n: 65
+  l: "  disk_quota: 10.5\n"
+  m: "              ^^^^  "
+- n: 66
+  l: "  network_limit: 0.5\n"
+  m: "                 ^^^  "

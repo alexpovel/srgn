@@ -1,0 +1,46 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 13
+  l: "  port: 5432\n"
+  m: "        ^^^^  "
+- n: 17
+  l: "  pool_size: 10\n"
+  m: "             ^^  "
+- n: 18
+  l: "  timeout: 30\n"
+  m: "           ^^  "
+- n: 26
+  l: "    timeout: 5\n"
+  m: "             ^  "
+- n: 30
+  l: "    timeout: 10\n"
+  m: "             ^^  "
+- n: 34
+  l: "    timeout: 15\n"
+  m: "             ^^  "
+- n: 39
+  l: "    - {host: \"api.example.com\", port: 443, ssl: true}\n"
+  m: "                                        ^^^              "
+- n: 40
+  l: "    - {host: \"api-backup.example.com\", port: 443, ssl: true}\n"
+  m: "                                               ^^^              "
+- n: 42
+  l: "    - {host: \"staging-api.example.com\", port: 443, ssl: true}\n"
+  m: "                                                ^^^              "
+- n: 63
+  l: "  cpu_limit: 80\n"
+  m: "             ^^  "
+- n: 85
+  l: "    - {name: \"high-cpu\", threshold: 90, action: \"scale\"}\n"
+  m: "                                      ^^                      "
+- n: 86
+  l: "    - {name: \"low-memory\", threshold: 20, action: \"alert\"}\n"
+  m: "                                        ^^                      "
+- n: 90
+  l: "      timeout: 5\n"
+  m: "               ^  "
+- n: 92
+  l: "      timeout: 10\n"
+  m: "               ^^  "

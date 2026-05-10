@@ -1,0 +1,310 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 4
+  l: "service:\n"
+  m: ^^^^^^^^^^
+- n: 5
+  l: "  name: \"example-api\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 6
+  l: "  version: 1.0\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 7
+  l: "  description: \"Example API service\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 8
+  l: "  enabled: true\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 9
+  l: "\n"
+  m: ^^
+- n: 10
+  l: "# Database configuration\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 11
+  l: "database:\n"
+  m: ^^^^^^^^^^^
+- n: 12
+  l: "  host: \"localhost\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 13
+  l: "  port: 5432\n"
+  m: ^^^^^^^^^^^^^^
+- n: 14
+  l: "  name: \"mydb\"\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 15
+  l: "  user: \"admin\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 16
+  l: "  password: \"secret\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 17
+  l: "  pool_size: 10\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 18
+  l: "  timeout: 30\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 19
+  l: "  ssl_enabled: false\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 20
+  l: "\n"
+  m: ^^
+- n: 21
+  l: "# API endpoints\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 22
+  l: "endpoints:\n"
+  m: ^^^^^^^^^^^^
+- n: 23
+  l: "  - name: \"health\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 24
+  l: "    path: \"/health\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 25
+  l: "    method: \"GET\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 26
+  l: "    timeout: 5\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 27
+  l: "  - name: \"status\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 28
+  l: "    path: \"/status\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 29
+  l: "    method: \"GET\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 30
+  l: "    timeout: 10\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 31
+  l: "  - name: \"metrics\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 32
+  l: "    path: \"/metrics\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 33
+  l: "    method: \"GET\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 34
+  l: "    timeout: 15\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 35
+  l: "\n"
+  m: ^^
+- n: 36
+  l: "# Server configuration\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 37
+  l: "servers:\n"
+  m: ^^^^^^^^^^
+- n: 38
+  l: "  production:\n"
+  m: ^^^^^^^^^^^^^^^
+- n: 39
+  l: "    - {host: \"api.example.com\", port: 443, ssl: true}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 40
+  l: "    - {host: \"api-backup.example.com\", port: 443, ssl: true}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 41
+  l: "  staging:\n"
+  m: ^^^^^^^^^^^^
+- n: 42
+  l: "    - {host: \"staging-api.example.com\", port: 443, ssl: true}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 43
+  l: "\n"
+  m: ^^
+- n: 44
+  l: "# Logging configuration\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 45
+  l: "logging:\n"
+  m: ^^^^^^^^^^
+- n: 46
+  l: "  level: \"info\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 47
+  l: "  format: \"json\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 48
+  l: "  outputs:\n"
+  m: ^^^^^^^^^^^^
+- n: 49
+  l: "    - type: \"console\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 50
+  l: "      level: \"debug\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 51
+  l: "    - type: \"file\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 52
+  l: "      path: \"/var/log/app.log\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 53
+  l: "      level: \"info\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 54
+  l: "\n"
+  m: ^^
+- n: 55
+  l: "# Feature flags\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 56
+  l: "features:\n"
+  m: ^^^^^^^^^^^
+- n: 57
+  l: "  experimental_ui: false\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 58
+  l: "  beta_api: true\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 59
+  l: "  alpha_features: true\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 60
+  l: "\n"
+  m: ^^
+- n: 61
+  l: "# Numeric values (integers and floats)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 62
+  l: "thresholds:\n"
+  m: ^^^^^^^^^^^^^
+- n: 63
+  l: "  cpu_limit: 80\n"
+  m: ^^^^^^^^^^^^^^^^^
+- n: 64
+  l: "  memory_limit: 4.0\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 65
+  l: "  disk_quota: 10.5\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 66
+  l: "  network_limit: 0.5\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 67
+  l: "\n"
+  m: ^^
+- n: 68
+  l: "# Boolean values\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 69
+  l: "settings:\n"
+  m: ^^^^^^^^^^^
+- n: 70
+  l: "  use_caching: true\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 71
+  l: "  enable_logging: false\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 72
+  l: "  auto_reload: true\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 73
+  l: "  debug_mode: false\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 74
+  l: "\n"
+  m: ^^
+- n: 75
+  l: "# String values (various types)\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 76
+  l: "metadata:\n"
+  m: ^^^^^^^^^^^
+- n: 77
+  l: "  title: \"Sample Application\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 78
+  l: "  author: \"Developer\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 79
+  l: "  email: \"dev@example.com\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 80
+  l: "  license: \"MIT\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^
+- n: 81
+  l: "\n"
+  m: ^^
+- n: 82
+  l: "# Complex nested structure\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 83
+  l: "monitoring:\n"
+  m: ^^^^^^^^^^^^^
+- n: 84
+  l: "  alerts:\n"
+  m: ^^^^^^^^^^^
+- n: 85
+  l: "    - {name: \"high-cpu\", threshold: 90, action: \"scale\"}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 86
+  l: "    - {name: \"low-memory\", threshold: 20, action: \"alert\"}\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 87
+  l: "  \n"
+  m: ^^^^
+- n: 88
+  l: "  endpoints:\n"
+  m: ^^^^^^^^^^^^^^
+- n: 89
+  l: "    - url: \"http://api.example.com/health\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 90
+  l: "      timeout: 5\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 91
+  l: "    - url: \"http://api.example.com/status\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 92
+  l: "      timeout: 10\n"
+  m: ^^^^^^^^^^^^^^^^^^^
+- n: 93
+  l: "\n"
+  m: ^^
+- n: 94
+  l: "# Mixed content types\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 95
+  l: "configuration:\n"
+  m: ^^^^^^^^^^^^^^^^
+- n: 96
+  l: "  app_name: \"MyApp\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^
+- n: 97
+  l: "  version: 1.0.0\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 98
+  l: "  features: [\"feature1\", \"feature2\", \"feature3\"]\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- n: 99
+  l: "  settings:\n"
+  m: ^^^^^^^^^^^^^
+- n: 100
+  l: "    production: true\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^
+- n: 101
+  l: "    debug: false\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 102
+  l: "  resources:\n"
+  m: ^^^^^^^^^^^^^^
+- n: 103
+  l: "    memory: \"4GB\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^
+- n: 104
+  l: "    cpu: \"2.0\"\n"
+  m: ^^^^^^^^^^^^^^^^^^
+- n: 105
+  l: "    storage: \"100GB\""
+  m: ^^^^^^^^^^^^^^^^^^^^^^

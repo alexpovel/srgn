@@ -1089,7 +1089,7 @@ mod cli {
     use regex::bytes::Regex;
     use srgn::GLOBAL_SCOPE;
     use srgn::scoping::langs::{
-        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript, yaml,
     };
     use tree_sitter::QueryError as TSQueryError;
 
@@ -1472,6 +1472,7 @@ mod cli {
             typescript_query_file,
             TypeScriptScope
         ),
+        (yaml, yaml_query, yaml_query_file, YamlScope),
     );
 
     /// Assert that either zero or one lang field is set.
@@ -1849,6 +1850,22 @@ mod cli {
         /// Scope TypeScript code using a custom tree-sitter query from file.
         #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
         typescript_query_file: Vec<PathBuf>,
+    }
+
+    #[derive(Parser, Debug, Clone)]
+    #[group(required = false, multiple = false)]
+    struct YamlScope {
+        /// Scope YAML files using a prepared query.
+        #[arg(long, env, verbatim_doc_comment, visible_alias = "yaml")]
+        yaml: Vec<yaml::PreparedQuery>,
+
+        /// Scope YAML files using a custom tree-sitter query.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_VALUE)]
+        yaml_query: Vec<QueryLiteral>,
+
+        /// Scope YAML files using a custom tree-sitter query from file.
+        #[arg(long, env, verbatim_doc_comment, value_name = TREE_SITTER_QUERY_FILENAME)]
+        yaml_query_file: Vec<PathBuf>,
     }
 
     #[cfg(feature = "german")]

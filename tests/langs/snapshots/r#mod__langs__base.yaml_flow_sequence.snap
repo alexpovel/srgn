@@ -1,0 +1,7 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 98
+  l: "  features: [\"feature1\", \"feature2\", \"feature3\"]\n"
+  m: "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

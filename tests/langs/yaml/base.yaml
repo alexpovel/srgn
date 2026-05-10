@@ -1,0 +1,105 @@
+# Sample YAML configuration file for testing
+
+# Service configuration
+service:
+  name: "example-api"
+  version: 1.0
+  description: "Example API service"
+  enabled: true
+
+# Database configuration
+database:
+  host: "localhost"
+  port: 5432
+  name: "mydb"
+  user: "admin"
+  password: "secret"
+  pool_size: 10
+  timeout: 30
+  ssl_enabled: false
+
+# API endpoints
+endpoints:
+  - name: "health"
+    path: "/health"
+    method: "GET"
+    timeout: 5
+  - name: "status"
+    path: "/status"
+    method: "GET"
+    timeout: 10
+  - name: "metrics"
+    path: "/metrics"
+    method: "GET"
+    timeout: 15
+
+# Server configuration
+servers:
+  production:
+    - {host: "api.example.com", port: 443, ssl: true}
+    - {host: "api-backup.example.com", port: 443, ssl: true}
+  staging:
+    - {host: "staging-api.example.com", port: 443, ssl: true}
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+  outputs:
+    - type: "console"
+      level: "debug"
+    - type: "file"
+      path: "/var/log/app.log"
+      level: "info"
+
+# Feature flags
+features:
+  experimental_ui: false
+  beta_api: true
+  alpha_features: true
+
+# Numeric values (integers and floats)
+thresholds:
+  cpu_limit: 80
+  memory_limit: 4.0
+  disk_quota: 10.5
+  network_limit: 0.5
+
+# Boolean values
+settings:
+  use_caching: true
+  enable_logging: false
+  auto_reload: true
+  debug_mode: false
+
+# String values (various types)
+metadata:
+  title: "Sample Application"
+  author: "Developer"
+  email: "dev@example.com"
+  license: "MIT"
+
+# Complex nested structure
+monitoring:
+  alerts:
+    - {name: "high-cpu", threshold: 90, action: "scale"}
+    - {name: "low-memory", threshold: 20, action: "alert"}
+  
+  endpoints:
+    - url: "http://api.example.com/health"
+      timeout: 5
+    - url: "http://api.example.com/status"
+      timeout: 10
+
+# Mixed content types
+configuration:
+  app_name: "MyApp"
+  version: 1.0.0
+  features: ["feature1", "feature2", "feature3"]
+  settings:
+    production: true
+    debug: false
+  resources:
+    memory: "4GB"
+    cpu: "2.0"
+    storage: "100GB"

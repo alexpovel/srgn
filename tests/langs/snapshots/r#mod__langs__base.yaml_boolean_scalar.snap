@@ -1,0 +1,46 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 8
+  l: "  enabled: true\n"
+  m: "           ^^^^  "
+- n: 19
+  l: "  ssl_enabled: false\n"
+  m: "               ^^^^^  "
+- n: 39
+  l: "    - {host: \"api.example.com\", port: 443, ssl: true}\n"
+  m: "                                                  ^^^^   "
+- n: 40
+  l: "    - {host: \"api-backup.example.com\", port: 443, ssl: true}\n"
+  m: "                                                         ^^^^   "
+- n: 42
+  l: "    - {host: \"staging-api.example.com\", port: 443, ssl: true}\n"
+  m: "                                                          ^^^^   "
+- n: 57
+  l: "  experimental_ui: false\n"
+  m: "                   ^^^^^  "
+- n: 58
+  l: "  beta_api: true\n"
+  m: "            ^^^^  "
+- n: 59
+  l: "  alpha_features: true\n"
+  m: "                  ^^^^  "
+- n: 70
+  l: "  use_caching: true\n"
+  m: "               ^^^^  "
+- n: 71
+  l: "  enable_logging: false\n"
+  m: "                  ^^^^^  "
+- n: 72
+  l: "  auto_reload: true\n"
+  m: "               ^^^^  "
+- n: 73
+  l: "  debug_mode: false\n"
+  m: "              ^^^^^  "
+- n: 100
+  l: "    production: true\n"
+  m: "                ^^^^  "
+- n: 101
+  l: "    debug: false\n"
+  m: "           ^^^^^  "

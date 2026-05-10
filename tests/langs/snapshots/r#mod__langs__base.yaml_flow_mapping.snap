@@ -1,0 +1,19 @@
+---
+source: tests/langs/mod.rs
+expression: inscope_parts
+---
+- n: 39
+  l: "    - {host: \"api.example.com\", port: 443, ssl: true}\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 40
+  l: "    - {host: \"api-backup.example.com\", port: 443, ssl: true}\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 42
+  l: "    - {host: \"staging-api.example.com\", port: 443, ssl: true}\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 85
+  l: "    - {name: \"high-cpu\", threshold: 90, action: \"scale\"}\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "
+- n: 86
+  l: "    - {name: \"low-memory\", threshold: 20, action: \"alert\"}\n"
+  m: "      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  "

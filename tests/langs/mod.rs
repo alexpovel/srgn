@@ -4,7 +4,8 @@ use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust,
+    typescript, yaml,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
@@ -903,7 +904,87 @@ impl InScopeLinePart {
 #[case(
     "base.c_callexpr",
     include_str!("c/base.c"),
-   c::CompiledQuery::from (c::PreparedQuery::CallExpression),
+    c::CompiledQuery::from (c::PreparedQuery::CallExpression),
+)]
+#[case(
+    "base.toml_top_level_key",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::TopLevelKey),
+)]
+#[case(
+    "base.toml_string_value",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::StringValue),
+)]
+#[case(
+    "base.toml_integer_value",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::IntegerValue),
+)]
+#[case(
+    "base.toml_float_value",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::FloatValue),
+)]
+#[case(
+    "base.toml_boolean_value",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::BooleanValue),
+)]
+#[case(
+    "base.toml_date_time_value",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::DateTimeValue),
+)]
+#[case(
+    "base.toml_array",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::Array),
+)]
+#[case(
+    "base.toml_inline_table",
+    include_str!("toml/base.toml"),
+    toml::CompiledQuery::from(toml::PreparedQuery::InlineTable),
+)]
+#[case(
+    "base.yaml_string_scalar",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::StringScalar),
+)]
+#[case(
+    "base.yaml_integer_scalar",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::IntegerScalar),
+)]
+#[case(
+    "base.yaml_float_scalar",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::FloatScalar),
+)]
+#[case(
+    "base.yaml_boolean_scalar",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::BooleanScalar),
+)]
+#[case(
+    "base.yaml_block_sequence",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::BlockSequence),
+)]
+#[case(
+    "base.yaml_block_mapping",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::BlockMapping),
+)]
+#[case(
+    "base.yaml_flow_sequence",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::FlowSequence),
+)]
+#[case(
+    "base.yaml_flow_mapping",
+    include_str!("yaml/base.yaml"),
+    yaml::CompiledQuery::from(yaml::PreparedQuery::FlowMapping),
 )]
 fn test_language_scopers(
     #[case] snapshot_name: &str,

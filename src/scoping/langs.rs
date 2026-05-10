@@ -30,6 +30,8 @@ pub mod python;
 pub mod rust;
 /// TypeScript.
 pub mod typescript;
+/// YAML files.
+pub mod yaml;
 
 /// A regular expression pattern as supported by tree-sitter.
 ///
