@@ -11,25 +11,26 @@ pub struct CompiledQuery(super::CompiledQuery);
 /// Prepared queries for YAML files.
 #[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
 pub enum PreparedQuery {
-    /// String scalar values.
+    /// String scalar nodes, including mapping keys and values.
     StringScalar,
-    /// Integer scalar values.
+    /// Integer scalar nodes.
     IntegerScalar,
-    /// Float scalar values.
+    /// Float scalar nodes.
     FloatScalar,
-    /// Boolean scalar values.
+    /// Boolean scalar nodes.
     BooleanScalar,
-    /// Block sequence entries.
+    /// Block sequence nodes.
     BlockSequence,
-    /// Block mapping key-value pairs.
+    /// Block mapping nodes.
     BlockMapping,
-    /// Flow sequence entries.
+    /// Flow sequence nodes.
     FlowSequence,
-    /// Flow mapping key-value pairs.
+    /// Flow mapping nodes.
     FlowMapping,
 }
 
 impl PreparedQuery {
+    /// Returns the tree-sitter query string for this prepared query variant.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {

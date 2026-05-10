@@ -2075,6 +2075,31 @@ Language scopes:
           
           [env: TYPESCRIPT_QUERY_FILE=]
 
+      --yaml <YAML>
+          Scope YAML files using a prepared query.
+          
+          [env: YAML=]
+
+          Possible values:
+          - string-scalar:  String scalar nodes, including mapping keys and values
+          - integer-scalar: Integer scalar nodes
+          - float-scalar:   Float scalar nodes
+          - boolean-scalar: Boolean scalar nodes
+          - block-sequence: Block sequence nodes
+          - block-mapping:  Block mapping nodes
+          - flow-sequence:  Flow sequence nodes
+          - flow-mapping:   Flow mapping nodes
+
+      --yaml-query <TREE-SITTER-QUERY-VALUE>
+          Scope YAML files using a custom tree-sitter query.
+          
+          [env: YAML_QUERY=]
+
+      --yaml-query-file <TREE-SITTER-QUERY-FILENAME>
+          Scope YAML files using a custom tree-sitter query from file.
+          
+          [env: YAML_QUERY_FILE=]
+
 Options (german):
       --german-prefer-original
           When some original version and its replacement are equally legal, prefer the

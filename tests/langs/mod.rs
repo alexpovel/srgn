@@ -4,8 +4,8 @@ use regex::bytes::Regex;
 use rstest::rstest;
 use serde::{Deserialize, Serialize};
 use srgn::scoping::langs::{
-    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust,
-    typescript, yaml,
+    LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+    yaml,
 };
 use srgn::scoping::scope::Scope;
 use srgn::scoping::view::ScopedViewBuilder;
@@ -907,46 +907,6 @@ impl InScopeLinePart {
     c::CompiledQuery::from (c::PreparedQuery::CallExpression),
 )]
 #[case(
-    "base.toml_top_level_key",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::TopLevelKey),
-)]
-#[case(
-    "base.toml_string_value",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::StringValue),
-)]
-#[case(
-    "base.toml_integer_value",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::IntegerValue),
-)]
-#[case(
-    "base.toml_float_value",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::FloatValue),
-)]
-#[case(
-    "base.toml_boolean_value",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::BooleanValue),
-)]
-#[case(
-    "base.toml_date_time_value",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::DateTimeValue),
-)]
-#[case(
-    "base.toml_array",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::Array),
-)]
-#[case(
-    "base.toml_inline_table",
-    include_str!("toml/base.toml"),
-    toml::CompiledQuery::from(toml::PreparedQuery::InlineTable),
-)]
-#[case(
     "base.yaml_string_scalar",
     include_str!("yaml/base.yaml"),
     yaml::CompiledQuery::from(yaml::PreparedQuery::StringScalar),
@@ -1041,6 +1001,7 @@ fn test_language_scopers(
 #[case::python(python::CompiledQuery::try_from(QuerySource::from("(decorated_definition) @x".to_string())))]
 #[case::rust(rust::CompiledQuery::try_from(QuerySource::from("(lifetime) @x".to_string())))]
 #[case::typescript(typescript::CompiledQuery::try_from(QuerySource::from("(type_annotation) @x".to_string())))]
+#[case::yaml(yaml::CompiledQuery::try_from(QuerySource::from("(block_mapping_pair) @x".to_string())))]
 fn test_custom_query_uses_correct_language(
     #[case] result: Result<impl LanguageScoper, tree_sitter::QueryError>,
 ) {

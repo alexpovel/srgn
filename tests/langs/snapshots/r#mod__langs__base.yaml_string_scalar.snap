@@ -276,5 +276,5 @@ expression: inscope_parts
   l: "    cpu: \"2.0\"\n"
   m: "    ^^^           "
 - n: 105
-  l: "    storage: \"100GB\""
-  m: "    ^^^^^^^           "
+  l: "    storage: \"100GB\"\n"
+  m: "    ^^^^^^^             "

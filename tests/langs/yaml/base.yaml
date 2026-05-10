@@ -84,7 +84,7 @@ monitoring:
   alerts:
     - {name: "high-cpu", threshold: 90, action: "scale"}
     - {name: "low-memory", threshold: 20, action: "alert"}
-  
+
   endpoints:
     - url: "http://api.example.com/health"
       timeout: 5

@@ -1089,7 +1089,8 @@ mod cli {
     use regex::bytes::Regex;
     use srgn::GLOBAL_SCOPE;
     use srgn::scoping::langs::{
-        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript, yaml,
+        LanguageScoper, QuerySource, TreeSitterRegex, c, csharp, go, hcl, python, rust, typescript,
+        yaml,
     };
     use tree_sitter::QueryError as TSQueryError;
 
@@ -1856,7 +1857,7 @@ mod cli {
     #[group(required = false, multiple = false)]
     struct YamlScope {
         /// Scope YAML files using a prepared query.
-        #[arg(long, env, verbatim_doc_comment, visible_alias = "yaml")]
+        #[arg(long, env, verbatim_doc_comment)]
         yaml: Vec<yaml::PreparedQuery>,
 
         /// Scope YAML files using a custom tree-sitter query.

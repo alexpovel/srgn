@@ -252,8 +252,8 @@ expression: inscope_parts
   l: "    - {name: \"low-memory\", threshold: 20, action: \"alert\"}\n"
   m: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - n: 87
-  l: "  \n"
-  m: ^^^^
+  l: "\n"
+  m: ^^
 - n: 88
   l: "  endpoints:\n"
   m: ^^^^^^^^^^^^^^
@@ -306,5 +306,5 @@ expression: inscope_parts
   l: "    cpu: \"2.0\"\n"
   m: ^^^^^^^^^^^^^^^^^^
 - n: 105
-  l: "    storage: \"100GB\""
-  m: ^^^^^^^^^^^^^^^^^^^^^^
+  l: "    storage: \"100GB\"\n"
+  m: ^^^^^^^^^^^^^^^^^^^^^^^^
