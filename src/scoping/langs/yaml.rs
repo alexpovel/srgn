@@ -34,7 +34,11 @@ impl PreparedQuery {
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
-            Self::StringScalar => r"(string_scalar) @string",
+            Self::StringScalar => {
+                r"(string_scalar) @string
+(double_quote_scalar) @string
+(single_quote_scalar) @string"
+            }
             Self::IntegerScalar => r"(integer_scalar) @integer",
             Self::FloatScalar => r"(float_scalar) @float",
             Self::BooleanScalar => r"(boolean_scalar) @boolean",
