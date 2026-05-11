@@ -99,7 +99,7 @@ impl PreparedQuery {
                 r"(array (string) @string (object) @object (array) @array) @array"
             }
             Self::IntegerNumbers => r#"((number) @integer (#match? @integer "^-?[0-9]+$"))"#,
-            Self::FloatNumbers => r#"((number) @float (#match? @float "\."))"#,
+            Self::FloatNumbers => r#"((number) @float (#match? @float "\\."))"#,
             Self::DoubleQuotedStrings => "(string) @string",
             Self::TopLevelValues => "(document (_value) @value)",
             Self::EmptyObjects => r#"((object) @object (#match? @object "^\\{\\s*\\}$"))"#,
