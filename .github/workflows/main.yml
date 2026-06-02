@@ -195,7 +195,7 @@ jobs:
           client-id: ${{ secrets.RELEASE_BOT_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_BOT_APP_PRIVATE_KEY }}
 
-      - uses: googleapis/release-please-action@v4.4.1
+      - uses: googleapis/release-please-action@v5.0.0
         id: release
         with:
           # Token needs: `contents: write`, `pull-requests: write`
