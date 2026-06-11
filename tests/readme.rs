@@ -146,7 +146,7 @@ mod tests {
                 }
                 "cat" => Self::Cat(invocation),
                 PROGRAM_NAME => Self::Self_(invocation),
-                _ => panic!("Unsupported program name: {}", name),
+                _ => panic!("Unsupported program name: {name}"),
             }
         }
 
@@ -723,7 +723,7 @@ mod tests {
                 .split(';')
                 .map(|pair| {
                     pair.split_once('=')
-                        .unwrap_or_else(|| panic!("need a value for key-value pair: {}", pair))
+                        .unwrap_or_else(|| panic!("need a value for key-value pair: {pair}"))
                 })
                 .map(|(k, v)| (k, v.to_string()))
                 .collect();
