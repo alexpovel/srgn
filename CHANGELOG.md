@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.3](https://github.com/alexpovel/srgn/compare/srgn-v0.14.2...srgn-v0.14.3) (2026-07-19)
+
+
+### Bug Fixes
+
+* **fmt:** Run formatting ([6d1c029](https://github.com/alexpovel/srgn/commit/6d1c029cdfec5fdb74e2f0421b2c1a25940580e9))
+
 ## [0.14.2](https://github.com/alexpovel/srgn/compare/srgn-v0.14.1...srgn-v0.14.2) (2026-02-22)
 
 
