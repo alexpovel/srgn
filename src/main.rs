@@ -671,12 +671,12 @@ fn process_path(
                     stdout,
                     "{}\n{}",
                     path.display().to_string().magenta(),
-                    &new_contents
+                    new_contents
                 )?;
             } else {
                 // Machine-parseable format: the content should already be formatted
                 // with filename:line_number: prefix by the apply function
-                write!(stdout, "{}", &new_contents)?;
+                write!(stdout, "{new_contents}")?;
             }
         }
     } else {

@@ -261,6 +261,6 @@ mod tests {
         #[case] string: &str,
         #[case] equal: bool,
     ) {
-        assert!((scopes == string) == equal);
+        assert_eq!((scopes == string), equal);
     }
 }

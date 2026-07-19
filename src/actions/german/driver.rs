@@ -378,7 +378,7 @@ impl Action for German {
                     )
                     .unwrap_or(original);
 
-                    debug!("Processed word, appending to output: {:?}", &word);
+                    debug!("Processed word, appending to output: {word:?}");
                     output.push_str(&word);
 
                     // Add back the non-word character that caused the exit transition
