@@ -16,7 +16,7 @@ categories = [
     "text-editors",
     "text-processing",
 ]
-rust-version = "1.85.0"
+rust-version = "1.99.0"
 exclude = [
     # Contains large submodules; those should *not* be checked out when packaging for
     # crates.io, aka not end up being a problem, but protect against accidents
@@ -95,69 +95,57 @@ rstest = { version = "0.26.1", default-features = false }
 serde = { version = "1.0.228", features = ["derive"], default-features = false }
 
 [lints.clippy]
-pedantic = "warn"
-cargo = "warn"
-style = "warn"
-perf = "warn"
-complexity = "warn"
-correctness = "warn"
-nursery = "warn"
-suspicious = "warn"
-# Overrides
-multiple_crate_versions = { level = "allow", priority = 1 }
-module_name_repetitions = { level = "allow", priority = 1 }
+# Clippy's default groups are already enabled, including correctness at `deny`.
+# Lower group priorities let individual lints override them.
+cargo = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Keep the existing opt-in to experimental lints; review new findings on upgrades.
+nursery = { level = "warn", priority = -1 }
+
+# Selected restriction lints; enabling the entire group is not recommended:
+# https://doc.rust-lang.org/clippy/lints.html#restriction
+dbg_macro = "warn"
+mem_forget = "warn"
+rc_mutex = "warn"
+todo = "warn"
+unimplemented = "warn"
+unnecessary_rest_pattern = "warn"
+unused_result_ok = "warn"
+
+# Dependency trees can legitimately contain multiple versions of the same crate.
+multiple_crate_versions = "allow"
+# Descriptive type names need not depend on the module they live in.
+module_name_repetitions = "allow"
 
 [lints.rust]
-# Just took everything at
+# Opt-in lints available on the MSRV. Default warnings and migration lints for
+# editions up to our current edition (2024) do not need to be repeated here.
 # https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html
-# and made it more strict. Will perhaps get too annoying.
-
-absolute_paths_not_starting_with_crate = "warn"
-deprecated_safe = { level = "warn", priority = -1 }
+ambiguous_negative_literals = "warn"
 elided_lifetimes_in_paths = "warn"
 explicit_outlives_requirements = "warn"
 ffi_unwind_calls = "warn"
-# fuzzy_provenance_casts = "warn" # Unstable
-# impl_trait_overcaptures = "warn" # Unstable
-keyword_idents = { level = "warn", priority = -1 }
-keyword_idents_2018 = "warn"
-keyword_idents_2024 = "warn"
+impl_trait_redundant_captures = "warn"
 let_underscore_drop = "warn"
-# lossy_provenance_casts = "warn" # Unstable
 macro_use_extern_crate = "warn"
 meta_variable_misuse = "warn"
-missing_abi = "warn"
 missing_copy_implementations = "warn"
 missing_debug_implementations = "warn"
 missing_docs = "warn"
-missing_unsafe_on_extern = "allow"     # Switch back on once things are Rust 1.82+ everywhere
-# multiple_supertrait_upcastable = "warn" # Unstable
-# must_not_suspend = "warn" # Unstable
 non_ascii_idents = "warn"
-# non_exhaustive_omitted_patterns = "warn" # Unstable
-non_local_definitions = "warn"
+redundant_imports = "warn"
 redundant_lifetimes = "warn"
-rust_2021_incompatible_closure_captures = "warn"
-rust_2021_incompatible_or_patterns = "warn"
-rust_2021_prefixes_incompatible_syntax = "warn"
-rust_2021_prelude_collisions = "warn"
-# rust_2024_incompatible_pat = "warn" # Unstable
 single_use_lifetimes = "warn"
 trivial_casts = "warn"
 trivial_numeric_casts = "warn"
 unit_bindings = "warn"
 unnameable_types = "warn"
-unreachable_pub = "allow"           # Too noisy
 unsafe_code = "warn"
-unsafe_op_in_unsafe_fn = "warn"
-unstable_features = "warn"
-unused_crate_dependencies = "allow"
-unused_extern_crates = "allow"
+unused_extern_crates = "warn"
 unused_import_braces = "warn"
 unused_lifetimes = "warn"
 unused_macro_rules = "warn"
 unused_qualifications = "warn"
-unused_results = "allow"            # Too noisy
 variant_size_differences = "warn"
 
 [profile.dev.package.insta]

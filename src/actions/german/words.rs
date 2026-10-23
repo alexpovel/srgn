@@ -137,7 +137,7 @@ impl Word {
         self.content.push(character);
     }
 
-    pub(super) fn len(&self) -> usize {
+    pub(super) const fn len(&self) -> usize {
         self.content.len()
     }
 

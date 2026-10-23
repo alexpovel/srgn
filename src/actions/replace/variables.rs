@@ -103,18 +103,12 @@ pub(super) fn inject_variables(
 
                 State::FinishNumberedVar(num)
             }
-            (
-                State::BuildingNamedVar {
-                    name, braced: true, ..
-                },
-                _,
-            ) => return Err(VariableExpressionError::MismatchedBraces(name)),
-            (
-                State::BuildingNumberedVar {
-                    num, braced: true, ..
-                },
-                _,
-            ) => return Err(VariableExpressionError::MismatchedBraces(num.to_string())),
+            (State::BuildingNamedVar { name, braced: true }, _) => {
+                return Err(VariableExpressionError::MismatchedBraces(name));
+            }
+            (State::BuildingNumberedVar { num, braced: true }, _) => {
+                return Err(VariableExpressionError::MismatchedBraces(num.to_string()));
+            }
 
             (State::FinishNamedVar(name) | State::BuildingNamedVar { name, .. }, _) => {
                 trace!("Finishing up named variable '{name}'");
@@ -205,18 +199,12 @@ pub(super) fn inject_variables(
                 None => return Err(VariableExpressionError::UndefinedVariable(num.to_string())),
             }
         }
-        (
-            State::BuildingNamedVar {
-                name, braced: true, ..
-            },
-            _,
-        ) => return Err(VariableExpressionError::MismatchedBraces(name.clone())),
-        (
-            State::BuildingNumberedVar {
-                num, braced: true, ..
-            },
-            _,
-        ) => return Err(VariableExpressionError::MismatchedBraces(num.to_string())),
+        (State::BuildingNamedVar { name, braced: true }, _) => {
+            return Err(VariableExpressionError::MismatchedBraces(name.clone()));
+        }
+        (State::BuildingNumberedVar { num, braced: true }, _) => {
+            return Err(VariableExpressionError::MismatchedBraces(num.to_string()));
+        }
         (State::Noop | State::Start | State::BracedStart, _) => state,
     };
 

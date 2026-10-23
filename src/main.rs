@@ -85,7 +85,9 @@ fn main() -> Result<()> {
 
     let mut actions = {
         debug!("Assembling actions.");
-        let mut actions = assemble_common_actions(&composable_actions, standalone_action)?;
+        let actions = assemble_common_actions(&composable_actions, standalone_action)?;
+        #[cfg(any(feature = "symbols", feature = "german"))]
+        let mut actions = actions;
 
         #[cfg(feature = "symbols")]
         if composable_actions.symbols {
@@ -1903,7 +1905,6 @@ mod cli {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
     use std::sync::LazyLock;
 
     use env_logger::DEFAULT_FILTER_ENV;
