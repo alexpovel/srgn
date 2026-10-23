@@ -471,7 +471,7 @@ mod tests {
         use super::*;
         use crate::scoping::scope::ROScope;
 
-        fn generate_random_regex(mut rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
+        fn generate_random_regex(rng: &mut rand::rngs::ThreadRng) -> Option<RegexPattern> {
             let atoms: [&str; 7] = [".", "\\d", "\\D", "\\w", "\\W", "\\s", "\\S"];
             let quantifiers: [&str; 5] = ["*", "+", "?", "{2,5}", "{3}"];
             let others: [&str; 3] = ["|", "^", "$"];
@@ -484,11 +484,11 @@ mod tests {
 
             for _ in 0..rng.random_range(1..=2) {
                 if rng.random_bool(0.3) {
-                    regex.push_str(atoms.choose(&mut rng).unwrap());
+                    regex.push_str(atoms.choose(rng).unwrap());
                 }
 
                 if rng.random_bool(0.6) {
-                    let letter = letters.choose(&mut rng).unwrap();
+                    let letter = letters.choose(rng).unwrap();
                     if rng.random_bool(0.5) {
                         let uc = letter.to_uppercase();
                         regex.push_str(uc.as_str());
@@ -498,11 +498,11 @@ mod tests {
                 }
 
                 if rng.random_bool(0.3) {
-                    regex.push_str(quantifiers.choose(&mut rng).unwrap());
+                    regex.push_str(quantifiers.choose(rng).unwrap());
                 }
 
                 if rng.random_bool(0.1) {
-                    regex.push_str(others.choose(&mut rng).unwrap());
+                    regex.push_str(others.choose(rng).unwrap());
                 }
             }
 

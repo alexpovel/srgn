@@ -119,7 +119,7 @@ explicit_outlives_requirements = "warn"
 ffi_unwind_calls = "warn"
 # fuzzy_provenance_casts = "warn" # Unstable
 # impl_trait_overcaptures = "warn" # Unstable
-keyword-idents = "warn"
+keyword_idents = { level = "warn", priority = -1 }
 keyword_idents_2018 = "warn"
 keyword_idents_2024 = "warn"
 let_underscore_drop = "warn"
