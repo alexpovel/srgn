@@ -205,7 +205,7 @@ pub trait LanguageScoper: Scoper + Find + Send + Sync {
                 let mut ranges = Vec::with_capacity(matches.size_hint().1.unwrap_or_default());
 
                 while let Some(m) = matches.next() {
-                    for capture in m.captures {
+                    for capture in m.captures() {
                         ranges.push(capture.node.byte_range());
                     }
                 }

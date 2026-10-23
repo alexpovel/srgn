@@ -1646,7 +1646,7 @@ Standalone Actions (only usable alone):
           Squeeze consecutive occurrences of scope into one.
           
           [env: SQUEEZE=]
-          [aliases: squeeze-repeats]
+          [alias: --squeeze-repeats]
 
 Options (global):
   -G, --glob <GLOB>
@@ -1737,23 +1737,23 @@ Options (global):
 
       --stdin-detection <STDIN_DETECTION>
           Control heuristics for stdin readability detection, and force to value.
-          
-          [default: auto]
 
           Possible values:
           - auto:             Automatically detect if stdin is readable
           - force-readable:   Act as if stdin is readable
           - force-unreadable: Act as if stdin is not readable
+          
+          [default: auto]
 
       --stdout-detection <STDOUT_DETECTION>
           Control heuristics for stdout detection, and potentially force to value.
-          
-          [default: auto]
 
           Possible values:
           - auto:       Automatically detect if stdout is a TTY and act accordingly
           - force-tty:  Act as if stdout is a TTY
           - force-pipe: Act as if stdout is not a TTY, e.g. a pipe, redirect
+          
+          [default: auto]
 
       --threads <THREADS>
           Number of threads to run processing on, when working with files.
@@ -1771,8 +1771,6 @@ Options (global):
 Language scopes:
       --c <C>
           Scope C code using a prepared query.
-          
-          [env: C=]
 
           Possible values:
           - comments:        Comments (single- and multi-line)
@@ -1794,6 +1792,8 @@ Language scopes:
           - identifier:      Identifier
           - declaration:     Declaration
           - call-expression: Call expression
+          
+          [env: C=]
 
       --c-query <TREE-SITTER-QUERY-VALUE>
           Scope C code using a custom tree-sitter query.
@@ -1807,9 +1807,6 @@ Language scopes:
 
       --csharp <CSHARP>
           Scope C# code using a prepared query.
-          
-          [env: CSHARP=]
-          [aliases: cs]
 
           Possible values:
           - comments:             Comments (including XML, inline, doc comments)
@@ -1828,6 +1825,9 @@ Language scopes:
           - field:                Field definitions on types (in their entirety)
           - attribute:            Attribute names
           - identifier:           Identifier names
+          
+          [env: CSHARP=]
+          [alias: --cs]
 
       --csharp-query <TREE-SITTER-QUERY-VALUE>
           Scope C# code using a custom tree-sitter query.
@@ -1841,8 +1841,6 @@ Language scopes:
 
       --go <GO>
           Scope Go code using a prepared query.
-          
-          [env: GO=]
 
           Possible values:
           - comments:            Comments (single- and multi-line)
@@ -1873,6 +1871,8 @@ Language scopes:
           - labeled:             Labeled statements
           - goto:                `goto` statements
           - struct-tags:         Struct tags
+          
+          [env: GO=]
 
       --go-query <TREE-SITTER-QUERY-VALUE>
           Scope Go code using a custom tree-sitter query.
@@ -1886,8 +1886,6 @@ Language scopes:
 
       --hcl <HCL>
           Scope HashiCorp Configuration Language code using a prepared query.
-          
-          [env: HCL=]
 
           Possible values:
           - variable:           `variable` blocks (in their entirety)
@@ -1906,6 +1904,8 @@ Language scopes:
           - data-sources:       `data` source declarations and usages
           - comments:           Comments
           - strings:            Literal strings
+          
+          [env: HCL=]
 
       --hcl-query <TREE-SITTER-QUERY-VALUE>
           Scope HashiCorp Configuration Language code using a custom tree-sitter query.
@@ -1920,9 +1920,6 @@ Language scopes:
 
       --python <PYTHON>
           Scope Python code using a prepared query.
-          
-          [env: PYTHON=]
-          [aliases: py]
 
           Possible values:
           - comments:             Comments
@@ -1951,6 +1948,9 @@ Language scopes:
             assignments)
           - types:                Types in type hints
           - identifiers:          Identifiers (variable names, ...)
+          
+          [env: PYTHON=]
+          [alias: --py]
 
       --python-query <TREE-SITTER-QUERY-VALUE>
           Scope Python code using a custom tree-sitter query.
@@ -1964,9 +1964,6 @@ Language scopes:
 
       --rust <RUST>
           Scope Rust code using a prepared query.
-          
-          [env: RUST=]
-          [aliases: rs]
 
           Possible values:
           - comments:         Comments (line and block styles; excluding doc comments;
@@ -2026,6 +2023,9 @@ Language scopes:
           - closure:          Closure definitions
           - unsafe:           `unsafe` keyword usages (`unsafe fn`, `unsafe` blocks,
             `unsafe Trait`, `unsafe impl Trait`)
+          
+          [env: RUST=]
+          [alias: --rs]
 
       --rust-query <TREE-SITTER-QUERY-VALUE>
           Scope Rust code using a custom tree-sitter query.
@@ -2039,9 +2039,6 @@ Language scopes:
 
       --typescript <TYPESCRIPT>
           Scope TypeScript code using a prepared query.
-          
-          [env: TYPESCRIPT=]
-          [aliases: ts]
 
           Possible values:
           - comments:       Comments
@@ -2064,6 +2061,9 @@ Language scopes:
           - type-alias:     Type alias declarations
           - namespace:      `namespace` blocks
           - export:         `export` blocks
+          
+          [env: TYPESCRIPT=]
+          [alias: --ts]
 
       --typescript-query <TREE-SITTER-QUERY-VALUE>
           Scope TypeScript code using a custom tree-sitter query.

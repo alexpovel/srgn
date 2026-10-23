@@ -1,0 +1,5 @@
+[registry]
+global-min-publish-age = "4 weeks" # Needs Rust 1.100.0+ (probably...)
+
+[resolver]
+incompatible-publish-age = "deny"

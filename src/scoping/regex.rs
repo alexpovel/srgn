@@ -466,7 +466,7 @@ mod tests {
 
         use log::info;
         use rand::seq::IndexedRandom;
-        use rand::{self, Rng};
+        use rand::{self, RngExt};
 
         use super::*;
         use crate::scoping::scope::ROScope;
