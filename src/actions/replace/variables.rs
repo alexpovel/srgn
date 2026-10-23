@@ -86,6 +86,10 @@ pub(super) fn inject_variables(
                 '0'..='9',
             ) => State::BuildingNumberedVar {
                 num: {
+                    // Leading zeroes are part of the expression, but not width(num).
+                    if magnitude == 0 {
+                        to_remove += 1;
+                    }
                     magnitude * 10
                         + c.to_digit(10).expect("hard-coded digit is valid number") as usize
                 },
@@ -338,6 +342,10 @@ mod test {
     #[case("${var1}${var1}", Ok("val1val1"))]
     #[case("${var1}$var1", Ok("val1val1"))]
     #[case("${2}$2", Ok("nvalnval"))]
+    #[case("$02", Ok("nval"))]
+    #[case("${002}", Ok("nval"))]
+    #[case("$02!", Ok("nval!"))]
+    #[case("${002}!", Ok("nval!"))]
     #[case("${var1}$var1 ${2}$2", Ok("val1val1 nvalnval"))]
     //
     // Undefined variables
