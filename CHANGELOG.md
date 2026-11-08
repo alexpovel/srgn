@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.3](https://github.com/alexpovel/srgn/compare/srgn-v0.14.2...srgn-v0.14.3) (2026-11-08)
+
+
+### Bug Fixes
+
+* **fmt:** Run formatting ([6d1c029](https://github.com/alexpovel/srgn/commit/6d1c029cdfec5fdb74e2f0421b2c1a25940580e9))
+* normalize leading zero capture references ([23177c3](https://github.com/alexpovel/srgn/commit/23177c3141e5d31f1d502d0bb622a8fd38b212db))
+
 ## [0.14.2](https://github.com/alexpovel/srgn/compare/srgn-v0.14.1...srgn-v0.14.2) (2026-02-22)
 
 
