@@ -902,7 +902,7 @@ mod tests {
                 let observed_stderr = String::from_utf8(assertion.get_output().stderr.clone())
                     .expect("Stderr should be given as UTF-8");
 
-                if let Some(expected_stdout) = program.stdout().clone() {
+                if let Some(expected_stdout) = program.stdout() {
                     if cfg!(target_os = "windows") {
                         observed_stdout = fix_windows_output(observed_stdout);
                     }

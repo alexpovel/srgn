@@ -915,7 +915,7 @@ Heizoelrueckstossabdaempfung.
 
                 {
                     let parent = path
-                        .clone()
+                        
                         .parent()
                         .expect("(our) directories under test always have parents")
                         .to_owned();
@@ -1024,7 +1024,7 @@ right contents:
                 }
             } else if metadata.is_dir() {
                 // Recursion step
-                compare_directories(left.path().clone(), candidate.clone())?;
+                compare_directories(left.path(), candidate.clone())?;
             } else {
                 // Do not silently ignore.
                 return Err(std::io::Error::new(

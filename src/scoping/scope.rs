@@ -99,13 +99,13 @@ impl<'viewee> ROScopes<'viewee> {
         let mut last_end = 0;
         for (Range { start, end }, context) in ranges.into_iter().sorted_by_key(|(r, _)| r.start) {
             let range = last_end..start;
-            let out = &input[range.clone()];
+            let out = &input[range];
             if !out.is_empty() {
                 scopes.push(ROScope(Out(out)));
             }
 
             let range = start..end;
-            let r#in = &input[range.clone()];
+            let r#in = &input[range];
             if !r#in.is_empty() {
                 scopes.push(ROScope(In(r#in, context)));
             }
