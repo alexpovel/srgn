@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.4](https://github.com/alexpovel/srgn/compare/srgn-v0.14.3...srgn-v0.14.4) (2026-11-15)
+
+
+### Features
+
+* Add Rust non-test scope ([ce1feaf](https://github.com/alexpovel/srgn/commit/ce1feaf2e593ead5375729cf98ab90a082f20e49))
+* Add Rust test-only scope ([e468f52](https://github.com/alexpovel/srgn/commit/e468f52d66abb50d7937eea483faf70c79762a00))
+
 ## [0.14.3](https://github.com/alexpovel/srgn/compare/srgn-v0.14.2...srgn-v0.14.3) (2026-11-08)
 
 
