@@ -965,3 +965,47 @@ fn test_custom_query_uses_correct_language(
 ) {
     result.expect("Custom query should compile against the language's own grammar");
 }
+
+#[rstest]
+#[case::no_tests("fn production() {}", "fn production() {}")]
+#[case::only_tests("#[cfg(test)] mod tests { fn helper() {} }", " ")]
+#[case::arbitrary_module_name("#[cfg(test)] mod checks {}", " ")]
+#[case::unconditional_tests_module("mod tests {}", "mod tests {}")]
+#[case::negated_test_cfg(
+    "#[cfg(not(test))] mod production {}",
+    "#[cfg(not(test))] mod production {}"
+)]
+#[case::test_feature(
+    "#[cfg(feature = \"test\")] mod production {}",
+    "#[cfg(feature = \"test\")] mod production {}"
+)]
+#[case::other_attribute("#[other(test)] mod production {}", "#[other(test)] mod production {}")]
+#[case::whitespace("#[ cfg ( test ) ] mod tests {}", " ")]
+#[case::extra_attributes(
+    "#[allow(dead_code)] #[cfg(test)] #[allow(unused)] mod tests {}",
+    "   "
+)]
+#[case::comments("#[cfg(test)] // tests\n/* tests */ mod tests {}", " \n ")]
+#[case::unrelated_module(
+    "#[cfg(test)] fn helper() {} mod production {}",
+    "#[cfg(test)] fn helper() {} mod production {}"
+)]
+#[case::nested_tests(
+    "mod production { fn keep() {} #[cfg(test)] mod checks { mod nested {} } fn also_keep() {} }",
+    "mod production { fn keep() {}   fn also_keep() {} }"
+)]
+#[case::multiple_test_modules(
+    "#[cfg(test)] mod first {} fn keep() {} #[cfg(test)] mod second {}",
+    "  fn keep() {}  "
+)]
+#[case::following_item("#[cfg(test)] mod tests {} fn keep() {}", "  fn keep() {}")]
+fn test_rust_non_test(#[case] input: &str, #[case] expected: &str) {
+    let query = rust::CompiledQuery::from(rust::PreparedQuery::NonTest);
+    let actual: String = query
+        .scope_via_query(input)
+        .into_iter()
+        .map(|range| &input[range])
+        .collect();
+
+    assert_eq!(actual, expected);
+}

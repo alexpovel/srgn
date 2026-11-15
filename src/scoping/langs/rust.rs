@@ -128,6 +128,8 @@ pub enum PreparedQuery {
     ModNamed(TreeSitterRegex),
     /// `mod tests` blocks.
     ModTests,
+    /// Everything outside modules marked `#[cfg(test)]`.
+    NonTest,
     /// Type definitions (`struct`, `enum`, `union`).
     TypeDef,
     /// Identifiers.
@@ -412,6 +414,41 @@ impl PreparedQuery {
                     (#eq? @mod_name "tests")
                 ) @mod_tests
                 "#
+            }
+            .into(),
+            Self::NonTest => {
+                // Attributes are siblings of the item they annotate. Only cross
+                // attributes and comments to avoid excluding a later, unrelated module.
+                formatcp!(
+                    "
+                    (source_file) @source
+                    (
+                        (attribute_item)* @{0}.attributes_before
+                        .
+                        (attribute_item
+                            (attribute
+                                (identifier) @{0}.cfg
+                                arguments: (token_tree
+                                    .
+                                    (identifier) @{0}.test
+                                    .
+                                )
+                                (#eq? @{0}.cfg \"cfg\")
+                                (#eq? @{0}.test \"test\")
+                            )
+                        ) @{0}.attribute
+                        .
+                        [
+                            (attribute_item)
+                            (line_comment)
+                            (block_comment)
+                        ]* @{0}.attributes_after
+                        .
+                        (mod_item) @{0}.module
+                    )
+                    ",
+                    IGNORE
+                )
             }
             .into(),
             Self::TypeDef => {

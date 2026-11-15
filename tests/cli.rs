@@ -232,6 +232,18 @@ Heizoelrueckstossabdaempfung.
         ],
         Some("# A comment\nx = \"A string\"\ndef A(): return \"A string in a func\"\nclass A: pass"),
     )]
+    #[case::rust_non_test_search(
+        "rust-non-test-search",
+        false,
+        &["--rust", "non-test", "needle"],
+        Some(include_str!("langs/rust/non-test.rs")),
+    )]
+    #[case::rust_non_test_multiple_scopes(
+        "rust-non-test-multiple-scopes",
+        false,
+        &["--rust", "non-test", "--rust", "strings", "needle", "--", "replacement"],
+        Some(include_str!("langs/rust/non-test.rs")),
+    )]
     //
     // Set up baseline for subsequent tests
     #[case(

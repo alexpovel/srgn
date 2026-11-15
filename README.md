@@ -874,6 +874,31 @@ type ActualDomainType struct {
 }
 ```
 
+###### Searching outside unit tests (Rust)
+
+Use `--rust non-test` to exclude modules marked `#[cfg(test)]` and everything inside
+them. The module name does not matter:
+
+```rust file=unit-tests.rs
+fn calculate() {}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn check_calculate() {
+        super::calculate();
+    }
+}
+```
+
+```console
+$ cat unit-tests.rs | srgn --rust 'non-test' 'calculate'
+1:fn calculate() {}
+```
+
+Combine it with other scopes, such as `--rust non-test --rust strings`, to search
+strings outside those modules.
+
 ###### Finding all `unsafe` code (Rust)
 
 One advantage of the [`unsafe` keyword in
@@ -2017,6 +2042,7 @@ Language scopes:
           - mod~<PATTERN>:    Like mod, but only considers items whose name matches
             PATTERN.
           - mod-tests:        `mod tests` blocks
+          - non-test:         Everything outside modules marked `#[cfg(test)]`
           - type-def:         Type definitions (`struct`, `enum`, `union`)
           - identifier:       Identifiers
           - type-identifier:  Identifiers for types
