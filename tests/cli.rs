@@ -915,7 +915,6 @@ Heizoelrueckstossabdaempfung.
 
                 {
                     let parent = path
-                        
                         .parent()
                         .expect("(our) directories under test always have parents")
                         .to_owned();
