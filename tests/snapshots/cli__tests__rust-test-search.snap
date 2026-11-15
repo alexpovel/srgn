@@ -1,0 +1,33 @@
+---
+source: tests/cli.rs
+expression: "CommandSnap\n{\n    args: args.into(), stdin:\n    stdin.map(|s|\n    s.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec()), stdout:\n    stdout.split_inclusive('\\n').map(ToOwned::to_owned).collect_vec(),\n    exit_code,\n}"
+info:
+  stderr: []
+---
+args:
+  - "--threads"
+  - "1"
+  - "--rust"
+  - test
+  - needle
+stdin:
+  - "const MESSAGE: &str = \"needle\";\n"
+  - "fn needle() {}\n"
+  - "\n"
+  - "#[cfg(test)]\n"
+  - "mod checks {\n"
+  - "    use super::*;\n"
+  - "\n"
+  - "    #[test]\n"
+  - "    fn needle() {\n"
+  - "        assert_eq!(MESSAGE, \"needle\");\n"
+  - "    }\n"
+  - "}\n"
+  - "\n"
+  - "fn after() {\n"
+  - "    println!(\"needle\");\n"
+  - "}\n"
+stdout:
+  - "(stdin):9:7-13:    fn needle() {\n"
+  - "(stdin):10:29-35:        assert_eq!(MESSAGE, \"needle\");\n"
+exit_code: 0

@@ -244,6 +244,18 @@ Heizoelrueckstossabdaempfung.
         &["--rust", "non-test", "--rust", "strings", "needle", "--", "replacement"],
         Some(include_str!("langs/rust/non-test.rs")),
     )]
+    #[case::rust_test_search(
+        "rust-test-search",
+        false,
+        &["--rust", "test", "needle"],
+        Some(include_str!("langs/rust/non-test.rs")),
+    )]
+    #[case::rust_test_multiple_scopes(
+        "rust-test-multiple-scopes",
+        false,
+        &["--rust", "test", "--rust", "strings", "needle", "--", "replacement"],
+        Some(include_str!("langs/rust/non-test.rs")),
+    )]
     //
     // Set up baseline for subsequent tests
     #[case(

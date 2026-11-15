@@ -874,7 +874,7 @@ type ActualDomainType struct {
 }
 ```
 
-###### Searching outside unit tests (Rust)
+###### Searching inside and outside unit tests (Rust)
 
 Use `--rust non-test` to exclude modules marked `#[cfg(test)]` and everything inside
 them. The module name does not matter:
@@ -894,6 +894,15 @@ mod tests {
 ```console
 $ cat unit-tests.rs | srgn --rust 'non-test' 'calculate'
 1:fn calculate() {}
+```
+
+Use `--rust test` for the opposite scope, selecting only those modules and their
+attributes:
+
+```console
+$ cat unit-tests.rs | srgn --rust 'test' 'calculate'
+6:    fn check_calculate() {
+7:        super::calculate();
 ```
 
 Combine it with other scopes, such as `--rust non-test --rust strings`, to search
@@ -2042,6 +2051,7 @@ Language scopes:
           - mod~<PATTERN>:    Like mod, but only considers items whose name matches
             PATTERN.
           - mod-tests:        `mod tests` blocks
+          - test:             Modules marked `#[cfg(test)]`, including their attributes
           - non-test:         Everything outside modules marked `#[cfg(test)]`
           - type-def:         Type definitions (`struct`, `enum`, `union`)
           - identifier:       Identifiers

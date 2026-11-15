@@ -128,6 +128,8 @@ pub enum PreparedQuery {
     ModNamed(TreeSitterRegex),
     /// `mod tests` blocks.
     ModTests,
+    /// Modules marked `#[cfg(test)]`, including their attributes.
+    Test,
     /// Everything outside modules marked `#[cfg(test)]`.
     NonTest,
     /// Type definitions (`struct`, `enum`, `union`).
@@ -416,41 +418,43 @@ impl PreparedQuery {
                 "#
             }
             .into(),
-            Self::NonTest => {
+            Self::Test | Self::NonTest => {
                 // Attributes are siblings of the item they annotate. Only cross
                 // attributes and comments to avoid excluding a later, unrelated module.
-                formatcp!(
-                    "
-                    (source_file) @source
+                // Both scopes use the same captures: NonTest subtracts them from
+                // the whole file, while Test selects them directly.
+                let (source, capture) = if matches!(self, Self::NonTest) {
+                    ("(source_file) @source", IGNORE)
+                } else {
+                    ("", "test")
+                };
+
+                format!(
+                    r#"
+                    {source}
                     (
-                        (attribute_item)* @{0}.attributes_before
+                        (attribute_item)* @{capture}
                         .
                         (attribute_item
                             (attribute
-                                (identifier) @{0}.cfg
-                                arguments: (token_tree
-                                    .
-                                    (identifier) @{0}.test
-                                    .
-                                )
-                                (#eq? @{0}.cfg \"cfg\")
-                                (#eq? @{0}.test \"test\")
+                                (identifier) @{capture}.cfg
+                                arguments: (token_tree . (identifier) @{capture}.test .)
+                                (#eq? @{capture}.cfg "cfg")
+                                (#eq? @{capture}.test "test")
                             )
-                        ) @{0}.attribute
+                        ) @{capture}
                         .
                         [
                             (attribute_item)
                             (line_comment)
                             (block_comment)
-                        ]* @{0}.attributes_after
+                        ]* @{capture}
                         .
-                        (mod_item) @{0}.module
+                        (mod_item) @{capture}
                     )
-                    ",
-                    IGNORE
+                    "#,
                 )
             }
-            .into(),
             Self::TypeDef => {
                 r"
                 [
